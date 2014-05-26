@@ -1,0 +1,4 @@
+bin/*
+lib/*
+*.json
+*.ipynb
