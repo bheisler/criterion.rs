@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/japaric/criterion.rs.svg?branch=master)](https://travis-ci.org/japaric/criterion.rs)
+
 # criterion.rs
 
 This is a port (with a few modifications) of
