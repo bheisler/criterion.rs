@@ -12,6 +12,37 @@ I encourage you to look at this
 [braindump](http://japaric.github.io/criterion-braindump), for an explanation
 (with plots!) of how criterion works.
 
+## Run the examples
+
+```
+$ make && make test
+estimating the cost of precise_time_ns()
+> mean:    17.281 ns
+> median:  17.270 ns
+> std dev: 55.225 ps
+
+benchmarking fib_5
+> collecting 100 measurements, 524288 iters each in estimated 1.8906 s
+> found 4 outliers among 100 measurements (4.00%)
+  > 3 (3.00%) high mild
+  > 1 (1.00%) high severe
+> bootstrapping sample with 100000 resamples
+  > mean:    36.430 ns ± 6.5817 ps [36.419 ns 36.444 ns] 95% CI
+  > median:  36.420 ns ± 3.6513 ps [36.412 ns 36.421 ns] 95% CI
+  > std_dev: 65.780 ps ± 6.0348 ps [53.181 ps 76.776 ps] 95% CI
+
+benchmarking fib_10
+> collecting 100 measurements, 32768 iters each in estimated 1.4569 s
+> found 4 outliers among 100 measurements (4.00%)
+  > 2 (2.00%) high mild
+  > 2 (2.00%) high severe
+> bootstrapping sample with 100000 resamples
+  > mean:    440.32 ns ± 94.507 ps [440.14 ns 440.51 ns] 95% CI
+  > median:  440.06 ns ± 254.11 ps [439.65 ns 440.37 ns] 95% CI
+  > std_dev: 935.46 ps ± 117.37 ps [707.91 ps 1.1652 ns] 95% CI
+(...)
+```
+
 ## Done so far
 
 * Estimation of the cost of reading the clock (`precise_time_ns()`)
