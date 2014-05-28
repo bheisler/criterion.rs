@@ -83,6 +83,10 @@ impl Sample {
         self.data.as_slice().median()
     }
 
+    pub fn median_abs_dev(&self) -> f64 {
+        self.data.as_slice().median_abs_dev()
+    }
+
     pub fn outliers(&self) -> Outliers {
         Outliers::new(self)
     }

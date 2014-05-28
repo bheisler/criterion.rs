@@ -46,6 +46,7 @@ impl Estimate {
 
 pub struct Bootstrap {
     iters: uint,
+    mad: Estimate,
     mean: Estimate,
     median: Estimate,
     nresamples: uint,
@@ -64,7 +65,7 @@ impl Bootstrap {
 
         println!("> bootstrapping sample with {} resamples", nresamples);
 
-
+        let mut mads = Vec::with_capacity(nresamples);
         let mut means = Vec::with_capacity(nresamples);
         let mut medians = Vec::with_capacity(nresamples);
         let mut std_devs = Vec::with_capacity(nresamples);
@@ -73,6 +74,7 @@ impl Bootstrap {
         for _ in range(0, nresamples) {
             let resample = resamples.next();
 
+            mads.push(resample.median_abs_dev());
             means.push(resample.mean());
             medians.push(resample.median());
             std_devs.push(resample.std_dev());
@@ -89,12 +91,14 @@ impl Bootstrap {
             //}
         //}
 
+        let mad = Estimate::new(sample.median_abs_dev(), mads.as_slice(), cl);
         let mean = Estimate::new(sample.mean(), means.as_slice(), cl);
         let median = Estimate::new(sample.median(), medians.as_slice(), cl);
         let std_dev = Estimate::new(sample.std_dev(), std_devs.as_slice(), cl);
 
         Bootstrap {
             iters: sample.iters(),
+            mad: mad,
             mean: mean,
             median: median,
             nresamples: nresamples,
@@ -104,9 +108,10 @@ impl Bootstrap {
     }
 
     pub fn report(&self) {
-        println!("  > mean:    {}", self.mean.report());
-        println!("  > median:  {}", self.median.report());
-        println!("  > std_dev: {}", self.std_dev.report());
+        println!("  > mean:   {}", self.mean.report());
+        println!("  > SD:     {}", self.std_dev.report());
+        println!("  > median: {}", self.median.report());
+        println!("  > MAD:    {}", self.mad.report());
     }
 }
 
