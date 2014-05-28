@@ -13,5 +13,5 @@ fn fib(n: uint) -> uint {
 fn main() {
     let mut b = Bencher::new();
 
-    b.bench_group("fib", &[5u, 10, 15], |n| fib(n));
+    b.bench_group("fib", &[5u, 10, 15], fib);
 }
