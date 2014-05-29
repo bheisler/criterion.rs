@@ -12,7 +12,7 @@ impl Clock {
         self.cost as f64
     }
 
-    pub fn new(dump: bool) -> Clock {
+    pub fn new() -> Clock {
         let action = || precise_time_ns();
         let (_, iters, action) = run_for_at_least(10.ms(), 10_000, action);
 
@@ -26,10 +26,6 @@ impl Clock {
         println!("> mean:    {}", mean.as_time());
         println!("> median:  {}", median.as_time());
         println!("> std dev: {}", std_dev.as_time());
-
-        if dump {
-            sample.dump(&Path::new("clock.json"));
-        }
 
         Clock {
             cost: median,

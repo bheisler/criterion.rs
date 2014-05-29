@@ -75,6 +75,10 @@ impl Sample {
         self.iters
     }
 
+    pub fn into_data(self) -> Vec<f64> {
+        self.data
+    }
+
     pub fn mean(&self) -> f64 {
         self.data.as_slice().mean()
     }

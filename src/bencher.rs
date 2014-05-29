@@ -1,5 +1,6 @@
 use clock::Clock;
 use common::run_for_at_least;
+use metrics::Metrics;
 use sample::Sample;
 use std::default::Default;
 use std::fmt::Show;
@@ -8,6 +9,7 @@ use units::{AsTime,ToNanoSeconds};
 pub struct Bencher {
     clock: Option<Clock>,
     config: BencherConfig,
+    metrics: Metrics,
 }
 
 impl Bencher {
@@ -15,6 +17,7 @@ impl Bencher {
         Bencher {
             clock: None,
             config: Default::default(),
+            metrics: Metrics::new(),
         }
     }
 
@@ -22,9 +25,9 @@ impl Bencher {
         self.config = config;
     }
 
-    pub fn bench<T, N: Show>(&mut self, name: N, action: || -> T) {
+    pub fn bench<T, N: Str + ToStr>(&mut self, name: N, action: || -> T) {
         if self.clock.is_none() {
-            self.clock = Some(Clock::new(self.config.dump_clock));
+            self.clock = Some(Clock::new());
         }
 
         let cl = self.config.confidence_level;
@@ -33,7 +36,7 @@ impl Bencher {
         let size = self.config.sample_size;
         let wu_time = self.config.warm_up_time as u64 * 1.ms();
 
-        println!("\nbenchmarking {}", name);
+        println!("\nbenchmarking {}", name.as_slice());
 
         println!("> warming up...");
         let (wu_ns, wu_iters, action) = run_for_at_least(wu_time, 1, action);
@@ -53,11 +56,9 @@ impl Bencher {
 
         sample.outliers().report();
 
-        if self.config.dump_sample {
-            sample.dump(&Path::new(format!("{}.json", name)));
-        }
-
         sample.without_outliers().bootstrap(nresamples, cl).report();
+
+        self.metrics.update(&name.to_str(), sample.into_data());
     }
 
     pub fn bench_group<G: Show, I: Clone + Show, O>(&mut self,
@@ -74,8 +75,6 @@ impl Bencher {
 
 pub struct BencherConfig {
     pub confidence_level: f64,
-    pub dump_clock: bool,
-    pub dump_sample: bool,
     pub measurement_time: uint,
     pub nresamples: uint,
     pub sample_size: uint,
@@ -86,8 +85,6 @@ impl Default for BencherConfig {
     fn default() -> BencherConfig {
         BencherConfig {
             confidence_level: 0.95,
-            dump_clock: false,
-            dump_sample: false,
             measurement_time: 10,
             nresamples: 100_000,
             sample_size: 100,
