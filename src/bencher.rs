@@ -27,22 +27,28 @@ impl Bencher {
             self.clock = Some(Clock::new(self.config.dump_clock));
         }
 
-        let min_time = 10.ms();
-        let size = self.config.sample_size;
-        let nresamples = self.config.nresamples;
         let cl = self.config.confidence_level;
+        let m_time = self.config.measurement_time as u64 * 1.ms();
+        let nresamples = self.config.nresamples;
+        let size = self.config.sample_size;
+        let wu_time = self.config.warm_up_time as u64 * 1.ms();
 
         println!("\nbenchmarking {}", name);
-        let (elapsed, iters, action) = run_for_at_least(min_time, 1, action);
+
+        println!("> warming up...");
+        let (wu_ns, wu_iters, action) = run_for_at_least(wu_time, 1, action);
+
+        let m_iters = (wu_iters as u64 * m_time / wu_time) as uint;
+        let m_ns = wu_ns * m_time / wu_time * size as u64;
 
         println!("> collecting {} measurements, {} iters each in estimated {}",
                  size,
-                 iters,
-                 (elapsed as f64 * size as f64).as_time());
+                 m_iters,
+                 (m_ns as f64).as_time());
 
         let (sample, _) = Sample::new(size,
                                       action,
-                                      iters,
+                                      m_iters,
                                       self.clock);
 
         sample.outliers().report();
@@ -70,8 +76,10 @@ pub struct BencherConfig {
     pub confidence_level: f64,
     pub dump_clock: bool,
     pub dump_sample: bool,
+    pub measurement_time: uint,
     pub nresamples: uint,
     pub sample_size: uint,
+    pub warm_up_time: uint,
 }
 
 impl Default for BencherConfig {
@@ -80,8 +88,10 @@ impl Default for BencherConfig {
             confidence_level: 0.95,
             dump_clock: false,
             dump_sample: false,
+            measurement_time: 10,
             nresamples: 100_000,
             sample_size: 100,
+            warm_up_time: 500,
         }
     }
 }
