@@ -56,9 +56,16 @@ impl Metrics {
         };
 
         let new = self.samples.find(name).unwrap();
+        let old = old.as_slice();
+        let new = new.as_slice();
 
         println!("> testing hypotheses against previous sample");
-        bootstrap::same_population(old.as_slice(), new.as_slice(), config);
+        if !bootstrap::same_population(old, new, config) {
+            if bootstrap::mean_regressed(old, new, config) {
+                fail!("regression")
+            }
+        }
+
         self.save();
     }
 }
