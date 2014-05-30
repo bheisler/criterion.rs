@@ -1,8 +1,7 @@
-use bootstrap::Bootstrap;
+use bencher::BencherConfig;
+use bootstrap;
 use clock::Clock;
 use outlier::Outliers;
-use serialize::json;
-use std::io::{File,Truncate,Write};
 use test::black_box;
 use test::stats::Stats;
 use time::precise_time_ns;
@@ -51,28 +50,12 @@ impl Sample {
         (sample, action)
     }
 
-    pub fn bootstrap(&self, nresamples: uint, cl: f64) -> Bootstrap {
-        Bootstrap::new(self, nresamples, cl)
+    pub fn estimate(&self, config: &BencherConfig) {
+        bootstrap::estimate(self, config.nresamples, config.confidence_level)
     }
 
     pub fn data<'a>(&'a self) -> &'a [f64] {
         self.data.as_slice()
-    }
-
-    pub fn dump(&self, path: &Path) {
-        let json = json::Encoder::str_encode(self);
-
-        match File::open_mode(&Path::new(path), Truncate, Write) {
-            Err(_) => fail!("couldn't open {}", path.display()),
-            Ok(mut file) => match file.write_str(json.as_slice()) {
-                Err(_) => fail!("couldn't write {}", path.display()),
-                Ok(_) => {},
-            }
-        }
-    }
-
-    pub fn iters(&self) -> uint {
-        self.iters
     }
 
     pub fn into_data(self) -> Vec<f64> {

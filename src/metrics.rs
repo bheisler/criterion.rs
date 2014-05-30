@@ -1,3 +1,5 @@
+use bencher::BencherConfig;
+use bootstrap;
 use collections::HashMap;
 use serialize::{Decodable,json};
 use std::hash::sip::SipHasher;
@@ -40,10 +42,13 @@ impl Metrics {
         }
     }
 
-    pub fn update(&mut self, name: &String, sample: Vec<f64>) {
+    pub fn update(&mut self,
+                  name: &String,
+                  sample: Vec<f64>,
+                  config: &BencherConfig) {
         let old = match self.samples.swap(name.clone(), sample) {
             None => {
-                println!("> storing new result in metrics.json");
+                println!("> storing new sample in metrics.json");
                 self.save();
                 return;
             },
@@ -52,8 +57,8 @@ impl Metrics {
 
         let new = self.samples.find(name).unwrap();
 
-        // TODO compare old and new sample
-        println!("> comparing with old result");
+        println!("> testing hypotheses against previous sample");
+        bootstrap::same_population(old.as_slice(), new.as_slice(), config);
         self.save();
     }
 }

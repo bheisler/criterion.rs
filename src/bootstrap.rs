@@ -1,13 +1,10 @@
+use bencher::BencherConfig;
 use rand::distributions::IndependentSample;
 use rand::distributions::range::Range;
 use rand::{TaskRng,task_rng};
 use sample::Sample;
 use test::stats::Stats;
 use units::AsTime;
-
-// XXX for debugging purposes, remove later
-//use std::io::{File,Truncate,Write};
-//use serialize::json::ToJson;
 
 pub struct Estimate {
     confidence_level: f64,
@@ -44,74 +41,86 @@ impl Estimate {
     }
 }
 
-pub struct Bootstrap {
-    iters: uint,
-    mad: Estimate,
-    mean: Estimate,
-    median: Estimate,
-    nresamples: uint,
-    sample_size: uint,
-    std_dev: Estimate,
+pub fn estimate(sample: &Sample, nresamples: uint, cl: f64) {
+    assert!(cl > 0.0 && cl < 1.0,
+            "confidence level must be between 0.0 and 1.0");
+
+    println!("> estimating statistics");
+    println!("  > bootstrapping sample with {} resamples", nresamples);
+
+    let mut mads = Vec::with_capacity(nresamples);
+    let mut means = Vec::with_capacity(nresamples);
+    let mut medians = Vec::with_capacity(nresamples);
+    let mut std_devs = Vec::with_capacity(nresamples);
+
+    let mut resamples = Resamples::new(sample.data());
+    for _ in range(0, nresamples) {
+        let resample = resamples.next();
+
+        mads.push(resample.median_abs_dev());
+        means.push(resample.mean());
+        medians.push(resample.median());
+        std_devs.push(resample.std_dev());
+    }
+
+    let mad = Estimate::new(sample.median_abs_dev(), mads.as_slice(), cl);
+    let mean = Estimate::new(sample.mean(), means.as_slice(), cl);
+    let median = Estimate::new(sample.median(), medians.as_slice(), cl);
+    let std_dev = Estimate::new(sample.std_dev(), std_devs.as_slice(), cl);
+
+    println!("  > mean:   {}", mean.report());
+    println!("  > SD:     {}", std_dev.report());
+    println!("  > median: {}", median.report());
+    println!("  > MAD:    {}", mad.report());
 }
 
-impl Bootstrap {
-    pub fn new(sample: &Sample,
-               nresamples: uint,
-               cl: f64)
-        -> Bootstrap
-    {
-        assert!(cl > 0.0 && cl < 1.0,
-                "confidence level must be between 0.0 and 1.0");
+pub fn same_population(x: &[f64], y: &[f64], config: &BencherConfig) {
+    println!("  > H0: both samples belong to the same population");
 
-        println!("> bootstrapping sample with {} resamples", nresamples);
+    let (n_x, n_y) = (x.len(), y.len());
+    let nresamples = config.nresamples;
+    let sl = config.significance_level;
 
-        let mut mads = Vec::with_capacity(nresamples);
-        let mut means = Vec::with_capacity(nresamples);
-        let mut medians = Vec::with_capacity(nresamples);
-        let mut std_devs = Vec::with_capacity(nresamples);
+    let t_mean = (x.mean() - y.mean()).abs();
+    let t_median = (x.median() - y.median()).abs();
 
-        let mut resamples = Resamples::new(sample.data());
-        for _ in range(0, nresamples) {
-            let resample = resamples.next();
+    let mut z = Vec::with_capacity(n_x + n_y);
+    z.push_all(x);
+    z.push_all(y);
 
-            mads.push(resample.median_abs_dev());
-            means.push(resample.mean());
-            medians.push(resample.median());
-            std_devs.push(resample.std_dev());
+    println!("    > bootstrapping with {} resamples", nresamples);
+    let (mut n_mean, mut n_median) = (0, 0);
+    let mut resamples = Resamples::new(z.as_slice());
+    for _ in range(0, nresamples) {
+        let resample = resamples.next();
+        let x = resample.slice_to(n_x);
+        let y = resample.slice_from(n_x);
+
+        if (x.mean() - y.mean()).abs() > t_mean {
+            n_mean += 1;
         }
 
-        // XXX for debugging purposes, remove later
-        //match File::open_mode(&Path::new("b-mean.json"), Truncate, Write) {
-            //Err(_) => fail!("couldn't open b-mean.json"),
-            //Ok(mut file) => {
-                //match file.write_str(means.to_json().to_str().as_slice()) {
-                    //Err(_) => fail!("couldn't write b-mean.json"),
-                    //Ok(_) => {},
-                //}
-            //}
-        //}
-
-        let mad = Estimate::new(sample.median_abs_dev(), mads.as_slice(), cl);
-        let mean = Estimate::new(sample.mean(), means.as_slice(), cl);
-        let median = Estimate::new(sample.median(), medians.as_slice(), cl);
-        let std_dev = Estimate::new(sample.std_dev(), std_devs.as_slice(), cl);
-
-        Bootstrap {
-            iters: sample.iters(),
-            mad: mad,
-            mean: mean,
-            median: median,
-            nresamples: nresamples,
-            sample_size: sample.len(),
-            std_dev: std_dev,
+        if (x.median() - y.median()).abs() > t_median {
+            n_median += 1;
         }
     }
 
-    pub fn report(&self) {
-        println!("  > mean:   {}", self.mean.report());
-        println!("  > SD:     {}", self.std_dev.report());
-        println!("  > median: {}", self.median.report());
-        println!("  > MAD:    {}", self.mad.report());
+    let p_mean = n_mean as f64 / nresamples as f64;
+    let p_median = n_median as f64 / nresamples as f64;
+
+    match (p_mean < sl, p_median < sl) {
+        (true, true) => {
+            println!("    > both mean and median contradict H0");
+        },
+        (true, false) => {
+            println!("    > mean contradicts H0");
+        },
+        (false, true) => {
+            println!("    > median contradicts H0");
+        },
+        (false, false) => {
+            println!("    > no evidence to contradict H0");
+        },
     }
 }
 
