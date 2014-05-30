@@ -27,7 +27,7 @@ impl Bencher {
 
     pub fn bench<T, N: Str + ToStr>(&mut self, name: N, action: || -> T) {
         if self.clock.is_none() {
-            self.clock = Some(Clock::new());
+            self.clock = Some(Clock::new(&self.config));
         }
 
         let m_time = self.config.measurement_time as u64 * 1.ms();
@@ -54,7 +54,9 @@ impl Bencher {
 
         sample.outliers().report();
 
-        sample.without_outliers().estimate(&self.config);
+        let sample = sample.without_outliers();
+
+        sample.estimate(&self.config);
 
         self.metrics.update(&name.to_str(), sample.into_data(), &self.config);
     }

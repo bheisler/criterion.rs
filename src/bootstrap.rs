@@ -148,6 +148,7 @@ pub fn mean_regressed(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
         println!("  > Ha: mean regressed by {:.2}%", diff * 100.0);
     }
 
+    println!("    > bootstrapping with {} resamples", nresamples);
     let mut n_t = 0;
     let mut x_resamples = Resamples::new(x);
     let mut y_resamples = Resamples::new(y);
@@ -162,7 +163,7 @@ pub fn mean_regressed(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
         let den = (sigma_x * sigma_x / n_x + sigma_y * sigma_y / n_y).sqrt();
         let t = num / den;
 
-        if (diff < 0.0 && t <= 0.0) || (diff > 0.0 && t >= 0.0 ) {
+        if (diff < 0.0 && t <= 3.0) || (diff > 0.0 && t >= -3.0 ) {
             n_t += 1;
         }
     }
@@ -196,6 +197,7 @@ pub fn median_regressed(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
         println!("  > Ha: median regressed by {:.2}%", diff * 100.0);
     }
 
+    println!("    > bootstrapping with {} resamples", nresamples);
     let mut n_t = 0;
     let mut x_resamples = Resamples::new(x);
     let mut y_resamples = Resamples::new(y);
@@ -210,7 +212,7 @@ pub fn median_regressed(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
         let den = (sigma_x * sigma_x / n_x + sigma_y * sigma_y / n_y).sqrt();
         let t = num / den;
 
-        if (diff < 0.0 && t <= 0.0) || (diff > 0.0 && t >= 0.0 ) {
+        if (diff < 0.0 && t <= 3.0) || (diff > 0.0 && t >= -3.0 ) {
             n_t += 1;
         }
     }
