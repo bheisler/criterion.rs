@@ -1,7 +1,7 @@
 use bencher::BencherConfig;
 use rand::distributions::IndependentSample;
 use rand::distributions::range::Range;
-use rand::{TaskRng,task_rng};
+use std::rand::{TaskRng,task_rng};
 use sample::Sample;
 use test::stats::Stats;
 use units::AsTime;
