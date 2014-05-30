@@ -116,11 +116,11 @@ pub fn same_population(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
         },
         (true, false) => {
             println!("    > mean contradicts H0 ({} < {})", p_mean, sl);
-            true
+            false
         },
         (false, true) => {
             println!("    > median contradicts H0 ({} < {})", p_median, sl);
-            true
+            false
         },
         (false, false) => {
             println!("    > no evidence to contradict H0");
@@ -129,25 +129,24 @@ pub fn same_population(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
     }
 }
 
+// Null hypothesis: x.mean() <= y.mean()
+// Alternative hypothesis: y.mean() has regressed X%
+// Bootstrap hypothesis testing using Welch T statistic
+// http://en.wikipedia.org/wiki/Welch_t_test
 pub fn mean_regressed(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
     let (mu_x, mu_y) = (x.mean(), y.mean());
     let (n_x, n_y) = (x.len() as f64, y.len() as f64);
-    let (sigma_x, sigma_y) = (x.std_dev(), y.std_dev());
     let diff = mu_y / mu_x - 1.0;
     let nresamples = config.nresamples;
     let sl = config.significance_level;
 
     if diff < 0.0 {
-        println!("  > H0: new mean <= old mean");
+        println!("  > H0: new mean >= old mean");
         println!("  > Ha: mean improved by {:.2}%", -diff * 100.0);
     } else {
-        println!("  > H0: new mean >= old mean");
+        println!("  > H0: new mean <= old mean");
         println!("  > Ha: mean regressed by {:.2}%", diff * 100.0);
     }
-
-    let num = mu_x - mu_y;
-    let den = (sigma_x * sigma_x / n_x + sigma_y * sigma_y / n_y).sqrt();
-    let t_obs = num / den;
 
     let mut n_t = 0;
     let mut x_resamples = Resamples::new(x);
@@ -163,7 +162,55 @@ pub fn mean_regressed(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
         let den = (sigma_x * sigma_x / n_x + sigma_y * sigma_y / n_y).sqrt();
         let t = num / den;
 
-        if diff < 0.0 && t > t_obs || diff > 0.0 && t < t_obs {
+        if (diff < 0.0 && t <= 0.0) || (diff > 0.0 && t >= 0.0 ) {
+            n_t += 1;
+        }
+    }
+
+    let p = n_t as f64 / nresamples as f64;
+
+    if p < sl {
+        println!("    > strong evidence to contradict H0 ({} < {})", p, sl);
+        diff > 0.0
+    } else {
+        println!("    > no evidence to contradict H0 ({} > {})", p, sl);
+        false
+    }
+}
+
+// Null hypothesis: x.median() >= y.median()
+// Alternative hypothesis: y.median() has regressed X%
+// Bootstrap hypothesis testing using Welch T statistic
+pub fn median_regressed(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
+    let (mu_x, mu_y) = (x.median(), y.median());
+    let (n_x, n_y) = (x.len() as f64, y.len() as f64);
+    let diff = mu_y / mu_x - 1.0;
+    let nresamples = config.nresamples;
+    let sl = config.significance_level;
+
+    if diff < 0.0 {
+        println!("  > H0: new median >= old median");
+        println!("  > Ha: median improved by {:.2}%", -diff * 100.0);
+    } else {
+        println!("  > H0: new median <= old median");
+        println!("  > Ha: median regressed by {:.2}%", diff * 100.0);
+    }
+
+    let mut n_t = 0;
+    let mut x_resamples = Resamples::new(x);
+    let mut y_resamples = Resamples::new(y);
+    for _ in range(0, nresamples) {
+        let x = x_resamples.next();
+        let y = y_resamples.next();
+
+        let (mu_x, mu_y) = (x.median(), y.median());
+        let (sigma_x, sigma_y) = (x.median_abs_dev(), y.median_abs_dev());
+
+        let num = mu_x - mu_y;
+        let den = (sigma_x * sigma_x / n_x + sigma_y * sigma_y / n_y).sqrt();
+        let t = num / den;
+
+        if (diff < 0.0 && t <= 0.0) || (diff > 0.0 && t >= 0.0 ) {
             n_t += 1;
         }
     }

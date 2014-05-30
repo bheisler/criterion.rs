@@ -61,7 +61,8 @@ impl Metrics {
 
         println!("> testing hypotheses against previous sample");
         if !bootstrap::same_population(old, new, config) {
-            if bootstrap::mean_regressed(old, new, config) {
+            if bootstrap::mean_regressed(old, new, config) &
+                bootstrap::median_regressed(old, new, config) {
                 fail!("regression")
             }
         }
