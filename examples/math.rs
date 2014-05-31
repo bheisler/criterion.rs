@@ -1,11 +1,29 @@
 extern crate criterion;
+extern crate test;
 
-use criterion::Bencher;
+use criterion::Criterion;
 
 fn main() {
-    let mut b = Bencher::new();
+    let mut b = Criterion::new();
 
-    b.bench("exp", || 2.0_f64.exp());
-    b.bench("ln", || 2.0_f64.ln());
-    b.bench("sqrt", || 2.0_f64.sqrt());
+    b.bench("exp", |b| {
+        let mut x: f64 = 2.0;
+        test::black_box(&mut x);
+
+        b.iter(|| x.exp())
+    });
+
+    b.bench("ln", |b| {
+        let mut x: f64 = 2.0;
+        test::black_box(&mut x);
+
+        b.iter(|| x.ln())
+    });
+
+    b.bench("sqrt", |b| {
+        let mut x: f64 = 2.0;
+        test::black_box(&mut x);
+
+        b.iter(|| x.sqrt())
+    });
 }

@@ -1,56 +1,51 @@
-use bencher::BencherConfig;
+use bencher::Bencher;
 use bootstrap;
 use clock::Clock;
+use common::run_for_at_least;
+use criterion::CriterionConfig;
 use outlier::Outliers;
-use test::black_box;
 use test::stats::Stats;
-use time::precise_time_ns;
+use units::{AsTime,ToNanoSeconds};
 
 #[deriving(Encodable)]
 pub struct Sample {
     data: Vec<f64>,
-    iters: uint,
+    iters: u64,
 }
 
 impl Sample {
-    pub fn new<'a, T>(size: uint,
-                      action: ||:'a -> T,
-                      iters: uint,
-                      clock: Option<Clock>)
-        -> (Sample, ||:'a -> T)
+    pub fn new(f: |&mut Bencher|,
+               config: &CriterionConfig,
+               clock: Option<Clock>)
+        -> Sample
     {
-        let mut total_time = Vec::from_elem(size, 0u64);
+        let m_time = config.measurement_time as u64 * 1.ms();
+        let size = config.sample_size;
+        let wu_time = config.warm_up_time as u64 * 1.ms();
 
-        for t in total_time.mut_iter() {
-            let start = precise_time_ns();
-            for _ in range(0, iters) {
-                black_box(action());
-            }
-            *t = precise_time_ns() - start;
+        let mut b = Bencher::new(clock);
+        println!("> warming up for {} ms", config.warm_up_time);
+        let (wu_elapsed, wu_iters) = run_for_at_least(wu_time, 1, |x| f(x));
+
+        let m_iters = wu_iters * m_time / wu_time;
+        let s_elapsed = (wu_elapsed * m_time * size) as f64 / wu_time as f64;
+
+        println!("> collecting {} measurements, {} iters each in estimated {}",
+                 size, m_iters, s_elapsed.as_time());
+
+        let mut sample = Vec::from_elem(size as uint, 0.0);
+        for measurement in sample.mut_iter() {
+            b.bench_n(m_iters, |x| f(x));
+            *measurement = b.ns_per_iter();
         }
 
-        let time_per_iter: Vec<f64> = total_time.move_iter().map(|t| {
-            match clock {
-                None => {
-                    t as f64 / (iters + 1) as f64
-                },
-                // XXX this operation adds variance to our measurement, but
-                // we'll consider the increment to be negligible
-                Some(clock) => {
-                    (t as f64 - clock.cost()) / iters as f64
-                },
-            }
-        }).collect();
-
-        let sample = Sample {
-            data: time_per_iter,
-            iters: iters,
-        };
-
-        (sample, action)
+        Sample {
+            data: sample,
+            iters: m_iters * size,
+        }
     }
 
-    pub fn estimate(&self, config: &BencherConfig) {
+    pub fn estimate(&self, config: &CriterionConfig) {
         bootstrap::estimate(self, config.nresamples, config.confidence_level)
     }
 

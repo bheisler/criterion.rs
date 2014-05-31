@@ -1,4 +1,4 @@
-use bencher::BencherConfig;
+use criterion::CriterionConfig;
 use rand::distributions::IndependentSample;
 use rand::distributions::range::Range;
 use std::rand::{TaskRng,task_rng};
@@ -74,7 +74,13 @@ pub fn estimate(sample: &Sample, nresamples: uint, cl: f64) {
     println!("  > MAD:    {}", mad.report());
 }
 
-pub fn same_population(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
+// Null hypothesis: new.mean() == old.mean() || new.median() == old.median()
+// Alternative hypothesis: samples don't belong to the same population
+pub fn same_population(x: &[f64],
+                       y: &[f64],
+                       config: &CriterionConfig)
+    -> bool
+{
     println!("  > H0: both samples belong to the same population");
 
     let (n_x, n_y) = (x.len(), y.len());
@@ -116,11 +122,11 @@ pub fn same_population(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
         },
         (true, false) => {
             println!("    > mean contradicts H0 ({} < {})", p_mean, sl);
-            false
+            true
         },
         (false, true) => {
             println!("    > median contradicts H0 ({} < {})", p_median, sl);
-            false
+            true
         },
         (false, false) => {
             println!("    > no evidence to contradict H0");
@@ -129,11 +135,11 @@ pub fn same_population(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
     }
 }
 
-// Null hypothesis: x.mean() <= y.mean()
-// Alternative hypothesis: y.mean() has regressed X%
+// Null hypothesis: new.mean() <= old.mean() + 3 * standard_error
+// Alternative hypothesis: new.mean() has regressed X%
 // Bootstrap hypothesis testing using Welch T statistic
 // http://en.wikipedia.org/wiki/Welch_t_test
-pub fn mean_regressed(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
+pub fn mean_regressed(x: &[f64], y: &[f64], config: &CriterionConfig) -> bool {
     let (mu_x, mu_y) = (x.mean(), y.mean());
     let (n_x, n_y) = (x.len() as f64, y.len() as f64);
     let diff = mu_y / mu_x - 1.0;
@@ -179,10 +185,14 @@ pub fn mean_regressed(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
     }
 }
 
-// Null hypothesis: x.median() >= y.median()
-// Alternative hypothesis: y.median() has regressed X%
+// Null hypothesis: new.median() <= old.median() + 3 * standard_error
+// Alternative hypothesis: new.median() has regressed X%
 // Bootstrap hypothesis testing using Welch T statistic
-pub fn median_regressed(x: &[f64], y: &[f64], config: &BencherConfig) -> bool {
+pub fn median_regressed(x: &[f64],
+                        y: &[f64],
+                        config: &CriterionConfig)
+    -> bool
+{
     let (mu_x, mu_y) = (x.median(), y.median());
     let (n_x, n_y) = (x.len() as f64, y.len() as f64);
     let diff = mu_y / mu_x - 1.0;

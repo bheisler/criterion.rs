@@ -1,24 +1,23 @@
-use test::black_box;
+use bencher::Bencher;
 use time::precise_time_ns;
 
-pub fn run_for_at_least<'a, T>(how_long: u64,
-                               seed: uint,
-                               action: ||:'a -> T)
-    -> (u64, uint, ||:'a -> T)
+pub fn run_for_at_least(how_long: u64,
+                        seed: u64,
+                        f: |&mut Bencher|)
+    -> (u64, u64)
 {
+    let mut b = Bencher::new(None);
     let mut iters = seed;
     let mut tries = 0;
 
     let init = precise_time_ns();
     loop {
-        let start = precise_time_ns();
-        for _ in range(0, iters) {
-            black_box(action());
-        }
-        let elapsed = precise_time_ns() - start;
+        b.bench_n(iters, |x| f(x));
+
+        let elapsed = b.ns_elapsed();
 
         if elapsed > how_long {
-            return (elapsed, iters, action);
+            return (elapsed, iters);
         }
 
         iters *= 2;

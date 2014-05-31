@@ -1,96 +1,54 @@
 use clock::Clock;
-use common::run_for_at_least;
-use metrics::Metrics;
-use sample::Sample;
-use std::default::Default;
-use std::fmt::Show;
-use units::{AsTime,ToNanoSeconds};
+use test::black_box;
+use time::precise_time_ns;
 
 pub struct Bencher {
     clock: Option<Clock>,
-    config: BencherConfig,
-    metrics: Metrics,
+    iterations: u64,
+    ns_end: u64,
+    ns_start: u64,
 }
 
 impl Bencher {
-    pub fn new() -> Bencher {
+    pub fn bench_n(&mut self, n: u64, f: |&mut Bencher|) {
+        self.iterations = n;
+        f(self);
+    }
+
+    pub fn iter<T>(&mut self, inner: || -> T) {
+        self.ns_start = precise_time_ns();
+        for _ in range(0, self.iterations) {
+            black_box(inner());
+        }
+        self.ns_end = precise_time_ns();
+    }
+
+    pub fn new(clock: Option<Clock>) -> Bencher {
         Bencher {
-            clock: None,
-            config: Default::default(),
-            metrics: Metrics::new(),
+            clock: clock,
+            iterations: 0,
+            ns_end: 0,
+            ns_start: 0,
         }
     }
 
-    pub fn set_config(&mut self, config: BencherConfig) {
-        self.config = config;
+    pub fn ns_elapsed(&self) -> u64 {
+        self.ns_end - self.ns_start
     }
 
-    pub fn bench<T, N: Str + ToStr>(&mut self, name: N, action: || -> T) {
-        if self.clock.is_none() {
-            self.clock = Some(Clock::new(&self.config));
-        }
+    pub fn ns_per_iter(&self) -> f64 {
+        let iters = self.iterations;
+        let elapsed = self.ns_elapsed() as f64;
 
-        let m_time = self.config.measurement_time as u64 * 1.ms();
-        let size = self.config.sample_size;
-        let wu_time = self.config.warm_up_time as u64 * 1.ms();
-
-        println!("\nbenchmarking {}", name.as_slice());
-
-        println!("> warming up for {} ms", self.config.warm_up_time);
-        let (wu_ns, wu_iters, action) = run_for_at_least(wu_time, 1, action);
-
-        let m_iters = (wu_iters as u64 * m_time / wu_time) as uint;
-        let m_ns = wu_ns * m_time / wu_time * size as u64;
-
-        println!("> collecting {} measurements, {} iters each in estimated {}",
-                 size,
-                 m_iters,
-                 (m_ns as f64).as_time());
-
-        let (sample, _) = Sample::new(size,
-                                      action,
-                                      m_iters,
-                                      self.clock);
-
-        sample.outliers().report();
-
-        let sample = sample.without_outliers();
-
-        sample.estimate(&self.config);
-
-        self.metrics.update(&name.to_str(), sample.into_data(), &self.config);
-    }
-
-    pub fn bench_group<G: Show, I: Clone + Show, O>(&mut self,
-                                                    group: G,
-                                                    inputs: &[I],
-                                                    action: |I| -> O) {
-        for input in inputs.iter() {
-            self.bench(format!("{}_{}", group, input), || {
-                action(input.clone())
-            });
-        }
-    }
-}
-
-pub struct BencherConfig {
-    pub confidence_level: f64,
-    pub measurement_time: uint,
-    pub nresamples: uint,
-    pub sample_size: uint,
-    pub significance_level: f64,
-    pub warm_up_time: uint,
-}
-
-impl Default for BencherConfig {
-    fn default() -> BencherConfig {
-        BencherConfig {
-            confidence_level: 0.95,
-            measurement_time: 10,
-            nresamples: 100_000,
-            sample_size: 100,
-            significance_level: 0.05,
-            warm_up_time: 500,
+        match self.clock {
+            None => {
+                elapsed / (iters + 1) as f64
+            },
+            // XXX this operation introduces variance in the measurement
+            // I'll assume the variance introduced is negligible
+            Some(clock) => {
+                (elapsed - clock.cost()) / iters as f64
+            },
         }
     }
 }

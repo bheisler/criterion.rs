@@ -1,4 +1,4 @@
-use bencher::BencherConfig;
+use criterion::CriterionConfig;
 use bootstrap;
 use collections::HashMap;
 use serialize::{Decodable,json};
@@ -45,7 +45,7 @@ impl Metrics {
     pub fn update(&mut self,
                   name: &String,
                   sample: Vec<f64>,
-                  config: &BencherConfig) {
+                  config: &CriterionConfig) {
         let old = match self.samples.swap(name.clone(), sample) {
             None => {
                 println!("> storing new sample in metrics.json");
