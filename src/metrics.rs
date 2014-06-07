@@ -1,6 +1,6 @@
 use criterion::CriterionConfig;
 use bootstrap;
-use collections::HashMap;
+use std::collections::HashMap;
 use serialize::{Decodable,json};
 use std::hash::sip::SipHasher;
 use std::io::{File,Truncate,Write};

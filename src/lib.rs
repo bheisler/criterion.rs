@@ -3,8 +3,6 @@
 
 #![feature(default_type_params)]
 
-extern crate collections;
-extern crate rand;
 extern crate serialize;
 extern crate test;
 extern crate time;

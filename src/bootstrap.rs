@@ -1,6 +1,5 @@
 use criterion::CriterionConfig;
-use rand::distributions::IndependentSample;
-use rand::distributions::range::Range;
+use std::rand::distributions::{IndependentSample,Range};
 use std::rand::{TaskRng,task_rng};
 use sample::Sample;
 use test::stats::Stats;
