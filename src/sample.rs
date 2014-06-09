@@ -102,7 +102,7 @@ impl Sample {
     }
 }
 
-impl Container for Sample {
+impl Collection for Sample {
     fn len(&self) -> uint {
         self.data.len()
     }
