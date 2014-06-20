@@ -250,7 +250,7 @@ impl<'a> Resamples<'a> {
         let size = sample.len();
 
         Resamples {
-            range: Range::new(0, size - 1),
+            range: Range::new(0, size),
             rng: rand::task_rng(),
             sample: sample,
             stage: Vec::from_elem(size, 0.0),
