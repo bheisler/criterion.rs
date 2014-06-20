@@ -2,11 +2,10 @@ use criterion::CriterionConfig;
 use bootstrap;
 use std::collections::HashMap;
 use serialize::{Decodable,json};
-use std::hash::sip::SipHasher;
 use std::io::{File,Truncate,Write};
 
 pub struct Metrics {
-    samples: HashMap<String, Vec<f64>, SipHasher>,
+    samples: HashMap<String, Vec<f64>>,
 }
 
 impl Metrics {

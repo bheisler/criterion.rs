@@ -1,8 +1,6 @@
 #![crate_id="criterion#0.11-pre"]
 #![crate_type="lib"]
 
-#![feature(default_type_params)]
-
 extern crate serialize;
 extern crate test;
 extern crate time;
