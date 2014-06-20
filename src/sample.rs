@@ -4,6 +4,7 @@ use clock::Clock;
 use common::run_for_at_least;
 use criterion::CriterionConfig;
 use outlier::Outliers;
+use std::cmp;
 use test::stats::Stats;
 use units::{AsTime,ToNanoSeconds};
 
@@ -27,8 +28,8 @@ impl Sample {
         println!("> warming up for {} ms", config.warm_up_time);
         let (wu_elapsed, wu_iters) = run_for_at_least(wu_time, 1, |x| f(x));
 
-        let m_iters = wu_iters * m_time / wu_time;
-        let s_elapsed = (wu_elapsed * m_time * size) as f64 / wu_time as f64;
+        let m_iters = cmp::max(wu_iters * m_time / wu_time, 1);
+        let s_elapsed = (wu_elapsed * m_iters * size) as f64 / wu_iters as f64;
 
         println!("> collecting {} measurements, {} iters each in estimated {}",
                  size, m_iters, s_elapsed.as_time());
