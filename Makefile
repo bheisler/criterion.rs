@@ -5,7 +5,7 @@ RUSTC = rustc -O
 SRCS = $(wildcard examples/*.rs)
 BINS = $(patsubst examples/%.rs,bin/%,$(SRCS))
 
-.PHONY: all clean test
+.PHONY: all bench clean test
 
 all:
 	mkdir -p $(LIBDIR)
@@ -20,3 +20,9 @@ test:
 	$(foreach src,$(SRCS),$(RUSTC) $(src) -L $(LIBDIR) --out-dir $(BINDIR);)
 	$(foreach bin,$(BINS),$(bin) &&) true
 	./check-line-length.sh
+
+bench:
+	rm -rf bin
+	mkdir bin
+	$(RUSTC) --cfg bench --test src/lib.rs --out-dir $(BINDIR)
+	bin/criterion --test --nocapture

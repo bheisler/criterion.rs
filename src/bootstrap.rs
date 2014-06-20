@@ -1,7 +1,8 @@
 use criterion::CriterionConfig;
-use std::rand::distributions::{IndependentSample,Range};
-use std::rand::{TaskRng,task_rng};
 use sample::Sample;
+use std::rand::TaskRng;
+use std::rand::distributions::{IndependentSample,Range};
+use std::rand;
 use test::stats::Stats;
 use units::AsTime;
 
@@ -250,7 +251,7 @@ impl<'a> Resamples<'a> {
 
         Resamples {
             range: Range::new(0, size - 1),
-            rng: task_rng(),
+            rng: rand::task_rng(),
             sample: sample,
             stage: Vec::from_elem(size, 0.0),
         }
@@ -267,5 +268,37 @@ impl<'a> Resamples<'a> {
         }
 
         self.stage.as_slice()
+    }
+}
+
+#[cfg(bench)]
+mod bench {
+    use std::rand;
+    use super::Resamples;
+    use test::stats::Stats;
+    use {Bencher,Criterion};
+
+    #[test]
+    fn bootstrap_mean() {
+        let mut c = Criterion::new();
+        let nresamples = 100_000;
+
+        c.bench("bootstrap_mean", |b: &mut Bencher| {
+            let xs: Vec<f64> = range(0, 100).map(|_| rand::random()).collect();
+            let xs = xs.as_slice();
+
+            b.iter(|| {
+                let mut means = Vec::with_capacity(nresamples);
+
+                let mut resamples = Resamples::new(xs);
+                for _ in range(0, nresamples) {
+                    let resample = resamples.next();
+
+                    means.push(resample.mean());
+                }
+
+                means
+            });
+        });
     }
 }
