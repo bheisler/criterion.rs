@@ -25,4 +25,4 @@ bench:
 	rm -rf bin
 	mkdir bin
 	$(RUSTC) --cfg bench --test src/lib.rs --out-dir $(BINDIR)
-	bin/criterion --test --nocapture
+	RUST_THREADS=1 bin/criterion --test --nocapture

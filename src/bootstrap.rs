@@ -278,23 +278,89 @@ mod bench {
     use test::stats::Stats;
     use {Bencher,Criterion};
 
+    static NSAMPLES: uint = 100;
+    static NRESAMPLES: uint = 100_000;
+
     #[test]
     fn bootstrap_mean() {
         let mut c = Criterion::new();
-        let nresamples = 100_000;
 
         c.bench("bootstrap_mean", |b: &mut Bencher| {
-            let xs: Vec<f64> = range(0, 100).map(|_| rand::random()).collect();
+            let xs: Vec<f64> = range(0, NSAMPLES).map(|_| {
+                rand::random()
+            }).collect();
             let xs = xs.as_slice();
 
             b.iter(|| {
-                let mut means = Vec::with_capacity(nresamples);
+                let mut means = Vec::with_capacity(NRESAMPLES);
 
-                let mut resamples = Resamples::new(xs);
-                for _ in range(0, nresamples) {
-                    let resample = resamples.next();
+                let mut xs = Resamples::new(xs);
+                for _ in range(0, NRESAMPLES) {
+                    let x = xs.next();
 
-                    means.push(resample.mean());
+                    means.push(x.mean());
+                }
+
+                means
+            });
+        });
+    }
+
+    #[test]
+    fn bootstrap_statistics() {
+        let mut c = Criterion::new();
+
+        c.bench("bootstrap_statistics", |b: &mut Bencher| {
+            let xs: Vec<f64> = range(0, NSAMPLES).map(|_| {
+                rand::random()
+            }).collect();
+            let xs = xs.as_slice();
+
+            b.iter(|| {
+                let mut mads = Vec::with_capacity(NRESAMPLES);
+                let mut means = Vec::with_capacity(NRESAMPLES);
+                let mut medians = Vec::with_capacity(NRESAMPLES);
+                let mut std_devs = Vec::with_capacity(NRESAMPLES);
+
+                let mut xs = Resamples::new(xs);
+                for _ in range(0, NRESAMPLES) {
+                    let x = xs.next();
+
+                    mads.push(x.median_abs_dev());
+                    means.push(x.mean());
+                    medians.push(x.median());
+                    std_devs.push(x.std_dev());
+                }
+
+                (mads, means, medians, std_devs)
+            });
+        });
+    }
+
+    #[test]
+    fn bootstrap_mean_diff() {
+        let mut c = Criterion::new();
+
+        c.bench("bootstrap_mean_diff", |b: &mut Bencher| {
+            let xs: Vec<f64> = range(0, NSAMPLES).map(|_| {
+                rand::random()
+            }).collect();
+            let ys: Vec<f64> = range(0, NSAMPLES).map(|_| {
+                rand::random()
+            }).collect();
+            let xs = xs.as_slice();
+            let ys = ys.as_slice();
+
+            b.iter(|| {
+                let mut means = Vec::with_capacity(NRESAMPLES);
+
+                let mut xs = Resamples::new(xs);
+                let mut ys = Resamples::new(ys);
+                for _ in range(0, NRESAMPLES) {
+                    let x = xs.next();
+                    let y = ys.next();
+
+                    means.push(x.mean() - y.mean());
                 }
 
                 means
