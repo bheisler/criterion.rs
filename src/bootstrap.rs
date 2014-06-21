@@ -6,6 +6,35 @@ use std::rand;
 use test::stats::Stats;
 use units::AsTime;
 
+// FIXME UCFS may make these unnecessary, e.g. `<&[f64]>::mean`?
+fn mean(xs: &[f64]) -> f64 { xs.mean() }
+fn median(xs: &[f64]) -> f64 { xs.median() }
+fn median_abs_dev(xs: &[f64]) -> f64 { xs.median_abs_dev() }
+fn std_dev(xs: &[f64]) -> f64 { xs.std_dev() }
+
+static STATISTICS: &'static [fn(&[f64]) -> f64] =
+    &[mean, median, median_abs_dev, std_dev];
+
+fn bootstrap(sample: &[f64],
+             nresamples: uint,
+             statistics: &[fn(&[f64]) -> f64])
+             -> Vec<Vec<f64>> {
+    let mut resamples = Resamples::new(sample);
+    let mut boots: Vec<Vec<f64>> = range(0, statistics.len()).map(|_| {
+        Vec::with_capacity(nresamples)
+    }).collect();
+
+    for _ in range(0, nresamples) {
+        let resample = resamples.next();
+
+        for (statistic, boot) in statistics.iter().zip(boots.mut_iter()) {
+            boot.push((*statistic)(resample));
+        }
+    }
+
+    boots
+}
+
 pub struct Estimate {
     confidence_level: f64,
     lower_bound: f64,
@@ -48,25 +77,13 @@ pub fn estimate(sample: &Sample, nresamples: uint, cl: f64) {
     println!("> estimating statistics");
     println!("  > bootstrapping sample with {} resamples", nresamples);
 
-    let mut mads = Vec::with_capacity(nresamples);
-    let mut means = Vec::with_capacity(nresamples);
-    let mut medians = Vec::with_capacity(nresamples);
-    let mut std_devs = Vec::with_capacity(nresamples);
+    let boots = bootstrap(sample.data(), nresamples, STATISTICS);
+    let boots = boots.as_slice();
 
-    let mut resamples = Resamples::new(sample.data());
-    for _ in range(0, nresamples) {
-        let resample = resamples.next();
-
-        mads.push(resample.median_abs_dev());
-        means.push(resample.mean());
-        medians.push(resample.median());
-        std_devs.push(resample.std_dev());
-    }
-
-    let mad = Estimate::new(sample.median_abs_dev(), mads.as_slice(), cl);
-    let mean = Estimate::new(sample.mean(), means.as_slice(), cl);
-    let median = Estimate::new(sample.median(), medians.as_slice(), cl);
-    let std_dev = Estimate::new(sample.std_dev(), std_devs.as_slice(), cl);
+    let mad = Estimate::new(sample.median_abs_dev(), boots[2].as_slice(), cl);
+    let mean = Estimate::new(sample.mean(), boots[0].as_slice(), cl);
+    let median = Estimate::new(sample.median(), boots[1].as_slice(), cl);
+    let std_dev = Estimate::new(sample.std_dev(), boots[3].as_slice(), cl);
 
     println!("  > mean:   {}", mean.report());
     println!("  > SD:     {}", std_dev.report());
@@ -274,8 +291,6 @@ impl<'a> Resamples<'a> {
 #[cfg(bench)]
 mod bench {
     use std::rand;
-    use super::Resamples;
-    use test::stats::Stats;
     use {Bencher,Criterion};
 
     static NSAMPLES: uint = 100;
@@ -292,16 +307,7 @@ mod bench {
             let xs = xs.as_slice();
 
             b.iter(|| {
-                let mut means = Vec::with_capacity(NRESAMPLES);
-
-                let mut xs = Resamples::new(xs);
-                for _ in range(0, NRESAMPLES) {
-                    let x = xs.next();
-
-                    means.push(x.mean());
-                }
-
-                means
+                super::bootstrap(xs, NRESAMPLES, &[super::mean])
             });
         });
     }
@@ -317,22 +323,7 @@ mod bench {
             let xs = xs.as_slice();
 
             b.iter(|| {
-                let mut mads = Vec::with_capacity(NRESAMPLES);
-                let mut means = Vec::with_capacity(NRESAMPLES);
-                let mut medians = Vec::with_capacity(NRESAMPLES);
-                let mut std_devs = Vec::with_capacity(NRESAMPLES);
-
-                let mut xs = Resamples::new(xs);
-                for _ in range(0, NRESAMPLES) {
-                    let x = xs.next();
-
-                    mads.push(x.median_abs_dev());
-                    means.push(x.mean());
-                    medians.push(x.median());
-                    std_devs.push(x.std_dev());
-                }
-
-                (mads, means, medians, std_devs)
+                super::bootstrap(xs, NRESAMPLES, super::STATISTICS)
             });
         });
     }
@@ -352,18 +343,12 @@ mod bench {
             let ys = ys.as_slice();
 
             b.iter(|| {
-                let mut means = Vec::with_capacity(NRESAMPLES);
+                let xs = super::bootstrap(xs, NRESAMPLES, &[super::mean]);
+                let ys = super::bootstrap(ys, NRESAMPLES, &[super::mean]);
 
-                let mut xs = Resamples::new(xs);
-                let mut ys = Resamples::new(ys);
-                for _ in range(0, NRESAMPLES) {
-                    let x = xs.next();
-                    let y = ys.next();
-
-                    means.push(x.mean() - y.mean());
-                }
-
-                means
+                xs.get(0).iter().zip(ys.get(0).iter()).map(|(x, &y)| {
+                    x / y - 1.0
+                }).collect::<Vec<f64>>()
             });
         });
     }
