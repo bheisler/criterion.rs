@@ -71,7 +71,7 @@ impl Default for CriterionConfig {
             nresamples: 100_000,
             sample_size: 100,
             significance_level: 0.05,
-            warm_up_time: 500,
+            warm_up_time: 1_000,
         }
     }
 }

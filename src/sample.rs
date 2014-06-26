@@ -34,7 +34,7 @@ impl Sample {
         println!("> collecting {} measurements, {} iters each in estimated {}",
                  size, m_iters, s_elapsed.as_time());
 
-        let mut sample = Vec::from_elem(size as uint, 0.0);
+        let mut sample = Vec::from_elem(size as uint, 0f64);
         for measurement in sample.mut_iter() {
             b.bench_n(m_iters, |x| f(x));
             *measurement = b.ns_per_iter();

@@ -58,13 +58,7 @@ impl Metrics {
         let old = old.as_slice();
         let new = new.as_slice();
 
-        println!("> testing hypotheses against previous sample");
-        if !bootstrap::same_population(old, new, config) {
-            if bootstrap::mean_regressed(old, new, config) &
-                bootstrap::median_regressed(old, new, config) {
-                fail!("regression")
-            }
-        }
+        bootstrap::compare(old, new, config);
 
         self.save();
     }

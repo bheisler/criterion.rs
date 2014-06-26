@@ -8,7 +8,7 @@ pub fn run_for_at_least(how_long: u64,
 {
     let mut b = Bencher::new(None);
     let mut iters = seed;
-    let mut tries = 0;
+    let mut tries = 0u;
 
     let init = precise_time_ns();
     loop {
