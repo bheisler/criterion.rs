@@ -19,43 +19,66 @@ I encourage you to look at this
 ```
 $ make && make test
 estimating the cost of precise_time_ns()
-> warming up for 500 ms
-> collecting 100 measurements, 671088 iters each in estimated 1.1822 s
-> found 5 outliers among 100 measurements (5.00%)
-  > 1 (1.00%) high mild
-  > 4 (4.00%) high severe
+> warming up for 1000 ms
+> collecting 100 measurements, 671088 iters each in estimated 1.2407 s
+> found 3 outliers among 100 measurements (3.00%)
+  > 3 (3.00%) high mild
 > estimating statistics
   > bootstrapping sample with 100000 resamples
-  > mean:   17.620 ns ± 5.7328 ps [17.609 ns 17.632 ns] 95% CI
-  > SD:     56.656 ps ± 6.6899 ps [44.233 ps 69.918 ps] 95% CI
-  > median: 17.631 ns ± 10.929 ps [17.593 ns 17.632 ns] 95% CI
-  > MAD:    56.522 ps ± 5.4038 ps [44.654 ps 68.040 ps] 95% CI
+  > mean   18.492 ns ± 13.375 ps [18.467 ns 18.519 ns] 95% CI
+  > median 18.483 ns ± 11.900 ps [18.459 ns 18.505 ns] 95% CI
+  > MAD    126.40 ps ± 14.781 ps [93.148 ps 148.58 ps] 95% CI
+  > SD     134.19 ps ± 14.304 ps [105.21 ps 161.04 ps] 95% CI
 
-(...)
-benchmarking fib_15
-> warming up for 500 ms
-> collecting 100 measurements, 2621 iters each in estimated 1.2882 s
-> found 6 outliers among 100 measurements (6.00%)
-  > 4 (4.00%) high mild
-  > 2 (2.00%) high severe
+benchmarking fib_5
+> warming up for 1000 ms
+> collecting 100 measurements, 335544 iters each in estimated 1.2664 s
+> found 14 outliers among 100 measurements (14.00%)
+  > 14 (14.00%) high severe
 > estimating statistics
   > bootstrapping sample with 100000 resamples
-  > mean:   4.9175 us ± 1.5812 ns [4.9146 us 4.9208 us] 95% CI
-  > SD:     15.618 ns ± 1.5828 ns [12.433 ns 18.633 ns] 95% CI
-  > median: 4.9184 us ± 1.2377 ns [4.9138 us 4.9192 us] 95% CI
-  > MAD:    14.200 ns ± 1.5540 ns [11.688 ns 18.286 ns] 95% CI
-> testing hypotheses against previous sample
-  > H0: both samples belong to the same population
-    > bootstrapping with 100000 resamples
-    > both mean and median contradict H0 (0.00026, 0.00151 < 0.05)
-  > H0: new mean <= old mean
-  > Ha: mean regressed by 0.18%
-    > bootstrapping with 100000 resamples
-    > no evidence to contradict H0 (0.22496 > 0.05)
-  > H0: new median <= old median
-  > Ha: median regressed by 0.21%
-    > bootstrapping with 100000 resamples
-    > strong evidence to contradict H0 (0.04635 < 0.05)
+  > mean   37.810 ns ± 25.282 ps [37.763 ns 37.861 ns] 95% CI
+  > median 37.812 ns ± 29.191 ps [37.701 ns 37.838 ns] 95% CI
+  > MAD    262.27 ps ± 29.568 ps [191.77 ps 322.27 ps] 95% CI
+  > SD     235.87 ps ± 22.632 ps [189.76 ps 277.61 ps] 95% CI
+> comparing with previous sample
+  > bootstrapping sample with 100000 resamples
+  > mean   +0.1189% ± 0.0782% [-0.0324% +0.2753%] 95% CI
+  > median +0.0288% ± 0.1395% [-0.2382% +0.3090%] 95% CI
+
+benchmarking fib_10
+> warming up for 1000 ms
+> collecting 100 measurements, 41943 iters each in estimated 1.9154 s
+> found 12 outliers among 100 measurements (12.00%)
+  > 2 (2.00%) low mild
+  > 2 (2.00%) high mild
+  > 8 (8.00%) high severe
+> estimating statistics
+  > bootstrapping sample with 100000 resamples
+  > mean   456.70 ns ± 141.17 ps [456.43 ns 456.98 ns] 95% CI
+  > median 456.55 ns ± 146.25 ps [456.37 ns 456.96 ns] 95% CI
+  > MAD    1.2904 ns ± 282.12 ps [660.92 ps 1.6421 ns] 95% CI
+  > SD     1.3627 ns ± 122.72 ps [1.1165 ns 1.5966 ns] 95% CI
+> comparing with previous sample
+  > bootstrapping sample with 100000 resamples
+  > mean   +0.0601% ± 0.0452% [-0.0280% +0.1487%] 95% CI
+  > median +0.0169% ± 0.0459% [-0.0334% +0.1409%] 95% CI
+
+benchmarking fib_15
+> warming up for 1000 ms
+> collecting 100 measurements, 2621 iters each in estimated 1.3323 s
+> found 3 outliers among 100 measurements (3.00%)
+  > 3 (3.00%) high severe
+> estimating statistics
+  > bootstrapping sample with 100000 resamples
+  > mean   5.0777 us ± 1.9671 ns [5.0739 us 5.0816 us] 95% CI
+  > median 5.0803 us ± 5.8789 ns [5.0661 us 5.0867 us] 95% CI
+  > MAD    23.692 ns ± 2.9360 ns [16.897 ns 29.377 ns] 95% CI
+  > SD     19.461 ns ± 1.1989 ns [17.061 ns 21.755 ns] 95% CI
+> comparing with previous sample
+  > bootstrapping sample with 100000 resamples
+  > mean   -0.0234% ± 0.0659% [-0.1530% +0.1048%] 95% CI
+  > median -0.0161% ± 0.1450% [-0.2547% +0.3206%] 95% CI
 (...)
 ```
 
@@ -71,9 +94,15 @@ benchmarking fib_15
 * Benchmark groups
 * Some examples
 * Save metrics to json file
-* Hypothesis testing
+* ~~Hypothesis testing~~
   * Do the old and new sample belong to the same population?
   * Has the benchmark regressed by at least 3 standard errors?
+  * Removed at the moment
+    * Not sure if 3 or 5 standard errors is a good metric to determine a
+      regression
+    * It's hard to relate the standard error to a % change (which the Bencher
+      infrastructure uses)
+* Report improvement/regression with a confidence interval
 
 ## Not (yet?) ported from the original
 
@@ -106,6 +135,7 @@ benchmarking fib_15
   * background constant CPU usage should be hard to detect
     * this affects more the mean than the variance
 * Documentation
+* Ratchet metrics using confidence intervals
 
 # Wishlist
 
