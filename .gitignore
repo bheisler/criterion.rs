@@ -1,4 +1,5 @@
 bin/*
 lib/*
+target/*
 *.json
 *.ipynb
