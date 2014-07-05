@@ -1,5 +1,4 @@
-#![crate_id="criterion#0.11-pre"]
-#![crate_type="lib"]
+#![crate_id="criterion"]
 #![feature(macro_rules)]
 
 extern crate serialize;
