@@ -58,24 +58,12 @@ impl Sample {
         self.data
     }
 
-    pub fn mean(&self) -> f64 {
-        self.data.as_slice().mean()
-    }
-
     pub fn median(&self) -> f64 {
         self.data.as_slice().median()
     }
 
-    pub fn median_abs_dev(&self) -> f64 {
-        self.data.as_slice().median_abs_dev()
-    }
-
     pub fn outliers(&self) -> Outliers {
         Outliers::new(self)
-    }
-
-    pub fn std_dev(&self) -> f64 {
-        self.data.as_slice().std_dev()
     }
 
     pub fn quartiles(&self) -> (f64, f64, f64) {
