@@ -6,3 +6,18 @@ authors = ["Jorge Aparicio <japaric@linux.com>"]
 [[lib]]
 name = "criterion"
 path = "src/lib.rs"
+
+[deppendencies.simplot]
+git = "https://github.com/japaric/simplot.rs"
+
+[[bin]]
+name = "alloc"
+path = "examples/alloc.rs"
+
+[[bin]]
+name = "fib"
+path = "examples/fib.rs"
+
+[[bin]]
+name = "math"
+path = "examples/math.rs"
