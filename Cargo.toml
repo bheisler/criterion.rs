@@ -3,12 +3,12 @@ name = "criterion"
 version = "0.0.0"
 authors = ["Jorge Aparicio <japaric@linux.com>"]
 
+[dependencies.simplot]
+git = "https://github.com/japaric/simplot.rs"
+
 [[lib]]
 name = "criterion"
 path = "src/lib.rs"
-
-[deppendencies.simplot]
-git = "https://github.com/japaric/simplot.rs"
 
 [[bin]]
 name = "alloc"

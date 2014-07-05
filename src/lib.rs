@@ -2,6 +2,7 @@
 #![feature(macro_rules)]
 
 extern crate serialize;
+extern crate simplot;
 extern crate test;
 extern crate time;
 
