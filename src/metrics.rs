@@ -32,7 +32,7 @@ impl Metrics {
         match File::open_mode(&p, Truncate, Write) {
             Err(_) => fail!("couldn't open metrics.json"),
             Ok(mut f) => {
-                let s = json::Encoder::str_encode(&self.samples);
+                let s = json::encode(&self.samples);
                 match f.write_str(s.as_slice()) {
                     Err(_) => fail!("couldn't write metrics.json"),
                     Ok(_) => {},
