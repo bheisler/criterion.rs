@@ -1,4 +1,4 @@
-#![crate_id="criterion"]
+#![crate_name = "criterion"]
 #![feature(macro_rules)]
 
 extern crate serialize;
