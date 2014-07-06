@@ -7,7 +7,8 @@ all:
 	cargo build
 
 test:
-	$(foreach bin,$(BINS),$(bin) &&) true
+	#$(foreach bin,$(BINS),$(bin) &&) true
+	target/fib
 	./check-line-length.sh
 
 #bench:
