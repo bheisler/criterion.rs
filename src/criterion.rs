@@ -4,7 +4,9 @@ use std::io::{fs,UserRWX};
 use bencher::Bencher;
 use bootstrap;
 use clock::Clock;
+use math;
 use sample::Sample;
+use simplot::Figure;
 
 pub struct Criterion {
     pub confidence_level: f64,
@@ -122,6 +124,14 @@ impl Criterion {
             Err(e) => fail!("Couldn't save {}: {}", new_data_, e),
             Ok(_) => {},
         }
+
+        let (xs, ys) = math::kde(sample.data());
+        // XXX should the size of the image be configurable?
+        Figure::new().
+            set_output_file(new_dir.join("kde.png")).
+            set_size((1366, 768)).
+            plot(xs.iter(), ys.iter()).
+            draw();
 
         self
     }

@@ -14,6 +14,7 @@ mod bootstrap;
 mod clock;
 mod common;
 mod criterion;
+mod math;
 mod outlier;
 mod sample;
 mod units;
