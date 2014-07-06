@@ -69,10 +69,6 @@ impl Sample {
         self.data.as_slice()
     }
 
-    pub fn into_data(self) -> Vec<f64> {
-        self.data
-    }
-
     pub fn median(&self) -> f64 {
         self.data.as_slice().median()
     }
