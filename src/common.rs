@@ -6,7 +6,7 @@ pub fn run_for_at_least(how_long: u64,
                         f: |&mut Bencher|)
     -> (u64, u64)
 {
-    let mut b = Bencher::new(None);
+    let mut b = Bencher::new();
     let mut iters = seed;
     let mut tries = 0u;
 

@@ -1,6 +1,5 @@
 use bencher::Bencher;
 use bootstrap;
-use clock::Clock;
 use common::run_for_at_least;
 use criterion::CriterionConfig;
 use outlier::Outliers;
@@ -15,15 +14,14 @@ pub struct Sample {
 
 impl Sample {
     pub fn new(f: |&mut Bencher|,
-               config: &CriterionConfig,
-               clock: Option<Clock>)
+               config: &CriterionConfig)
         -> Sample
     {
         let m_time = config.measurement_time as u64 * 1.ms();
         let size = config.sample_size;
         let wu_time = config.warm_up_time as u64 * 1.ms();
 
-        let mut b = Bencher::new(clock);
+        let mut b = Bencher::new();
         println!("> warming up for {} ms", config.warm_up_time);
         let (wu_elapsed, wu_iters) = run_for_at_least(wu_time, 1, |x| f(x));
 

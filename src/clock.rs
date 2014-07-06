@@ -15,7 +15,7 @@ impl Clock {
     pub fn new(config: &CriterionConfig) -> Clock {
         println!("estimating the cost of precise_time_ns()");
 
-        let sample = Sample::new(clock_cost, config, None);
+        let sample = Sample::new(clock_cost, config);
 
         sample.outliers().report();
 

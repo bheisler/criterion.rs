@@ -6,7 +6,6 @@ use std::default::Default;
 use std::fmt::Show;
 
 pub struct Criterion {
-    clock: Option<Clock>,
     config: CriterionConfig,
     metrics: Metrics,
 }
@@ -14,7 +13,6 @@ pub struct Criterion {
 impl Criterion {
     pub fn new() -> Criterion {
         Criterion {
-            clock: None,
             config: Default::default(),
             metrics: Metrics::new(),
         }
@@ -25,13 +23,15 @@ impl Criterion {
     }
 
     pub fn bench<N: Str + ToStr>(&mut self, name: N, f: |&mut Bencher|) {
-        if self.clock.is_none() {
-            self.clock = Some(Clock::new(&self.config));
+        local_data_key!(clock: Clock);
+
+        if clock.get().is_none() {
+            clock.replace(Some(Clock::new(&self.config)));
         }
 
         println!("\nbenchmarking {}", name.as_slice());
 
-        let sample = Sample::new(f, &self.config, self.clock);
+        let sample = Sample::new(f, &self.config);
 
         sample.outliers().report();
 

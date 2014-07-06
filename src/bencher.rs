@@ -23,9 +23,11 @@ impl Bencher {
         self.ns_end = precise_time_ns();
     }
 
-    pub fn new(clock: Option<Clock>) -> Bencher {
+    pub fn new() -> Bencher {
+        local_data_key!(clock: Clock);
+
         Bencher {
-            clock: clock,
+            clock: clock.get().map(|c| *c),
             iterations: 0,
             ns_end: 0,
             ns_start: 0,
@@ -41,14 +43,10 @@ impl Bencher {
         let elapsed = self.ns_elapsed() as f64;
 
         match self.clock {
-            None => {
-                elapsed / (iters + 1) as f64
-            },
+            None => elapsed / (iters + 1) as f64,
             // XXX this operation introduces variance in the measurement
             // I'll assume the variance introduced is negligible
-            Some(clock) => {
-                (elapsed - clock.cost()) / iters as f64
-            },
+            Some(clock) => (elapsed - clock.cost()) / iters as f64,
         }
     }
 }
