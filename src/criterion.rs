@@ -65,11 +65,13 @@ impl Criterion {
                  -> &'a mut Criterion {
         local_data_key!(clock: Clock);
 
+        let name = name.as_slice();
+
         if clock.get().is_none() {
             clock.replace(Some(Clock::new(self)));
         }
 
-        println!("\nbenchmarking {}", name.as_slice());
+        println!("\nbenchmarking {}", name);
 
         let sample = Sample::new(f, self);
 
@@ -79,43 +81,46 @@ impl Criterion {
 
         sample.estimate(self);
 
-        let dir = Path::new(".criterion").join(name.as_slice());
+        let base_dir = Path::new(".criterion").join(name);
+        let new_dir = base_dir.join("new");
+        let new_dir_ = new_dir.display();
+        let new_data = new_dir.join("data.json");
+        let new_data_ = new_data.display();
 
-        if !dir.exists() {
-            match fs::mkdir_recursive(&dir, UserRWX) {
-                Err(e) => fail!("`mkdir -p {}`: {}", dir.display(), e),
-                Ok(_) => {},
-            }
-        }
-
-        let new_path = dir.join("new.json");
-        let new_display = new_path.display();
-        if new_path.exists() {
-
-            let old_sample = match Sample::load(&new_path) {
+        if new_dir.exists() {
+            let old_sample = match Sample::load(&new_data) {
                 Err(e) => fail!("{}", e),
                 Ok(s) => s,
             };
 
             bootstrap::compare(old_sample.data(), sample.data(), self);
 
-            // TODO add regression test here, fail if regressed
+            let old_dir = base_dir.join("old");
+            let old_dir_ = old_dir.display();
 
-            let old_path = dir.join("old.json");
-            let old_display = old_path.display();
-            match old_sample.save(&old_path) {
-                Err(e) => fail!("Couldn't save {}: {}", old_display, e),
+            if old_dir.exists() {
+                match fs::rmdir_recursive(&old_dir) {
+                    Err(e) => fail!("`rm -rf {}: {}`", old_dir_, e),
+                    Ok(_) => {},
+                }
+            }
+
+            match fs::rename(&new_dir, &old_dir) {
+                Err(e) => fail!("`mv {} {}`: {}", new_dir_, old_dir_, e),
                 Ok(_) => {},
             }
-            match sample.save(&new_path) {
-                Err(e) => fail!("Couldn't save {}: {}", new_display, e),
-                Ok(_) => {},
-            }
-        } else {
-            match sample.save(&new_path) {
-                Err(e) => fail!("Couldn't store sample: {}", e),
-                Ok(_) => {},
-            }
+
+            // TODO add regression test here, fail if regressed
+        }
+
+        match fs::mkdir_recursive(&new_dir, UserRWX) {
+            Err(e) => fail!("`mkdir -p {}`: {}", new_dir_, e),
+            Ok(_) => {},
+        }
+
+        match sample.save(&new_data) {
+            Err(e) => fail!("Couldn't save {}: {}", new_data_, e),
+            Ok(_) => {},
         }
 
         self
