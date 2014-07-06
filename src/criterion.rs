@@ -89,7 +89,9 @@ impl Criterion {
         }
 
         let new_path = dir.join("new.json");
+        let new_display = new_path.display();
         if new_path.exists() {
+
             let old_sample = match Sample::load(&new_path) {
                 Err(e) => fail!("{}", e),
                 Ok(s) => s,
@@ -99,8 +101,16 @@ impl Criterion {
 
             // TODO add regression test here, fail if regressed
 
-            old_sample.save(&dir.join("old.json"));
-            sample.save(&new_path);
+            let old_path = dir.join("old.json");
+            let old_display = old_path.display();
+            match old_sample.save(&old_path) {
+                Err(e) => fail!("Couldn't save {}: {}", old_display, e),
+                Ok(_) => {},
+            }
+            match sample.save(&new_path) {
+                Err(e) => fail!("Couldn't save {}: {}", new_display, e),
+                Ok(_) => {},
+            }
         } else {
             match sample.save(&new_path) {
                 Err(e) => fail!("Couldn't store sample: {}", e),
