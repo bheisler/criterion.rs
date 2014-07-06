@@ -11,7 +11,6 @@ pub struct Criterion {
     pub measurement_time: uint,
     pub nresamples: uint,
     pub sample_size: u64,
-    pub significance_level: f64,
     pub warm_up_time: uint,
 }
 
@@ -22,7 +21,6 @@ impl Criterion {
             measurement_time: 10,
             nresamples: 100_000,
             sample_size: 100,
-            significance_level: 0.05,
             warm_up_time: 1_000,
         }
     }
