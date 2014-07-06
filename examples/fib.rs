@@ -11,9 +11,8 @@ fn fibonacci(n: uint) -> uint {
 }
 
 fn main() {
-    let mut b = Criterion::new();
-
-    b.bench_group("fib", &[5u, 10, 15], fib);
+    Criterion::default().
+        bench_group("fib", &[5u, 10, 15], fib);
 }
 
 fn fib(b: &mut Bencher, n: uint) {
