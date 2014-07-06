@@ -3,7 +3,7 @@ use std::rand::distributions::{IndependentSample,Range};
 use std::rand;
 use test::stats::Stats;
 
-use criterion::CriterionConfig;
+use criterion::Criterion;
 use sample::Sample;
 use units::{AsPercent,AsSignedPercent,AsTime};
 
@@ -74,9 +74,9 @@ fn diff(base: &[f64],
     (points, boots)
 }
 
-pub fn compare(base: &[f64], new: &[f64], config: &CriterionConfig) {
-    let cl = config.confidence_level;
-    let nresamples = config.nresamples;
+pub fn compare(base: &[f64], new: &[f64], criterion: &Criterion) {
+    let cl = criterion.confidence_level;
+    let nresamples = criterion.nresamples;
 
     println!("> comparing with previous sample");
     println!("  > bootstrapping sample with {} resamples", nresamples);

@@ -1,4 +1,3 @@
-use std::default::Default;
 use std::fmt::Show;
 use std::io::{fs,UserRWX};
 
@@ -8,36 +7,42 @@ use clock::Clock;
 use sample::Sample;
 
 pub struct Criterion {
-    config: CriterionConfig,
+    pub confidence_level: f64,
+    pub measurement_time: uint,
+    pub nresamples: uint,
+    pub sample_size: u64,
+    pub significance_level: f64,
+    pub warm_up_time: uint,
 }
 
 impl Criterion {
     pub fn new() -> Criterion {
         Criterion {
-            config: Default::default(),
+            confidence_level: 0.95,
+            measurement_time: 10,
+            nresamples: 100_000,
+            sample_size: 100,
+            significance_level: 0.05,
+            warm_up_time: 1_000,
         }
-    }
-
-    pub fn set_config(&mut self, config: CriterionConfig) {
-        self.config = config;
     }
 
     pub fn bench<N: Str + ToStr>(&mut self, name: N, f: |&mut Bencher|) {
         local_data_key!(clock: Clock);
 
         if clock.get().is_none() {
-            clock.replace(Some(Clock::new(&self.config)));
+            clock.replace(Some(Clock::new(self)));
         }
 
         println!("\nbenchmarking {}", name.as_slice());
 
-        let sample = Sample::new(f, &self.config);
+        let sample = Sample::new(f, self);
 
         sample.outliers().report();
 
         let sample = sample.without_outliers();
 
-        sample.estimate(&self.config);
+        sample.estimate(self);
 
         let dir = Path::new(".criterion").join(name.as_slice());
 
@@ -55,7 +60,7 @@ impl Criterion {
                 Ok(s) => s,
             };
 
-            bootstrap::compare(old_sample.data(), sample.data(), &self.config);
+            bootstrap::compare(old_sample.data(), sample.data(), self);
 
             // TODO add regression test here, fail if regressed
 
@@ -77,28 +82,6 @@ impl Criterion {
             self.bench(format!("{}_{}", group, input), |x| {
                 f(x, input.clone())
             });
-        }
-    }
-}
-
-pub struct CriterionConfig {
-    pub confidence_level: f64,
-    pub measurement_time: uint,
-    pub nresamples: uint,
-    pub sample_size: u64,
-    pub significance_level: f64,
-    pub warm_up_time: uint,
-}
-
-impl Default for CriterionConfig {
-    fn default() -> CriterionConfig {
-        CriterionConfig {
-            confidence_level: 0.95,
-            measurement_time: 10,
-            nresamples: 100_000,
-            sample_size: 100,
-            significance_level: 0.05,
-            warm_up_time: 1_000,
         }
     }
 }

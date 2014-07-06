@@ -1,7 +1,7 @@
 use time::precise_time_ns;
 
 use bencher::Bencher;
-use criterion::CriterionConfig;
+use criterion::Criterion;
 use sample::Sample;
 
 pub struct Clock {
@@ -13,16 +13,16 @@ impl Clock {
         self.cost as f64
     }
 
-    pub fn new(config: &CriterionConfig) -> Clock {
+    pub fn new(criterion: &Criterion) -> Clock {
         println!("estimating the cost of precise_time_ns()");
 
-        let sample = Sample::new(clock_cost, config);
+        let sample = Sample::new(clock_cost, criterion);
 
         sample.outliers().report();
 
         let sample = sample.without_outliers();
 
-        sample.estimate(config);
+        sample.estimate(criterion);
 
         Clock {
             cost: sample.median(),

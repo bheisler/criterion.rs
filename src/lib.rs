@@ -7,7 +7,7 @@ extern crate test;
 extern crate time;
 
 pub use bencher::Bencher;
-pub use criterion::{Criterion,CriterionConfig};
+pub use criterion::Criterion;
 
 mod bencher;
 mod bootstrap;

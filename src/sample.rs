@@ -6,7 +6,7 @@ use test::stats::Stats;
 use bencher::Bencher;
 use bootstrap;
 use common::run_for_at_least;
-use criterion::CriterionConfig;
+use criterion::Criterion;
 use outlier::Outliers;
 use units::{AsTime,ToNanoSeconds};
 
@@ -16,15 +16,15 @@ pub struct Sample {
 
 impl Sample {
     pub fn new(f: |&mut Bencher|,
-               config: &CriterionConfig)
+               criterion: &Criterion)
         -> Sample
     {
-        let m_time = config.measurement_time as u64 * 1.ms();
-        let size = config.sample_size;
-        let wu_time = config.warm_up_time as u64 * 1.ms();
+        let m_time = criterion.measurement_time as u64 * 1.ms();
+        let size = criterion.sample_size;
+        let wu_time = criterion.warm_up_time as u64 * 1.ms();
 
         let mut b = Bencher::new();
-        println!("> warming up for {} ms", config.warm_up_time);
+        println!("> warming up for {} ms", criterion.warm_up_time);
         let (wu_elapsed, wu_iters) = run_for_at_least(wu_time, 1, |x| f(x));
 
         let m_iters = cmp::max(wu_iters * m_time / wu_time, 1);
@@ -45,22 +45,24 @@ impl Sample {
     }
 
     pub fn load(path: &Path) -> Result<Sample, String> {
-        let display = path.display();
+        let d = path.display();
 
         match File::open(path) {
-            Err(e) => Err(format!("Couldn't open {}: {}", display, e)),
+            Err(e) => Err(format!("Couldn't open {}: {}", d, e)),
             Ok(mut f) => match f.read_to_str() {
-                Err(e) => Err(format!("Couldn't read {}: {}", display, e)),
+                Err(e) => Err(format!("Couldn't read {}: {}", d, e)),
                 Ok(s) => match json::decode(s.as_slice()) {
-                    Err(e) => Err(format!("Couldn't decode {}: {}", display, e)),
+                    Err(e) => Err(format!("Couldn't decode {}: {}", d, e)),
                     Ok(v) => Ok(Sample { data: v }),
                 },
             },
         }
     }
 
-    pub fn estimate(&self, config: &CriterionConfig) {
-        bootstrap::estimate(self, config.nresamples, config.confidence_level)
+    pub fn estimate(&self, criterion: &Criterion) {
+        bootstrap::estimate(self,
+                            criterion.nresamples,
+                            criterion.confidence_level)
     }
 
     pub fn data<'a>(&'a self) -> &'a [f64] {
