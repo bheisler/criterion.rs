@@ -130,7 +130,7 @@ impl Criterion {
                        f: |&mut Bencher, I|)
                        -> &'a mut Criterion {
         for input in inputs.iter() {
-            self.bench(format!("{}_{}", group, input), |x| {
+            self.bench(format!("{}/{}", group, input), |x| {
                 f(x, input.clone())
             });
         }
