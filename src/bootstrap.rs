@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::rand::TaskRng;
 use std::rand::distributions::{IndependentSample,Range};
 use std::rand;
@@ -95,6 +96,7 @@ pub fn compare(base: &[f64], new: &[f64], criterion: &Criterion) {
     }
 }
 
+#[deriving(Encodable)]
 pub struct Estimate {
     confidence_level: f64,
     lower_bound: f64,
@@ -141,24 +143,32 @@ impl AsTime for Estimate {
     }
 }
 
-pub fn estimate(sample: &Sample, nresamples: uint, cl: f64) {
+pub fn estimate(sample: &Sample,
+                nresamples: uint,
+                cl: f64)
+                -> HashMap<&'static str, Estimate> {
     assert!(cl > 0.0 && cl < 1.0,
             "confidence level must be between 0.0 and 1.0");
 
     println!("> estimating statistics");
     println!("  > bootstrapping sample with {} resamples", nresamples);
 
+    let mut estimates = HashMap::new();
     let (points, boots) = bootstrap(sample.data(), nresamples, STATISTICS_FNS);
 
-    for (name, (point, boot)) in zip!(
+    for (&name, (point, boot)) in zip!(
         STATISTICS_NAMES.iter(),
         points.move_iter(),
         boots.move_iter(),
     ) {
         let estimate = Estimate::new(point, boot.as_slice(), cl);
 
+        estimates.insert(name, estimate);
+
         println!("  > {:<6} {}", name, estimate.as_time());
     }
+
+    estimates
 }
 
 struct Resamples<'a> {

@@ -1,5 +1,6 @@
+use serialize::json;
 use std::fmt::Show;
-use std::io::{fs,UserRWX};
+use std::io::{fs,File,UserRWX};
 
 use bencher::Bencher;
 use bootstrap;
@@ -77,11 +78,8 @@ impl Criterion {
 
         let sample = Sample::new(f, self);
 
-        sample.outliers().report();
-
-        let sample = sample.without_outliers();
-
-        sample.estimate(self);
+        // FIXME Don't remove outliers for now
+        //let sample = sample.without_outliers();
 
         let base_dir = Path::new(".criterion").join(name);
         let new_dir = base_dir.join("new");
@@ -123,6 +121,21 @@ impl Criterion {
         match sample.save(&new_data) {
             Err(e) => fail!("Couldn't save {}: {}", new_data_, e),
             Ok(_) => {},
+        }
+
+        sample.outliers().report();
+
+        let estimates = sample.estimate(self);
+
+        let new_estimates = new_dir.join("estimates.json");
+        let new_estimates_ = new_estimates.display();
+        match File::create(&new_estimates) {
+            Err(e) => fail!("Couldn't create {}: {}", new_estimates_, e),
+            Ok(mut f) => match f.write_str(json::encode(&estimates).as_slice())
+            {
+                Err(e) => fail!("Couldn't write {}: {}", new_estimates_, e),
+                Ok(_) => {},
+            },
         }
 
         let (xs, ys) = math::kde(sample.data());

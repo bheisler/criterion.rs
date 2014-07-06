@@ -1,9 +1,11 @@
 use serialize::json;
 use std::cmp;
+use std::collections::HashMap;
 use std::io::{File,IoResult};
 use test::stats::Stats;
 
 use bencher::Bencher;
+use bootstrap::Estimate;
 use bootstrap;
 use common::run_for_at_least;
 use criterion::Criterion;
@@ -59,7 +61,9 @@ impl Sample {
         }
     }
 
-    pub fn estimate(&self, criterion: &Criterion) {
+    pub fn estimate(&self,
+                    criterion: &Criterion)
+                    -> HashMap<&'static str, Estimate> {
         bootstrap::estimate(self,
                             criterion.nresamples,
                             criterion.confidence_level)
