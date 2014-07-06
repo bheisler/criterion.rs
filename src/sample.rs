@@ -1,13 +1,15 @@
+use serialize::json;
+use std::cmp;
+use std::io::{File,IoResult};
+use test::stats::Stats;
+
 use bencher::Bencher;
 use bootstrap;
 use common::run_for_at_least;
 use criterion::CriterionConfig;
 use outlier::Outliers;
-use std::cmp;
-use test::stats::Stats;
 use units::{AsTime,ToNanoSeconds};
 
-#[deriving(Encodable)]
 pub struct Sample {
     data: Vec<f64>,
 }
@@ -42,6 +44,21 @@ impl Sample {
         }
     }
 
+    pub fn load(path: &Path) -> Result<Sample, String> {
+        let display = path.display();
+
+        match File::open(path) {
+            Err(e) => Err(format!("Couldn't open {}: {}", display, e)),
+            Ok(mut f) => match f.read_to_str() {
+                Err(e) => Err(format!("Couldn't read {}: {}", display, e)),
+                Ok(s) => match json::decode(s.as_slice()) {
+                    Err(e) => Err(format!("Couldn't decode {}: {}", display, e)),
+                    Ok(v) => Ok(Sample { data: v }),
+                },
+            },
+        }
+    }
+
     pub fn estimate(&self, config: &CriterionConfig) {
         bootstrap::estimate(self, config.nresamples, config.confidence_level)
     }
@@ -66,7 +83,15 @@ impl Sample {
         self.data.as_slice().quartiles()
     }
 
-    // remove severe outliers using the IQR criteria
+    pub fn save(&self, path: &Path) -> IoResult<()> {
+        let mut f = try!(File::create(path));
+
+        try!(f.write_str(json::encode(&self.data).as_slice()));
+
+        Ok(())
+    }
+
+    // Removes severe outliers using the IQR criteria
     pub fn without_outliers(&self) -> Sample {
         let (q1, _, q3) = self.quartiles();
         let iqr = q3 - q1;

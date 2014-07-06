@@ -1,6 +1,7 @@
-use clock::Clock;
 use test::black_box;
 use time::precise_time_ns;
+
+use clock::Clock;
 
 pub struct Bencher {
     clock: Option<Clock>,

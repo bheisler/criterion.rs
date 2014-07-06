@@ -1,9 +1,10 @@
-use criterion::CriterionConfig;
-use sample::Sample;
 use std::rand::TaskRng;
 use std::rand::distributions::{IndependentSample,Range};
 use std::rand;
 use test::stats::Stats;
+
+use criterion::CriterionConfig;
+use sample::Sample;
 use units::{AsPercent,AsSignedPercent,AsTime};
 
 // FIXME UCFS may make these unnecessary, e.g. `<&[f64]>::mean`?

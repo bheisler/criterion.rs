@@ -1,5 +1,6 @@
-use bencher::Bencher;
 use time::precise_time_ns;
+
+use bencher::Bencher;
 
 pub fn run_for_at_least(how_long: u64,
                         seed: u64,

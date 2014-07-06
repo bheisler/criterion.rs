@@ -1,7 +1,8 @@
+use time::precise_time_ns;
+
 use bencher::Bencher;
 use criterion::CriterionConfig;
 use sample::Sample;
-use time::precise_time_ns;
 
 pub struct Clock {
     cost: f64,

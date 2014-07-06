@@ -1,20 +1,20 @@
-use bencher::Bencher;
-use clock::Clock;
-use metrics::Metrics;
-use sample::Sample;
 use std::default::Default;
 use std::fmt::Show;
+use std::io::{fs,UserRWX};
+
+use bencher::Bencher;
+use bootstrap;
+use clock::Clock;
+use sample::Sample;
 
 pub struct Criterion {
     config: CriterionConfig,
-    metrics: Metrics,
 }
 
 impl Criterion {
     pub fn new() -> Criterion {
         Criterion {
             config: Default::default(),
-            metrics: Metrics::new(),
         }
     }
 
@@ -39,7 +39,34 @@ impl Criterion {
 
         sample.estimate(&self.config);
 
-        self.metrics.update(&name.to_str(), sample.into_data(), &self.config);
+        let dir = Path::new(".criterion").join(name.as_slice());
+
+        if !dir.exists() {
+            match fs::mkdir_recursive(&dir, UserRWX) {
+                Err(e) => fail!("`mkdir -p {}`: {}", dir.display(), e),
+                Ok(_) => {},
+            }
+        }
+
+        let new_path = dir.join("new.json");
+        if new_path.exists() {
+            let old_sample = match Sample::load(&new_path) {
+                Err(e) => fail!("{}", e),
+                Ok(s) => s,
+            };
+
+            bootstrap::compare(old_sample.data(), sample.data(), &self.config);
+
+            // TODO add regression test here, fail if regressed
+
+            old_sample.save(&dir.join("old.json"));
+            sample.save(&new_path);
+        } else {
+            match sample.save(&new_path) {
+                Err(e) => fail!("Couldn't store sample: {}", e),
+                Ok(_) => {},
+            }
+        }
     }
 
     pub fn bench_group<G: Show, I: Clone + Show>(&mut self,
