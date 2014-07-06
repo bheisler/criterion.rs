@@ -11,7 +11,6 @@ use units::{AsTime,ToNanoSeconds};
 #[deriving(Encodable)]
 pub struct Sample {
     data: Vec<f64>,
-    iters: u64,
 }
 
 impl Sample {
@@ -42,7 +41,6 @@ impl Sample {
 
         Sample {
             data: sample,
-            iters: m_iters * size,
         }
     }
 
@@ -86,7 +84,6 @@ impl Sample {
 
         Sample {
             data: data,
-            iters: self.iters,
         }
     }
 }
