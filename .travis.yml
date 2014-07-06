@@ -4,7 +4,7 @@ before_install:
   - sudo apt-get update -qq
 
 install:
-  - sudo apt-get install -qq rust-nightly cargo
+  - sudo apt-get install -qq rust-nightly cargo gnuplot
 
 script:
   - make
