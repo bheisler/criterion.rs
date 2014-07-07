@@ -9,7 +9,7 @@ use math;
 // XXX should the size of the image be configurable?
 pub static PNG_SIZE: (uint, uint) = (1366, 768);
 
-pub fn kde(sample: &[f64], dir: &Path) {
+pub fn pdf(sample: &[f64], dir: &Path) {
     fs::mkdirp(dir);
 
     // TODO add legend/caption
@@ -22,7 +22,7 @@ pub fn kde(sample: &[f64], dir: &Path) {
     let median = [median, median];
 
     Figure::new().
-        set_output_file(dir.join("kde.png")).
+        set_output_file(dir.join("pdf.png")).
         set_title("Probability Density Function").
         set_ylabel("Density (a.u.)").
         set_xlabel("Time (ns)").

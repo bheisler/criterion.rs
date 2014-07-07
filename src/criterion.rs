@@ -93,7 +93,7 @@ impl Criterion {
         fs::mkdirp(&new_dir);
         sample.save(&new_data);
 
-        plot::kde(sample.data(), &new_dir.join("dirty"));
+        plot::pdf(sample.data(), &new_dir.join("dirty"));
 
         let outliers = sample.classify_outliers();
         outliers.save(&new_dir);
@@ -107,7 +107,7 @@ impl Criterion {
         file::write(&new_dir.join("statistics.json"),
                     json::encode(&estimates).as_slice());
 
-        plot::kde(sample, &new_dir.join("clean"));
+        plot::pdf(sample, &new_dir.join("clean"));
 
         if !old_dir.exists() {
             return self;
