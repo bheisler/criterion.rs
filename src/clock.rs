@@ -1,3 +1,4 @@
+use test::stats::Stats;
 use time::precise_time_ns;
 
 use bencher::Bencher;
@@ -16,16 +17,14 @@ impl Clock {
     pub fn new(criterion: &Criterion) -> Clock {
         println!("estimating the cost of precise_time_ns()");
 
+        // XXX Is it worth to do a more complex analysis of this sample?
         let sample = Sample::new(clock_cost, criterion);
+        let median = sample.data().median();
 
-        sample.outliers().report();
-
-        let sample = sample.without_outliers();
-
-        sample.estimate(criterion);
+        println!("> median: {}", median);
 
         Clock {
-            cost: sample.median(),
+            cost: median,
         }
     }
 }

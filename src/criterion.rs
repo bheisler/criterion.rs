@@ -1,13 +1,16 @@
 use serialize::json;
 use std::fmt::Show;
-use std::io::{fs,File,UserRWX};
 
+use analyze;
 use bencher::Bencher;
-use bootstrap;
 use clock::Clock;
-use math;
+use file;
+use fs;
+use plot;
 use sample::Sample;
-use simplot::Figure;
+
+// XXX should the size of the image be configurable?
+pub static PNG_SIZE: (uint, uint) = (1366, 768);
 
 pub struct Criterion {
     pub confidence_level: f64,
@@ -68,7 +71,9 @@ impl Criterion {
                  -> &'a mut Criterion {
         local_data_key!(clock: Clock);
 
+        let cl = self.confidence_level;
         let name = name.as_slice();
+        let nresamples = self.nresamples;
 
         if clock.get().is_none() {
             clock.replace(Some(Clock::new(self)));
@@ -78,73 +83,49 @@ impl Criterion {
 
         let sample = Sample::new(f, self);
 
-        // FIXME Don't remove outliers for now
-        //let sample = sample.without_outliers();
-
         let base_dir = Path::new(".criterion").join(name);
         let new_dir = base_dir.join("new");
-        let new_dir_ = new_dir.display();
         let new_data = new_dir.join("data.json");
-        let new_data_ = new_data.display();
+        let old_dir = base_dir.join("old");
 
-        if new_dir.exists() {
-            let old_sample = match Sample::load(&new_data) {
-                Err(e) => fail!("{}", e),
-                Ok(s) => s,
-            };
+        if old_dir.exists() { fs::rmrf(&old_dir) }
 
-            bootstrap::compare(old_sample.data(), sample.data(), self);
+        if new_dir.exists() { fs::mv(&new_dir, &old_dir) }
 
-            let old_dir = base_dir.join("old");
-            let old_dir_ = old_dir.display();
+        fs::mkdirp(&new_dir);
+        sample.save(&new_data);
 
-            if old_dir.exists() {
-                match fs::rmdir_recursive(&old_dir) {
-                    Err(e) => fail!("`rm -rf {}: {}`", old_dir_, e),
-                    Ok(_) => {},
-                }
-            }
+        plot::kde(sample.data(), &new_dir.join("dirty"));
 
-            match fs::rename(&new_dir, &old_dir) {
-                Err(e) => fail!("`mv {} {}`: {}", new_dir_, old_dir_, e),
-                Ok(_) => {},
-            }
+        let outliers = sample.classify_outliers();
+        outliers.save(&new_dir);
+        outliers.report();
 
-            // TODO add regression test here, fail if regressed
+        // TODO plot outliers
+
+        let sample = outliers.normal();
+        let estimates = analyze::estimate_statistics(sample, nresamples, cl);
+
+        file::write(&new_dir.join("statistics.json"),
+                    json::encode(&estimates).as_slice());
+
+        plot::kde(sample, &new_dir.join("clean"));
+
+        if !old_dir.exists() {
+            return self;
         }
 
-        match fs::mkdir_recursive(&new_dir, UserRWX) {
-            Err(e) => fail!("`mkdir -p {}`: {}", new_dir_, e),
-            Ok(_) => {},
-        }
+        let old_sample =
+            Sample::load(&old_dir.join("data.json")).classify_outliers();
+        let old_sample = old_sample.normal();
 
-        match sample.save(&new_data) {
-            Err(e) => fail!("Couldn't save {}: {}", new_data_, e),
-            Ok(_) => {},
-        }
+        let estimates =
+            analyze::compare_samples(old_sample, sample, nresamples, cl);
 
-        sample.outliers().report();
-
-        let estimates = sample.estimate(self);
-
-        let new_estimates = new_dir.join("estimates.json");
-        let new_estimates_ = new_estimates.display();
-        match File::create(&new_estimates) {
-            Err(e) => fail!("Couldn't create {}: {}", new_estimates_, e),
-            Ok(mut f) => match f.write_str(json::encode(&estimates).as_slice())
-            {
-                Err(e) => fail!("Couldn't write {}: {}", new_estimates_, e),
-                Ok(_) => {},
-            },
-        }
-
-        let (xs, ys) = math::kde(sample.data());
-        // XXX should the size of the image be configurable?
-        Figure::new().
-            set_output_file(new_dir.join("kde.png")).
-            set_size((1366, 768)).
-            plot(xs.iter(), ys.iter()).
-            draw();
+        let diff_dir = base_dir.join("diff");
+        fs::mkdirp(&diff_dir);
+        file::write(&diff_dir.join("statistics.json"),
+                    json::encode(&estimates).as_slice());
 
         self
     }
@@ -162,6 +143,8 @@ impl Criterion {
                 f(x, input.clone())
             });
         }
+
+        // TODO Summary analysis
 
         self
     }

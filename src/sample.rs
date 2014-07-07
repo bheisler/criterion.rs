@@ -1,14 +1,10 @@
 use serialize::json;
 use std::cmp;
-use std::collections::HashMap;
-use std::io::{File,IoResult};
-use test::stats::Stats;
 
 use bencher::Bencher;
-use bootstrap::Estimate;
-use bootstrap;
 use common::run_for_at_least;
 use criterion::Criterion;
+use file;
 use outlier::Outliers;
 use units::{AsTime,ToNanoSeconds};
 
@@ -21,6 +17,7 @@ impl Sample {
                criterion: &Criterion)
         -> Sample
     {
+        // XXX `m_time` should have a lower limit based on clock_cost
         let m_time = criterion.measurement_time as u64 * 1.ms();
         let size = criterion.sample_size;
         let wu_time = criterion.warm_up_time as u64 * 1.ms();
@@ -46,75 +43,22 @@ impl Sample {
         }
     }
 
-    pub fn load(path: &Path) -> Result<Sample, String> {
-        let d = path.display();
-
-        match File::open(path) {
-            Err(e) => Err(format!("Couldn't open {}: {}", d, e)),
-            Ok(mut f) => match f.read_to_str() {
-                Err(e) => Err(format!("Couldn't read {}: {}", d, e)),
-                Ok(s) => match json::decode(s.as_slice()) {
-                    Err(e) => Err(format!("Couldn't decode {}: {}", d, e)),
-                    Ok(v) => Ok(Sample { data: v }),
-                },
-            },
+    pub fn load(path: &Path) -> Sample {
+        match json::decode(file::read(path).as_slice()) {
+            Err(e) => fail!("Couldn't decode {}: {}", path.display(), e),
+            Ok(v) => Sample { data: v },
         }
-    }
-
-    pub fn estimate(&self,
-                    criterion: &Criterion)
-                    -> HashMap<&'static str, Estimate> {
-        bootstrap::estimate(self,
-                            criterion.nresamples,
-                            criterion.confidence_level)
     }
 
     pub fn data<'a>(&'a self) -> &'a [f64] {
         self.data.as_slice()
     }
 
-    pub fn median(&self) -> f64 {
-        self.data.as_slice().median()
+    pub fn classify_outliers(&self) -> Outliers {
+        Outliers::new(self.data())
     }
 
-    pub fn outliers(&self) -> Outliers {
-        Outliers::new(self)
-    }
-
-    pub fn quartiles(&self) -> (f64, f64, f64) {
-        self.data.as_slice().quartiles()
-    }
-
-    pub fn save(&self, path: &Path) -> IoResult<()> {
-        let mut f = try!(File::create(path));
-
-        try!(f.write_str(json::encode(&self.data).as_slice()));
-
-        Ok(())
-    }
-
-    // Removes severe outliers using the IQR criteria
-    pub fn without_outliers(&self) -> Sample {
-        let (q1, _, q3) = self.quartiles();
-        let iqr = q3 - q1;
-        let (lb, ub) = (q1 - 3.0 * iqr, q3 + 3.0 * iqr);
-
-        let data: Vec<f64> = self.data.iter().filter_map(|&x| {
-            if x > lb && x < ub {
-                Some(x)
-            } else {
-                None
-            }
-        }).collect();
-
-        Sample {
-            data: data,
-        }
-    }
-}
-
-impl Collection for Sample {
-    fn len(&self) -> uint {
-        self.data.len()
+    pub fn save(&self, path: &Path) {
+        file::write(path, json::encode(&self.data()).as_slice());
     }
 }
