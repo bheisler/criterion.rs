@@ -1,4 +1,5 @@
 use simplot::Figure;
+use simplot::option::Title;
 use simplot::plottype::Lines;
 use test::stats::Stats;
 
@@ -27,7 +28,7 @@ pub fn kde(sample: &[f64], dir: &Path) {
         set_xlabel("Time (ns)").
         set_size(PNG_SIZE).
         plot(Lines, xs.iter(), ys.iter(), []).
-        plot(Lines, mean.iter(), vertical.iter(), []).
-        plot(Lines, median.iter(), vertical.iter(), []).
+        plot(Lines, mean.iter(), vertical.iter(), [Title("mean")]).
+        plot(Lines, median.iter(), vertical.iter(), [Title("median")]).
         draw();
 }
