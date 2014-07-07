@@ -9,8 +9,6 @@ use fs;
 use plot;
 use sample::Sample;
 
-// XXX should the size of the image be configurable?
-pub static PNG_SIZE: (uint, uint) = (1366, 768);
 
 pub struct Criterion {
     pub confidence_level: f64,
