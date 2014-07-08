@@ -9,6 +9,7 @@ use test::stats::Stats;
 use fs;
 use math;
 use outliers::Outliers;
+use statistics::estimate::Estimate;
 
 // XXX should the size of the image be configurable?
 pub static PNG_SIZE: (uint, uint) = (1366, 768);
@@ -102,29 +103,27 @@ pub fn both_pdfs(old: &[f64], new: &[f64], dir: &Path) {
 
 }
 
-pub fn bootstraps(distributions: &Vec<Vec<f64>>, dir: &Path) {
-    let (mean, median) = match distributions.as_slice() {
-        [ref mean, ref median] => (mean.as_slice(), median.as_slice()),
-        _ => fail!("`distributions` should be vec![means, medians]"),
-    };
+pub fn distribution(distribution: &[f64],
+                    estimate: &Estimate,
+                    dir: &Path,
+                    statistic: &'static str) {
+    let (xs, ys) = math::kde(distribution);
+    let ys = ys.as_slice();
+    let vertical = [ys.min(), ys.max()];
 
-    let (mean_xs, mean_ys) = math::kde(mean);
+    let point = estimate.point();
+    let (lb, ub) = (estimate.lower_bound(), estimate.upper_bound());
     Figure::new().
-        set_output_file(dir.join("mean.png")).
-        set_title("Bootstrapped Probability Density Function").
-        set_xlabel("Ratio (%)").
+        set_output_file(dir.join(format!("{}.png", statistic))).
+        set_title("Probability Density Function").
+        set_xlabel("Time (ns)").
         set_ylabel("Density (a.u.)").
         set_size(PNG_SIZE).
-        plot(Lines, mean_xs.iter().map(|x| x * 100.0), mean_ys.iter(), []).
-        draw();
-
-    let (median_xs, median_ys) = math::kde(median);
-    Figure::new().
-        set_output_file(dir.join("median.png")).
-        set_title("Bootstrapped Probability Density Function").
-        set_xlabel("Ratio (%)").
-        set_ylabel("Density (a.u.)").
-        set_size(PNG_SIZE).
-        plot(Lines, median_xs.iter().map(|x| x * 100.0), median_ys.iter(), []).
+        plot(Lines, xs.iter(), ys.iter(), []).
+        plot(Lines, [point, point].iter(), vertical.iter(), [Title("Point")]).
+        plot(Lines,
+             [lb, lb, ub, ub].iter(),
+             vertical.iter().rev().chain(vertical.iter()),
+             [Title("Confidence Interval")]).
         draw();
 }

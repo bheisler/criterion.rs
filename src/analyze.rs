@@ -35,14 +35,14 @@ static ESTIMATOR_FNS: &'static [fn (&[f64]) -> f64] = &[
 static ESTIMATOR_NAMES: &'static [&'static str] = &[
     "mean",
     "median",
-    "MAD",
     "SD",
+    "MAD",
 ];
 
 pub fn estimate_statistics(sample: &[f64],
                            nresamples: uint,
                            cl: f64)
-                           -> Estimates {
+                           -> (Estimates, Vec<Vec<f64>>) {
     let mut estimates = HashMap::new();
     let distributions = bootstrap::estimate(sample, nresamples, ESTIMATOR_FNS);
 
@@ -63,7 +63,7 @@ pub fn estimate_statistics(sample: &[f64],
         println!("  > {:<6} {}", name, estimate.as_time());
     }
 
-    estimates
+    (estimates, distributions)
 }
 
 fn diff_mean(this: &[f64], that: &[f64]) -> f64 {

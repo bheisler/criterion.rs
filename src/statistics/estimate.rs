@@ -31,6 +31,18 @@ impl Estimate {
             upper_bound: upper_bound,
         }
     }
+
+    pub fn lower_bound(&self) -> f64 {
+        self.lower_bound
+    }
+
+    pub fn point(&self) -> f64 {
+        self.point
+    }
+
+    pub fn upper_bound(&self) -> f64 {
+        self.upper_bound
+    }
 }
 
 impl AsPercent for Estimate {

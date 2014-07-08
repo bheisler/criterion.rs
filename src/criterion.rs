@@ -101,9 +101,33 @@ impl Criterion {
         plot::outliers(&outliers, &new_dir.join("outliers"));
 
         let sample = outliers.normal();
-        let estimates = analyze::estimate_statistics(sample, nresamples, cl);
+        let (estimates, distributions) =
+            analyze::estimate_statistics(sample, nresamples, cl);
 
-        fs::mkdirp(&new_dir.join("bootstrap"));
+        let bootstrap_dir = new_dir.join("bootstrap");
+        let distributions_dir = bootstrap_dir.join("distributions");
+        fs::mkdirp(&distributions_dir);
+
+        plot::distribution(distributions.get(0).as_slice(),
+                           estimates.get(&"mean"),
+                           &distributions_dir,
+                           "mean");
+
+        plot::distribution(distributions.get(1).as_slice(),
+                           estimates.get(&"median"),
+                           &distributions_dir,
+                           "median");
+
+        plot::distribution(distributions.get(2).as_slice(),
+                           estimates.get(&"SD"),
+                           &distributions_dir,
+                           "SD");
+
+        plot::distribution(distributions.get(3).as_slice(),
+                           estimates.get(&"MAD"),
+                           &distributions_dir,
+                           "MAD");
+
         file::write(&new_dir.join("bootstrap/estimates.json"),
                     json::encode(&estimates).as_slice());
 
@@ -117,10 +141,11 @@ impl Criterion {
         plot::both_points(base_sample, sample, &root_dir.join("both"));
         plot::both_pdfs(base_sample, sample, &root_dir.join("both"));
 
-        let (estimates, distributions) =
+        let (estimates, _) =
             analyze::compare_samples(base_sample, sample, nresamples, cl);
 
-        plot::bootstraps(&distributions, &root_dir.join("change"));
+        // TODO Plot the bootstrap distribution of the change
+        //plot::bootstraps(&distributions, &root_dir.join("change"));
 
         let change_dir = root_dir.join("change");
         fs::mkdirp(&change_dir.join("bootstrap"));
