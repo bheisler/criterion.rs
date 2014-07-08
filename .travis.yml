@@ -1,10 +1,11 @@
 before_install:
-  - sudo add-apt-repository --yes ppa:cmrx64/cargo
+  - git clone --recursive https://github.com/rust-lang/cargo
   - sudo add-apt-repository --yes ppa:hansjorg/rust
   - sudo apt-get update -qq
 
 install:
-  - sudo apt-get install -qq rust-nightly cargo gnuplot
+  - sudo apt-get install -qq rust-nightly gnuplot
+  - cd cargo && make && sudo make install && cd .. && rm -rf cargo
 
 script:
   - make
