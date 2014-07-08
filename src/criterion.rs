@@ -113,9 +113,13 @@ impl Criterion {
             return self;
         }
 
-        let old_sample =
+        let outliers =
             Sample::load(&old_dir.join("data.json")).classify_outliers();
-        let old_sample = old_sample.normal();
+
+        let old_sample = outliers.normal();
+
+        plot::both_points(old_sample, sample, &base_dir.join("both"));
+        plot::both_pdfs(old_sample, sample, &base_dir.join("both"));
 
         let estimates =
             analyze::compare_samples(old_sample, sample, nresamples, cl);

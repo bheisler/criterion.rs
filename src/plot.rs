@@ -16,7 +16,6 @@ pub static PNG_SIZE: (uint, uint) = (1366, 768);
 pub fn pdf(sample: &[f64], dir: &Path) {
     fs::mkdirp(dir);
 
-    // TODO add legend/caption
     let (xs, ys) = math::kde(sample);
     let ys = ys.as_slice();
     let vertical = [ys.min(), ys.max()];
@@ -55,7 +54,6 @@ pub fn outliers(outliers: &Outliers, dir: &Path) {
         set_output_file(dir.join("outliers.png")).
         set_title("Classification of Outliers").
         set_xlabel("Time (ns)").
-        set_ylabel("").
         set_size(PNG_SIZE).
         plot(Lines, [lomt, lomt, himt, himt].iter(), y.iter(), []).
         plot(Lines, [lost, lost, hist, hist].iter(), y.iter(), []).
@@ -66,4 +64,40 @@ pub fn outliers(outliers: &Outliers, dir: &Path) {
         plot(Points, severe, rng.gen_iter::<f64>(),
              [PointType(Circle), Title("Severe")]).
         draw();
+}
+
+pub fn both_points(old: &[f64], new: &[f64], dir: &Path) {
+    fs::mkdirp(dir);
+
+    let mut rng = rand::task_rng();
+
+    Figure::new().
+        set_output_file(dir.join("points.png")).
+        set_title("Sample points").
+        set_xlabel("Time (ns)").
+        set_size(PNG_SIZE).
+        plot(Points, old.iter(), rng.gen_iter::<f64>(),
+             [PointType(Circle), Title("Old")]).
+        plot(Points, new.iter(), rng.gen_iter::<f64>(),
+             [PointType(Circle), Title("New")]).
+        draw();
+
+}
+
+pub fn both_pdfs(old: &[f64], new: &[f64], dir: &Path) {
+    fs::mkdirp(dir);
+
+    let (old_xs, old_ys) = math::kde(old);
+    let (new_xs, new_ys) = math::kde(new);
+
+    Figure::new().
+        set_output_file(dir.join("pdfs.png")).
+        set_title("Probability Density Functions").
+        set_xlabel("Time (ns)").
+        set_ylabel("Density (a.u.)").
+        set_size(PNG_SIZE).
+        plot(Lines, old_xs.iter(), old_ys.iter(), [Title("Old")]).
+        plot(Lines, new_xs.iter(), new_ys.iter(), [Title("New")]).
+        draw();
+
 }
