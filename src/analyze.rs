@@ -88,7 +88,7 @@ pub fn compare_samples(this: &[f64],
                        that: &[f64],
                        nresamples: uint,
                        cl: f64)
-                       -> Estimates {
+                       -> (Estimates, Vec<Vec<f64>>) {
     let mut estimates = HashMap::new();
     let nresamples = (nresamples as f64).sqrt().ceil() as uint;
     let distributions =
@@ -112,5 +112,5 @@ pub fn compare_samples(this: &[f64],
         println!("  > {:<6} {}", name, estimate.as_percent());
     }
 
-    estimates
+    (estimates, distributions)
 }

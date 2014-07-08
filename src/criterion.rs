@@ -121,8 +121,10 @@ impl Criterion {
         plot::both_points(old_sample, sample, &base_dir.join("both"));
         plot::both_pdfs(old_sample, sample, &base_dir.join("both"));
 
-        let estimates =
+        let (estimates, distributions) =
             analyze::compare_samples(old_sample, sample, nresamples, cl);
+
+        plot::bootstraps(&distributions, &base_dir.join("diff"));
 
         let diff_dir = base_dir.join("diff");
         fs::mkdirp(&diff_dir);

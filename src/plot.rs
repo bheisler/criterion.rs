@@ -101,3 +101,30 @@ pub fn both_pdfs(old: &[f64], new: &[f64], dir: &Path) {
         draw();
 
 }
+
+pub fn bootstraps(distributions: &Vec<Vec<f64>>, dir: &Path) {
+    let (mean, median) = match distributions.as_slice() {
+        [ref mean, ref median] => (mean.as_slice(), median.as_slice()),
+        _ => fail!("`distributions` should be vec![means, medians]"),
+    };
+
+    let (mean_xs, mean_ys) = math::kde(mean);
+    Figure::new().
+        set_output_file(dir.join("mean.png")).
+        set_title("Bootstrapped Probability Density Function").
+        set_xlabel("Ratio (%)").
+        set_ylabel("Density (a.u.)").
+        set_size(PNG_SIZE).
+        plot(Lines, mean_xs.iter().map(|x| x * 100.0), mean_ys.iter(), []).
+        draw();
+
+    let (median_xs, median_ys) = math::kde(median);
+    Figure::new().
+        set_output_file(dir.join("median.png")).
+        set_title("Bootstrapped Probability Density Function").
+        set_xlabel("Ratio (%)").
+        set_ylabel("Density (a.u.)").
+        set_size(PNG_SIZE).
+        plot(Lines, median_xs.iter().map(|x| x * 100.0), median_ys.iter(), []).
+        draw();
+}
