@@ -5,7 +5,7 @@ use bencher::Bencher;
 use common::run_for_at_least;
 use criterion::Criterion;
 use file;
-use outlier::Outliers;
+use outliers::Outliers;
 use units::{AsTime,ToNanoSeconds};
 
 pub struct Sample {

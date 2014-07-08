@@ -17,7 +17,7 @@ mod criterion;
 mod file;
 mod fs;
 mod math;
-mod outlier;
+mod outliers;
 mod plot;
 mod sample;
 mod statistics;

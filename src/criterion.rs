@@ -99,7 +99,7 @@ impl Criterion {
         outliers.save(&new_dir);
         outliers.report();
 
-        // TODO plot outliers
+        plot::outliers(&outliers, &new_dir);
 
         let sample = outliers.normal();
         let estimates = analyze::estimate_statistics(sample, nresamples, cl);

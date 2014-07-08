@@ -54,8 +54,28 @@ impl Outliers {
         }
     }
 
+    pub fn high_mild<'a>(&'a self) -> &'a [f64] {
+        self.high_mild.as_slice()
+    }
+
+    pub fn high_severe<'a>(&'a self) -> &'a [f64] {
+        self.high_severe.as_slice()
+    }
+
+
+    pub fn low_mild<'a>(&'a self) -> &'a [f64] {
+        self.low_mild.as_slice()
+    }
+
+    pub fn low_severe<'a>(&'a self) -> &'a [f64] {
+        self.low_severe.as_slice()
+    }
     pub fn normal<'a>(&'a self) -> &'a [f64] {
         self.normal.as_slice()
+    }
+
+    pub fn thresholds(&self) -> (f64, f64, f64, f64) {
+        self.thresholds
     }
 
     pub fn save(&self, dir: &Path) {

@@ -1,10 +1,14 @@
 use simplot::Figure;
-use simplot::option::Title;
-use simplot::plottype::Lines;
+use simplot::option::{Title,PointType};
+use simplot::plottype::{Lines,Points};
+use simplot::pointtype::Circle;
+use std::rand::Rng;
+use std::rand;
 use test::stats::Stats;
 
 use fs;
 use math;
+use outliers::Outliers;
 
 // XXX should the size of the image be configurable?
 pub static PNG_SIZE: (uint, uint) = (1366, 768);
@@ -24,11 +28,42 @@ pub fn pdf(sample: &[f64], dir: &Path) {
     Figure::new().
         set_output_file(dir.join("pdf.png")).
         set_title("Probability Density Function").
-        set_ylabel("Density (a.u.)").
         set_xlabel("Time (ns)").
+        set_ylabel("Density (a.u.)").
         set_size(PNG_SIZE).
         plot(Lines, xs.iter(), ys.iter(), []).
         plot(Lines, mean.iter(), vertical.iter(), [Title("mean")]).
         plot(Lines, median.iter(), vertical.iter(), [Title("median")]).
+        draw();
+}
+
+pub fn outliers(outliers: &Outliers, dir: &Path) {
+    fs::mkdirp(dir);
+
+    let mut rng = rand::task_rng();
+    let (lost, lomt, himt, hist) = outliers.thresholds();
+    let him = outliers.high_mild();
+    let his = outliers.high_severe();
+    let lom = outliers.low_mild();
+    let los = outliers.low_severe();
+    let normal = outliers.normal();
+    let y = [1u, 0, 0, 1];
+    let mild = lom.iter().chain(him.iter());
+    let severe = los.iter().chain(his.iter());
+
+    Figure::new().
+        set_output_file(dir.join("outliers.png")).
+        set_title("Classification of Outliers").
+        set_xlabel("Time (ns)").
+        set_ylabel("").
+        set_size(PNG_SIZE).
+        plot(Lines, [lomt, lomt, himt, himt].iter(), y.iter(), []).
+        plot(Lines, [lost, lost, hist, hist].iter(), y.iter(), []).
+        plot(Points, mild, rng.gen_iter::<f64>(),
+             [PointType(Circle), Title("Mild")]).
+        plot(Points, normal.iter(), rng.gen_iter::<f64>(),
+             [PointType(Circle)]).
+        plot(Points, severe, rng.gen_iter::<f64>(),
+             [PointType(Circle), Title("Severe")]).
         draw();
 }
