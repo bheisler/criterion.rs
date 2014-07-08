@@ -5,19 +5,3 @@ authors = ["Jorge Aparicio <japaric@linux.com>"]
 
 [dependencies.simplot]
 git = "https://github.com/japaric/simplot.rs"
-
-[[lib]]
-name = "criterion"
-path = "src/lib.rs"
-
-[[bin]]
-name = "alloc"
-path = "examples/alloc.rs"
-
-[[bin]]
-name = "fib"
-path = "examples/fib.rs"
-
-[[bin]]
-name = "math"
-path = "examples/math.rs"
