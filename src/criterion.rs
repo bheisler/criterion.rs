@@ -81,54 +81,50 @@ impl Criterion {
 
         let sample = Sample::new(f, self);
 
-        let base_dir = Path::new(".criterion").join(name);
-        let new_dir = base_dir.join("new");
-        let new_data = new_dir.join("data.json");
-        let old_dir = base_dir.join("old");
+        let root_dir = Path::new(".criterion").join(name);
+        let new_dir = root_dir.join("new");
+        let base_dir = root_dir.join("base");
 
-        if old_dir.exists() { fs::rmrf(&old_dir) }
+        if base_dir.exists() { fs::rmrf(&base_dir) }
 
-        if new_dir.exists() { fs::mv(&new_dir, &old_dir) }
+        if new_dir.exists() { fs::mv(&new_dir, &base_dir) }
 
         fs::mkdirp(&new_dir);
-        sample.save(&new_data);
+        sample.save(&new_dir.join("sample.json"));
 
-        plot::pdf(sample.data(), &new_dir.join("dirty"));
+        plot::pdf(sample.data(), &new_dir);
 
         let outliers = sample.classify_outliers();
-        outliers.save(&new_dir);
+        outliers.save(&new_dir.join("outliers"));
         outliers.report();
 
-        plot::outliers(&outliers, &new_dir);
+        plot::outliers(&outliers, &new_dir.join("outliers"));
 
         let sample = outliers.normal();
         let estimates = analyze::estimate_statistics(sample, nresamples, cl);
 
-        file::write(&new_dir.join("statistics.json"),
+        fs::mkdirp(&new_dir.join("bootstrap"));
+        file::write(&new_dir.join("bootstrap/estimates.json"),
                     json::encode(&estimates).as_slice());
 
-        plot::pdf(sample, &new_dir.join("clean"));
-
-        if !old_dir.exists() {
+        if !base_dir.exists() {
             return self;
         }
 
-        let outliers =
-            Sample::load(&old_dir.join("data.json")).classify_outliers();
+        let base_sample = Sample::load(&base_dir.join("sample.json"));
+        let base_sample = base_sample.data();
 
-        let old_sample = outliers.normal();
-
-        plot::both_points(old_sample, sample, &base_dir.join("both"));
-        plot::both_pdfs(old_sample, sample, &base_dir.join("both"));
+        plot::both_points(base_sample, sample, &root_dir.join("both"));
+        plot::both_pdfs(base_sample, sample, &root_dir.join("both"));
 
         let (estimates, distributions) =
-            analyze::compare_samples(old_sample, sample, nresamples, cl);
+            analyze::compare_samples(base_sample, sample, nresamples, cl);
 
-        plot::bootstraps(&distributions, &base_dir.join("diff"));
+        plot::bootstraps(&distributions, &root_dir.join("change"));
 
-        let diff_dir = base_dir.join("diff");
-        fs::mkdirp(&diff_dir);
-        file::write(&diff_dir.join("statistics.json"),
+        let change_dir = root_dir.join("change");
+        fs::mkdirp(&change_dir.join("bootstrap"));
+        file::write(&change_dir.join("bootstrap/estimates.json"),
                     json::encode(&estimates).as_slice());
 
         self

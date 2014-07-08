@@ -51,7 +51,7 @@ pub fn outliers(outliers: &Outliers, dir: &Path) {
     let severe = los.iter().chain(his.iter());
 
     Figure::new().
-        set_output_file(dir.join("outliers.png")).
+        set_output_file(dir.join("boxplot.png")).
         set_title("Classification of Outliers").
         set_xlabel("Time (ns)").
         set_size(PNG_SIZE).

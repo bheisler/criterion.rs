@@ -2,6 +2,7 @@ use serialize::json;
 use test::stats::Stats;
 
 use file;
+use fs;
 
 #[deriving(Encodable)]
 pub struct Outliers {
@@ -79,7 +80,10 @@ impl Outliers {
     }
 
     pub fn save(&self, dir: &Path) {
-        file::write(&dir.join("outliers.json"), json::encode(self).as_slice());
+        fs::mkdirp(dir);
+
+        let data = json::encode(self);
+        file::write(&dir.join("classification.json"), data.as_slice());
     }
 
     pub fn report(&self) {
