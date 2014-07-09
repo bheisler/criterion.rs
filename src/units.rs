@@ -1,3 +1,8 @@
+pub enum Unit {
+    Ratio,
+    Time,
+}
+
 pub trait ToNanoSeconds {
     fn s(self) -> u64;
     fn ms(self) -> u64;

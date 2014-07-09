@@ -10,6 +10,7 @@ use fs;
 use math;
 use outliers::Outliers;
 use statistics::estimate::Estimate;
+use units::{Unit,Time,Ratio};
 
 // XXX should the size of the image be configurable?
 pub static PNG_SIZE: (uint, uint) = (1366, 768);
@@ -34,6 +35,21 @@ pub fn pdf(sample: &[f64], dir: &Path) {
         plot(Lines, xs.iter(), ys.iter(), []).
         plot(Lines, mean.iter(), vertical.iter(), [Title("mean")]).
         plot(Lines, median.iter(), vertical.iter(), [Title("median")]).
+        draw();
+}
+
+pub fn points(sample: &[f64], dir: &Path) {
+    fs::mkdirp(dir);
+
+    let mut rng = rand::task_rng();
+
+    Figure::new().
+        set_output_file(dir.join("points.png")).
+        set_title("Sample points").
+        set_xlabel("Time (ns)").
+        set_size(PNG_SIZE).
+        plot(Points, sample.iter(), rng.gen_iter::<f64>(),
+             [PointType(Circle)]).
         draw();
 }
 
@@ -67,7 +83,7 @@ pub fn outliers(outliers: &Outliers, dir: &Path) {
         draw();
 }
 
-pub fn both_points(old: &[f64], new: &[f64], dir: &Path) {
+pub fn both_points(base: &[f64], new: &[f64], dir: &Path) {
     fs::mkdirp(dir);
 
     let mut rng = rand::task_rng();
@@ -77,18 +93,18 @@ pub fn both_points(old: &[f64], new: &[f64], dir: &Path) {
         set_title("Sample points").
         set_xlabel("Time (ns)").
         set_size(PNG_SIZE).
-        plot(Points, old.iter(), rng.gen_iter::<f64>(),
-             [PointType(Circle), Title("Old")]).
+        plot(Points, base.iter(), rng.gen_iter::<f64>(),
+             [PointType(Circle), Title("Base")]).
         plot(Points, new.iter(), rng.gen_iter::<f64>(),
              [PointType(Circle), Title("New")]).
         draw();
 
 }
 
-pub fn both_pdfs(old: &[f64], new: &[f64], dir: &Path) {
+pub fn both_pdfs(base: &[f64], new: &[f64], dir: &Path) {
     fs::mkdirp(dir);
 
-    let (old_xs, old_ys) = math::kde(old);
+    let (base_xs, base_ys) = math::kde(base);
     let (new_xs, new_ys) = math::kde(new);
 
     Figure::new().
@@ -97,7 +113,7 @@ pub fn both_pdfs(old: &[f64], new: &[f64], dir: &Path) {
         set_xlabel("Time (ns)").
         set_ylabel("Density (a.u.)").
         set_size(PNG_SIZE).
-        plot(Lines, old_xs.iter(), old_ys.iter(), [Title("Old")]).
+        plot(Lines, base_xs.iter(), base_ys.iter(), [Title("Base")]).
         plot(Lines, new_xs.iter(), new_ys.iter(), [Title("New")]).
         draw();
 
@@ -106,17 +122,35 @@ pub fn both_pdfs(old: &[f64], new: &[f64], dir: &Path) {
 pub fn distribution(distribution: &[f64],
                     estimate: &Estimate,
                     dir: &Path,
-                    statistic: &'static str) {
+                    statistic: &'static str,
+                    unit: Unit) {
     let (xs, ys) = math::kde(distribution);
     let ys = ys.as_slice();
     let vertical = [ys.min(), ys.max()];
 
     let point = estimate.point();
     let (lb, ub) = (estimate.lower_bound(), estimate.upper_bound());
+
+    let (xs, point, lb, ub) = match unit {
+        Time => {
+            // TODO Properly scale the time
+            (xs, point, lb, ub)
+        },
+        Ratio => {(
+            xs.iter().map(|y| y * 100.0).collect(),
+            point * 100.0,
+            lb * 100.0,
+            ub * 100.0,
+        )},
+    };
+
     Figure::new().
         set_output_file(dir.join(format!("{}.png", statistic))).
         set_title("Probability Density Function").
-        set_xlabel("Time (ns)").
+        set_xlabel(match unit {
+            Time => "Time (ns)",
+            Ratio => "Relative change (%)"
+        }).
         set_ylabel("Density (a.u.)").
         set_size(PNG_SIZE).
         plot(Lines, xs.iter(), ys.iter(), []).
