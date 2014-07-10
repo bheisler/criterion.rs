@@ -4,6 +4,7 @@ use std::cmp;
 use bencher::Bencher;
 use common::run_for_at_least;
 use criterion::Criterion;
+use ext;
 use file;
 use outliers::Outliers;
 use units::{AsTime,ToNanoSeconds};
@@ -35,6 +36,31 @@ impl Sample {
         let mut sample = Vec::from_elem(size as uint, 0f64);
         for measurement in sample.mut_iter() {
             b.bench_n(m_iters, |x| f(x));
+            *measurement = b.ns_per_iter();
+        }
+
+        Sample {
+            data: sample,
+        }
+    }
+
+    pub fn new_ext(b: &mut ext::Bencher, criterion: &Criterion) -> Sample {
+        let m_time = criterion.measurement_time as u64 * 1.ms();
+        let size = criterion.sample_size;
+        let wu_time = criterion.warm_up_time as u64 * 1.ms();
+
+        println!("> warming up for {} ms", criterion.warm_up_time);
+        let (wu_elapsed, wu_iters) = ext::run_for_at_least(wu_time, 1, b);
+
+        let m_iters = cmp::max(wu_iters * m_time / wu_time, 1);
+        let s_elapsed = (wu_elapsed * m_iters * size) as f64 / wu_iters as f64;
+
+        println!("> collecting {} measurements, {} iters each in estimated {}",
+                 size, m_iters, s_elapsed.as_time());
+
+        let mut sample = Vec::from_elem(size as uint, 0f64);
+        for measurement in sample.mut_iter() {
+            b.bench_n(m_iters);
             *measurement = b.ns_per_iter();
         }
 

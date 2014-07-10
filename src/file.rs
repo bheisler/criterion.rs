@@ -1,7 +1,7 @@
 use std::io::File;
 
 pub fn read(path: &Path) -> String {
-    match File::open(path).read_to_str() {
+    match File::open(path).unwrap().read_to_string() {
         Err(e) => fail!("Couldn't read {}: {}", path.display(), e),
         Ok(contents) => contents,
     }

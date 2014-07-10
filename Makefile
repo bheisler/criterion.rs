@@ -9,4 +9,6 @@ all:
 test:
 	#$(foreach bin,$(BINS),$(bin) &&) true
 	target/release/fib
+	target/release/pyclock
+	target/release/pyfib
 	./check-line-length.sh

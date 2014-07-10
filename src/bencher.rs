@@ -1,5 +1,5 @@
 use test::black_box;
-use time::precise_time_ns;
+use time;
 
 use clock::Clock;
 
@@ -17,11 +17,11 @@ impl Bencher {
     }
 
     pub fn iter<T>(&mut self, inner: || -> T) {
-        self.ns_start = precise_time_ns();
+        self.ns_start = time::precise_time_ns();
         for _ in range(0, self.iterations) {
             black_box(inner());
         }
-        self.ns_end = precise_time_ns();
+        self.ns_end = time::precise_time_ns();
     }
 
     pub fn new() -> Bencher {

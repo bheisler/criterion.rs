@@ -1,9 +1,11 @@
 use serialize::json;
 use std::fmt::Show;
+use std::io::Command;
 
 use analyze;
 use bencher::Bencher;
 use clock::Clock;
+use ext;
 use file;
 use fs;
 use plot;
@@ -62,7 +64,7 @@ impl Criterion {
     }
 
     pub fn bench<'a,
-                 N: Str + ToStr>(
+                 N: Str + ToString>(
                  &'a mut self,
                  name: N,
                  f: |&mut Bencher|)
@@ -191,7 +193,63 @@ impl Criterion {
             });
         }
 
-        // TODO Summary analysis
+        self
+    }
+
+    pub fn ext_bench<'a,
+                     N: Str + ToString>(
+                     &'a mut self,
+                     name: N,
+                     cmd: Command)
+                     -> &'a mut Criterion {
+        let mut b = ext::Bencher::new(cmd);
+        let name = name.as_slice();
+
+        println!("benchmarking {}", name);
+
+        let sample = Sample::new_ext(&mut b, self);
+
+        let root_dir = Path::new(".criterion").join(name);
+        let new_dir = root_dir.join("new");
+        let base_dir = root_dir.join("base");
+
+        if base_dir.exists() {
+            fs::rmrf(&base_dir)
+        }
+
+        if new_dir.exists() {
+            fs::mv(&new_dir, &base_dir)
+        }
+
+        fs::mkdirp(&new_dir);
+        sample.save(&new_dir.join("sample.json"));
+
+        let new_sample = sample.data();
+        plot::pdf(new_sample, &new_dir);
+        plot::points(new_sample, &new_dir);
+
+        let outliers = sample.classify_outliers();
+        outliers.save(&new_dir.join("outliers"));
+        outliers.report();
+
+        plot::outliers(&outliers, &new_dir.join("outliers"));
+
+        self
+    }
+
+    pub fn ext_bench_group<'a,
+                           G: Show,
+                           I: Clone + Show>(
+                           &'a mut self,
+                           group: G,
+                           inputs: &[I],
+                           cmd: Command)
+                           -> &'a mut Criterion {
+        for input in inputs.iter() {
+            let mut cmd = cmd.clone();
+            cmd.arg(format!("{}", input));
+            self.ext_bench(format!("{}/{}", group, input), cmd);
+        }
 
         self
     }

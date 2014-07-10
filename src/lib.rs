@@ -13,6 +13,7 @@ mod bencher;
 mod clock;
 mod common;
 mod criterion;
+mod ext;
 mod file;
 mod fs;
 mod math;

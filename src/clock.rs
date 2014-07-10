@@ -1,5 +1,5 @@
 use test::stats::Stats;
-use time::precise_time_ns;
+use time;
 
 use bencher::Bencher;
 use criterion::Criterion;
@@ -30,5 +30,5 @@ impl Clock {
 }
 
 fn clock_cost(b: &mut Bencher) {
-    b.iter(|| precise_time_ns())
+    b.iter(|| time::precise_time_ns())
 }
