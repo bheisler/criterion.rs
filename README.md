@@ -10,9 +10,13 @@ Addresses [mozilla/rust#6812](https://github.com/mozilla/rust/issues/6812) and
 I hope it'll help with
 [mozilla/rust#7532](https://github.com/mozilla/rust/issues/7532)
 
-I encourage you to look at this
+~~I encourage you to look at this
 [braindump](http://japaric.github.io/criterion-braindump), for an explanation
-(with plots!) of how criterion works.
+(with plots!) of how criterion works.~~ (Outdated, I'll publish something new
+soon...)
+
+Docs available
+[here](http://japaric.github.io/criterion.rs/criterion/index.html)
 
 ## Run the examples
 
