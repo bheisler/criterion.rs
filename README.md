@@ -82,9 +82,10 @@ benchmarking fib_15
 (...)
 ```
 
-## Work plan
+## Progress
 
-This section is outdated, see #2 instead
+This section is outdated, see the
+[Roadmap](https://github.com/japaric/criterion.rs/issues/2) instead
 
 ### Done so far
 
