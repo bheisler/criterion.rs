@@ -82,7 +82,11 @@ benchmarking fib_15
 (...)
 ```
 
-## Done so far
+## Work plan
+
+This section is outdated, see #2 instead
+
+### Done so far
 
 * Estimation of the cost of reading the clock (`precise_time_ns()`)
 * Outlier classification using the box plot method (IQR criteria)
@@ -104,7 +108,7 @@ benchmarking fib_15
       infrastructure uses)
 * Report improvement/regression with a confidence interval
 
-## Not (yet?) ported from the original
+### Not (yet?) ported from the original
 
 * outlierVariance, this method computes the influence of the outliers on the
   variance of the sample
@@ -120,7 +124,7 @@ benchmarking fib_15
       the R squared.
     * Look at the skewness of the bootstrap distributions.
 
-## TODO
+### TODO
 
 * More testing
 * Redirect benchmark stdout to /dev/null
