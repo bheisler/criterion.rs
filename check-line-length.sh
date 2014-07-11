@@ -1,14 +1,14 @@
 #!/bin/bash
 
-echo "Checking if any rust file has a line longer than 79 characters"
+echo "Checking if any rust file has a line longer than 99 characters"
 
-offenders=$(grep -Pl ".{80}" $(find . -name '*.rs'))
+offenders=$(grep -Pl ".{100}" $(find . -name '*.rs'))
 status=$?
 
 if [[ $status == 0 ]]; then
   for offender in $offenders; do
-    echo "> $offender exceeds 79 chars"
-    awk 'length($0) > 79' $offender
+    echo "> $offender exceeds 99 chars"
+    awk 'length($0) > 99' $offender
   done
 
   exit 1
