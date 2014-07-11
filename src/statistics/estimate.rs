@@ -1,68 +1,57 @@
-use test::stats::Stats;
+use serialize::{Encodable,json};
+use std::collections::HashMap;
+use std::io::File;
 
-use units::{AsPercent,AsSignedPercent,AsTime};
+use super::Statistic;
+use super::confidence::ConfidenceInterval;
 
 #[deriving(Encodable)]
 pub struct Estimate {
-    confidence_level: f64,
-    lower_bound: f64,
-    point: f64,
+    confidence_interval: ConfidenceInterval,
+    point_estimate: f64,
     standard_error: f64,
-    upper_bound: f64,
 }
 
 impl Estimate {
-    // XXX Naive estimate using percentiles, try the BCA boostrap
-    pub fn new(point_estimate: f64,
-           distribution: &[f64],
-           cl: f64)
-            -> Estimate {
-        assert!(cl > 0.0 && cl < 1.0);
-
-        let standard_error = distribution.std_dev();
-        let lower_bound = distribution.percentile(50.0 * (1.0 - cl));
-        let upper_bound = distribution.percentile(50.0 * (1.0 + cl));
-
+    pub fn new(ci: ConfidenceInterval, p: f64, se: f64) -> Estimate {
         Estimate {
-            confidence_level: cl,
-            lower_bound: lower_bound,
-            point: point_estimate,
-            standard_error: standard_error,
-            upper_bound: upper_bound,
+            confidence_interval: ci,
+            point_estimate: p,
+            standard_error: se,
         }
     }
 
-    pub fn lower_bound(&self) -> f64 {
-        self.lower_bound
+    pub fn confidence_interval(&self) -> ConfidenceInterval {
+        self.confidence_interval
     }
 
-    pub fn point(&self) -> f64 {
-        self.point
+    pub fn point_estimate(&self) -> f64 {
+        self.point_estimate
     }
 
-    pub fn upper_bound(&self) -> f64 {
-        self.upper_bound
-    }
-}
-
-impl AsPercent for Estimate {
-    fn as_percent(&self) -> String {
-        format!("{} ± {} [{} {}] {}% CI",
-                self.point.as_signed_percent(),
-                self.standard_error.as_percent(),
-                self.lower_bound.as_signed_percent(),
-                self.upper_bound.as_signed_percent(),
-                self.confidence_level * 100.0)
+    pub fn standard_error(&self) -> f64 {
+        self.standard_error
     }
 }
 
-impl AsTime for Estimate {
-    fn as_time(&self) -> String {
-        format!("{} ± {} [{} {}] {}% CI",
-                self.point.as_time(),
-                self.standard_error.as_time(),
-                self.lower_bound.as_time(),
-                self.upper_bound.as_time(),
-                self.confidence_level * 100.0)
+pub struct Estimates(HashMap<Statistic, Estimate>);
+
+impl Estimates {
+    pub fn new(statistics: &[Statistic], estimates: Vec<Estimate>) -> Estimates {
+        Estimates(statistics.iter().map(|&x| x).zip(estimates.move_iter()).collect())
+    }
+
+    pub fn get<'a>(&'a self, statistic: Statistic) -> &'a Estimate {
+        let &Estimates(ref estimates) = self;
+        estimates.get(&statistic)
+    }
+
+    pub fn save(&self, path: &Path) {
+        let &Estimates(ref estimates) = self;
+
+        match File::create(path).write_str(json::encode(estimates).as_slice()) {
+            Err(e) => fail!("{}", e),
+            Ok(_) => {},
+        }
     }
 }

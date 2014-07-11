@@ -1,24 +1,21 @@
+#![crate_name = "criterion"]
 #![feature(macro_rules)]
 
 extern crate serialize;
 extern crate simplot;
 extern crate test;
-extern crate time;
 
 pub use bencher::Bencher;
 pub use criterion::Criterion;
+pub use time::traits::{Milisecond,Second};
 
-mod analyze;
 mod bencher;
-mod clock;
-mod common;
 mod criterion;
-mod ext;
-mod file;
 mod fs;
 mod math;
 mod outliers;
 mod plot;
-mod sample;
 mod statistics;
-mod units;
+mod stream;
+mod target;
+mod time;

@@ -1,8 +1,6 @@
 use serialize::json;
+use std::io::File;
 use test::stats::Stats;
-
-use file;
-use fs;
 
 #[deriving(Encodable)]
 pub struct Outliers {
@@ -17,7 +15,8 @@ pub struct Outliers {
 impl Outliers {
     // Classify outliers using the boxplot method
     // see http://en.wikipedia.org/wiki/Boxplot for more information
-    pub fn new(sample: &[f64]) -> Outliers {
+    // TODO Do the normal points still have outliers?
+    pub fn classify(sample: &[f64]) -> Outliers {
         let (q1, _, q3) = sample.quartiles();
         let iqr = q3 - q1;
 
@@ -27,9 +26,9 @@ impl Outliers {
         let himt = q3 + 1.5 * iqr;
         let hist = q3 + 3.0 * iqr;
 
-        let (mut los, mut lom) = (vec!(), vec!());
-        let (mut him, mut his) = (vec!(), vec!());
-        let mut normal = vec!();
+        let (mut los, mut lom, mut him, mut his, mut normal) = (
+            vec!(), vec!(), vec!(), vec!(), vec!()
+        );
 
         for &value in sample.iter() {
             if value < lost {
@@ -63,7 +62,6 @@ impl Outliers {
         self.high_severe.as_slice()
     }
 
-
     pub fn low_mild<'a>(&'a self) -> &'a [f64] {
         self.low_mild.as_slice()
     }
@@ -79,11 +77,11 @@ impl Outliers {
         self.thresholds
     }
 
-    pub fn save(&self, dir: &Path) {
-        fs::mkdirp(dir);
-
-        let data = json::encode(self);
-        file::write(&dir.join("classification.json"), data.as_slice());
+    pub fn save(&self, path: &Path) {
+        match File::create(path).write_str(json::encode(self).as_slice()) {
+            Err(e) => fail!("{}", e),
+            Ok(_) => {},
+        }
     }
 
     pub fn report(&self) {
@@ -101,7 +99,7 @@ impl Outliers {
 
         let percent = |n: uint| { 100.0 * n as f64 / sample_size as f64 };
 
-        println!("> found {} outliers among {} measurements ({:.2}%)",
+        println!("> Found {} outliers among {} measurements ({:.2}%)",
                  total,
                  sample_size,
                  percent(total));

@@ -1,53 +1,53 @@
-use test::black_box;
+use test;
+
+use time::traits::Nanosecond;
+use time::types::Ns;
 use time;
 
-use clock::Clock;
-
+/// Helper `struct` to build benchmark functions that follow the setup - bench - teardown pattern.
+#[experimental]
 pub struct Bencher {
-    clock: Option<Clock>,
+    end: Ns<u64>,
     iterations: u64,
-    ns_end: u64,
-    ns_start: u64,
+    start: Ns<u64>,
 }
 
 impl Bencher {
-    pub fn bench_n(&mut self, n: u64, f: |&mut Bencher|) {
-        self.iterations = n;
-        f(self);
-    }
-
-    pub fn iter<T>(&mut self, inner: || -> T) {
-        self.ns_start = time::precise_time_ns();
+    /// Callback for benchmark functions to benchmark a routine
+    ///
+    /// A benchmark function looks like this:
+    ///
+    ///     fn bench_me(b: &mut Bencher) {
+    ///         // Setup
+    ///
+    ///         // Bench
+    ///         b.iter(|| {
+    ///             // Routine to benchmark
+    ///         })
+    ///
+    ///         // Teardown
+    ///     }
+    ///
+    /// See `Criterion::bench()` for details about how to run this benchmark function
+    #[experimental]
+    pub fn iter<T>(&mut self, routine: || -> T) {
+        self.start = time::now();
         for _ in range(0, self.iterations) {
-            black_box(inner());
+            test::black_box(routine());
         }
-        self.ns_end = time::precise_time_ns();
+        self.end = time::now();
     }
+}
 
-    pub fn new() -> Bencher {
-        local_data_key!(clock: Clock);
-
-        Bencher {
-            clock: clock.get().map(|c| *c),
-            iterations: 0,
-            ns_end: 0,
-            ns_start: 0,
-        }
+// XXX These functions should be inside the `impl Bencher`, but they would leak into the API
+pub fn new(iterations: u64) -> Bencher {
+    Bencher {
+        iterations: iterations,
+        end: 0.ns(),
+        start: 0.ns(),
     }
+}
 
-    pub fn ns_elapsed(&self) -> u64 {
-        self.ns_end - self.ns_start
-    }
-
-    pub fn ns_per_iter(&self) -> f64 {
-        let iters = self.iterations;
-        let elapsed = self.ns_elapsed() as f64;
-
-        match self.clock {
-            None => elapsed / (iters + 1) as f64,
-            // XXX this operation introduces variance in the measurement
-            // I'll assume the variance introduced is negligible
-            Some(clock) => (elapsed - clock.cost()) / iters as f64,
-        }
-    }
+pub fn elapsed(b: &Bencher) -> Ns<u64> {
+    b.end - b.start
 }
