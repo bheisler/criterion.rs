@@ -9,6 +9,7 @@ pub trait Prefix {
     fn symbol(_: Option<Self>) -> String;
 }
 
+#[experimental]
 pub trait Second { fn s(self) -> Time<prefix::No, unit::Second, Self> { Time(self) } }
 impl<T> Second for T {}
 
@@ -16,7 +17,6 @@ impl<T> Second for T {}
 pub trait Milisecond { fn ms(self) -> Time<prefix::Mili, unit::Second, Self> { Time(self) } }
 impl<T> Milisecond for T {}
 
-#[experimental]
 pub trait Microsecond { fn us(self) -> Time<prefix::Micro, unit::Second, Self> { Time(self) } }
 impl<T> Microsecond for T {}
 
