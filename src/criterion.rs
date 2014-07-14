@@ -7,11 +7,11 @@ use bencher::Bencher;
 use fs;
 use outliers::Outliers;
 use plot;
-use statistics::{Estimates,Mean,Median,MedianAbsDev,Sample,StdDev};
+use statistics::{Estimate,Estimates,Mean,Median,MedianAbsDev,Sample,StdDev};
 use stream::Stream;
 use target::{Function,Program,Target};
 use time::Time;
-use time::prefix::{Mili,Nano,No};
+use time::prefix::{Mili,Nano};
 use time::traits::{Milisecond,Nanosecond,Prefix,Second};
 use time::types::Ns;
 use time::unit;
@@ -24,6 +24,7 @@ use time;
 pub struct Criterion {
     confidence_level: f64,
     measurement_time: Ns<u64>,
+    noise_tolerance: f64,
     nresamples: uint,
     sample_size: uint,
     warm_up_time: Ns<u64>,
@@ -36,6 +37,8 @@ impl Criterion {
     ///
     /// * Measurement time: 10 ms
     ///
+    /// * Noise tolerance: 0.01 (1%)
+    ///
     /// * Bootstrap with 100 000 resamples
     ///
     /// * Sample size: 100 measurements
@@ -46,6 +49,7 @@ impl Criterion {
         Criterion {
             confidence_level: 0.95,
             measurement_time: 10.ms().to::<Nano>(),
+            noise_tolerance: 0.01,
             nresamples: 100_000,
             sample_size: 100,
             warm_up_time: 1.s().to::<Nano>(),
@@ -54,6 +58,8 @@ impl Criterion {
 
     #[experimental]
     pub fn confidence_level<'a>(&'a mut self, cl: f64) -> &'a mut Criterion {
+        assert!(cl > 0.0 && cl < 1.0);
+
         self.confidence_level = cl;
         self
     }
@@ -66,6 +72,14 @@ impl Criterion {
                             t: Time<P, unit::Second, u64>)
                             -> &'a mut Criterion {
         self.measurement_time = t.to::<Nano>();
+        self
+    }
+
+    #[experimental]
+    pub fn noise_tolerance<'a>(&'a mut self, nt: f64) -> &'a mut Criterion {
+        assert!(nt >= 0.0);
+
+        self.noise_tolerance = nt;
         self
     }
 
@@ -287,6 +301,32 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     plot::ratio_distributions(&distributions,
                               &estimates,
                               &change_dir.join("bootstrap/distribution"));
+
+    let noise = criterion.noise_tolerance;
+    let mut regressed = vec!();
+    for &statistic in [Mean, Median].iter() {
+        let estimate = estimates.get(statistic);
+        let result = compare_to_noise(estimate, noise);
+
+        let p = estimate.point_estimate();
+        match result {
+            Improved => {
+                println!("  > {} has improved by {:.2}%", statistic, -100.0 * p);
+                regressed.push(false);
+            },
+            Regressed => {
+                println!("  > {} has regressed by {:.2}%", statistic, 100.0 * p);
+                regressed.push(true);
+            },
+            WithinNoise => {
+                println!("  > {} is within noise levels", statistic);
+                regressed.push(false);
+            },
+        }
+    }
+    if regressed.iter().all(|&x| x) {
+        fail!("regression");
+    }
 }
 
 fn extrapolate_iters(iters: u64, took: Ns<u64>, want: Ns<u64>) -> (Ns<f64>, u64) {
@@ -422,5 +462,25 @@ fn format_change(pct: f64, signed: bool) -> String {
         format!("{:>+6}%", format_signed_short(pct * 1e2))
     } else {
         format!("{:>6}%", format_short(pct * 1e2))
+    }
+}
+
+enum ComparisonResult {
+    Improved,
+    Regressed,
+    WithinNoise,
+}
+
+fn compare_to_noise(estimate: &Estimate, noise: f64) -> ComparisonResult {
+    let ci = estimate.confidence_interval();
+    let lb = ci.lower_bound();
+    let ub = ci.upper_bound();
+
+    if lb < -noise && ub < -noise {
+        Improved
+    } else if lb > noise && ub > noise {
+        Regressed
+    } else {
+        WithinNoise
     }
 }
