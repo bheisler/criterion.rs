@@ -411,13 +411,6 @@ fn report_time(estimates: &Estimates) {
         let se = format_time(estimate.standard_error());
         let cl = ci.confidence_level();
 
-        let statistic = match statistic {
-            Mean => "mean",
-            Median => "median",
-            MedianAbsDev => "MAD",
-            StdDev => "SD",
-        };
-
         println!("  > {:<7} {} ± {} [{} {}] {}% CI", statistic, p, se, lb, ub, cl * 100.0);
     }
 }
@@ -445,13 +438,6 @@ fn report_change(estimates: &Estimates) {
         let ub = format_change(ci.upper_bound(), true);
         let se = format_change(estimate.standard_error(), false);
         let cl = ci.confidence_level();
-
-        let statistic = match statistic {
-            Mean => "mean",
-            Median => "median",
-            MedianAbsDev => "MAD",
-            StdDev => "SD",
-        };
 
         println!("  > {:<7} {} ± {} [{} {}] {}% CI", statistic, p, se, lb, ub, cl * 100.0);
     }
