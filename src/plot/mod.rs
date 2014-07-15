@@ -167,8 +167,14 @@ pub fn summarize(dir: &Path) {
             });
 
             let inputs = estimates_pairs.iter().map(|&(_, input)| input);
-            let statistics = estimates_pairs.iter().map(|&(ref estimates, _)| {
+            let points = estimates_pairs.iter().map(|&(ref estimates, _)| {
                 estimates.get(statistic).point_estimate()
+            });
+            let lbs = estimates_pairs.iter().map(|&(ref estimates, _)| {
+                estimates.get(statistic).confidence_interval().lower_bound()
+            });
+            let ubs = estimates_pairs.iter().map(|&(ref estimates, _)| {
+                estimates.get(statistic).confidence_interval().upper_bound()
             });
 
             fs::mkdirp(&dir.join(format!("summary/{}", sample)));
@@ -178,7 +184,7 @@ pub fn summarize(dir: &Path) {
                 set_xlabel("Input").
                 set_ylabel("Time (ns)").
                 set_size(PNG_SIZE).
-                plot(Points, inputs, statistics, [PointType(Circle)]).
+                yerrorbars(inputs, points, lbs, ubs, [Title("Confidence Interval")]).
                 draw();
         }
     }
