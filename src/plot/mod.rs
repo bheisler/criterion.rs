@@ -2,6 +2,7 @@ use simplot::Figure;
 use simplot::option::{Title,PointType};
 use simplot::plottype::{Lines,Points};
 use simplot::pointtype::Circle;
+use std::iter;
 use std::rand::Rng;
 use std::rand;
 use test::stats::Stats;
@@ -141,17 +142,17 @@ pub fn outliers(outliers: &Outliers, path: Path) {
 pub fn summarize(dir: &Path) {
     let contents = fs::ls(dir);
 
-    // TODO Handle inputs that are not `uint`s (needs xtics in simplot)
+    // TODO Specially handle inputs that can be parsed as `int`s
     for &sample in ["new", "base"].iter() {
         for &statistic in [Mean, Median].iter() {
-            let mut estimates_pairs: Vec<(Estimates, uint)> = Vec::new();
+            let mut estimates_pairs = Vec::new();
             for entry in contents.iter().filter(|entry| {
                 entry.is_dir() && entry.filename_str() != Some("summary")
             }) {
                 let input = entry.filename_str().unwrap();
                 let path = entry.join(sample).join("bootstrap/estimates.json");
-                match (from_str(input), Estimates::load(&path)) {
-                    (Some(size), Some(estimates)) => estimates_pairs.push((estimates, size)),
+                match Estimates::load(&path) {
+                    Some(estimates) => estimates_pairs.push((estimates, input)),
                     _ => {}
                 }
             }
@@ -183,8 +184,9 @@ pub fn summarize(dir: &Path) {
                 set_title(format!("{}", statistic)).
                 set_xlabel("Input").
                 set_ylabel("Time (ns)").
+                set_xtics(inputs, iter::count(0u, 1)).
                 set_size(PNG_SIZE).
-                yerrorbars(inputs, points, lbs, ubs, [Title("Confidence Interval")]).
+                yerrorbars(iter::count(0u, 1), points, lbs, ubs, [Title("Confidence Interval")]).
                 draw();
         }
     }
