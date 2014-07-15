@@ -60,7 +60,7 @@ impl Estimates {
         let &Estimates(ref estimates) = self;
 
         match File::create(path).write_str(json::encode(estimates).as_slice()) {
-            Err(e) => fail!("{}", e),
+            Err(e) => fail!("`write {}`: {}", path.display(), e),
             Ok(_) => {},
         }
     }

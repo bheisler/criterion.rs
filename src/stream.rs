@@ -11,7 +11,7 @@ pub struct Stream {
 impl Stream {
     pub fn spawn(cmd: &Command) -> Stream {
         let mut process = match cmd.spawn() {
-            Err(e) => fail!("{}", e),
+            Err(e) => fail!("`{}`: {}", cmd, e),
             Ok(process) => process,
         };
 
@@ -24,14 +24,14 @@ impl Stream {
 
     pub fn send<T: Show>(&mut self, line: T) {
         match writeln!(self.stdin.get_mut_ref(), "{}", line) {
-            Err(e) => fail!("{}", e),
+            Err(e) => fail!("`read stdin`: {}", e),
             Ok(_) => {},
         }
     }
 
     pub fn recv(&mut self) -> String {
         match self.stdout.read_line() {
-            Err(e) => fail!("{}", e),
+            Err(e) => fail!("`write stdout`: {}", e),
             Ok(line) => line,
         }
     }

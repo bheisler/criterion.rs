@@ -25,10 +25,12 @@ impl<V> Sample<V> {
     }
 
     pub fn load(path: &Path) -> Sample<Vec<f64>> {
+        let path_ = path.display();
+
         match File::open(path).read_to_string() {
-            Err(e) => fail!("{}", e),
+            Err(e) => fail!("`open {}`: {}", path_, e),
             Ok(s) => match json::decode(s.as_slice()) {
-                Err(e) => fail!("{}", e),
+                Err(e) => fail!("`decode {}`: {}", path_, e),
                 Ok(v) => Sample(v),
             }
         }
@@ -40,7 +42,7 @@ impl<'a, V: Encodable<json::Encoder<'a>, IoError>> Sample<V> {
         let &Sample(ref sample) = self;
         // TODO JSON should be pretty encoded (I wish we had `json::pretty_encode`)
         match File::create(path).write_str(json::encode(sample).as_slice()) {
-            Err(e) => fail!("{}", e),
+            Err(e) => fail!("`write {}`: {}", path.display(), e),
             Ok(_) => {},
         }
     }

@@ -79,7 +79,7 @@ impl Outliers {
 
     pub fn save(&self, path: &Path) {
         match File::create(path).write_str(json::encode(self).as_slice()) {
-            Err(e) => fail!("{}", e),
+            Err(e) => fail!("`write {}`: {}", path.display(), e),
             Ok(_) => {},
         }
     }
