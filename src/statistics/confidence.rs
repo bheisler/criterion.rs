@@ -1,6 +1,6 @@
 use super::Distribution;
 
-#[deriving(Encodable)]
+#[deriving(Decodable,Encodable)]
 pub struct ConfidenceInterval {
     confidence_level: f64,
     lower_bound: f64,

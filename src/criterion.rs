@@ -161,6 +161,10 @@ impl Criterion {
             self.bench(format!("{}/{}", id, input), |b| fun(b, input));
         }
 
+        print!("Summarizing results of {}... ", id);
+        plot::summarize(&Path::new(".criterion").join(id));
+        println!("DONE\n");
+
         self
     }
 
@@ -239,6 +243,10 @@ impl Criterion {
         for input in inputs.iter() {
             self.bench_prog(format!("{}/{}", id, input), prog.clone().arg(format!("{}", input)));
         }
+
+        print!("Summarizing results of {}... ", id);
+        plot::summarize(&Path::new(".criterion").join(id));
+        println!("DONE\n");
 
         self
     }

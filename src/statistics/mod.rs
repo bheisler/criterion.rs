@@ -12,7 +12,7 @@ mod estimate;
 mod resampler;
 mod sample;
 
-#[deriving(Encodable, Eq, Hash, PartialEq)]
+#[deriving(Decodable,Encodable, Eq, Hash, PartialEq)]
 pub enum Statistic {
     Mean,
     Median,

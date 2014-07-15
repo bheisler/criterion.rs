@@ -6,6 +6,7 @@ use std::rand::Rng;
 use std::rand;
 use test::stats::Stats;
 
+use fs;
 use math;
 use outliers::Outliers;
 use statistics::{Distributions,Estimates,Mean,Median,Sample};
@@ -135,4 +136,50 @@ pub fn outliers(outliers: &Outliers, path: Path) {
         plot(Points, severe, rng.gen_iter::<f64>(),
              [PointType(Circle), Title("Severe")]).
         draw();
+}
+
+pub fn summarize(dir: &Path) {
+    let contents = fs::ls(dir);
+
+    // TODO Handle inputs that are not `uint`s (needs xtics in simplot)
+    for &sample in ["new", "base"].iter() {
+        for &statistic in [Mean, Median].iter() {
+            let mut estimates_pairs: Vec<(Estimates, uint)> = Vec::new();
+            for entry in contents.iter().filter(|entry| {
+                entry.is_dir() && entry.filename_str() != Some("summary")
+            }) {
+                let input = entry.filename_str().unwrap();
+                let path = entry.join(sample).join("bootstrap/estimates.json");
+                match (from_str(input), Estimates::load(&path)) {
+                    (Some(size), Some(estimates)) => estimates_pairs.push((estimates, size)),
+                    _ => {}
+                }
+            }
+
+            if estimates_pairs.is_empty() {
+                continue;
+            }
+
+            estimates_pairs.sort_by(|&(ref a, _), &(ref b, _)| {
+                let a = a.get(statistic).point_estimate();
+                let b = b.get(statistic).point_estimate();
+                a.partial_cmp(&b).unwrap()
+            });
+
+            let inputs = estimates_pairs.iter().map(|&(_, input)| input);
+            let statistics = estimates_pairs.iter().map(|&(ref estimates, _)| {
+                estimates.get(statistic).point_estimate()
+            });
+
+            fs::mkdirp(&dir.join(format!("summary/{}", sample)));
+            Figure::new().
+                set_output_file(dir.join(format!("summary/{}/{}s.png", sample, statistic))).
+                set_title(format!("{}", statistic)).
+                set_xlabel("Input").
+                set_ylabel("Time (ns)").
+                set_size(PNG_SIZE).
+                plot(Points, inputs, statistics, [PointType(Circle)]).
+                draw();
+        }
+    }
 }

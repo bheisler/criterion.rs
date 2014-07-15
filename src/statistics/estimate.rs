@@ -5,7 +5,7 @@ use std::io::File;
 use super::Statistic;
 use super::confidence::ConfidenceInterval;
 
-#[deriving(Encodable)]
+#[deriving(Decodable,Encodable)]
 pub struct Estimate {
     confidence_interval: ConfidenceInterval,
     point_estimate: f64,
@@ -39,6 +39,16 @@ pub struct Estimates(HashMap<Statistic, Estimate>);
 impl Estimates {
     pub fn new(statistics: &[Statistic], estimates: Vec<Estimate>) -> Estimates {
         Estimates(statistics.iter().map(|&x| x).zip(estimates.move_iter()).collect())
+    }
+
+    pub fn load(path: &Path) -> Option<Estimates> {
+        match File::open(path).read_to_string() {
+            Err(_) => None,
+            Ok(string) => match json::decode(string.as_slice()) {
+                Err(_) => None,
+                Ok(estimates) => Some(Estimates(estimates)),
+            }
+        }
     }
 
     pub fn get<'a>(&'a self, statistic: Statistic) -> &'a Estimate {

@@ -1,5 +1,12 @@
 use std::io::{UserRWX,fs};
 
+pub fn ls(dir: &Path) -> Vec<Path> {
+    match fs::readdir(dir) {
+        Err(e) => fail!("{}", e),
+        Ok(contents) => contents,
+    }
+}
+
 pub fn mkdirp(path: &Path) {
     match fs::mkdir_recursive(path, UserRWX) {
         Err(e) => fail!("{}", e),
