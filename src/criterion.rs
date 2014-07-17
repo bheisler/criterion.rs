@@ -251,6 +251,23 @@ impl Criterion {
 
         self
     }
+
+    /// Summarize the results stored under the `.criterion/${id}` folder
+    ///
+    /// Note that `bench_family` and `bench_prog_family` internally call the `summarize` method
+    #[experimental]
+    pub fn summarize<'a,
+                     S: Str>(
+                     &'a mut self,
+                     id: S)
+                     -> &'a mut Criterion {
+        let id = id.as_slice();
+        print!("Summarizing results of {}... ", id);
+        plot::summarize(&Path::new(".criterion").join(id));
+        println!("DONE\n");
+
+        self
+    }
 }
 
 fn bench(id: &str, mut target: Target, criterion: &Criterion) {
