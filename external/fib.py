@@ -7,8 +7,7 @@ def fib(n):
 n = int(sys.argv[1])
 
 while True:
-    line = sys.stdin.readline()
-    iters = int(line)
+    iters = int(input())
 
     # Setup
 

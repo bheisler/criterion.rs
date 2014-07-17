@@ -1,9 +1,7 @@
-import sys
 import time
 
 while True:
-    line = sys.stdin.readline()
-    iters = int(line)
+    iters = int(input())
 
     # Setup
 
