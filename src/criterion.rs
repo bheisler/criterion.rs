@@ -199,20 +199,9 @@ impl Criterion {
     ///         }
     ///     }
     ///
-    /// If `inputs` is empty, only `prog` will be benchmarked, otherwise `prog` will be
-    /// benchmarked under each input
+    /// For example, to benchmark a python script use the following command
     ///
-    /// For example, to benchmark a python script under different inputs, use these arguments:
-    ///
-    ///     let cmd = Command::new("python3").args(["-O", "-u", "fib.py"]);
-    ///     let inputs = [5u, 10, 15];
-    ///
-    /// This is equivalent to calling `bench_prog` on each of the following commands (with
-    /// `inputs` left empty):
-    ///
-    ///     let cmd1 = Command::new("python3").args(["-O", "-u", "fib.py", "5"]);
-    ///     let cmd2 = Command::new("python3").args(["-O", "-u", "fib.py", "10"]);
-    ///     let cmd2 = Command::new("python3").args(["-O", "-u", "fib.py", "15"]);
+    ///     let cmd = Command::new("python3").args(["-O", "clock.py"]);
     #[experimental]
     pub fn bench_prog<'a,
                       S: Str>(
@@ -229,6 +218,18 @@ impl Criterion {
         self
     }
 
+    /// Benchmark an external program under various inputs
+    ///
+    /// For example, to benchmark a python script under various inputs, use this combination:
+    ///
+    ///     let cmd = Command::new("python3").args(["-O", "fib.py"]);
+    ///     let inputs = [5u, 10, 15];
+    ///
+    /// This is equivalent to calling `bench_prog` on each of the following commands:
+    ///
+    ///     let cmd1 = Command::new("python3").args(["-O", "fib.py", "5"]);
+    ///     let cmd2 = Command::new("python3").args(["-O", "fib.py", "10"]);
+    ///     let cmd2 = Command::new("python3").args(["-O", "fib.py", "15"]);
     #[experimental]
     pub fn bench_prog_family<'a,
                              I: Show,
