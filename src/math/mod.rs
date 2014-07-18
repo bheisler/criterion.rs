@@ -6,7 +6,7 @@ use self::linspace::LinSpace;
 mod linspace;
 
 // XXX Should this be configurable?
-static KDE_POINTS: uint = 200;
+static KDE_POINTS: uint = 400;
 
 // Standard Normal Distribution
 fn snpdf(x: f64) -> f64 {
