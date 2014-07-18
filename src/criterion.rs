@@ -283,7 +283,7 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
 
     match target {
         Program(_) => {
-            let clock_cost = external_clock_cost(&mut target, criterion, &new_dir.join("clock"));
+            let _clock_cost = external_clock_cost(&mut target, criterion, &new_dir.join("clock"));
 
             // TODO use clock_cost to set minimal measurement_time
         },

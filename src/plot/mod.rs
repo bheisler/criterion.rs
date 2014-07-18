@@ -18,6 +18,7 @@ pub mod both;
 
 // TODO This should be configurable
 static PNG_SIZE: (uint, uint) = (1366, 768);
+static FONT: &'static str = "Fantasque Sans Mono";
 
 pub fn pdf<V: Vector<f64>>(s: &Sample<V>, path: Path) {
     let (xs, ys) = math::kde(s.as_slice());
@@ -30,6 +31,7 @@ pub fn pdf<V: Vector<f64>>(s: &Sample<V>, path: Path) {
     let median = [median, median];
 
     Figure::new().
+        set_font(FONT).
         set_output_file(path).
         set_title("Probability Density Function").
         set_xlabel("Time (ns)").
@@ -46,6 +48,7 @@ pub fn sample<V: Vector<f64>>(s: &Sample<V>, path: Path) {
     let sample = s.as_slice();
 
     Figure::new().
+        set_font(FONT).
         set_output_file(path).
         set_title("Sample points").
         set_xlabel("Time (ns)").
@@ -66,6 +69,7 @@ pub fn time_distributions(d: &Distributions, e: &Estimates, dir: &Path) {
         let (lb, ub) = (ci.lower_bound(), ci.upper_bound());
 
         Figure::new().
+            set_font(FONT).
             set_output_file(dir.join(format!("{}.png", statistic))).
             set_title("Bootstrap distribution").
             set_xlabel("Time (ns)").
@@ -95,6 +99,7 @@ pub fn ratio_distributions(d: &Distributions, e: &Estimates, dir: &Path) {
         let (lb, ub) = (ci.lower_bound() * 100.0, ci.upper_bound() * 100.0);
 
         Figure::new().
+            set_font(FONT).
             set_output_file(dir.join(format!("{}.png", statistic))).
             set_title("Bootstrap distribution").
             set_xlabel("Relative change (%)").
@@ -124,6 +129,7 @@ pub fn outliers(outliers: &Outliers, path: Path) {
     let severe = los.iter().chain(his.iter());
 
     Figure::new().
+        set_font(FONT).
         set_output_file(path).
         set_title("Classification of Outliers").
         set_xlabel("Time (ns)").
@@ -180,6 +186,7 @@ pub fn summarize(dir: &Path) {
 
             fs::mkdirp(&dir.join(format!("summary/{}", sample)));
             Figure::new().
+                set_font(FONT).
                 set_logscale((points[0] / *points.last().unwrap() > 50.0, false)).
                 set_output_file(dir.join(format!("summary/{}/{}s.png", sample, statistic))).
                 set_size(PNG_SIZE).
