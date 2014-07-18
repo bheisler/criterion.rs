@@ -4,6 +4,7 @@ use std::io::{BufferedReader,Command,PipeStream,Process};
 // A two-way channel to the standard streams of a child process
 pub struct Stream {
     _process: Process,
+    stderr: PipeStream,
     stdin: Option<PipeStream>,
     stdout: BufferedReader<PipeStream>,
 }
@@ -16,6 +17,7 @@ impl Stream {
         };
 
         Stream {
+            stderr: process.stderr.take_unwrap(),
             stdin: Some(process.stdin.take_unwrap()),
             stdout: BufferedReader::new(process.stdout.take_unwrap()),
             _process: process,
@@ -24,14 +26,18 @@ impl Stream {
 
     pub fn send<T: Show>(&mut self, line: T) {
         match writeln!(self.stdin.get_mut_ref(), "{}", line) {
-            Err(e) => fail!("`read stdin`: {}", e),
+            Err(e) => fail!("`write into child stdin`: {}", e),
             Ok(_) => {},
         }
     }
 
     pub fn recv(&mut self) -> String {
         match self.stdout.read_line() {
-            Err(e) => fail!("`write stdout`: {}", e),
+            Err(e) => {
+                println!("stderr:\n{}", self.stderr.read_to_string().unwrap());
+
+                fail!("`read from child stdout`: {}", e);
+            },
             Ok(line) => line,
         }
     }
