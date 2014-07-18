@@ -184,12 +184,12 @@ pub fn summarize(dir: &Path) {
                 set_output_file(dir.join(format!("summary/{}/{}s.png", sample, statistic))).
                 set_size(PNG_SIZE).
                 set_title(format!("{}", statistic)).
-                set_xlabel("Input").
-                set_xtics(inputs, iter::count(0u, 1)).
-                set_xrange((-0.5, estimates_pairs.len() as f64 - 0.5)).
-                set_ylabel("Time (ns)").
-                yerrorbars(
-                    iter::count(0u, 1), points.iter(), lbs, ubs, [Title("Confidence Interval")]).
+                set_ylabel("Input").
+                set_ytics(inputs, iter::count(0u, 1)).
+                set_yrange((-0.5, estimates_pairs.len() as f64 - 0.5)).
+                set_xlabel("Time (ns)").
+                xerrorbars(
+                    points.iter(), iter::count(0u, 1), lbs, ubs, [Title("Confidence Interval")]).
                 draw();
         }
     }
