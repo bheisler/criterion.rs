@@ -35,7 +35,7 @@ impl<'a> Target<'a> {
         }
     }
 
-    fn run(&mut self, iterations: u64) -> Ns<u64> {
+    pub fn run(&mut self, iterations: u64) -> Ns<u64> {
         match *self {
             Function(ref mut fun) => {
                 let mut b = bencher::new(iterations);

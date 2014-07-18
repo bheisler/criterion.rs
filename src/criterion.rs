@@ -273,6 +273,21 @@ impl Criterion {
 fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     println!("Benchmarking {}", id);
 
+    match target {
+        Program(_) => {
+            println!("> Estimating the cost of a clock call");
+            let sample = Sample::new(
+                range(0, criterion.sample_size).
+                    map(|_| target.run(0).unwrap() as f64).
+                    collect::<Vec<f64>>());
+
+            let clock_cost = sample.compute(Median);
+            println!("  > {}: {}", Median, format_time(clock_cost));
+        },
+        _ => {},
+    }
+
+
     rename_new_dir_to_base(id);
     build_directory_skeleton(id);
 
