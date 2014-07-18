@@ -4,7 +4,7 @@ BINS = $(patsubst src/bin/%.rs,target/release/%,$(SRCS))
 .PHONY: all test
 
 all:
-	cargo build --release
+	cargo build --release -u
 
 test:
 	$(foreach bin,$(BINS),$(bin) &&) true
