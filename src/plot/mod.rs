@@ -164,7 +164,7 @@ pub fn summarize(dir: &Path) {
             estimates_pairs.sort_by(|&(ref a, _), &(ref b, _)| {
                 let a = a.get(statistic).point_estimate();
                 let b = b.get(statistic).point_estimate();
-                a.partial_cmp(&b).unwrap()
+                b.partial_cmp(&a).unwrap()
             });
 
             let inputs = estimates_pairs.iter().map(|&(_, input)| input);
