@@ -180,7 +180,7 @@ pub fn summarize(dir: &Path) {
 
             fs::mkdirp(&dir.join(format!("summary/{}", sample)));
             Figure::new().
-                set_logscale((false, points.last().unwrap() / points[0] > 50.0)).
+                set_logscale((points.last().unwrap() / points[0] > 50.0, false)).
                 set_output_file(dir.join(format!("summary/{}/{}s.png", sample, statistic))).
                 set_size(PNG_SIZE).
                 set_title(format!("{}", statistic)).
