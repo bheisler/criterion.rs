@@ -4,7 +4,7 @@ before_install:
   - sudo apt-get update -qq
 
 install:
-  - sudo apt-get install -qq rust-nightly gnuplot python3
+  - sudo apt-get install -qq rust-nightly gnuplot
   - cd cargo && make && sudo make install && cd .. && sudo rm -rf cargo
 
 script:
