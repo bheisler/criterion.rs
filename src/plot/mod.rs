@@ -19,13 +19,13 @@ pub mod both;
 // TODO This should be configurable
 static PNG_SIZE: (uint, uint) = (1366, 768);
 
-pub fn pdf<V: Vector<f64>>(s: &Sample<V>, e: &Estimates, path: Path) {
+pub fn pdf<V: Vector<f64>>(s: &Sample<V>, path: Path) {
     let (xs, ys) = math::kde(s.as_slice());
 
     let ys = ys.as_slice();
     let vertical = [ys.min(), ys.max()];
-    let mean = e.get(Mean).point_estimate();
-    let median = e.get(Median).point_estimate();
+    let mean = s.compute(Mean);
+    let median = s.compute(Median);
     let mean = [mean, mean];
     let median = [median, median];
 

@@ -273,21 +273,6 @@ impl Criterion {
 fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     println!("Benchmarking {}", id);
 
-    match target {
-        Program(_) => {
-            println!("> Estimating the cost of a clock call");
-            let sample = Sample::new(
-                range(0, criterion.sample_size).
-                    map(|_| target.run(0).unwrap() as f64).
-                    collect::<Vec<f64>>());
-
-            let clock_cost = sample.compute(Median);
-            println!("  > {}: {}", Median, format_time(clock_cost));
-        },
-        _ => {},
-    }
-
-
     rename_new_dir_to_base(id);
     build_directory_skeleton(id);
 
@@ -295,10 +280,21 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     let base_dir = root.join("base");
     let change_dir = root.join("change");
     let new_dir = root.join("new");
+
+    match target {
+        Program(_) => {
+            let clock_cost = external_clock_cost(&mut target, criterion, &new_dir.join("clock"));
+
+            // TODO use clock_cost to set minimal measurement_time
+        },
+        _ => {},
+    }
+
     let sample = take_sample(&mut target, criterion).unwrap();
     sample.save(&new_dir.join("sample.json"));
 
     plot::sample(&sample, new_dir.join("points.png"));
+    plot::pdf(&sample, new_dir.join("pdf.png"));
 
     let outliers = Outliers::classify(sample.as_slice());
     outliers.report();
@@ -314,7 +310,6 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     estimates.save(&new_dir.join("bootstrap/estimates.json"));
 
     report_time(&estimates);
-    plot::pdf(&sample, &estimates, new_dir.join("pdf.png"));
     plot::time_distributions(&distributions,
                              &estimates,
                              &new_dir.join("bootstrap/distribution"));
@@ -368,6 +363,33 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     if regressed.iter().all(|&x| x) {
         fail!("regression");
     }
+}
+
+fn external_clock_cost(target: &mut Target, criterion: &Criterion, dir: &Path) -> Ns<f64> {
+    println!("> Estimating the cost of a clock call");
+
+    let wu_time = criterion.warm_up_time;
+    println!("  > Warming up for {}", wu_time.to::<Mili>());
+
+    let init = time::now();
+    while time::now() - init < wu_time {
+        target.run(0);
+    }
+
+    println!("  > Collecting {} measurements", criterion.sample_size);
+    let sample = Sample::new(
+        range(0, criterion.sample_size).
+            map(|_| target.run(0).unwrap() as f64).
+            collect::<Vec<f64>>());
+
+    let clock_cost = sample.compute(Median);
+    println!("  > {}: {}", Median, format_time(clock_cost));
+
+    fs::mkdirp(dir);
+    plot::sample(&sample, dir.join("points.png"));
+    plot::pdf(&sample, dir.join("pdf.png"));
+
+    clock_cost.ns()
 }
 
 fn extrapolate_iters(iters: u64, took: Ns<u64>, want: Ns<u64>) -> (Ns<f64>, u64) {
