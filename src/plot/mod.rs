@@ -170,7 +170,7 @@ pub fn summarize(dir: &Path) {
             let inputs = estimates_pairs.iter().map(|&(_, input)| input);
             let points = estimates_pairs.iter().map(|&(ref estimates, _)| {
                 estimates.get(statistic).point_estimate()
-            });
+            }).collect::<Vec<f64>>();
             let lbs = estimates_pairs.iter().map(|&(ref estimates, _)| {
                 estimates.get(statistic).confidence_interval().lower_bound()
             });
@@ -180,6 +180,7 @@ pub fn summarize(dir: &Path) {
 
             fs::mkdirp(&dir.join(format!("summary/{}", sample)));
             Figure::new().
+                set_logscale((false, points.last().unwrap() / points[0] > 50.0)).
                 set_output_file(dir.join(format!("summary/{}/{}s.png", sample, statistic))).
                 set_size(PNG_SIZE).
                 set_title(format!("{}", statistic)).
@@ -187,7 +188,8 @@ pub fn summarize(dir: &Path) {
                 set_xtics(inputs, iter::count(0u, 1)).
                 set_xrange((-0.5, estimates_pairs.len() as f64 - 0.5)).
                 set_ylabel("Time (ns)").
-                yerrorbars(iter::count(0u, 1), points, lbs, ubs, [Title("Confidence Interval")]).
+                yerrorbars(
+                    iter::count(0u, 1), points.iter(), lbs, ubs, [Title("Confidence Interval")]).
                 draw();
         }
     }
