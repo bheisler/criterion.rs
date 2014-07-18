@@ -8,5 +8,5 @@ fn main() {
     Criterion::default().
         bench_prog(
             "python/clock",
-            Command::new("python3").args(["-O", "external/clock.py"]));
+            Command::new("python").args(["-O", "external/clock.py"]));
 }

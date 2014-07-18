@@ -8,6 +8,6 @@ fn main() {
     Criterion::default().
         bench_prog_family(
             "python/fib",
-            Command::new("python3").args(["-O", "external/fib.py"]),
+            Command::new("python").args(["-O", "external/fib.py"]),
             [5u, 10, 15]);
 }
