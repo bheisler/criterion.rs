@@ -32,7 +32,7 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
 static PNG_SIZE: (uint, uint) = (1366, 768);
 static FONT: &'static str = "Fantasque Sans Mono";
 
-pub fn pdf<V: Vector<f64>>(s: &Sample<V>, path: Path) {
+pub fn pdf<S: Str, V: Vector<f64>>(s: &Sample<V>, path: Path, id: S) {
     let (xs, ys) = math::kde(s.as_slice());
 
     let (scale, prefix) = scale_time(xs.as_slice().max());
@@ -50,7 +50,7 @@ pub fn pdf<V: Vector<f64>>(s: &Sample<V>, path: Path) {
     Figure::new().
         set_font(FONT).
         set_output_file(path).
-        set_title("Probability Density Function").
+        set_title(format!("{}: Probability Density Function", id.as_slice())).
         set_xlabel(format!("Time ({}s)", prefix)).
         set_ylabel("Density (a.u.)").
         set_size(PNG_SIZE).
@@ -60,7 +60,7 @@ pub fn pdf<V: Vector<f64>>(s: &Sample<V>, path: Path) {
         draw();
 }
 
-pub fn sample<V: Vector<f64>>(s: &Sample<V>, path: Path) {
+pub fn sample<S: Str, V: Vector<f64>>(s: &Sample<V>, path: Path, id: S) {
     let mut rng = rand::task_rng();
     let sample = s.as_slice();
 
@@ -70,14 +70,14 @@ pub fn sample<V: Vector<f64>>(s: &Sample<V>, path: Path) {
     Figure::new().
         set_font(FONT).
         set_output_file(path).
-        set_title("Sample points").
+        set_title(format!("{}: Sample points", id.as_slice())).
         set_xlabel(format!("Time ({}s)", prefix)).
         set_size(PNG_SIZE).
         plot(Points, sample.iter(), rng.gen_iter::<f64>(), [PointType(Circle)]).
         draw();
 }
 
-pub fn time_distributions(d: &Distributions, e: &Estimates, dir: &Path) {
+pub fn time_distributions(d: &Distributions, e: &Estimates, dir: &Path, id: &str) {
     for (&statistic, distribution) in d.iter() {
         let (xs, ys) = math::kde(distribution.as_slice());
 
@@ -97,7 +97,7 @@ pub fn time_distributions(d: &Distributions, e: &Estimates, dir: &Path) {
         Figure::new().
             set_font(FONT).
             set_output_file(dir.join(format!("{}.png", statistic))).
-            set_title("Bootstrap distribution").
+            set_title(format!("{}: Bootstrap distribution of the {}", id, statistic)).
             set_xlabel(format!("Time ({}s)", prefix)).
             set_ylabel("Density (a.u.)").
             set_size(PNG_SIZE).
@@ -112,7 +112,7 @@ pub fn time_distributions(d: &Distributions, e: &Estimates, dir: &Path) {
 }
 
 // TODO DRY: This is very similar to the `time_distributions` method
-pub fn ratio_distributions(d: &Distributions, e: &Estimates, dir: &Path) {
+pub fn ratio_distributions(d: &Distributions, e: &Estimates, dir: &Path, id: &str) {
     for (&statistic, distribution) in d.iter() {
         let (xs, ys) = math::kde(distribution.as_slice());
         let xs: Vec<f64> = xs.iter().map(|x| x * 100.0).collect();
@@ -127,7 +127,7 @@ pub fn ratio_distributions(d: &Distributions, e: &Estimates, dir: &Path) {
         Figure::new().
             set_font(FONT).
             set_output_file(dir.join(format!("{}.png", statistic))).
-            set_title("Bootstrap distribution").
+            set_title(format!("{}: Bootstrap distribution of the {}", id, statistic)).
             set_xlabel("Relative change (%)").
             set_ylabel("Density (a.u.)").
             set_size(PNG_SIZE).
@@ -141,7 +141,7 @@ pub fn ratio_distributions(d: &Distributions, e: &Estimates, dir: &Path) {
     }
 }
 
-pub fn outliers(outliers: &Outliers, path: Path) {
+pub fn outliers(outliers: &Outliers, path: Path, id: &str) {
     let mut rng = rand::task_rng();
 
     let (mut lost, mut lomt, mut himt, mut hist) = outliers.thresholds();
@@ -170,7 +170,7 @@ pub fn outliers(outliers: &Outliers, path: Path) {
     Figure::new().
         set_font(FONT).
         set_output_file(path).
-        set_title("Classification of Outliers").
+        set_title(format!("{}: Classification of outliers", id)).
         set_xlabel(format!("Time ({}s)", prefix)).
         set_size(PNG_SIZE).
         plot(Lines, [lomt, lomt, himt, himt].iter(), y.iter(), []).
@@ -184,7 +184,7 @@ pub fn outliers(outliers: &Outliers, path: Path) {
         draw();
 }
 
-pub fn summarize(dir: &Path) {
+pub fn summarize(dir: &Path, id: &str) {
     let contents = fs::ls(dir);
 
     // TODO Specially handle inputs that can be parsed as `int`s
@@ -235,7 +235,7 @@ pub fn summarize(dir: &Path) {
                 set_logscale((points[0] / *points.last().unwrap() > 50.0, false)).
                 set_output_file(dir.join(format!("summary/{}/{}s.png", sample, statistic))).
                 set_size(PNG_SIZE).
-                set_title(format!("{}", statistic)).
+                set_title(format!("{}: Estimates of the {}s", id, statistic)).
                 set_ylabel("Input").
                 set_ytics(inputs, iter::count(0u, 1)).
                 set_yrange((-0.5, estimates_pairs.len() as f64 - 0.5)).

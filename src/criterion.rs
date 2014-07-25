@@ -162,7 +162,7 @@ impl Criterion {
         }
 
         print!("Summarizing results of {}... ", id);
-        plot::summarize(&Path::new(".criterion").join(id));
+        plot::summarize(&Path::new(".criterion").join(id), id);
         println!("DONE\n");
 
         self
@@ -246,7 +246,7 @@ impl Criterion {
         }
 
         print!("Summarizing results of {}... ", id);
-        plot::summarize(&Path::new(".criterion").join(id));
+        plot::summarize(&Path::new(".criterion").join(id), id);
         println!("DONE\n");
 
         self
@@ -263,7 +263,7 @@ impl Criterion {
                      -> &'a mut Criterion {
         let id = id.as_slice();
         print!("Summarizing results of {}... ", id);
-        plot::summarize(&Path::new(".criterion").join(id));
+        plot::summarize(&Path::new(".criterion").join(id), id);
         println!("DONE\n");
 
         self
@@ -283,7 +283,8 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
 
     match target {
         Program(_) => {
-            let _clock_cost = external_clock_cost(&mut target, criterion, &new_dir.join("clock"));
+            let _clock_cost =
+                external_clock_cost(&mut target, criterion, &new_dir.join("clock"), id);
 
             // TODO use clock_cost to set minimal measurement_time
         },
@@ -293,13 +294,13 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     let sample = take_sample(&mut target, criterion).unwrap();
     sample.save(&new_dir.join("sample.json"));
 
-    plot::sample(&sample, new_dir.join("points.png"));
-    plot::pdf(&sample, new_dir.join("pdf.png"));
+    plot::sample(&sample, new_dir.join("points.png"), id);
+    plot::pdf(&sample, new_dir.join("pdf.png"), id);
 
     let outliers = Outliers::classify(sample.as_slice());
     outliers.report();
     outliers.save(&new_dir.join("outliers/classification.json"));
-    plot::outliers(&outliers, new_dir.join("outliers/boxplot.png"));
+    plot::outliers(&outliers, new_dir.join("outliers/boxplot.png"), id);
 
     println!("> Estimating the statistics of the sample");
     let nresamples = criterion.nresamples;
@@ -312,7 +313,8 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     report_time(&estimates);
     plot::time_distributions(&distributions,
                              &estimates,
-                             &new_dir.join("bootstrap/distribution"));
+                             &new_dir.join("bootstrap/distribution"),
+                             id);
 
     if !base_dir.exists() {
         return;
@@ -322,8 +324,8 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     let base_sample = Sample::<Vec<f64>>::load(&base_dir.join("sample.json"));
 
     let both_dir = root.join("both");
-    plot::both::pdfs(&base_sample, &sample, both_dir.join("pdfs.png"));
-    plot::both::points(&base_sample, &sample, both_dir.join("points.png"));
+    plot::both::pdfs(&base_sample, &sample, both_dir.join("pdfs.png"), id);
+    plot::both::points(&base_sample, &sample, both_dir.join("points.png"), id);
 
     let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as uint;
     let nresamples = nresamples_sqrt * nresamples_sqrt;
@@ -336,7 +338,8 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     report_change(&estimates);
     plot::ratio_distributions(&distributions,
                               &estimates,
-                              &change_dir.join("bootstrap/distribution"));
+                              &change_dir.join("bootstrap/distribution"),
+                              id);
 
     let noise = criterion.noise_tolerance;
     let mut regressed = vec!();
@@ -365,7 +368,12 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     }
 }
 
-fn external_clock_cost(target: &mut Target, criterion: &Criterion, dir: &Path) -> Ns<f64> {
+fn external_clock_cost(
+    target: &mut Target,
+    criterion: &Criterion,
+    dir: &Path,
+    id: &str,
+) -> Ns<f64> {
     println!("> Estimating the cost of a clock call");
 
     let wu_time = criterion.warm_up_time;
@@ -386,8 +394,8 @@ fn external_clock_cost(target: &mut Target, criterion: &Criterion, dir: &Path) -
     println!("  > {}: {}", Median, format_time(clock_cost));
 
     fs::mkdirp(dir);
-    plot::sample(&sample, dir.join("points.png"));
-    plot::pdf(&sample, dir.join("pdf.png"));
+    plot::sample(&sample, dir.join("points.png"), format!("{}/clock_cost", id));
+    plot::pdf(&sample, dir.join("pdf.png"), format!("{}/clock_cost", id));
 
     clock_cost.ns()
 }

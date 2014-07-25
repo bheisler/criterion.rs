@@ -12,7 +12,14 @@ use super::FONT;
 use super::PNG_SIZE;
 use super::scale_time;
 
-pub fn pdfs<V: Vector<f64>, W: Vector<f64>>(base: &Sample<V>, new: &Sample<W>, path: Path) {
+pub fn pdfs<
+    V: Vector<f64>,
+    W: Vector<f64>>(
+    base: &Sample<V>,
+    new: &Sample<W>,
+    path: Path,
+    id: &str,
+) {
     let (base_xs, base_ys) = math::kde(base.as_slice());
     let (new_xs, new_ys) = math::kde(new.as_slice());
 
@@ -27,7 +34,7 @@ pub fn pdfs<V: Vector<f64>, W: Vector<f64>>(base: &Sample<V>, new: &Sample<W>, p
     Figure::new().
         set_font(FONT).
         set_output_file(path).
-        set_title("Probability Density Functions").
+        set_title(format!("{}: Probability Density Functions", id)).
         set_xlabel(format!("Time ({}s)", prefix)).
         set_ylabel("Density (a.u.)").
         set_size(PNG_SIZE).
@@ -36,7 +43,14 @@ pub fn pdfs<V: Vector<f64>, W: Vector<f64>>(base: &Sample<V>, new: &Sample<W>, p
         draw();
 }
 
-pub fn points<V: Vector<f64>, W: Vector<f64>>(base: &Sample<V>, new: &Sample<W>, path: Path) {
+pub fn points<
+    V: Vector<f64>,
+    W: Vector<f64>>(
+    base: &Sample<V>,
+    new: &Sample<W>,
+    path: Path,
+    id: &str,
+) {
     let mut rng = rand::task_rng();
     let base = base.as_slice();
     let new = new.as_slice();
@@ -48,7 +62,7 @@ pub fn points<V: Vector<f64>, W: Vector<f64>>(base: &Sample<V>, new: &Sample<W>,
     Figure::new().
         set_font(FONT).
         set_output_file(path).
-        set_title("Sample points").
+        set_title(format!("{}: Sample points", id)).
         set_xlabel(format!("Time ({}s)", prefix)).
         set_size(PNG_SIZE).
         plot(Points, base, rng.gen_iter::<f64>(), [PointType(Circle), Title("Base")]).
