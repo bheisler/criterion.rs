@@ -14,7 +14,19 @@ use statistics::{Distributions,Estimates,Mean,Median,Sample};
 
 pub mod both;
 
-// TODO Scale the time axis
+fn scale_time(ns: f64) -> (f64, &'static str) {
+    if ns < 10f64.powi(0) {
+        (10f64.powi(3), "p")
+    } else if ns < 10f64.powi(3) {
+        (10f64.powi(0), "n")
+    } else if ns < 10f64.powi(6) {
+        (10f64.powi(-3), "u")
+    } else if ns < 10f64.powi(9) {
+        (10f64.powi(-6), "m")
+    } else {
+        (10f64.powi(-9), "")
+    }
+}
 
 // TODO This should be configurable
 static PNG_SIZE: (uint, uint) = (1366, 768);
@@ -23,10 +35,15 @@ static FONT: &'static str = "Fantasque Sans Mono";
 pub fn pdf<V: Vector<f64>>(s: &Sample<V>, path: Path) {
     let (xs, ys) = math::kde(s.as_slice());
 
+    let (scale, prefix) = scale_time(xs.as_slice().max());
+    let rscale = scale.recip();
+    let xs = xs.move_iter().map(|x| x * scale).collect::<Vec<f64>>();
+    let ys = ys.move_iter().map(|y| y * rscale).collect::<Vec<f64>>();
+
     let ys = ys.as_slice();
     let vertical = [ys.min(), ys.max()];
-    let mean = s.compute(Mean);
-    let median = s.compute(Median);
+    let mean = s.compute(Mean) * scale;
+    let median = s.compute(Median) * scale;
     let mean = [mean, mean];
     let median = [median, median];
 
@@ -34,7 +51,7 @@ pub fn pdf<V: Vector<f64>>(s: &Sample<V>, path: Path) {
         set_font(FONT).
         set_output_file(path).
         set_title("Probability Density Function").
-        set_xlabel("Time (ns)").
+        set_xlabel(format!("Time ({}s)", prefix)).
         set_ylabel("Density (a.u.)").
         set_size(PNG_SIZE).
         plot(Lines, xs.iter(), ys.iter(), []).
@@ -47,11 +64,14 @@ pub fn sample<V: Vector<f64>>(s: &Sample<V>, path: Path) {
     let mut rng = rand::task_rng();
     let sample = s.as_slice();
 
+    let (scale, prefix) = scale_time(sample.max());
+    let sample = sample.iter().map(|x| x * scale).collect::<Vec<f64>>();
+
     Figure::new().
         set_font(FONT).
         set_output_file(path).
         set_title("Sample points").
-        set_xlabel("Time (ns)").
+        set_xlabel(format!("Time ({}s)", prefix)).
         set_size(PNG_SIZE).
         plot(Points, sample.iter(), rng.gen_iter::<f64>(), [PointType(Circle)]).
         draw();
@@ -60,19 +80,25 @@ pub fn sample<V: Vector<f64>>(s: &Sample<V>, path: Path) {
 pub fn time_distributions(d: &Distributions, e: &Estimates, dir: &Path) {
     for (&statistic, distribution) in d.iter() {
         let (xs, ys) = math::kde(distribution.as_slice());
+
+        let (scale, prefix) = scale_time(xs.as_slice().max());
+        let rscale = scale.recip();
+        let xs = xs.move_iter().map(|x| x * scale).collect::<Vec<f64>>();
+        let ys = ys.move_iter().map(|y| y * rscale).collect::<Vec<f64>>();
+
         let ys = ys.as_slice();
         let vertical = [ys.min(), ys.max()];
 
         let estimate = e.get(statistic);
-        let point = estimate.point_estimate();
+        let point = estimate.point_estimate() * scale;
         let ci = estimate.confidence_interval();
-        let (lb, ub) = (ci.lower_bound(), ci.upper_bound());
+        let (lb, ub) = (ci.lower_bound() * scale, ci.upper_bound() * scale);
 
         Figure::new().
             set_font(FONT).
             set_output_file(dir.join(format!("{}.png", statistic))).
             set_title("Bootstrap distribution").
-            set_xlabel("Time (ns)").
+            set_xlabel(format!("Time ({}s)", prefix)).
             set_ylabel("Density (a.u.)").
             set_size(PNG_SIZE).
             plot(Lines, xs.iter(), ys.iter(), []).
@@ -118,27 +144,40 @@ pub fn ratio_distributions(d: &Distributions, e: &Estimates, dir: &Path) {
 pub fn outliers(outliers: &Outliers, path: Path) {
     let mut rng = rand::task_rng();
 
-    let (lost, lomt, himt, hist) = outliers.thresholds();
+    let (mut lost, mut lomt, mut himt, mut hist) = outliers.thresholds();
     let him = outliers.high_mild();
     let his = outliers.high_severe();
     let lom = outliers.low_mild();
     let los = outliers.low_severe();
     let normal = outliers.normal();
+
+    let (scale, prefix) = scale_time(if his.is_empty() { hist } else { his.max() });
+    let him = him.iter().map(|x| x * scale);
+    let his = his.iter().map(|x| x * scale);
+    let lom = lom.iter().map(|x| x * scale);
+    let los = los.iter().map(|x| x * scale);
+    let normal = normal.iter().map(|x| x * scale);
+    himt *= scale;
+    hist *= scale;
+    lomt *= scale;
+    lost *= scale;
+
+    let mild = lom.chain(him);
+    let severe = los.chain(his);
+
     let y = [1u, 0, 0, 1];
-    let mild = lom.iter().chain(him.iter());
-    let severe = los.iter().chain(his.iter());
 
     Figure::new().
         set_font(FONT).
         set_output_file(path).
         set_title("Classification of Outliers").
-        set_xlabel("Time (ns)").
+        set_xlabel(format!("Time ({}s)", prefix)).
         set_size(PNG_SIZE).
         plot(Lines, [lomt, lomt, himt, himt].iter(), y.iter(), []).
         plot(Lines, [lost, lost, hist, hist].iter(), y.iter(), []).
         plot(Points, mild, rng.gen_iter::<f64>(),
              [PointType(Circle), Title("Mild")]).
-        plot(Points, normal.iter(), rng.gen_iter::<f64>(),
+        plot(Points, normal, rng.gen_iter::<f64>(),
              [PointType(Circle)]).
         plot(Points, severe, rng.gen_iter::<f64>(),
              [PointType(Circle), Title("Severe")]).
@@ -149,6 +188,7 @@ pub fn summarize(dir: &Path) {
     let contents = fs::ls(dir);
 
     // TODO Specially handle inputs that can be parsed as `int`s
+    // TODO Need better way to handle log scale triggering
     for &sample in ["new", "base"].iter() {
         for &statistic in [Mean, Median].iter() {
             let mut estimates_pairs = Vec::new();
@@ -179,10 +219,15 @@ pub fn summarize(dir: &Path) {
             }).collect::<Vec<f64>>();
             let lbs = estimates_pairs.iter().map(|&(ref estimates, _)| {
                 estimates.get(statistic).confidence_interval().lower_bound()
-            });
+            }).collect::<Vec<f64>>();
             let ubs = estimates_pairs.iter().map(|&(ref estimates, _)| {
                 estimates.get(statistic).confidence_interval().upper_bound()
-            });
+            }).collect::<Vec<f64>>();
+
+            let (scale, prefix) = scale_time(ubs.as_slice().max());
+            let points = points.iter().map(|x| x * scale).collect::<Vec<f64>>();
+            let lbs = lbs.iter().map(|x| x * scale);
+            let ubs = ubs.iter().map(|x| x * scale);
 
             fs::mkdirp(&dir.join(format!("summary/{}", sample)));
             Figure::new().
@@ -194,7 +239,7 @@ pub fn summarize(dir: &Path) {
                 set_ylabel("Input").
                 set_ytics(inputs, iter::count(0u, 1)).
                 set_yrange((-0.5, estimates_pairs.len() as f64 - 0.5)).
-                set_xlabel("Time (ns)").
+                set_xlabel(format!("Time ({}s)", prefix)).
                 xerrorbars(
                     points.iter(), iter::count(0u, 1), lbs, ubs, [Title("Confidence Interval")]).
                 draw();
