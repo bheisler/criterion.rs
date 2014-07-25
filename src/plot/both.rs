@@ -8,6 +8,7 @@ use test::stats::Stats;
 
 use math;
 use statistics::Sample;
+use super::FONT;
 use super::PNG_SIZE;
 use super::scale_time;
 
@@ -24,6 +25,7 @@ pub fn pdfs<V: Vector<f64>, W: Vector<f64>>(base: &Sample<V>, new: &Sample<W>, p
     let new_ys = new_ys.iter().map(|x| x * rscale);
 
     Figure::new().
+        set_font(FONT).
         set_output_file(path).
         set_title("Probability Density Functions").
         set_xlabel(format!("Time ({}s)", prefix)).
@@ -44,6 +46,7 @@ pub fn points<V: Vector<f64>, W: Vector<f64>>(base: &Sample<V>, new: &Sample<W>,
     let new = new.iter().map(|x| x * scale);
 
     Figure::new().
+        set_font(FONT).
         set_output_file(path).
         set_title("Sample points").
         set_xlabel(format!("Time ({}s)", prefix)).
