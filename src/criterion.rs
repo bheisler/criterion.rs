@@ -10,11 +10,9 @@ use plot;
 use statistics::{Estimate,Estimates,Mean,Median,MedianAbsDev,Sample,StdDev};
 use stream::Stream;
 use target::{Function,Program,Target};
-use time::Time;
 use time::prefix::{Mili,Nano};
-use time::traits::{Milisecond,Nanosecond,Prefix,Second};
+use time::traits::{Milisecond,Nanosecond,Second};
 use time::types::Ns;
-use time::unit;
 use time;
 
 /// The "criterion" for the benchmark, which is also the benchmark "builder"
@@ -62,13 +60,9 @@ impl Criterion {
         self
     }
 
-    #[allow(visible_private_types)]
     #[experimental]
-    pub fn measurement_time<P: Prefix>(
-                            &mut self,
-                            t: Time<P, unit::Second, u64>)
-                            -> &mut Criterion {
-        self.measurement_time = t.to::<Nano>();
+    pub fn measurement_time(&mut self, ms: u64) -> &mut Criterion {
+        self.measurement_time = ms.ms().to::<Nano>();
         self
     }
 
@@ -92,13 +86,9 @@ impl Criterion {
         self
     }
 
-    #[allow(visible_private_types)]
     #[experimental]
-    pub fn warm_up_time<P: Prefix>(
-                        &mut self,
-                        t: Time<P, unit::Second, u64>)
-                        -> &mut Criterion {
-        self.warm_up_time = t.to::<Nano>();
+    pub fn warm_up_time(&mut self, ms: u64) -> &mut Criterion {
+        self.warm_up_time = ms.ms().to::<Nano>();
         self
     }
 
