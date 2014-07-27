@@ -17,8 +17,6 @@ use time::types::Ns;
 use time::unit;
 use time;
 
-// FIXME Sorry! This module is a mess :/
-
 /// The "criterion" for the benchmark, which is also the benchmark "builder"
 #[experimental]
 pub struct Criterion {
@@ -270,6 +268,8 @@ impl Criterion {
     }
 }
 
+// FIXME Sorry! Everything below this point is a mess :/
+
 fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     println!("Benchmarking {}", id);
 
@@ -294,13 +294,13 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     let sample = take_sample(&mut target, criterion).unwrap();
     sample.save(&new_dir.join("sample.json"));
 
-    plot::sample(&sample, new_dir.join("points.png"), id);
-    plot::pdf(&sample, new_dir.join("pdf.png"), id);
+    plot::sample(&sample, new_dir.join("points.svg"), id);
+    plot::pdf(&sample, new_dir.join("pdf.svg"), id);
 
     let outliers = Outliers::classify(sample.as_slice());
     outliers.report();
     outliers.save(&new_dir.join("outliers/classification.json"));
-    plot::outliers(&outliers, new_dir.join("outliers/boxplot.png"), id);
+    plot::outliers(&outliers, new_dir.join("outliers/boxplot.svg"), id);
 
     println!("> Estimating the statistics of the sample");
     let nresamples = criterion.nresamples;
@@ -324,8 +324,8 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     let base_sample = Sample::<Vec<f64>>::load(&base_dir.join("sample.json"));
 
     let both_dir = root.join("both");
-    plot::both::pdfs(&base_sample, &sample, both_dir.join("pdfs.png"), id);
-    plot::both::points(&base_sample, &sample, both_dir.join("points.png"), id);
+    plot::both::pdfs(&base_sample, &sample, both_dir.join("pdfs.svg"), id);
+    plot::both::points(&base_sample, &sample, both_dir.join("points.svg"), id);
 
     let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as uint;
     let nresamples = nresamples_sqrt * nresamples_sqrt;
@@ -394,8 +394,8 @@ fn external_clock_cost(
     println!("  > {}: {}", Median, format_time(clock_cost));
 
     fs::mkdirp(dir);
-    plot::sample(&sample, dir.join("points.png"), format!("{}/clock_cost", id));
-    plot::pdf(&sample, dir.join("pdf.png"), format!("{}/clock_cost", id));
+    plot::sample(&sample, dir.join("points.svg"), format!("{}/clock_cost", id));
+    plot::pdf(&sample, dir.join("pdf.svg"), format!("{}/clock_cost", id));
 
     clock_cost.ns()
 }

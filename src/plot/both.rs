@@ -2,15 +2,15 @@ use simplot::Figure;
 use simplot::option::{Title,PointType};
 use simplot::plottype::{Lines,Points};
 use simplot::pointtype::Circle;
+use simplot::terminal::Svg;
 use std::rand::Rng;
 use std::rand;
 use test::stats::Stats;
 
 use math;
 use statistics::Sample;
-use super::FONT;
-use super::PNG_SIZE;
 use super::scale_time;
+use super::{FONT,PLOT_SIZE};
 
 pub fn pdfs<
     V: Vector<f64>,
@@ -34,10 +34,11 @@ pub fn pdfs<
     Figure::new().
         set_font(FONT).
         set_output_file(path).
+        set_size(PLOT_SIZE).
+        set_terminal(Svg).
         set_title(format!("{}: Probability Density Functions", id)).
         set_xlabel(format!("Time ({}s)", prefix)).
         set_ylabel("Density (a.u.)").
-        set_size(PNG_SIZE).
         plot(Lines, base_xs, base_ys, [Title("Base")]).
         plot(Lines, new_xs, new_ys, [Title("New")]).
         draw();
@@ -62,9 +63,10 @@ pub fn points<
     Figure::new().
         set_font(FONT).
         set_output_file(path).
+        set_size(PLOT_SIZE).
+        set_terminal(Svg).
         set_title(format!("{}: Sample points", id)).
         set_xlabel(format!("Time ({}s)", prefix)).
-        set_size(PNG_SIZE).
         plot(Points, base, rng.gen_iter::<f64>(), [PointType(Circle), Title("Base")]).
         plot(Points, new, rng.gen_iter::<f64>(), [PointType(Circle), Title("New")]).
         draw();

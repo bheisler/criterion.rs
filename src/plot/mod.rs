@@ -2,6 +2,7 @@ use simplot::Figure;
 use simplot::option::{Title,PointType};
 use simplot::plottype::{Lines,Points};
 use simplot::pointtype::Circle;
+use simplot::terminal::Svg;
 use std::iter;
 use std::rand::Rng;
 use std::rand;
@@ -29,7 +30,7 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
 }
 
 // TODO This should be configurable
-static PNG_SIZE: (uint, uint) = (1366, 768);
+static PLOT_SIZE: (uint, uint) = (880, 495);
 static FONT: &'static str = "Fantasque Sans Mono";
 
 pub fn pdf<S: Str, V: Vector<f64>>(s: &Sample<V>, path: Path, id: S) {
@@ -50,10 +51,11 @@ pub fn pdf<S: Str, V: Vector<f64>>(s: &Sample<V>, path: Path, id: S) {
     Figure::new().
         set_font(FONT).
         set_output_file(path).
+        set_size(PLOT_SIZE).
+        set_terminal(Svg).
         set_title(format!("{}: Probability Density Function", id.as_slice())).
         set_xlabel(format!("Time ({}s)", prefix)).
         set_ylabel("Density (a.u.)").
-        set_size(PNG_SIZE).
         plot(Lines, xs.iter(), ys.iter(), []).
         plot(Lines, mean.iter(), vertical.iter(), [Title("Mean")]).
         plot(Lines, median.iter(), vertical.iter(), [Title("Median")]).
@@ -70,9 +72,10 @@ pub fn sample<S: Str, V: Vector<f64>>(s: &Sample<V>, path: Path, id: S) {
     Figure::new().
         set_font(FONT).
         set_output_file(path).
+        set_size(PLOT_SIZE).
+        set_terminal(Svg).
         set_title(format!("{}: Sample points", id.as_slice())).
         set_xlabel(format!("Time ({}s)", prefix)).
-        set_size(PNG_SIZE).
         plot(Points, sample.iter(), rng.gen_iter::<f64>(), [PointType(Circle)]).
         draw();
 }
@@ -96,11 +99,12 @@ pub fn time_distributions(d: &Distributions, e: &Estimates, dir: &Path, id: &str
 
         Figure::new().
             set_font(FONT).
-            set_output_file(dir.join(format!("{}.png", statistic))).
+            set_output_file(dir.join(format!("{}.svg", statistic))).
+            set_size(PLOT_SIZE).
+            set_terminal(Svg).
             set_title(format!("{}: Bootstrap distribution of the {}", id, statistic)).
             set_xlabel(format!("Time ({}s)", prefix)).
             set_ylabel("Density (a.u.)").
-            set_size(PNG_SIZE).
             plot(Lines, xs.iter(), ys.iter(), []).
             plot(Lines, [point, point].iter(), vertical.iter(), [Title("Point")]).
             plot(Lines,
@@ -126,11 +130,12 @@ pub fn ratio_distributions(d: &Distributions, e: &Estimates, dir: &Path, id: &st
 
         Figure::new().
             set_font(FONT).
-            set_output_file(dir.join(format!("{}.png", statistic))).
+            set_output_file(dir.join(format!("{}.svg", statistic))).
+            set_size(PLOT_SIZE).
+            set_terminal(Svg).
             set_title(format!("{}: Bootstrap distribution of the {}", id, statistic)).
             set_xlabel("Relative change (%)").
             set_ylabel("Density (a.u.)").
-            set_size(PNG_SIZE).
             plot(Lines, xs.iter(), ys.iter(), []).
             plot(Lines, [point, point].iter(), vertical.iter(), [Title("Point")]).
             plot(Lines,
@@ -170,9 +175,10 @@ pub fn outliers(outliers: &Outliers, path: Path, id: &str) {
     Figure::new().
         set_font(FONT).
         set_output_file(path).
+        set_size(PLOT_SIZE).
+        set_terminal(Svg).
         set_title(format!("{}: Classification of outliers", id)).
         set_xlabel(format!("Time ({}s)", prefix)).
-        set_size(PNG_SIZE).
         plot(Lines, [lomt, lomt, himt, himt].iter(), y.iter(), []).
         plot(Lines, [lost, lost, hist, hist].iter(), y.iter(), []).
         plot(Points, mild, rng.gen_iter::<f64>(),
@@ -233,8 +239,9 @@ pub fn summarize(dir: &Path, id: &str) {
             Figure::new().
                 set_font(FONT).
                 set_logscale((points[0] / *points.last().unwrap() > 50.0, false)).
-                set_output_file(dir.join(format!("summary/{}/{}s.png", sample, statistic))).
-                set_size(PNG_SIZE).
+                set_output_file(dir.join(format!("summary/{}/{}s.svg", sample, statistic))).
+                set_size(PLOT_SIZE).
+                set_terminal(Svg).
                 set_title(format!("{}: Estimates of the {}s", id, statistic)).
                 set_ylabel("Input").
                 set_ytics(inputs, iter::count(0u, 1)).
