@@ -55,7 +55,7 @@ impl Criterion {
     }
 
     #[experimental]
-    pub fn confidence_level<'a>(&'a mut self, cl: f64) -> &'a mut Criterion {
+    pub fn confidence_level(&mut self, cl: f64) -> &mut Criterion {
         assert!(cl > 0.0 && cl < 1.0);
 
         self.confidence_level = cl;
@@ -64,17 +64,16 @@ impl Criterion {
 
     #[allow(visible_private_types)]
     #[experimental]
-    pub fn measurement_time<'a,
-                            P: Prefix>(
-                            &'a mut self,
+    pub fn measurement_time<P: Prefix>(
+                            &mut self,
                             t: Time<P, unit::Second, u64>)
-                            -> &'a mut Criterion {
+                            -> &mut Criterion {
         self.measurement_time = t.to::<Nano>();
         self
     }
 
     #[experimental]
-    pub fn noise_tolerance<'a>(&'a mut self, nt: f64) -> &'a mut Criterion {
+    pub fn noise_tolerance(&mut self, nt: f64) -> &mut Criterion {
         assert!(nt >= 0.0);
 
         self.noise_tolerance = nt;
@@ -82,36 +81,34 @@ impl Criterion {
     }
 
     #[experimental]
-    pub fn nresamples<'a>(&'a mut self, n: uint) -> &'a mut Criterion {
+    pub fn nresamples(&mut self, n: uint) -> &mut Criterion {
         self.nresamples = n;
         self
     }
 
     #[experimental]
-    pub fn sample_size<'a>(&'a mut self, n: uint) -> &'a mut Criterion {
+    pub fn sample_size(&mut self, n: uint) -> &mut Criterion {
         self.sample_size = n;
         self
     }
 
     #[allow(visible_private_types)]
     #[experimental]
-    pub fn warm_up_time<'a,
-                        P: Prefix>(
-                        &'a mut self,
+    pub fn warm_up_time<P: Prefix>(
+                        &mut self,
                         t: Time<P, unit::Second, u64>)
-                        -> &'a mut Criterion {
+                        -> &mut Criterion {
         self.warm_up_time = t.to::<Nano>();
         self
     }
 
     /// Benchmark a function. See `Bench::iter()` for an example of how `fun` should look
     #[experimental]
-    pub fn bench<'a,
-                 I: Str>(
-                 &'a mut self,
+    pub fn bench<I: Str>(
+                 &mut self,
                  id: I,
                  fun: |&mut Bencher|)
-                 -> &'a mut Criterion {
+                 -> &mut Criterion {
         let id = id.as_slice();
 
         local_data_key!(clock: Ns<f64>);
@@ -145,14 +142,13 @@ impl Criterion {
     ///     let fun2 = |b| Vec::from_elem(10_000, 0u);
     ///     let fun3 = |b| Vec::from_elem(1_000_000, 0u);
     #[experimental]
-    pub fn bench_family<'a,
-                        I: Show,
+    pub fn bench_family<I: Show,
                         S: Str>(
-                        &'a mut self,
+                        &mut self,
                         id: S,
                         fun: |&mut Bencher, &I|,
                         inputs: &[I])
-                        -> &'a mut Criterion {
+                        -> &mut Criterion {
         let id = id.as_slice();
 
         for input in inputs.iter() {
@@ -201,12 +197,11 @@ impl Criterion {
     ///
     ///     let cmd = Command::new("python3").args(["-O", "clock.py"]);
     #[experimental]
-    pub fn bench_prog<'a,
-                      S: Str>(
-                      &'a mut self,
+    pub fn bench_prog<S: Str>(
+                      &mut self,
                       id: S,
                       prog: &Command)
-                      -> &'a mut Criterion {
+                      -> &mut Criterion {
         let id = id.as_slice();
 
         bench(id, Program(Stream::spawn(prog)), self);
@@ -229,14 +224,13 @@ impl Criterion {
     ///     let cmd2 = Command::new("python3").args(["-O", "fib.py", "10"]);
     ///     let cmd2 = Command::new("python3").args(["-O", "fib.py", "15"]);
     #[experimental]
-    pub fn bench_prog_family<'a,
-                             I: Show,
+    pub fn bench_prog_family<I: Show,
                              S: Str>(
-                             &'a mut self,
+                             &mut self,
                              id: S,
                              prog: &Command,
                              inputs: &[I])
-                             -> &'a mut Criterion {
+                             -> &mut Criterion {
         let id = id.as_slice();
 
         for input in inputs.iter() {
@@ -254,11 +248,10 @@ impl Criterion {
     ///
     /// Note that `bench_family` and `bench_prog_family` internally call the `summarize` method
     #[experimental]
-    pub fn summarize<'a,
-                     S: Str>(
-                     &'a mut self,
+    pub fn summarize<S: Str>(
+                     &mut self,
                      id: S)
-                     -> &'a mut Criterion {
+                     -> &mut Criterion {
         let id = id.as_slice();
         print!("Summarizing results of {}... ", id);
         plot::summarize(&Path::new(".criterion").join(id), id);

@@ -153,7 +153,7 @@ impl<V: Vector<f64>> Sample<V> {
 }
 
 impl<V: Vector<f64>> Vector<f64> for Sample<V> {
-    fn as_slice<'a>(&'a self) -> &'a [f64] {
+    fn as_slice(&self) -> &[f64] {
         let &Sample(ref sample) = self;
         sample.as_slice()
     }

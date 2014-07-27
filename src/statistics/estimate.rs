@@ -51,7 +51,7 @@ impl Estimates {
         }
     }
 
-    pub fn get<'a>(&'a self, statistic: Statistic) -> &'a Estimate {
+    pub fn get(&self, statistic: Statistic) -> &Estimate {
         let &Estimates(ref estimates) = self;
         estimates.get(&statistic)
     }

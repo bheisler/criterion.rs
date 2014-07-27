@@ -24,7 +24,7 @@ impl Distribution {
 }
 
 impl Vector<f64> for Distribution {
-    fn as_slice<'a>(&'a self) -> &'a [f64] {
+    fn as_slice(&self) -> &[f64] {
         let &Distribution(ref distribution) = self;
         distribution.as_slice()
     }
