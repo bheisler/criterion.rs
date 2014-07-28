@@ -10,12 +10,13 @@ use time::unit;
 use time;
 
 // FIXME Unboxed closures: Get rid of the `Option`
-pub enum Target<'a> {
-    Function(Option<|&mut Bencher|:'a>),
+pub enum Target<'a, I> {
+    Function(fn (&mut Bencher)),
+    FunctionFamily(fn (&mut Bencher, &I), &'a I),
     Program(Stream),
 }
 
-impl<'a> Target<'a> {
+impl<'a, I> Target<'a, I> {
     pub fn warm_up<P: Prefix>(
                    &mut self,
                    how_long: Time<P, unit::Second, u64>)
@@ -37,13 +38,17 @@ impl<'a> Target<'a> {
 
     pub fn run(&mut self, iterations: u64) -> Ns<u64> {
         match *self {
-            Function(ref mut fun) => {
+            Function(fun) => {
                 let mut b = bencher::new(iterations);
 
-                // FIXME Unboxed closures: Get rid of this `Option` dance
-                let f = fun.take_unwrap();
-                f(&mut b);
-                *fun = Some(f);
+                fun(&mut b);
+
+                bencher::elapsed(&b)
+            },
+            FunctionFamily(fun, input) => {
+                let mut b = bencher::new(iterations);
+
+                fun(&mut b, input);
 
                 bencher::elapsed(&b)
             },

@@ -9,7 +9,7 @@ use outliers::Outliers;
 use plot;
 use statistics::{Estimate,Estimates,Mean,Median,MedianAbsDev,Sample,StdDev};
 use stream::Stream;
-use target::{Function,Program,Target};
+use target::{Function,FunctionFamily,Program,Target};
 use time::prefix::{Mili,Nano};
 use time::traits::{Milisecond,Nanosecond,Second};
 use time::types::Ns;
@@ -97,7 +97,7 @@ impl Criterion {
     pub fn bench<I: Str>(
                  &mut self,
                  id: I,
-                 fun: |&mut Bencher|)
+                 fun: fn (&mut Bencher))
                  -> &mut Criterion {
         let id = id.as_slice();
 
@@ -109,7 +109,7 @@ impl Criterion {
 
         // TODO Use clock cost to set a minimum `measurement_time`
 
-        bench(id, Function(Some(fun)), self);
+        bench(id, Function::<()>(fun), self);
 
         println!("");
 
@@ -136,13 +136,14 @@ impl Criterion {
                         S: Str>(
                         &mut self,
                         id: S,
-                        fun: |&mut Bencher, &I|,
+                        fun: fn (&mut Bencher, &I),
                         inputs: &[I])
                         -> &mut Criterion {
         let id = id.as_slice();
 
         for input in inputs.iter() {
-            self.bench(format!("{}/{}", id, input), |b| fun(b, input));
+            let id = format!("{}/{}", id, input);
+            bench(id.as_slice(), FunctionFamily(fun, input), self);
         }
 
         print!("Summarizing results of {}... ", id);
@@ -194,7 +195,7 @@ impl Criterion {
                       -> &mut Criterion {
         let id = id.as_slice();
 
-        bench(id, Program(Stream::spawn(prog)), self);
+        bench(id, Program::<()>(Stream::spawn(prog)), self);
 
         println!("");
 
@@ -253,7 +254,7 @@ impl Criterion {
 
 // FIXME Sorry! Everything below this point is a mess :/
 
-fn bench(id: &str, mut target: Target, criterion: &Criterion) {
+fn bench<I>(id: &str, mut target: Target<I>, criterion: &Criterion) {
     println!("Benchmarking {}", id);
 
     rename_new_dir_to_base(id);
@@ -351,8 +352,8 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     }
 }
 
-fn external_clock_cost(
-    target: &mut Target,
+fn external_clock_cost<I>(
+    target: &mut Target<I>,
     criterion: &Criterion,
     dir: &Path,
     id: &str,
@@ -390,12 +391,14 @@ fn extrapolate_iters(iters: u64, took: Ns<u64>, want: Ns<u64>) -> (Ns<f64>, u64)
     (e_time, e_iters)
 }
 
+fn time_now(b: &mut Bencher) {
+    b.iter(|| time::now());
+}
+
 fn clock_cost(criterion: &Criterion) -> Ns<f64> {
     println!("Estimating the cost of `precise_time_ns`");
 
-    let mut f = Function(Some(|b: &mut Bencher| b.iter(|| time::now())));
-
-    let sample = take_sample(&mut f, criterion);
+    let sample = take_sample(&mut Function::<()>(time_now), criterion);
 
     let median = sample.unwrap().compute(Mean).ns();
 
@@ -403,7 +406,7 @@ fn clock_cost(criterion: &Criterion) -> Ns<f64> {
     median
 }
 
-fn take_sample(t: &mut Target, criterion: &Criterion) -> Ns<Sample<Vec<f64>>> {
+fn take_sample<I>(t: &mut Target<I>, criterion: &Criterion) -> Ns<Sample<Vec<f64>>> {
     let wu_time = criterion.warm_up_time;
     println!("> Warming up for {}", wu_time.to::<Mili>())
     let (took, iters) = t.warm_up(wu_time);
