@@ -94,13 +94,7 @@ impl Criterion {
 
     /// Benchmark a function. See `Bench::iter()` for an example of how `fun` should look
     #[experimental]
-    pub fn bench<I: Str>(
-                 &mut self,
-                 id: I,
-                 fun: fn (&mut Bencher))
-                 -> &mut Criterion {
-        let id = id.as_slice();
-
+    pub fn bench(&mut self, id: &str, fun: fn (&mut Bencher)) -> &mut Criterion {
         local_data_key!(clock: Ns<f64>);
 
         if clock.get().is_none() {
@@ -132,15 +126,12 @@ impl Criterion {
     ///     let fun2 = |b| Vec::from_elem(10_000, 0u);
     ///     let fun3 = |b| Vec::from_elem(1_000_000, 0u);
     #[experimental]
-    pub fn bench_family<I: Show,
-                        S: Str>(
+    pub fn bench_family<I: Show>(
                         &mut self,
-                        id: S,
+                        id: &str,
                         fun: fn (&mut Bencher, &I),
                         inputs: &[I])
                         -> &mut Criterion {
-        let id = id.as_slice();
-
         for input in inputs.iter() {
             let id = format!("{}/{}", id, input);
             bench(id.as_slice(), FunctionFamily(fun, input), self);
