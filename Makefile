@@ -1,5 +1,4 @@
 SRCS = $(wildcard src/bin/*.rs)
-BINS = $(patsubst src/bin/%.rs,target/release/%,$(SRCS))
 
 .PHONY: all doc test
 
@@ -10,5 +9,8 @@ doc:
 	cargo doc
 
 test:
-	$(foreach bin,$(BINS),$(bin) &&) true
+	target/release/fun
+	target/release/fun_family
+	target/release/prog
+	target/release/prog_family
 	./check-line-length.sh
