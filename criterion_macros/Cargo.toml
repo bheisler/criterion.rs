@@ -1,0 +1,8 @@
+[package]
+name = "criterion_macros"
+version = "0.0.0"
+authors = ["Jorge Aparicio <japaric@linux.com>"]
+
+[[lib]]
+name = "criterion_macros"
+plugin = true

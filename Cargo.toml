@@ -3,5 +3,8 @@ name = "criterion"
 version = "0.0.0"
 authors = ["Jorge Aparicio <japaric@linux.com>"]
 
+[dependencies.criterion_macros]
+path = "criterion_macros"
+
 [dependencies.simplot]
 git = "https://github.com/japaric/simplot.rs"
