@@ -6,7 +6,5 @@ use criterion::Criterion;
 
 fn main() {
     Criterion::default().
-        bench_prog(
-            "python/clock",
-            Command::new("python").args(["-O", "external/clock.py"]));
+        bench_prog("fib", &Command::new("target/release/fib"));
 }

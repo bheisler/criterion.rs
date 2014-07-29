@@ -7,7 +7,7 @@ use criterion::Criterion;
 fn main() {
     Criterion::default().
         bench_prog_family(
-            "python/fib",
-            Command::new("python").args(["-O", "external/fib.py"]),
-            [5u, 10, 15]);
+            "from_elem",
+            &Command::new("target/release/from_elem"),
+            [10u, 100, 1_000]);
 }
