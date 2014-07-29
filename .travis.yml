@@ -6,7 +6,7 @@ before_install:
 
 install:
   - sudo apt-get install -qq rust-nightly gnuplot
-  - cd cargo && ./configure && make && sudo make install && cd .. && sudo rm -rf cargo
+  - cd cargo && ./configure && sudo make install && cd .. && sudo rm -rf cargo
 
 script:
   - make
