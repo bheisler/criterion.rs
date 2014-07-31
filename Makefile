@@ -1,5 +1,3 @@
-SRCS = $(wildcard src/bin/*.rs)
-
 .PHONY: all doc test
 
 all:
@@ -11,6 +9,6 @@ doc:
 test:
 	target/release/fun
 	target/release/fun_family
-	target/release/prog
-	target/release/prog_family
+	#target/release/prog
+	#target/release/prog_family
 	./check-line-length.sh
