@@ -9,7 +9,6 @@ use time::types::Ns;
 use time::unit;
 use time;
 
-// FIXME Unboxed closures: Get rid of the `Option`
 pub enum Target<'a, I> {
     Function(fn (&mut Bencher)),
     FunctionFamily(fn (&mut Bencher, &I), &'a I),
@@ -68,13 +67,49 @@ impl<'a, I> Target<'a, I> {
         }
     }
 
-    // FIXME Return type should be `Sample`
-    pub fn bench(&mut self,
-                 sample_size: uint,
-                 iterations: u64)
-                 -> Ns<Sample<Vec<f64>>> {
-        Sample::new(range(0, sample_size).map(|_| {
-            self.run(iterations).unwrap() as f64 / iterations as f64
+    pub fn bench(
+        &mut self,
+        sample_size: uint,
+        iterations: u64
+    ) -> Ns<Sample<Vec<f64>>> {
+        let mut sample = Vec::from_elem(sample_size, 0);
+
+        match *self {
+            Function(fun) => {
+                let mut b = bencher::new(iterations);
+
+                for measurement in sample.mut_iter() {
+                    fun(&mut b);
+                    *measurement = bencher::elapsed(&b).unwrap();
+                }
+            },
+            FunctionFamily(fun, input) => {
+                let mut b = bencher::new(iterations);
+
+                for measurement in sample.mut_iter() {
+                    fun(&mut b, input);
+                    *measurement = bencher::elapsed(&b).unwrap();
+                }
+            },
+            Program(ref mut prog) => {
+                for _ in range(0, sample_size) {
+                    prog.send(iterations);
+                }
+
+                for measurement in sample.mut_iter() {
+                    let msg = prog.recv();
+                    let msg = msg.as_slice().trim();
+
+                    *measurement = match from_str(msg) {
+                        None => fail!("Couldn't parse program output"),
+                        Some(elapsed) => elapsed,
+                    };
+                }
+            },
+        }
+
+        Sample::new(sample.move_iter().map(|elapsed| {
+            elapsed as f64 / iterations as f64
         }).collect()).ns()
     }
 }
