@@ -74,7 +74,8 @@ fn expand_meta_criterion(
 
             // Add the `#[test]` attribute to existing attributes
             let mut attrs = item.attrs.clone();
-            attrs.push(cx.attribute(span, cx.meta_word(span, token::intern_and_get_ident("test"))));
+            attrs.
+                push(cx.attribute(span, cx.meta_word(span, token::intern_and_get_ident("test"))));
 
             box(GC) Item { attrs: attrs, .. (*test).clone() }
         },
