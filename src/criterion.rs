@@ -295,17 +295,33 @@ fn bench<I>(id: &str, mut target: Target<I>, criterion: &Criterion) {
         return;
     }
 
-    println!("Comparing with previous sample");
+    println!("{}: Comparing with previous sample", id);
     let base_sample = Sample::<Vec<f64>>::load(&base_dir.join("sample.json"));
 
     let both_dir = root.join("both");
     plot::both::pdfs(&base_sample, &sample, both_dir.join("pdfs.svg"), id);
     plot::both::points(&base_sample, &sample, both_dir.join("points.svg"), id);
 
+    println!("> H0: Both samples belong to the same population");
+    println!("  > Bootstrapping with {} resamples", nresamples);
+    let t_statistic = sample.t_test(&base_sample);
+    let t_distribution = sample.bootstrap_t_test(&base_sample, nresamples, cl);
+    let t = t_statistic.abs();
+    let hits = t_distribution.as_slice().iter().filter(|&&x| x > t || x < -t).count();
+    let p_value = hits as f64 / nresamples as f64;
+    let sl = 0.05;  // TODO Significance level should be configurable
+    let different_population = p_value < sl;
+
+    println!("  > p = {}", p_value);
+    println!("  > {} reject the null hypothesis",
+             if different_population { "Strong evidence to" } else { "Can't" })
+    plot::t_test(t_statistic, &t_distribution, change_dir.join("bootstrap/t_test.svg"), id);
+
     let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as uint;
     let nresamples = nresamples_sqrt * nresamples_sqrt;
 
-    println!("> Bootstrapping with {} resamples", nresamples);
+    println!("> Estimating relative change of statistics");
+    println!("  > Bootstrapping with {} resamples", nresamples);
     let (estimates, distributions) =
         sample.bootstrap_compare(&base_sample, [Mean, Median], nresamples_sqrt, cl);
     estimates.save(&change_dir.join("bootstrap/estimates.json"));
@@ -333,13 +349,12 @@ fn bench<I>(id: &str, mut target: Target<I>, criterion: &Criterion) {
                 regressed.push(true);
             },
             WithinNoise => {
-                println!("  > {} is within noise levels", statistic);
                 regressed.push(false);
             },
         }
     }
-    if regressed.iter().all(|&x| x) {
-        fail!("regression");
+    if different_population && regressed.iter().all(|&x| x) {
+        fail!("{} has regressed", id);
     }
 }
 

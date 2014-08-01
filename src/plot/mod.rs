@@ -11,7 +11,7 @@ use test::stats::Stats;
 use fs;
 use math;
 use outliers::Outliers;
-use statistics::{Distributions,Estimates,Mean,Median,Sample};
+use statistics::{Distribution,Distributions,Estimates,Mean,Median,Sample};
 
 pub mod both;
 
@@ -144,6 +144,24 @@ pub fn ratio_distributions(d: &Distributions, e: &Estimates, dir: &Path, id: &st
                  [Title("Confidence Interval")]).
             draw();
     }
+}
+
+pub fn t_test(t: f64, distribution: &Distribution, path: Path, id: &str) {
+    let (xs, ys) = math::kde(distribution.as_slice());
+    let ys = ys.as_slice();
+    let vertical = [ys.min(), ys.max()];
+
+    Figure::new().
+        set_font(FONT).
+        set_output_file(path).
+        set_size(PLOT_SIZE).
+        set_terminal(Svg).
+        set_title(format!("{}: Welch's t test", id)).
+        set_xlabel("t score").
+        set_ylabel("Density").
+        plot(Lines, xs.iter(), ys.iter(), [Title("t distribution")]).
+        plot(Lines, [t, t].iter(), vertical.iter(), [Title("t statistic")]).
+        draw();
 }
 
 pub fn outliers(outliers: &Outliers, path: Path, id: &str) {

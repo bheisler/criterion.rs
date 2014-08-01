@@ -49,6 +49,22 @@ impl<'a, V: Encodable<json::Encoder<'a>, IoError>> Sample<V> {
 }
 
 impl<V: Vector<f64>> Sample<V> {
+    fn join<W: Vector<f64>>(&self, other: &Sample<W>) -> Sample<Vec<f64>> {
+        let mut v = Vec::with_capacity(self.len() + other.len());
+        v.push_all(self.as_slice());
+        v.push_all(other.as_slice());
+
+        Sample(v)
+    }
+
+    fn split_at(&self, n: uint) -> (Sample<&[f64]>, Sample<&[f64]>) {
+        assert!(n < self.len());
+
+        let sample = self.as_slice();
+
+        (Sample(sample.slice_to(n)), Sample(sample.slice_from(n)))
+    }
+
     // Returns the relative difference between the statistic of two samples
     fn compare<W: Vector<f64>>(
                &self,
@@ -68,6 +84,14 @@ impl<V: Vector<f64>> Sample<V> {
             MedianAbsDev => sample.median_abs_dev(),
             StdDev => sample.std_dev(),
         }
+    }
+
+    pub fn t_test<W: Vector<f64>>(&self, other: &Sample<W>) -> f64 {
+        let (mu_1, mu_2) = (self.compute(Mean), other.compute(Mean));
+        let (sigma_1, sigma_2) = (self.compute(StdDev).powi(2), other.compute(StdDev).powi(2));
+        let (n_1, n_2) = (self.len() as f64, other.len() as f64);
+
+        (mu_1 - mu_2) / (sigma_1 / n_1 + sigma_2 / n_2).sqrt()
     }
 
     // Bootstrap the statistics of the sample using "case resampling"
@@ -102,7 +126,6 @@ impl<V: Vector<f64>> Sample<V> {
                     distribution.standard_error(),
                 )
             }).collect::<Vec<Estimate>>();
-        //            ^~~ FIXME Better inference engine: Replace with ::<Vec<_>>
 
         (Estimates::new(statistics, estimates), Distributions::new(statistics, distributions))
     }
@@ -113,7 +136,7 @@ impl<V: Vector<f64>> Sample<V> {
                              other: &Sample<W>,
                              statistics: &[Statistic],
                              nresamples_sqrt: uint,
-                             _confidence_level@cl: f64)
+                             cl: f64)
                              -> (Estimates, Distributions) {
         assert!(cl > 0.0 && cl < 1.0);
 
@@ -146,9 +169,33 @@ impl<V: Vector<f64>> Sample<V> {
                     distribution.standard_error(),
                 )
             }).collect::<Vec<Estimate>>();
-        //            ^~~ FIXME Better inference engine: Replace with ::<Vec<_>>
 
         (Estimates::new(statistics, estimates), Distributions::new(statistics, distributions))
+    }
+
+    // FIXME DRY: This method is *very* similar to `bootstrap`
+    pub fn bootstrap_t_test<W: Vector<f64>>(
+                            &self,
+                            other: &Sample<W>,
+                            nresamples: uint,
+                            cl: f64)
+                            -> Distribution {
+        assert!(cl > 0.0 && cl < 1.0);
+
+        let n = self.len();
+        let joint_sample = self.join(other);
+        let mut resampler = Resampler::new(&joint_sample);
+
+        let mut distribution = Vec::with_capacity(nresamples);
+
+        for _ in range(0, nresamples) {
+            let joint_resample = resampler.next();
+            let (resample, other_resample) = joint_resample.split_at(n);
+
+            distribution.push(resample.t_test(&other_resample));
+        }
+
+        Distribution::new(distribution)
     }
 }
 
@@ -156,5 +203,12 @@ impl<V: Vector<f64>> Vector<f64> for Sample<V> {
     fn as_slice(&self) -> &[f64] {
         let &Sample(ref sample) = self;
         sample.as_slice()
+    }
+}
+
+impl<V: Vector<f64>> Collection for Sample<V> {
+    fn len(&self) -> uint {
+        let &Sample(ref sample) = self;
+        sample.as_slice().len()
     }
 }
