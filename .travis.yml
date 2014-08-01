@@ -1,12 +1,14 @@
 before_install:
-  - git clone --recursive https://github.com/rust-lang/cargo
+  - curl -O http://static.rust-lang.org/cargo-dist/cargo-nightly-x86_64-unknown-linux-gnu.tar.gz
+  - tar xf cargo-nightly-x86_64-unknown-linux-gnu.tar.gz
   - yes | sudo add-apt-repository --yes ppa:hansjorg/rust
   - yes | sudo add-apt-repository ppa:gladky-anton/precise-backports
   - sudo apt-get update -qq
 
 install:
   - sudo apt-get install -qq rust-nightly gnuplot
-  - cd cargo && ./configure && sudo make install && cd .. && sudo rm -rf {~/.,}cargo
+  - sudo cargo-nightly-x86_64-unknown-linux-gnu/install.sh
+  - sudo rm -rf cargo-nightly-x86_64-unknown-linux-gnu
 
 script:
   - make
