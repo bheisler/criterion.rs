@@ -20,7 +20,7 @@ use time;
 pub struct Criterion {
     confidence_level: f64,
     measurement_time: Ns<u64>,
-    noise_tolerance: f64,
+    noise_threshold: f64,
     nresamples: uint,
     sample_size: uint,
     significance_level: f64,
@@ -34,13 +34,13 @@ impl Criterion {
     ///
     /// * Measurement time: 10 ms
     ///
-    /// * Noise tolerance: 0.01 (1%)
+    /// * Noise threshold: 0.01 (1%)
     ///
     /// * Bootstrap with 100 000 resamples
     ///
     /// * Sample size: 100 measurements
     ///
-    /// * Significance level: 0.05 (for hypothesis testing)
+    /// * Significance level: 0.05
     ///
     /// * Warm-up time: 1 s
     #[experimental]
@@ -48,7 +48,7 @@ impl Criterion {
         Criterion {
             confidence_level: 0.95,
             measurement_time: 10.ms().to::<Nano>(),
-            noise_tolerance: 0.01,
+            noise_threshold: 0.01,
             nresamples: 100_000,
             sample_size: 100,
             significance_level: 0.05,
@@ -56,6 +56,9 @@ impl Criterion {
         }
     }
 
+    /// Changes the confidence level
+    ///
+    /// The confidence level is used to calculate the confidence intervals of the estimates
     #[experimental]
     pub fn confidence_level(&mut self, cl: f64) -> &mut Criterion {
         assert!(cl > 0.0 && cl < 1.0);
@@ -64,32 +67,49 @@ impl Criterion {
         self
     }
 
+    /// Change the measurement time
+    ///
+    /// The program/function under test is iterated for `measurement_time` ms. And the average run
+    /// time is reported as a measurement
     #[experimental]
     pub fn measurement_time(&mut self, ms: u64) -> &mut Criterion {
         self.measurement_time = ms.ms().to::<Nano>();
         self
     }
 
+    /// Changes the noise threshold
+    ///
+    /// When comparing benchmark results, only relative changes of the execution time above this
+    /// threshold are considered significant
     #[experimental]
-    pub fn noise_tolerance(&mut self, nt: f64) -> &mut Criterion {
+    pub fn noise_threshold(&mut self, nt: f64) -> &mut Criterion {
         assert!(nt >= 0.0);
 
-        self.noise_tolerance = nt;
+        self.noise_threshold = nt;
         self
     }
 
+    /// Changes the number of resamples
+    ///
+    /// Number of resamples to use for bootstraping via case resampling
     #[experimental]
     pub fn nresamples(&mut self, n: uint) -> &mut Criterion {
         self.nresamples = n;
         self
     }
 
+    /// Changes the size of a sample
+    ///
+    /// A sample consists of severals measurements
     #[experimental]
     pub fn sample_size(&mut self, n: uint) -> &mut Criterion {
         self.sample_size = n;
         self
     }
 
+    /// Changes the significance level
+    ///
+    /// Significance level to use for hypothesis testing
     #[experimental]
     pub fn significance_level(&mut self, sl: f64) -> &mut Criterion {
         assert!(sl > 0.0 && sl < 1.0);
@@ -98,6 +118,10 @@ impl Criterion {
         self
     }
 
+    /// Changes the warm up time
+    ///
+    /// The program/function under test is executed during `warm_up_time` ms before the real
+    /// measurement starts
     #[experimental]
     pub fn warm_up_time(&mut self, ms: u64) -> &mut Criterion {
         self.warm_up_time = ms.ms().to::<Nano>();
@@ -344,11 +368,11 @@ fn bench<I>(id: &str, mut target: Target<I>, criterion: &Criterion) {
                               &change_dir.join("bootstrap/distribution"),
                               id);
 
-    let noise = criterion.noise_tolerance;
+    let threshold = criterion.noise_threshold;
     let mut regressed = vec!();
     for &statistic in [Mean, Median].iter() {
         let estimate = estimates.get(statistic);
-        let result = compare_to_noise(estimate, noise);
+        let result = compare_to_threshold(estimate, threshold);
 
         let p = estimate.point_estimate();
         match result {
@@ -360,7 +384,7 @@ fn bench<I>(id: &str, mut target: Target<I>, criterion: &Criterion) {
                 println!("  > {} has regressed by {:.2}%", statistic, 100.0 * p);
                 regressed.push(true);
             },
-            WithinNoise => {
+            NonSignificant => {
                 regressed.push(false);
             },
         }
@@ -529,10 +553,10 @@ fn format_change(pct: f64, signed: bool) -> String {
 enum ComparisonResult {
     Improved,
     Regressed,
-    WithinNoise,
+    NonSignificant,
 }
 
-fn compare_to_noise(estimate: &Estimate, noise: f64) -> ComparisonResult {
+fn compare_to_threshold(estimate: &Estimate, noise: f64) -> ComparisonResult {
     let ci = estimate.confidence_interval();
     let lb = ci.lower_bound();
     let ub = ci.upper_bound();
@@ -542,6 +566,6 @@ fn compare_to_noise(estimate: &Estimate, noise: f64) -> ComparisonResult {
     } else if lb > noise && ub > noise {
         Regressed
     } else {
-        WithinNoise
+        NonSignificant
     }
 }
