@@ -15,7 +15,7 @@ use time::traits::{Milisecond,Nanosecond,Second};
 use time::types::Ns;
 use time;
 
-/// The "criterion" for the benchmark, which is also the benchmark "builder"
+/// The "criterion" for the benchmark, which is also the benchmark "manager"
 #[experimental]
 pub struct Criterion {
     confidence_level: f64,
@@ -23,6 +23,7 @@ pub struct Criterion {
     noise_tolerance: f64,
     nresamples: uint,
     sample_size: uint,
+    significance_level: f64,
     warm_up_time: Ns<u64>,
 }
 
@@ -39,6 +40,8 @@ impl Criterion {
     ///
     /// * Sample size: 100 measurements
     ///
+    /// * Significance level: 0.05 (for hypothesis testing)
+    ///
     /// * Warm-up time: 1 s
     #[experimental]
     pub fn default() -> Criterion {
@@ -48,6 +51,7 @@ impl Criterion {
             noise_tolerance: 0.01,
             nresamples: 100_000,
             sample_size: 100,
+            significance_level: 0.05,
             warm_up_time: 1.s().to::<Nano>(),
         }
     }
@@ -83,6 +87,14 @@ impl Criterion {
     #[experimental]
     pub fn sample_size(&mut self, n: uint) -> &mut Criterion {
         self.sample_size = n;
+        self
+    }
+
+    #[experimental]
+    pub fn significance_level(&mut self, sl: f64) -> &mut Criterion {
+        assert!(sl > 0.0 && sl < 1.0);
+
+        self.significance_level = sl;
         self
     }
 
@@ -309,7 +321,7 @@ fn bench<I>(id: &str, mut target: Target<I>, criterion: &Criterion) {
     let t = t_statistic.abs();
     let hits = t_distribution.as_slice().iter().filter(|&&x| x > t || x < -t).count();
     let p_value = hits as f64 / nresamples as f64;
-    let sl = 0.05;  // TODO Significance level should be configurable
+    let sl = criterion.significance_level;
     let different_population = p_value < sl;
 
     println!("  > p = {}", p_value);
