@@ -27,21 +27,16 @@ pub struct Criterion {
     warm_up_time: Ns<u64>,
 }
 
+#[experimental]
 impl Criterion {
     /// This is the default criterion:
     ///
     /// * Confidence level: 0.95
-    ///
     /// * Measurement time: 10 ms
-    ///
     /// * Noise threshold: 0.01 (1%)
-    ///
     /// * Bootstrap with 100 000 resamples
-    ///
     /// * Sample size: 100 measurements
-    ///
     /// * Significance level: 0.05
-    ///
     /// * Warm-up time: 1 s
     #[experimental]
     pub fn default() -> Criterion {
@@ -215,13 +210,10 @@ impl Criterion {
     ///
     ///     let cmd = Command::new("python3").args(["-O", "clock.py"]);
     #[experimental]
-    pub fn bench_prog<S: Str>(
-                      &mut self,
-                      id: S,
+    pub fn bench_prog(&mut self,
+                      id: &str,
                       prog: &Command)
                       -> &mut Criterion {
-        let id = id.as_slice();
-
         bench(id, Program::<()>(Stream::spawn(prog)), self);
 
         println!("");
@@ -242,17 +234,15 @@ impl Criterion {
     ///     let cmd2 = Command::new("python3").args(["-O", "fib.py", "10"]);
     ///     let cmd2 = Command::new("python3").args(["-O", "fib.py", "15"]);
     #[experimental]
-    pub fn bench_prog_family<I: Show,
-                             S: Str>(
+    pub fn bench_prog_family<I: Show>(
                              &mut self,
-                             id: S,
+                             id: &str,
                              prog: &Command,
                              inputs: &[I])
                              -> &mut Criterion {
-        let id = id.as_slice();
-
         for input in inputs.iter() {
-            self.bench_prog(format!("{}/{}", id, input), prog.clone().arg(format!("{}", input)));
+            let id = format!("{}/{}", id, input);
+            self.bench_prog(id.as_slice(), prog.clone().arg(format!("{}", input)));
         }
 
         print!("Summarizing results of {}... ", id);
@@ -266,11 +256,7 @@ impl Criterion {
     ///
     /// Note that `bench_family` and `bench_prog_family` internally call the `summarize` method
     #[experimental]
-    pub fn summarize<S: Str>(
-                     &mut self,
-                     id: S)
-                     -> &mut Criterion {
-        let id = id.as_slice();
+    pub fn summarize(&mut self, id: &str) -> &mut Criterion {
         print!("Summarizing results of {}... ", id);
         plot::summarize(&Path::new(".criterion").join(id), id);
         println!("DONE\n");

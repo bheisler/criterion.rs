@@ -12,6 +12,7 @@ pub struct Bencher {
     start: Ns<u64>,
 }
 
+#[experimental]
 impl Bencher {
     /// Callback for benchmark functions to benchmark a routine
     ///
