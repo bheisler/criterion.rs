@@ -99,7 +99,7 @@ impl<V: Vector<f64>> Sample<V> {
     pub fn bootstrap(&self,
                      statistics: &[Statistic],
                      nresamples: uint,
-                     _confidence_level@cl: f64)
+                     cl: f64)
                      -> (Estimates, Distributions) {
         assert!(cl > 0.0 && cl < 1.0);
 

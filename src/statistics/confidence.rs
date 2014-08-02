@@ -10,7 +10,7 @@ pub struct ConfidenceInterval {
 impl ConfidenceInterval {
     // Compute the confidence interval using percentiles
     // TODO Try other methods like the BCA bootstrap
-    pub fn new(distribution: &Distribution, _confidence_level@cl: f64) -> ConfidenceInterval {
+    pub fn new(distribution: &Distribution, cl: f64) -> ConfidenceInterval {
         ConfidenceInterval {
             confidence_level: cl,
             lower_bound: distribution.percentile(50.0 * (1.0 - cl)),
