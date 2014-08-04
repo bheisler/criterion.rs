@@ -1,7 +1,7 @@
 .PHONY: all doc test
 
 all:
-	cargo build --release -u
+	cargo build --release
 
 doc:
 	cargo doc
