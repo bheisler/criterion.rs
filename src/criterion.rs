@@ -3,6 +3,7 @@ use std::fmt::Show;
 use std::io::Command;
 use std::mem;
 use std::num;
+use time;
 
 use fs;
 use outliers::Outliers;
@@ -10,22 +11,22 @@ use plot;
 use statistics::{Estimate, Estimates, Mean, Median, MedianAbsDev, Sample, StdDev};
 use stream::Stream;
 use target::{Bencher, Function, Program, Target};
-use time::prefix::{Mili, Nano};
-use time::traits::{Milisecond, Nanosecond, Second};
-use time::types::Ns;
-use time;
 
 /// The "criterion" for the benchmark, which is also the benchmark "manager"
+// TODO (rust-lang/rust#15934) The `*_ns` fields should use the `Duration` type
 #[experimental]
 pub struct Criterion {
     confidence_level: f64,
-    measurement_time: Ns<u64>,
+    measurement_ns: u64,
     noise_threshold: f64,
     nresamples: uint,
     sample_size: uint,
     significance_level: f64,
-    warm_up_time: Ns<u64>,
+    warm_up_ns: u64,
 }
+
+static MILISECONDS: u64 = 1_000_000;
+static SECONDS: u64 = 1_000_000_000;
 
 #[experimental]
 impl Criterion {
@@ -42,12 +43,12 @@ impl Criterion {
     pub fn default() -> Criterion {
         Criterion {
             confidence_level: 0.95,
-            measurement_time: 10.ms().to::<Nano>(),
+            measurement_ns: 10 * MILISECONDS,
             noise_threshold: 0.01,
             nresamples: 100_000,
             sample_size: 100,
             significance_level: 0.05,
-            warm_up_time: 1.s().to::<Nano>(),
+            warm_up_ns: 1 * SECONDS,
         }
     }
 
@@ -68,7 +69,7 @@ impl Criterion {
     /// time is reported as a measurement
     #[experimental]
     pub fn measurement_time(&mut self, ms: u64) -> &mut Criterion {
-        self.measurement_time = ms.ms().to::<Nano>();
+        self.measurement_ns = ms * MILISECONDS;
         self
     }
 
@@ -119,7 +120,7 @@ impl Criterion {
     /// measurement starts
     #[experimental]
     pub fn warm_up_time(&mut self, ms: u64) -> &mut Criterion {
-        self.warm_up_time = ms.ms().to::<Nano>();
+        self.warm_up_ns = ms * MILISECONDS;
         self
     }
 
@@ -274,9 +275,9 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     let change_dir = root.join("change");
     let new_dir = root.join("new");
 
-    let start = time::now();
-    let sample = take_sample(&mut target, criterion).unwrap();
-    info!("Sampling took {}", format_time((time::now() - start).unwrap() as f64))
+    let start = time::precise_time_ns();
+    let sample = take_sample(&mut target, criterion);
+    info!("Sampling took {}", format_time((time::precise_time_ns() - start) as f64))
     sample.save(&new_dir.join("sample.json"));
 
     plot::sample(&sample, new_dir.join("points.svg"), id);
@@ -291,10 +292,10 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     let nresamples = criterion.nresamples;
     let cl = criterion.confidence_level;
     println!("  > Bootstrapping the sample with {} resamples", nresamples);
-    let start = time::now();
+    let start = time::precise_time_ns();
     let (estimates, distributions) =
         sample.bootstrap([Mean, Median, StdDev, MedianAbsDev], nresamples, cl);
-    info!("Bootstraping took {}", format_time((time::now() - start).unwrap() as f64))
+    info!("Bootstraping took {}", format_time((time::precise_time_ns() - start) as f64))
     estimates.save(&new_dir.join("bootstrap/estimates.json"));
 
     report_time(&estimates);
@@ -317,9 +318,9 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     println!("> H0: Both samples belong to the same population");
     println!("  > Bootstrapping with {} resamples", nresamples);
     let t_statistic = sample.t_test(&base_sample);
-    let start = time::now();
+    let start = time::precise_time_ns();
     let t_distribution = sample.bootstrap_t_test(&base_sample, nresamples, cl);
-    info!("Bootstraping took {}", format_time((time::now() - start).unwrap() as f64))
+    info!("Bootstraping took {}", format_time((time::precise_time_ns() - start) as f64))
     let t = t_statistic.abs();
     let hits = t_distribution.as_slice().iter().filter(|&&x| x > t || x < -t).count();
     let p_value = hits as f64 / nresamples as f64;
@@ -336,10 +337,10 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
 
     println!("> Estimating relative change of statistics");
     println!("  > Bootstrapping with {} resamples", nresamples);
-    let start = time::now();
+    let start = time::precise_time_ns();
     let (estimates, distributions) =
         sample.bootstrap_compare(&base_sample, [Mean, Median], nresamples_sqrt, cl);
-    info!("Bootstraping took {}", format_time((time::now() - start).unwrap() as f64))
+    info!("Bootstraping took {}", format_time((time::precise_time_ns() - start) as f64))
     estimates.save(&change_dir.join("bootstrap/estimates.json"));
 
     report_change(&estimates);
@@ -374,30 +375,28 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     }
 }
 
-fn extrapolate_iters(iters: u64, took: Ns<u64>, want: Ns<u64>) -> (Ns<f64>, u64) {
+fn extrapolate_iters(iters: u64, took: u64, want: u64) -> (f64, u64) {
     let e_iters = cmp::max(want * iters / took, 1);
-    let e_time = (took * e_iters).cast::<f64>() / iters as f64;
+    let e_time = (took * e_iters) as f64 / iters as f64;
 
     (e_time, e_iters)
 }
 
-fn take_sample(t: &mut Target, criterion: &Criterion) -> Ns<Sample<Vec<f64>>> {
-    let wu_time = criterion.warm_up_time;
-    println!("> Warming up for {}", wu_time.to::<Mili>())
-    let (took, iters) = t.warm_up(wu_time);
+fn take_sample(t: &mut Target, criterion: &Criterion) -> Sample<Vec<f64>> {
+    let wu_ns = criterion.warm_up_ns;
+    println!("> Warming up for {}", format_time(wu_ns as f64))
+    let (took, iters) = t.warm_up(wu_ns);
 
-    let m_time = criterion.measurement_time;
-    let (m_time, m_iters) = extrapolate_iters(iters, took, m_time);
+    let m_ns = criterion.measurement_ns;
+    let (m_ns, m_iters) = extrapolate_iters(iters, took, m_ns);
 
     let sample_size = criterion.sample_size;
     println!("> Collecting {} measurements, {} iters each in estimated {}",
              sample_size,
              m_iters,
-             format_time((m_time * sample_size as f64).unwrap()));
+             format_time((m_ns * sample_size as f64)));
 
-    let sample = t.bench(sample_size, m_iters).unwrap();
-
-    sample.ns()
+    t.bench(sample_size, m_iters)
 }
 
 fn rename_new_dir_to_base(id: &str) {

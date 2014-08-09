@@ -5,6 +5,7 @@ extern crate log;
 extern crate serialize;
 extern crate simplot;
 extern crate test;
+extern crate time;
 
 pub use criterion::Criterion;
 pub use target::Bencher;
@@ -17,4 +18,3 @@ mod plot;
 mod statistics;
 mod stream;
 mod target;
-mod time;
