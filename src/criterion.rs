@@ -4,13 +4,12 @@ use std::io::Command;
 use std::mem;
 use std::num;
 
-use bencher::Bencher;
 use fs;
 use outliers::Outliers;
 use plot;
 use statistics::{Estimate, Estimates, Mean, Median, MedianAbsDev, Sample, StdDev};
 use stream::Stream;
-use target::{Function, Program, Target};
+use target::{Bencher, Function, Program, Target};
 use time::prefix::{Mili, Nano};
 use time::traits::{Milisecond, Nanosecond, Second};
 use time::types::Ns;

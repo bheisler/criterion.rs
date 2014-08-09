@@ -6,10 +6,9 @@ extern crate serialize;
 extern crate simplot;
 extern crate test;
 
-pub use bencher::Bencher;
 pub use criterion::Criterion;
+pub use target::Bencher;
 
-mod bencher;
 mod criterion;
 mod fs;
 mod math;

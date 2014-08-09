@@ -1,5 +1,5 @@
-use bencher::Bencher;
-use bencher;
+use test;
+
 use statistics::Sample;
 use stream::Stream;
 use time::Time;
@@ -8,6 +8,42 @@ use time::traits::{Nanosecond, Prefix};
 use time::types::Ns;
 use time::unit;
 use time;
+
+/// Helper `struct` to build benchmark functions that follow the setup - bench - teardown pattern.
+#[experimental]
+pub struct Bencher {
+    end: Ns<u64>,
+    iters: u64,
+    start: Ns<u64>,
+}
+
+#[experimental]
+impl Bencher {
+    /// Callback for benchmark functions to benchmark a routine
+    ///
+    /// A benchmark function looks like this:
+    ///
+    ///     fn bench_me(b: &mut Bencher) {
+    ///         // Setup
+    ///
+    ///         // Bench
+    ///         b.iter(|| {
+    ///             // Routine to benchmark
+    ///         })
+    ///
+    ///         // Teardown
+    ///     }
+    ///
+    /// See `Criterion::bench()` for details about how to run this benchmark function
+    #[experimental]
+    pub fn iter<T>(&mut self, routine: || -> T) {
+        self.start = time::now();
+        for _ in range(0, self.iters) {
+            test::black_box(routine());
+        }
+        self.end = time::now();
+    }
+}
 
 pub enum Target<'a> {
     Function(Option<|&mut Bencher|:'a>),
@@ -20,33 +56,33 @@ impl<'a> Target<'a> {
                    how_long: Time<P, unit::Second, u64>)
                    -> (Ns<u64>, u64) {
         let how_long = how_long.to::<Nano>();
-        let mut iterations = 1;
+        let mut iters = 1;
 
         let init = time::now();
         loop {
-            let elapsed = self.run(iterations);
+            let elapsed = self.run(iters);
 
             if time::now() - init > how_long {
-                return (elapsed, iterations);
+                return (elapsed, iters);
             }
 
-            iterations *= 2;
+            iters *= 2;
         }
     }
 
-    pub fn run(&mut self, iterations: u64) -> Ns<u64> {
+    pub fn run(&mut self, iters: u64) -> Ns<u64> {
         match *self {
             Function(ref mut fun_opt) => {
-                let mut b = bencher::new(iterations);
+                let mut b = Bencher { iters: iters, end: 0.ns(), start: 0.ns() };
 
                 let fun = fun_opt.take_unwrap();
                 fun(&mut b);
                 *fun_opt = Some(fun);
 
-                bencher::elapsed(&b)
+                b.end - b.start
             },
             Program(ref mut prog) => {
-                prog.send(iterations);
+                prog.send(iters);
 
                 let msg = prog.recv();
                 let msg = msg.as_slice().trim();
@@ -64,25 +100,25 @@ impl<'a> Target<'a> {
     pub fn bench(
         &mut self,
         sample_size: uint,
-        iterations: u64
+        iters: u64
     ) -> Ns<Sample<Vec<f64>>> {
         let mut sample = Vec::from_elem(sample_size, 0);
 
         match *self {
             Function(ref mut fun_opt) => {
-                let mut b = bencher::new(iterations);
+                let mut b = Bencher { iters: iters, start: 0.ns(), end: 0.ns() };
                 let fun = fun_opt.take_unwrap();
 
                 for measurement in sample.mut_iter() {
                     fun(&mut b);
-                    *measurement = bencher::elapsed(&b).unwrap();
+                    *measurement = (b.end - b.start).unwrap();
                 }
 
                 *fun_opt = Some(fun);
             },
             Program(ref mut prog) => {
                 for _ in range(0, sample_size) {
-                    prog.send(iterations);
+                    prog.send(iters);
                 }
 
                 for measurement in sample.mut_iter() {
@@ -98,7 +134,7 @@ impl<'a> Target<'a> {
         }
 
         Sample::new(sample.move_iter().map(|elapsed| {
-            elapsed as f64 / iterations as f64
+            elapsed as f64 / iters as f64
         }).collect()).ns()
     }
 }
