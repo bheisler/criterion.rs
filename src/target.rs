@@ -9,13 +9,12 @@ use time::types::Ns;
 use time::unit;
 use time;
 
-pub enum Target<'a, I> {
-    Function(fn (&mut Bencher)),
-    FunctionFamily(fn (&mut Bencher, &I), &'a I),
+pub enum Target<'a> {
+    Function(Option<|&mut Bencher|:'a>),
     Program(Stream),
 }
 
-impl<'a, I> Target<'a, I> {
+impl<'a> Target<'a> {
     pub fn warm_up<P: Prefix>(
                    &mut self,
                    how_long: Time<P, unit::Second, u64>)
@@ -37,17 +36,12 @@ impl<'a, I> Target<'a, I> {
 
     pub fn run(&mut self, iterations: u64) -> Ns<u64> {
         match *self {
-            Function(fun) => {
+            Function(ref mut fun_opt) => {
                 let mut b = bencher::new(iterations);
 
+                let fun = fun_opt.take_unwrap();
                 fun(&mut b);
-
-                bencher::elapsed(&b)
-            },
-            FunctionFamily(fun, input) => {
-                let mut b = bencher::new(iterations);
-
-                fun(&mut b, input);
+                *fun_opt = Some(fun);
 
                 bencher::elapsed(&b)
             },
@@ -75,21 +69,16 @@ impl<'a, I> Target<'a, I> {
         let mut sample = Vec::from_elem(sample_size, 0);
 
         match *self {
-            Function(fun) => {
+            Function(ref mut fun_opt) => {
                 let mut b = bencher::new(iterations);
+                let fun = fun_opt.take_unwrap();
 
                 for measurement in sample.mut_iter() {
                     fun(&mut b);
                     *measurement = bencher::elapsed(&b).unwrap();
                 }
-            },
-            FunctionFamily(fun, input) => {
-                let mut b = bencher::new(iterations);
 
-                for measurement in sample.mut_iter() {
-                    fun(&mut b, input);
-                    *measurement = bencher::elapsed(&b).unwrap();
-                }
+                *fun_opt = Some(fun);
             },
             Program(ref mut prog) => {
                 for _ in range(0, sample_size) {

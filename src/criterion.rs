@@ -1,6 +1,7 @@
 use std::cmp;
 use std::fmt::Show;
 use std::io::Command;
+use std::mem;
 use std::num;
 
 use bencher::Bencher;
@@ -9,7 +10,7 @@ use outliers::Outliers;
 use plot;
 use statistics::{Estimate, Estimates, Mean, Median, MedianAbsDev, Sample, StdDev};
 use stream::Stream;
-use target::{Function, FunctionFamily, Program, Target};
+use target::{Function, Program, Target};
 use time::prefix::{Mili, Nano};
 use time::traits::{Milisecond, Nanosecond, Second};
 use time::types::Ns;
@@ -125,8 +126,9 @@ impl Criterion {
 
     /// Benchmark a function. See `Bench::iter()` for an example of how `fun` should look
     #[experimental]
-    pub fn bench(&mut self, id: &str, fun: fn (&mut Bencher)) -> &mut Criterion {
-        bench(id, Function::<()>(fun), self);
+    pub fn bench(&mut self, id: &str, fun: |&mut Bencher|:'static) -> &mut Criterion {
+        // FIXME Figure out what's the problem with lifetimes
+        bench(id, Function(Some(unsafe { mem::transmute(fun) })), self);
 
         println!("");
 
@@ -152,12 +154,15 @@ impl Criterion {
     pub fn bench_family<I: Show>(
                         &mut self,
                         id: &str,
-                        fun: fn (&mut Bencher, &I),
+                        fun: |&mut Bencher, &I|:'static,
                         inputs: &[I])
                         -> &mut Criterion {
         for input in inputs.iter() {
             let id = format!("{}/{}", id, input);
-            bench(id.as_slice(), FunctionFamily(fun, input), self);
+            let fun = |b| fun(b, input);
+
+            // FIXME Figure out what's the problem with lifetimes
+            bench(id.as_slice(), Function(Some(unsafe { mem::transmute(fun) })), self);
         }
 
         print!("Summarizing results of {}... ", id);
@@ -206,7 +211,7 @@ impl Criterion {
                       id: &str,
                       prog: &Command)
                       -> &mut Criterion {
-        bench(id, Program::<()>(Stream::spawn(prog)), self);
+        bench(id, Program(Stream::spawn(prog)), self);
 
         println!("");
 
@@ -259,7 +264,7 @@ impl Criterion {
 
 // FIXME Sorry! Everything below this point is a mess :/
 
-fn bench<I>(id: &str, mut target: Target<I>, criterion: &Criterion) {
+fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     println!("Benchmarking {}", id);
 
     rename_new_dir_to_base(id);
@@ -377,7 +382,7 @@ fn extrapolate_iters(iters: u64, took: Ns<u64>, want: Ns<u64>) -> (Ns<f64>, u64)
     (e_time, e_iters)
 }
 
-fn take_sample<I>(t: &mut Target<I>, criterion: &Criterion) -> Ns<Sample<Vec<f64>>> {
+fn take_sample(t: &mut Target, criterion: &Criterion) -> Ns<Sample<Vec<f64>>> {
     let wu_time = criterion.warm_up_time;
     println!("> Warming up for {}", wu_time.to::<Mili>())
     let (took, iters) = t.warm_up(wu_time);
