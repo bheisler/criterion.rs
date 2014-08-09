@@ -103,12 +103,12 @@ impl<V: Vector<f64>> Sample<V> {
                      -> (Estimates, Distributions) {
         assert!(cl > 0.0 && cl < 1.0);
 
-        let mut resampler = Resampler::new(self);
+        let mut resampler = Resampler::new(self.as_slice());
 
         let mut distributions: Vec<Vec<f64>> =
             Vec::from_elem(statistics.len(), Vec::with_capacity(nresamples));
         for _ in range(0, nresamples) {
-            let resample = resampler.next();
+            let resample = Sample::new(resampler.next());
 
             for (distribution, &statistic) in distributions.mut_iter().zip(statistics.iter()) {
                 distribution.push(resample.compute(statistic))
@@ -140,17 +140,17 @@ impl<V: Vector<f64>> Sample<V> {
                              -> (Estimates, Distributions) {
         assert!(cl > 0.0 && cl < 1.0);
 
-        let mut resampler = Resampler::new(self);
-        let mut other_resampler = Resampler::new(other);
+        let mut resampler = Resampler::new(self.as_slice());
+        let mut other_resampler = Resampler::new(other.as_slice());
 
         let nresamples = nresamples_sqrt * nresamples_sqrt;
         let mut distributions: Vec<Vec<f64>> =
             Vec::from_elem(statistics.len(), Vec::with_capacity(nresamples));
         for _ in range(0, nresamples_sqrt) {
-            let resample = resampler.next();
+            let resample = Sample::new(resampler.next());
 
             for _ in range(0, nresamples_sqrt) {
-                let other_resample = other_resampler.next();
+                let other_resample = Sample::new(other_resampler.next());
 
                 for (distribution, statistic) in distributions.mut_iter().zip(statistics.iter()) {
                     distribution.push(resample.compare(&other_resample, *statistic))
@@ -184,12 +184,12 @@ impl<V: Vector<f64>> Sample<V> {
 
         let n = self.len();
         let joint_sample = self.join(other);
-        let mut resampler = Resampler::new(&joint_sample);
+        let mut resampler = Resampler::new(joint_sample.as_slice());
 
         let mut distribution = Vec::with_capacity(nresamples);
 
         for _ in range(0, nresamples) {
-            let joint_resample = resampler.next();
+            let joint_resample = Sample::new(resampler.next());
             let (resample, other_resample) = joint_resample.split_at(n);
 
             distribution.push(resample.t_test(&other_resample));
