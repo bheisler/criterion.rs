@@ -126,14 +126,6 @@ impl Criterion {
     /// Benchmark a function. See `Bench::iter()` for an example of how `fun` should look
     #[experimental]
     pub fn bench(&mut self, id: &str, fun: fn (&mut Bencher)) -> &mut Criterion {
-        local_data_key!(clock: Ns<f64>);
-
-        if clock.get().is_none() {
-            clock.replace(Some(clock_cost(self)));
-        }
-
-        // TODO Use clock cost to set a minimum `measurement_time`
-
         bench(id, Function::<()>(fun), self);
 
         println!("");
@@ -278,16 +270,6 @@ fn bench<I>(id: &str, mut target: Target<I>, criterion: &Criterion) {
     let change_dir = root.join("change");
     let new_dir = root.join("new");
 
-    match target {
-        Program(_) => {
-            let _clock_cost =
-                external_clock_cost(&mut target, criterion, &new_dir.join("clock"), id);
-
-            // TODO use clock_cost to set minimal measurement_time
-        },
-        _ => {},
-    }
-
     let start = time::now();
     let sample = take_sample(&mut target, criterion).unwrap();
     info!("Sampling took {}", format_time((time::now() - start).unwrap() as f64))
@@ -388,58 +370,11 @@ fn bench<I>(id: &str, mut target: Target<I>, criterion: &Criterion) {
     }
 }
 
-fn external_clock_cost<I>(
-    target: &mut Target<I>,
-    criterion: &Criterion,
-    dir: &Path,
-    id: &str,
-) -> Ns<f64> {
-    println!("> Estimating the cost of a clock call");
-
-    let wu_time = criterion.warm_up_time;
-    println!("  > Warming up for {}", wu_time.to::<Mili>());
-
-    let init = time::now();
-    while time::now() - init < wu_time {
-        target.run(0);
-    }
-
-    println!("  > Collecting {} measurements", criterion.sample_size);
-    let sample = Sample::new(
-        range(0, criterion.sample_size).
-            map(|_| target.run(0).unwrap() as f64).
-            collect::<Vec<f64>>());
-
-    let clock_cost = sample.compute(Median);
-    println!("  > {}: {}", Median, format_time(clock_cost));
-
-    fs::mkdirp(dir);
-    plot::sample(&sample, dir.join("points.svg"), format!("{}/clock_cost", id));
-    plot::pdf(&sample, dir.join("pdf.svg"), format!("{}/clock_cost", id));
-
-    clock_cost.ns()
-}
-
 fn extrapolate_iters(iters: u64, took: Ns<u64>, want: Ns<u64>) -> (Ns<f64>, u64) {
     let e_iters = cmp::max(want * iters / took, 1);
     let e_time = (took * e_iters).cast::<f64>() / iters as f64;
 
     (e_time, e_iters)
-}
-
-fn time_now(b: &mut Bencher) {
-    b.iter(|| time::now());
-}
-
-fn clock_cost(criterion: &Criterion) -> Ns<f64> {
-    println!("Estimating the cost of `precise_time_ns`");
-
-    let sample = take_sample(&mut Function::<()>(time_now), criterion);
-
-    let median = sample.unwrap().compute(Mean).ns();
-
-    println!("> Median: {}\n", median);
-    median
 }
 
 fn take_sample<I>(t: &mut Target<I>, criterion: &Criterion) -> Ns<Sample<Vec<f64>>> {
