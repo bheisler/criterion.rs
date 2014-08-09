@@ -1,3 +1,4 @@
+use std::iter;
 use test;
 use time;
 
@@ -46,85 +47,79 @@ pub enum Target<'a> {
 }
 
 impl<'a> Target<'a> {
-    pub fn warm_up(&mut self, how_long: u64) -> (u64, u64) {
-        let mut iters = 1;
-
-        let init = time::precise_time_ns();
-        loop {
-            let elapsed = self.run(iters);
-
-            if time::precise_time_ns() - init > how_long {
-                return (elapsed, iters);
-            }
-
-            iters *= 2;
-        }
-    }
-
-    pub fn run(&mut self, iters: u64) -> u64 {
-        match *self {
-            Function(ref mut fun_opt) => {
-                let mut b = Bencher { iters: iters, ns_end: 0, ns_start: 0 };
-
-                let fun = fun_opt.take_unwrap();
-                fun(&mut b);
-                *fun_opt = Some(fun);
-
-                b.ns_end - b.ns_start
-            },
-            Program(ref mut prog) => {
-                prog.send(iters);
-
-                let msg = prog.recv();
-                let msg = msg.as_slice().trim();
-
-                let elapsed: u64 = match from_str(msg) {
-                    None => fail!("Couldn't parse program output: {}", msg),
-                    Some(elapsed) => elapsed,
-                };
-
-                elapsed
-            },
-        }
-    }
-
-    pub fn bench(
-        &mut self,
-        sample_size: uint,
-        iters: u64
-    ) -> Sample<Vec<f64>> {
-        let mut sample = Vec::from_elem(sample_size, 0);
+    pub fn warm_up(&mut self, how_long_ns: u64) -> (u64, u64) {
+        let ns_start = time::precise_time_ns();
 
         match *self {
             Function(ref mut fun_opt) => {
-                let mut b = Bencher { iters: iters, ns_start: 0, ns_end: 0 };
                 let fun = fun_opt.take_unwrap();
+                let mut b = Bencher { iters: 1, ns_end: 0, ns_start: 0 };
 
-                for measurement in sample.mut_iter() {
+                loop {
                     fun(&mut b);
-                    *measurement = b.ns_end - b.ns_start;
+
+                    if time::precise_time_ns() - ns_start > how_long_ns {
+                        *fun_opt = Some(fun);
+
+                        return (b.ns_end - b.ns_start, b.iters);
+                    }
+
+                    b.iters *= 2;
+                }
+            },
+            Program(ref mut prog) => {
+                let mut iters = 1;
+
+                loop {
+                    let elapsed =
+                        from_str(prog.send(iters).recv().as_slice().trim()).
+                            expect("Couldn't parse the program output");
+
+                    if time::precise_time_ns() - ns_start > how_long_ns {
+                        return (elapsed, iters);
+                    }
+
+                    iters *= 2;
+                }
+            },
+        }
+    }
+
+    // Collects measurements, each one with different number of iterations: d, 2*d, 3*d, ..., n*d
+    pub fn bench(&mut self, n: uint, d: u64) -> Sample<Vec<f64>> {
+        let mut sample = Vec::with_capacity(n);
+
+        match *self {
+            Function(ref mut fun_opt) => {
+                let mut b = Bencher { iters: n as u64 * d, ns_start: 0, ns_end: 0 };
+                let fun = fun_opt.take_unwrap();
+
+                for _ in range(0, n) {
+                    fun(&mut b);
+                    sample.push(b.ns_end - b.ns_start);
+                    b.iters -= d;
                 }
 
                 *fun_opt = Some(fun);
             },
             Program(ref mut prog) => {
-                for _ in range(0, sample_size) {
+                let mut iters = n as u64 * d;
+
+                for _ in range(0, n) {
                     prog.send(iters);
+                    iters -= d;
                 }
 
-                for measurement in sample.mut_iter() {
+                for _ in range(0, n) {
                     let msg = prog.recv();
                     let msg = msg.as_slice().trim();
 
-                    *measurement = match from_str(msg) {
-                        None => fail!("Couldn't parse program output"),
-                        Some(elapsed) => elapsed,
-                    };
+                    sample.push(from_str(msg).expect("Couldn't parse program output"));
                 }
             },
         }
 
-        Sample::new(sample.move_iter().map(|elapsed| {
+        Sample::new(sample.move_iter().rev().zip(iter::count(d, d)).map(|(elapsed, iters)| {
             elapsed as f64 / iters as f64
         }).collect())
     }

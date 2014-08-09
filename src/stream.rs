@@ -24,10 +24,10 @@ impl Stream {
         }
     }
 
-    pub fn send<T: Show>(&mut self, line: T) {
+    pub fn send<T: Show>(&mut self, line: T) -> &mut Stream {
         match writeln!(self.stdin.get_mut_ref(), "{}", line) {
             Err(e) => fail!("`write into child stdin`: {}", e),
-            Ok(_) => {},
+            Ok(_) => self,
         }
     }
 

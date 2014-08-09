@@ -1,4 +1,3 @@
-use std::cmp;
 use std::fmt::Show;
 use std::io::Command;
 use std::mem;
@@ -43,7 +42,7 @@ impl Criterion {
     pub fn default() -> Criterion {
         Criterion {
             confidence_level: 0.95,
-            measurement_ns: 10 * MILISECONDS,
+            measurement_ns: 1 * SECONDS,
             noise_threshold: 0.01,
             nresamples: 100_000,
             sample_size: 100,
@@ -375,28 +374,31 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     }
 }
 
-fn extrapolate_iters(iters: u64, took: u64, want: u64) -> (f64, u64) {
-    let e_iters = cmp::max(want * iters / took, 1);
-    let e_time = (took * e_iters) as f64 / iters as f64;
-
-    (e_time, e_iters)
-}
-
 fn take_sample(t: &mut Target, criterion: &Criterion) -> Sample<Vec<f64>> {
     let wu_ns = criterion.warm_up_ns;
-    println!("> Warming up for {}", format_time(wu_ns as f64))
-    let (took, iters) = t.warm_up(wu_ns);
-
     let m_ns = criterion.measurement_ns;
-    let (m_ns, m_iters) = extrapolate_iters(iters, took, m_ns);
+    let n = criterion.sample_size as u64;
 
-    let sample_size = criterion.sample_size;
-    println!("> Collecting {} measurements, {} iters each in estimated {}",
-             sample_size,
-             m_iters,
-             format_time((m_ns * sample_size as f64)));
+    println!("> Warming up for {}", format_time(wu_ns as f64))
+    let (wu_ns, wu_iters) = t.warm_up(wu_ns);
 
-    t.bench(sample_size, m_iters)
+    let d = {
+        let num = 2 * m_ns * wu_iters;
+        let den = n * (n + 1) * wu_ns;
+
+        num / den + 1
+    };
+
+    let m_ns = {
+        let num = n * (n + 1) * d * wu_ns;
+        let den = 2 * wu_iters;
+
+        num / den
+    } as f64;
+
+    println!("> Collecting {} measurements in estimated {}", n, format_time(m_ns));
+
+    t.bench(n as uint, d)
 }
 
 fn rename_new_dir_to_base(id: &str) {
