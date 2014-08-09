@@ -288,7 +288,9 @@ fn bench<I>(id: &str, mut target: Target<I>, criterion: &Criterion) {
         _ => {},
     }
 
+    let start = time::now();
     let sample = take_sample(&mut target, criterion).unwrap();
+    info!("Sampling took {}", format_time((time::now() - start).unwrap() as f64))
     sample.save(&new_dir.join("sample.json"));
 
     plot::sample(&sample, new_dir.join("points.svg"), id);
@@ -303,8 +305,10 @@ fn bench<I>(id: &str, mut target: Target<I>, criterion: &Criterion) {
     let nresamples = criterion.nresamples;
     let cl = criterion.confidence_level;
     println!("  > Bootstrapping the sample with {} resamples", nresamples);
+    let start = time::now();
     let (estimates, distributions) =
         sample.bootstrap([Mean, Median, StdDev, MedianAbsDev], nresamples, cl);
+    info!("Bootstraping took {}", format_time((time::now() - start).unwrap() as f64))
     estimates.save(&new_dir.join("bootstrap/estimates.json"));
 
     report_time(&estimates);
@@ -327,7 +331,9 @@ fn bench<I>(id: &str, mut target: Target<I>, criterion: &Criterion) {
     println!("> H0: Both samples belong to the same population");
     println!("  > Bootstrapping with {} resamples", nresamples);
     let t_statistic = sample.t_test(&base_sample);
+    let start = time::now();
     let t_distribution = sample.bootstrap_t_test(&base_sample, nresamples, cl);
+    info!("Bootstraping took {}", format_time((time::now() - start).unwrap() as f64))
     let t = t_statistic.abs();
     let hits = t_distribution.as_slice().iter().filter(|&&x| x > t || x < -t).count();
     let p_value = hits as f64 / nresamples as f64;
@@ -344,8 +350,10 @@ fn bench<I>(id: &str, mut target: Target<I>, criterion: &Criterion) {
 
     println!("> Estimating relative change of statistics");
     println!("  > Bootstrapping with {} resamples", nresamples);
+    let start = time::now();
     let (estimates, distributions) =
         sample.bootstrap_compare(&base_sample, [Mean, Median], nresamples_sqrt, cl);
+    info!("Bootstraping took {}", format_time((time::now() - start).unwrap() as f64))
     estimates.save(&change_dir.join("bootstrap/estimates.json"));
 
     report_change(&estimates);
