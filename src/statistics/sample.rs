@@ -1,7 +1,7 @@
-use serialize::{Encodable,json};
+use serialize::{Encodable, json};
 use std::cmp;
 use std::comm;
-use std::io::{File,IoError};
+use std::io::{File, IoError};
 use std::mem;
 use std::os;
 use std::raw::Slice;

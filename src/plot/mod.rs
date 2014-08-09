@@ -1,6 +1,6 @@
 use simplot::Figure;
-use simplot::option::{Title,PointType};
-use simplot::plottype::{Lines,Points};
+use simplot::option::{Title, PointType};
+use simplot::plottype::{Lines, Points};
 use simplot::pointtype::Circle;
 use simplot::terminal::Svg;
 use std::iter;
@@ -11,7 +11,7 @@ use test::stats::Stats;
 use fs;
 use math;
 use outliers::Outliers;
-use statistics::{Distribution,Distributions,Estimates,Mean,Median,Sample};
+use statistics::{Distribution, Distributions, Estimates, Mean, Median, Sample};
 
 pub mod both;
 

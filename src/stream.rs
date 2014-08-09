@@ -1,5 +1,5 @@
 use std::fmt::Show;
-use std::io::{BufferedReader,Command,PipeStream,Process};
+use std::io::{BufferedReader, Command, PipeStream, Process};
 
 // A two-way channel to the standard streams of a child process
 pub struct Stream {

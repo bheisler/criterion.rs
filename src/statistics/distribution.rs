@@ -1,4 +1,4 @@
-use std::collections::hashmap::{Entries,HashMap};
+use std::collections::hashmap::{Entries, HashMap};
 use test::stats::Stats;
 
 use super::Statistic;

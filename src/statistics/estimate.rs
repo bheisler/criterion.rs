@@ -1,11 +1,11 @@
-use serialize::{Encodable,json};
+use serialize::{Encodable, json};
 use std::collections::HashMap;
 use std::io::File;
 
 use super::Statistic;
 use super::confidence::ConfidenceInterval;
 
-#[deriving(Decodable,Encodable)]
+#[deriving(Decodable, Encodable)]
 pub struct Estimate {
     confidence_interval: ConfidenceInterval,
     point_estimate: f64,

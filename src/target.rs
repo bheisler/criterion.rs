@@ -4,7 +4,7 @@ use statistics::Sample;
 use stream::Stream;
 use time::Time;
 use time::prefix::Nano;
-use time::traits::{Nanosecond,Prefix};
+use time::traits::{Nanosecond, Prefix};
 use time::types::Ns;
 use time::unit;
 use time;

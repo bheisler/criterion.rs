@@ -1,4 +1,4 @@
-use std::io::{UserRWX,fs};
+use std::io::{UserRWX, fs};
 
 pub fn ls(dir: &Path) -> Vec<Path> {
     match fs::readdir(dir) {

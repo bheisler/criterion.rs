@@ -2,12 +2,12 @@
 // unit checking
 extern crate time;
 
-use std::fmt::{Formatter,Show};
+use std::fmt::{Formatter, Show};
 use std::fmt;
 use std::num::One;
 use std::num;
 
-use self::traits::{Prefix,Unit};
+use self::traits::{Prefix, Unit};
 
 pub mod prefix;
 pub mod traits;

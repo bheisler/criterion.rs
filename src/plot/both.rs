@@ -1,6 +1,6 @@
 use simplot::Figure;
-use simplot::option::{Title,PointType};
-use simplot::plottype::{Lines,Points};
+use simplot::option::{Title, PointType};
+use simplot::plottype::{Lines, Points};
 use simplot::pointtype::Circle;
 use simplot::terminal::Svg;
 use std::rand::Rng;
@@ -10,7 +10,7 @@ use test::stats::Stats;
 use math;
 use statistics::Sample;
 use super::scale_time;
-use super::{FONT,PLOT_SIZE};
+use super::{FONT, PLOT_SIZE};
 
 pub fn pdfs<
     V: Vector<f64>,

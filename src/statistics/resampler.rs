@@ -1,5 +1,5 @@
 use std::rand::{Rng, SeedableRng, XorShiftRng};
-use std::rand::distributions::{IndependentSample,Range};
+use std::rand::distributions::{IndependentSample, Range};
 
 // Generates resamples from a sample, using resampling with replacement
 pub struct Resampler<'a, T> {
