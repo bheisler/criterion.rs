@@ -1,4 +1,4 @@
-use std::rand::{Rng, SeedableRng, XorShiftRng};
+use std::rand::{Rng, XorShiftRng, mod};
 use std::rand::distributions::{IndependentSample, Range};
 
 // Generates resamples from a sample, using resampling with replacement
@@ -11,13 +11,11 @@ pub struct Resampler<'a, T> {
 
 impl<'a, T: Clone> Resampler<'a, T> {
     pub fn new(sample: &'a [T]) -> Resampler<'a, T> {
-        use std::rand;
-
         let mut rng = rand::task_rng();
-        let seed = [rng.next_u32(), rng.next_u32(), rng.next_u32(), rng.next_u32()];
+
         Resampler {
             range: Range::new(0, sample.len()),
-            rng: SeedableRng::from_seed(seed),
+            rng: rng.gen(),
             sample: sample,
             stage: None,
         }
