@@ -1,4 +1,4 @@
-use std::rand::TaskRng;
+use std::rand::{Rng, SeedableRng, XorShiftRng};
 use std::rand::distributions::{IndependentSample,Range};
 
 use super::Sample;
@@ -6,7 +6,7 @@ use super::Sample;
 // Generates resamples from a sample, using resampling with replacement
 pub struct Resampler<'a> {
     range: Range<uint>,
-    rng: TaskRng,
+    rng: XorShiftRng,
     sample: &'a [f64],
     stage: Vec<f64>
 }
@@ -18,9 +18,11 @@ impl<'a> Resampler<'a> {
         let sample = sample.as_slice();
         let length = sample.len();
 
+        let mut rng = rand::task_rng();
+        let seed = [rng.next_u32(), rng.next_u32(), rng.next_u32(), rng.next_u32()];
         Resampler {
             range: Range::new(0, length),
-            rng: rand::task_rng(),
+            rng: SeedableRng::from_seed(seed),
             sample: sample,
             stage: Vec::from_elem(length, 0f64),
         }
