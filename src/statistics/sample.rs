@@ -1,5 +1,10 @@
-use std::io::{File,IoError};
 use serialize::{Encodable,json};
+use std::cmp;
+use std::comm;
+use std::io::{File,IoError};
+use std::mem;
+use std::os;
+use std::raw::Slice;
 
 use super::{
     ConfidenceInterval,
@@ -103,15 +108,46 @@ impl<V: Vector<f64>> Sample<V> {
                      -> (Estimates, Distributions) {
         assert!(cl > 0.0 && cl < 1.0);
 
-        let mut resampler = Resampler::new(self.as_slice());
+        let ncpus = os::num_cpus();
+        let slice = self.as_slice();
+
+        let (tx, rx) = comm::channel();
+        for i in range(0, ncpus) {
+            let tx = tx.clone();
+            let n = nresamples / (ncpus - 1);
+
+            // FIXME Is there a safe way to send a slice to a task that will finish before the
+            // slice goes out of scope?
+            let Slice { data: data_sl, len: len_sl }: Slice<f64> =
+                unsafe { mem::transmute(slice) };
+            let Slice { data: data_st, len: len_st }: Slice<Statistic> =
+                unsafe { mem::transmute(statistics) };
+
+            spawn(proc() {
+                // NB These tasks will finish before the slices go out of scope
+                let slice: &[f64] =
+                    unsafe { mem::transmute(Slice { data: data_sl, len: len_sl }) };
+                let statistics: &[Statistic] =
+                    unsafe { mem::transmute(Slice { data: data_st, len: len_st }) };
+
+                let mut resampler = Resampler::new(slice);
+
+                for _ in range(i * n, cmp::min((i + 1) * n, nresamples)) {
+                    let resample = Sample::new(resampler.next());
+
+                    tx.send(statistics.iter().map(|&statistic| {
+                        resample.compute(statistic)
+                    }).collect::<Vec<f64>>());
+                }
+            })
+        }
 
         let mut distributions: Vec<Vec<f64>> =
             Vec::from_elem(statistics.len(), Vec::with_capacity(nresamples));
-        for _ in range(0, nresamples) {
-            let resample = Sample::new(resampler.next());
 
-            for (distribution, &statistic) in distributions.mut_iter().zip(statistics.iter()) {
-                distribution.push(resample.compute(statistic))
+        for statistics in rx.iter().take(nresamples) {
+            for (distribution, statistic) in distributions.mut_iter().zip(statistics.move_iter()) {
+                distribution.push(statistic)
             }
         }
 
