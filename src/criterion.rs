@@ -126,7 +126,7 @@ impl Criterion {
     /// Benchmark a function. See `Bench::iter()` for an example of how `fun` should look
     #[experimental]
     pub fn bench(&mut self, id: &str, fun: |&mut Bencher|:'static) -> &mut Criterion {
-        // FIXME Figure out what's the problem with lifetimes
+        // FIXME (rust-lang/rust#16453) Remove unsafe transmute
         bench(id, Function(Some(unsafe { mem::transmute(fun) })), self);
 
         println!("");
@@ -158,10 +158,10 @@ impl Criterion {
                         -> &mut Criterion {
         for input in inputs.iter() {
             let id = format!("{}/{}", id, input);
-            let fun = |b| fun(b, input);
+            // FIXME (rust-lang/rust#16473) drop type annotation on `b`
+            let fun = |b: &mut Bencher| fun(b, input);
 
-            // FIXME Figure out what's the problem with lifetimes
-            bench(id.as_slice(), Function(Some(unsafe { mem::transmute(fun) })), self);
+            bench(id.as_slice(), Function(Some(fun)), self);
         }
 
         print!("Summarizing results of {}... ", id);
