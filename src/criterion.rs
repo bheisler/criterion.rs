@@ -3,6 +3,7 @@ use stats::ttest::{TDistribution, TwoTailed};
 use stats::{Sample, t};
 use std::fmt::Show;
 use std::io::Command;
+use std::time::Duration;
 use std::{mem, num};
 use time;
 
@@ -17,23 +18,20 @@ use target::{Bencher, Function, Program, Target};
 #[experimental]
 pub struct Criterion {
     confidence_level: f64,
-    measurement_ns: u64,
+    measurement_time: Duration,
     noise_threshold: f64,
     nresamples: uint,
     sample_size: uint,
     significance_level: f64,
-    warm_up_ns: u64,
+    warm_up_time: Duration,
 }
-
-static MILISECONDS: u64 = 1_000_000;
-static SECONDS: u64 = 1_000_000_000;
 
 #[experimental]
 impl Criterion {
     /// This is the default criterion:
     ///
     /// * Confidence level: 0.95
-    /// * Measurement time: 10 ms
+    /// * Measurement time: 1 s
     /// * Noise threshold: 0.01 (1%)
     /// * Bootstrap with 100 000 resamples
     /// * Sample size: 100 measurements
@@ -43,12 +41,12 @@ impl Criterion {
     pub fn default() -> Criterion {
         Criterion {
             confidence_level: 0.95,
-            measurement_ns: 1 * SECONDS,
+            measurement_time: Duration::seconds(1),
             noise_threshold: 0.01,
             nresamples: 100_000,
             sample_size: 100,
             significance_level: 0.05,
-            warm_up_ns: 1 * SECONDS,
+            warm_up_time: Duration::seconds(1),
         }
     }
 
@@ -68,8 +66,10 @@ impl Criterion {
     /// The program/function under test is iterated for `measurement_time` ms. And the average run
     /// time is reported as a measurement
     #[experimental]
-    pub fn measurement_time(&mut self, ms: u64) -> &mut Criterion {
-        self.measurement_ns = ms * MILISECONDS;
+    pub fn measurement_time(&mut self, dur: Duration) -> &mut Criterion {
+        assert!(dur.num_nanoseconds().expect("duration overflow") > 0);
+
+        self.measurement_time = dur;
         self
     }
 
@@ -119,8 +119,10 @@ impl Criterion {
     /// The program/function under test is executed during `warm_up_time` ms before the real
     /// measurement starts
     #[experimental]
-    pub fn warm_up_time(&mut self, ms: u64) -> &mut Criterion {
-        self.warm_up_ns = ms * MILISECONDS;
+    pub fn warm_up_time(&mut self, dur: Duration) -> &mut Criterion {
+        assert!(dur.num_nanoseconds().expect("duration overflow") > 0);
+
+        self.warm_up_time = dur;
         self
     }
 
@@ -394,8 +396,8 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
 }
 
 fn take_sample(t: &mut Target, criterion: &Criterion) -> Vec<f64> {
-    let wu_ns = criterion.warm_up_ns;
-    let m_ns = criterion.measurement_ns;
+    let wu_ns = criterion.warm_up_time.num_nanoseconds().expect("Duration overflow") as u64;
+    let m_ns = criterion.measurement_time.num_nanoseconds().expect("Duration overflow") as u64;
     let n = criterion.sample_size as u64;
 
     println!("> Warming up for {}", format_time(wu_ns as f64))
