@@ -1,0 +1,11 @@
+[package]
+
+name = "stats"
+version = "0.0.0"
+authors = ["Jorge Aparicio <japaric@linux.com>"]
+
+[dependencies.quickcheck]
+git = "https://github.com/BurntSushi/quickcheck"
+
+[dependencies.quickcheck_macros]
+git = "https://github.com/BurntSushi/quickcheck"
