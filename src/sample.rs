@@ -1,5 +1,4 @@
-use std::{cmp, comm, mem, os, ptr};
-use std::raw::Slice;
+use std::{cmp, comm, mem, os, ptr, raw};
 
 use distribution::Distribution;
 use resamples::Resamples;
@@ -48,15 +47,16 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
             let distribution_ptr = distribution.as_mut_ptr();
 
             // FIXME (when available) Use a safe fork-join API
-            let Slice { data: ptr, len: len } =
-                unsafe { mem::transmute::<&[A], Slice<A>>(self.as_slice()) };
+            let raw::Slice { data: ptr, len: len } =
+                unsafe { mem::transmute::<&[A], raw::Slice<A>>(self.as_slice()) };
 
             for i in range(0, ncpus) {
                 let tx = tx.clone();
 
                 spawn(proc() {
                     // NB This task will finish before this slice becomes invalid
-                    let slice: &[A] = unsafe { mem::transmute(Slice { data: ptr, len: len }) };
+                    let slice: &[A] =
+                        unsafe { mem::transmute(raw::Slice { data: ptr, len: len }) };
 
                     let mut resamples = Resamples::new(slice);
 
@@ -114,9 +114,9 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
             let d_ptr = distribution.as_mut_ptr();
 
             // FIXME (when available) Use a safe fork-join API
-            let Slice { data: ptr, len: len }: Slice<A> =
+            let raw::Slice { data: ptr, len: len }: raw::Slice<A> =
                 unsafe { mem::transmute(self.as_slice()) };
-            let Slice { data: o_ptr, len: o_len }: Slice<B> =
+            let raw::Slice { data: o_ptr, len: o_len }: raw::Slice<B> =
                 unsafe { mem::transmute(other.as_slice()) };
 
             for i in range(0, ncpus) {
@@ -124,10 +124,11 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
 
                 spawn(proc() {
                     // NB This task will finish before this slice becomes invalid
-                    let sample: &[A] = unsafe { mem::transmute(Slice { data: ptr, len: len }) };
+                    let sample: &[A] =
+                        unsafe { mem::transmute(raw::Slice { data: ptr, len: len }) };
 
                     let other_sample: &[B] =
-                        unsafe { mem::transmute(Slice { data: o_ptr, len: o_len }) };
+                        unsafe { mem::transmute(raw::Slice { data: o_ptr, len: o_len }) };
 
                     let mut resamples = Resamples::new(sample);
                     let mut other_resamples = Resamples::new(other_sample);
@@ -210,10 +211,10 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
             }).collect();
 
             // FIXME (when available) Use a safe fork-join API
-            let Slice { data: ptr, len: len }: Slice<A> =
+            let raw::Slice { data: ptr, len: len }: raw::Slice<A> =
                 unsafe { mem::transmute(self.as_slice()) };
 
-            let Slice { data: st_ptr, len: st_len }: Slice<fn(&[A]) -> B> =
+            let raw::Slice { data: st_ptr, len: st_len }: raw::Slice<fn(&[A]) -> B> =
                 unsafe { mem::transmute(statistics) };
 
             for i in range(0, ncpus) {
@@ -223,10 +224,10 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
                 spawn(proc() {
                     // NB This task will finish before these slices becomes invalid
                     let data: &[A] =
-                        unsafe { mem::transmute(Slice { data: ptr, len: len }) };
+                        unsafe { mem::transmute(raw::Slice { data: ptr, len: len }) };
 
                     let statistics: &[fn(&[A]) -> B] =
-                        unsafe { mem::transmute(Slice { data: st_ptr, len: st_len }) };
+                        unsafe { mem::transmute(raw::Slice { data: st_ptr, len: st_len }) };
 
                     let mut resamples = Resamples::new(data);
 
@@ -307,13 +308,13 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
             }).collect();
 
             // FIXME (when available) Use a safe fork-join API
-            let Slice { data: ptr, len: len }: Slice<A> =
+            let raw::Slice { data: ptr, len: len }: raw::Slice<A> =
                 unsafe { mem::transmute(self.as_slice()) };
 
-            let Slice { data: o_ptr, len: o_len }: Slice<B> =
+            let raw::Slice { data: o_ptr, len: o_len }: raw::Slice<B> =
                 unsafe { mem::transmute(other.as_slice()) };
 
-            let Slice { data: st_ptr, len: st_len }: Slice<fn(&[A]) -> B> =
+            let raw::Slice { data: st_ptr, len: st_len }: raw::Slice<fn(&[A]) -> B> =
                 unsafe { mem::transmute(statistics) };
 
             for i in range(0, ncpus) {
@@ -323,13 +324,13 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
                 spawn(proc() {
                     // NB This task will finish before these slices becomes invalid
                     let data: &[A] =
-                        unsafe { mem::transmute(Slice { data: ptr, len: len }) };
+                        unsafe { mem::transmute(raw::Slice { data: ptr, len: len }) };
 
                     let other_data: &[B] =
-                        unsafe { mem::transmute(Slice { data: o_ptr, len: o_len }) };
+                        unsafe { mem::transmute(raw::Slice { data: o_ptr, len: o_len }) };
 
                     let statistics: &[fn(&[A], &[B]) -> C] =
-                        unsafe { mem::transmute(Slice { data: st_ptr, len: st_len }) };
+                        unsafe { mem::transmute(raw::Slice { data: st_ptr, len: st_len }) };
 
                     let mut resamples = Resamples::new(data);
                     let mut other_resamples = Resamples::new(other_data);

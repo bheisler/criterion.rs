@@ -1,7 +1,6 @@
 //! t-test
 
-use std::raw::Slice;
-use std::{cmp, comm, mem, num, os, ptr};
+use std::{cmp, comm, mem, num, os, ptr, raw};
 
 use resamples::Resamples;
 
@@ -18,7 +17,9 @@ impl<A: FloatMath + FromPrimitive + Send> TDistribution<A> {
         // FIXME `RUST_THREADS` should be favored over `num_cpus`
         let ncpus = os::num_cpus();
         let n = a.len();
-        let joint_sample = [a.as_slice(), b.as_slice()].concat_vec();
+        let mut joint_sample = Vec::with_capacity(n + b.len());
+        joint_sample.push_all(a);
+        joint_sample.push_all(b);
         let joint_sample = joint_sample.as_slice();
 
         // TODO Under what conditions should multi thread by favored?
@@ -31,15 +32,16 @@ impl<A: FloatMath + FromPrimitive + Send> TDistribution<A> {
             let distribution_ptr = distribution.as_mut_ptr();
 
             // FIXME (when available) Use a safe fork-join API
-            let Slice { data: ptr, len: len } =
-                unsafe { mem::transmute::<&[A], Slice<A>>(joint_sample) };
+            let raw::Slice { data: ptr, len: len } =
+                unsafe { mem::transmute::<&[A], raw::Slice<A>>(joint_sample) };
 
             for i in range(0, ncpus) {
                 let tx = tx.clone();
 
                 spawn(proc() {
                     // NB This task will finish before this slice becomes invalid
-                    let slice: &[A] = unsafe { mem::transmute(Slice { data: ptr, len: len }) };
+                    let slice: &[A] =
+                        unsafe { mem::transmute(raw::Slice { data: ptr, len: len }) };
 
                     let mut resamples = Resamples::new(slice);
 
