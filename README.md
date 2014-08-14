@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/japaric/stats.rs.svg?branch=master)](https://travis-ci.org/japaric/stats.rs)
+
 # stats.rs
 
 A Rust library to do statistics.
