@@ -1,13 +1,14 @@
+use stats::outliers::Outliers;
+use stats::ttest::{TDistribution, TwoTailed};
+use stats::{Sample, t};
 use std::fmt::Show;
 use std::io::Command;
-use std::mem;
-use std::num;
+use std::{mem, num};
 use time;
 
+use estimate::{Distributions, Estimate, Estimates, Mean, Median, MedianAbsDev, Statistic, StdDev};
 use fs;
-use outliers::Outliers;
 use plot;
-use statistics::{Estimate, Estimates, Mean, Median, MedianAbsDev, Sample, StdDev};
 use stream::Stream;
 use target::{Bencher, Function, Program, Target};
 
@@ -264,6 +265,14 @@ impl Criterion {
 // FIXME Sorry! Everything below this point is a mess :/
 
 fn bench(id: &str, mut target: Target, criterion: &Criterion) {
+    static ABS_STATS: &'static [Statistic] = &[Mean, Median, MedianAbsDev, StdDev];
+    static REL_STATS: &'static [Statistic] = &[Mean, Median];
+
+    let abs_stats_fns: Vec<fn(&[f64]) -> f64> =
+        ABS_STATS.iter().map(|st| st.abs_fn()).collect();
+    let rel_stats_fns: Vec<fn(&[f64], &[f64]) -> f64> =
+        REL_STATS.iter().map(|st| st.rel_fn()).collect();
+
     println!("Benchmarking {}", id);
 
     rename_new_dir_to_base(id);
@@ -277,25 +286,30 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     let start = time::precise_time_ns();
     let sample = take_sample(&mut target, criterion);
     info!("Sampling took {}", format_time((time::precise_time_ns() - start) as f64))
-    sample.save(&new_dir.join("sample.json"));
+    let points: Vec<f64> = abs_stats_fns.iter().map(|&f| f(sample.as_slice())).collect();
+    fs::save(&sample.as_slice(), &new_dir.join("sample.json"));
+    let sample = Sample::new(sample.as_slice());
 
-    plot::sample(&sample, new_dir.join("points.svg"), id);
-    plot::pdf(&sample, new_dir.join("pdf.svg"), id);
+    plot::sample(sample.as_slice(), new_dir.join("points.svg"), id);
+    plot::pdf(sample.as_slice(), new_dir.join("pdf.svg"), id);
 
-    let outliers = Outliers::classify(sample.as_slice());
-    outliers.report();
-    outliers.save(&new_dir.join("outliers/classification.json"));
-    plot::outliers(&outliers, new_dir.join("outliers/boxplot.svg"), id);
+    let (filtered, outliers) = Outliers::classify(sample.as_slice());
+    report_outliers(&outliers, filtered.as_slice());
+    fs::save(&filtered, &new_dir.join("outliers/filtered.json"));
+    fs::save(&outliers, &new_dir.join("outliers/classification.json"));
+    plot::outliers(&outliers, filtered.as_slice(), new_dir.join("outliers/boxplot.svg"), id);
 
     println!("> Estimating the statistics of the sample");
     let nresamples = criterion.nresamples;
     let cl = criterion.confidence_level;
     println!("  > Bootstrapping the sample with {} resamples", nresamples);
     let start = time::precise_time_ns();
-    let (estimates, distributions) =
-        sample.bootstrap([Mean, Median, StdDev, MedianAbsDev], nresamples, cl);
-    info!("Bootstraping took {}", format_time((time::precise_time_ns() - start) as f64))
-    estimates.save(&new_dir.join("bootstrap/estimates.json"));
+    let distributions = sample.bootstrap_many(abs_stats_fns.as_slice(), nresamples);
+    info!("Bootstraping took {}", format_time((time::precise_time_ns() - start) as f64));
+    let distributions: Distributions =
+        ABS_STATS.iter().map(|&x| x).zip(distributions.move_iter()).collect();
+    let estimates = Estimate::new(&distributions, points.as_slice(), cl);
+    fs::save(&estimates, &new_dir.join("bootstrap/estimates.json"));
 
     report_time(&estimates);
     plot::time_distributions(&distributions,
@@ -308,39 +322,45 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     }
 
     println!("{}: Comparing with previous sample", id);
-    let base_sample = Sample::<Vec<f64>>::load(&base_dir.join("sample.json"));
+    let base_sample = fs::load::<Vec<f64>>(&base_dir.join("sample.json"));
+    let base_sample = Sample::new(base_sample.as_slice());
 
     let both_dir = root.join("both");
-    plot::both::pdfs(&base_sample, &sample, both_dir.join("pdfs.svg"), id);
-    plot::both::points(&base_sample, &sample, both_dir.join("points.svg"), id);
+    plot::both::pdfs(base_sample.as_slice(), sample.as_slice(), both_dir.join("pdfs.svg"), id);
+    plot::both::points(base_sample.as_slice(), sample.as_slice(), both_dir.join("points.svg"), id);
 
     println!("> H0: Both samples belong to the same population");
     println!("  > Bootstrapping with {} resamples", nresamples);
-    let t_statistic = sample.t_test(&base_sample);
+    let t_statistic = t(sample.as_slice(), base_sample.as_slice());
     let start = time::precise_time_ns();
-    let t_distribution = sample.bootstrap_t_test(&base_sample, nresamples, cl);
+    let t_distribution = TDistribution::new(sample.as_slice(), base_sample.as_slice(), nresamples);
     info!("Bootstraping took {}", format_time((time::precise_time_ns() - start) as f64))
-    let t = t_statistic.abs();
-    let hits = t_distribution.as_slice().iter().filter(|&&x| x > t || x < -t).count();
-    let p_value = hits as f64 / nresamples as f64;
+    let p_value = t_distribution.p_value(t_statistic, TwoTailed);
     let sl = criterion.significance_level;
     let different_population = p_value < sl;
 
     println!("  > p = {}", p_value);
     println!("  > {} reject the null hypothesis",
              if different_population { "Strong evidence to" } else { "Can't" })
-    plot::t_test(t_statistic, &t_distribution, change_dir.join("bootstrap/t_test.svg"), id);
-
-    let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as uint;
-    let nresamples = nresamples_sqrt * nresamples_sqrt;
+    plot::t_test(
+        t_statistic,
+        t_distribution.as_slice(),
+        change_dir.join("bootstrap/t_test.svg"),
+        id);
 
     println!("> Estimating relative change of statistics");
     println!("  > Bootstrapping with {} resamples", nresamples);
     let start = time::precise_time_ns();
-    let (estimates, distributions) =
-        sample.bootstrap_compare(&base_sample, [Mean, Median], nresamples_sqrt, cl);
+    let distributions =
+        sample.bootstrap2_many(&base_sample, rel_stats_fns.as_slice(), nresamples);
     info!("Bootstraping took {}", format_time((time::precise_time_ns() - start) as f64))
-    estimates.save(&change_dir.join("bootstrap/estimates.json"));
+        let points: Vec<f64> = rel_stats_fns.iter().map(|&f| {
+            f(sample.as_slice(), base_sample.as_slice())
+        }).collect();
+    let distributions: Distributions =
+        REL_STATS.iter().map(|&x| x).zip(distributions.move_iter()).collect();
+    let estimates = Estimate::new(&distributions, points.as_slice(), cl);
+    fs::save(&estimates, &change_dir.join("bootstrap/estimates.json"));
 
     report_change(&estimates);
     plot::ratio_distributions(&distributions,
@@ -350,11 +370,10 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
 
     let threshold = criterion.noise_threshold;
     let mut regressed = vec!();
-    for &statistic in [Mean, Median].iter() {
-        let estimate = estimates.get(statistic);
+    for (&statistic, estimate) in estimates.iter() {
         let result = compare_to_threshold(estimate, threshold);
 
-        let p = estimate.point_estimate();
+        let p = estimate.point_estimate;
         match result {
             Improved => {
                 println!("  > {} has improved by {:.2}%", statistic, -100.0 * p);
@@ -374,7 +393,7 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     }
 }
 
-fn take_sample(t: &mut Target, criterion: &Criterion) -> Sample<Vec<f64>> {
+fn take_sample(t: &mut Target, criterion: &Criterion) -> Vec<f64> {
     let wu_ns = criterion.warm_up_ns;
     let m_ns = criterion.measurement_ns;
     let n = criterion.sample_size as u64;
@@ -435,14 +454,13 @@ fn format_signed_short(n: f64) -> String {
 }
 
 fn report_time(estimates: &Estimates) {
-    for &statistic in [Mean, Median, StdDev, MedianAbsDev].iter() {
-        let estimate = estimates.get(statistic);
-        let p = format_time(estimate.point_estimate());
-        let ci = estimate.confidence_interval();
-        let lb = format_time(ci.lower_bound());
-        let ub = format_time(ci.upper_bound());
-        let se = format_time(estimate.standard_error());
-        let cl = ci.confidence_level();
+    for (&statistic, estimate) in estimates.iter() {
+        let p = format_time(estimate.point_estimate);
+        let ci = estimate.confidence_interval;
+        let lb = format_time(ci.lower_bound);
+        let ub = format_time(ci.upper_bound);
+        let se = format_time(estimate.standard_error);
+        let cl = ci.confidence_level;
 
         println!("  > {:<7} {} ± {} [{} {}] {}% CI", statistic, p, se, lb, ub, cl * 100.0);
     }
@@ -463,17 +481,44 @@ fn format_time(ns: f64) -> String {
 }
 
 fn report_change(estimates: &Estimates) {
-    for &statistic in [Mean, Median].iter() {
-        let estimate = estimates.get(statistic);
-        let p = format_change(estimate.point_estimate(), true);
-        let ci = estimate.confidence_interval();
-        let lb = format_change(ci.lower_bound(), true);
-        let ub = format_change(ci.upper_bound(), true);
-        let se = format_change(estimate.standard_error(), false);
-        let cl = ci.confidence_level();
+    for (&statistic, estimate) in estimates.iter() {
+        let p = format_change(estimate.point_estimate, true);
+        let ci = estimate.confidence_interval;
+        let lb = format_change(ci.lower_bound, true);
+        let ub = format_change(ci.upper_bound, true);
+        let se = format_change(estimate.standard_error, false);
+        let cl = ci.confidence_level;
 
         println!("  > {:<7} {} ± {} [{} {}] {}% CI", statistic, p, se, lb, ub, cl * 100.0);
     }
+}
+
+fn report_outliers(outliers: &Outliers<f64>, normal: &[f64]) {
+    let total = outliers.len();
+
+    if total == 0 {
+        return
+    }
+
+    let sample_size = total + normal.len();
+
+    let percent = |n: uint| { 100. * n as f64 / sample_size as f64 };
+
+    println!("> Found {} outliers among {} measurements ({:.2}%)",
+             total,
+             sample_size,
+             percent(total));
+
+    let print = |n: uint, class| {
+        if n != 0 {
+            println!("  > {} ({:.2}%) {}", n, percent(n), class);
+        }
+    };
+
+    print(outliers.low_severe.len(), "low severe");
+    print(outliers.low_mild.len(), "low mild");
+    print(outliers.high_mild.len(), "high mild");
+    print(outliers.high_severe.len(), "high severe");
 }
 
 fn format_change(pct: f64, signed: bool) -> String {
@@ -491,9 +536,9 @@ enum ComparisonResult {
 }
 
 fn compare_to_threshold(estimate: &Estimate, noise: f64) -> ComparisonResult {
-    let ci = estimate.confidence_interval();
-    let lb = ci.lower_bound();
-    let ub = ci.upper_bound();
+    let ci = estimate.confidence_interval;
+    let lb = ci.lower_bound;
+    let ub = ci.upper_bound;
 
     if lb < -noise && ub < -noise {
         Improved

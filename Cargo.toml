@@ -8,3 +8,6 @@ path = "criterion_macros"
 
 [dependencies.simplot]
 git = "https://github.com/japaric/simplot.rs"
+
+[dependencies.stats]
+git = "https://github.com/japaric/stats.rs"

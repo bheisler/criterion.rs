@@ -1,4 +1,11 @@
-use std::io::{UserRWX, fs};
+use serialize::{Decodable, Encodable, json};
+use std::io::{File, IoError, UserRWX, fs};
+
+// TODO Proper error handling
+pub fn load<A: Decodable<json::Decoder, json::DecoderError>>(path: &Path) -> A {
+    json::decode(File::open(path).read_to_string().ok().expect("Couldn't open file").as_slice()).
+        ok().expect("Couldn't decode data")
+}
 
 pub fn ls(dir: &Path) -> Vec<Path> {
     match fs::readdir(dir) {
@@ -26,4 +33,10 @@ pub fn rmrf(path: &Path) {
         Err(e) => fail!("`rm -rf {}`: {}", path.display(), e),
         Ok(_) => {},
     }
+}
+
+// TODO Proper error handling
+pub fn save<'a, D: Encodable<json::Encoder<'a>, IoError>>(data: &D, path: &Path) {
+    File::create(path).write_str(json::encode(data).as_slice()).ok().
+        expect("Couldn't save data")
 }

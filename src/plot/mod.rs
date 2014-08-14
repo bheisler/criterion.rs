@@ -3,15 +3,15 @@ use simplot::option::{Title, PointType};
 use simplot::plottype::{Lines, Points};
 use simplot::pointtype::Circle;
 use simplot::terminal::Svg;
+use stats::outliers::Outliers;
+use stats::{mean, median};
 use std::iter;
-use std::rand::Rng;
-use std::rand;
+use std::rand::{Rng, mod};
 use test::stats::Stats;
 
+use estimate::{Distributions, Estimate, Estimates, Mean, Median};
 use fs;
-use math;
-use outliers::Outliers;
-use statistics::{Distribution, Distributions, Estimates, Mean, Median, Sample};
+use kde;
 
 pub mod both;
 
@@ -32,9 +32,10 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
 // TODO This should be configurable
 static PLOT_SIZE: (uint, uint) = (880, 495);
 static FONT: &'static str = "Fantasque Sans Mono";
+static KDE_POINTS: uint = 1_000;
 
-pub fn pdf<S: Str, V: Vector<f64>>(s: &Sample<V>, path: Path, id: S) {
-    let (xs, ys) = math::kde(s.as_slice());
+pub fn pdf<S: Str>(sample: &[f64], path: Path, id: S) {
+    let (xs, ys) = kde::sweep(sample, KDE_POINTS);
 
     let (scale, prefix) = scale_time(xs.as_slice().max());
     let rscale = scale.recip();
@@ -43,8 +44,8 @@ pub fn pdf<S: Str, V: Vector<f64>>(s: &Sample<V>, path: Path, id: S) {
 
     let ys = ys.as_slice();
     let vertical = [ys.min(), ys.max()];
-    let mean = s.compute(Mean) * scale;
-    let median = s.compute(Median) * scale;
+    let mean = mean(sample) * scale;
+    let median = median(sample) * scale;
     let mean = [mean, mean];
     let median = [median, median];
 
@@ -62,7 +63,7 @@ pub fn pdf<S: Str, V: Vector<f64>>(s: &Sample<V>, path: Path, id: S) {
         draw();
 }
 
-pub fn sample<S: Str, V: Vector<f64>>(s: &Sample<V>, path: Path, id: S) {
+pub fn sample<S: Str>(s: &[f64], path: Path, id: S) {
     let mut rng = rand::task_rng();
     let sample = s.as_slice();
 
@@ -80,9 +81,16 @@ pub fn sample<S: Str, V: Vector<f64>>(s: &Sample<V>, path: Path, id: S) {
         draw();
 }
 
-pub fn time_distributions(d: &Distributions, e: &Estimates, dir: &Path, id: &str) {
-    for (&statistic, distribution) in d.iter() {
-        let (xs, ys) = math::kde(distribution.as_slice());
+pub fn time_distributions(
+    distributions: &Distributions,
+    estimates: &Estimates,
+    dir: &Path,
+    id: &str
+) {
+    for (&statistic, distribution) in distributions.iter() {
+        let estimate = estimates[statistic];
+
+        let (xs, ys) = kde::sweep(distribution.as_slice(), KDE_POINTS);
 
         let (scale, prefix) = scale_time(xs.as_slice().max());
         let rscale = scale.recip();
@@ -92,10 +100,9 @@ pub fn time_distributions(d: &Distributions, e: &Estimates, dir: &Path, id: &str
         let ys = ys.as_slice();
         let vertical = [ys.min(), ys.max()];
 
-        let estimate = e.get(statistic);
-        let point = estimate.point_estimate() * scale;
-        let ci = estimate.confidence_interval();
-        let (lb, ub) = (ci.lower_bound() * scale, ci.upper_bound() * scale);
+        let ci = estimate.confidence_interval;
+        let p = estimate.point_estimate * scale;
+        let (lb, ub) = (ci.lower_bound * scale, ci.upper_bound * scale);
 
         Figure::new().
             set_font(FONT).
@@ -106,7 +113,7 @@ pub fn time_distributions(d: &Distributions, e: &Estimates, dir: &Path, id: &str
             set_xlabel(format!("Time ({}s)", prefix)).
             set_ylabel("Density (a.u.)").
             plot(Lines, xs.iter(), ys.iter(), []).
-            plot(Lines, [point, point].iter(), vertical.iter(), [Title("Point")]).
+            plot(Lines, [p, p].iter(), vertical.iter(), [Title("Point estimate")]).
             plot(Lines,
                  [lb, lb, ub, ub].iter(),
                  vertical.iter().rev().chain(vertical.iter()),
@@ -116,17 +123,22 @@ pub fn time_distributions(d: &Distributions, e: &Estimates, dir: &Path, id: &str
 }
 
 // TODO DRY: This is very similar to the `time_distributions` method
-pub fn ratio_distributions(d: &Distributions, e: &Estimates, dir: &Path, id: &str) {
-    for (&statistic, distribution) in d.iter() {
-        let (xs, ys) = math::kde(distribution.as_slice());
-        let xs: Vec<f64> = xs.iter().map(|x| x * 100.0).collect();
+pub fn ratio_distributions(
+    distributions: &Distributions,
+    estimates: &Estimates,
+    dir: &Path,
+    id: &str
+) {
+    for (&statistic, distribution) in distributions.iter() {
+        let (xs, ys) = kde::sweep(distribution.as_slice(), KDE_POINTS);
+        let xs: Vec<f64> = xs.move_iter().map(|x| x * 100.0).collect();
         let ys = ys.as_slice();
         let vertical = [ys.min(), ys.max()];
 
-        let estimate = e.get(statistic);
-        let point = estimate.point_estimate() * 100.0;
-        let ci = estimate.confidence_interval();
-        let (lb, ub) = (ci.lower_bound() * 100.0, ci.upper_bound() * 100.0);
+        let estimate = estimates[statistic];
+        let point = estimate.point_estimate * 100.0;
+        let ci = estimate.confidence_interval;
+        let (lb, ub) = (ci.lower_bound * 100.0, ci.upper_bound * 100.0);
 
         Figure::new().
             set_font(FONT).
@@ -137,7 +149,7 @@ pub fn ratio_distributions(d: &Distributions, e: &Estimates, dir: &Path, id: &st
             set_xlabel("Relative change (%)").
             set_ylabel("Density (a.u.)").
             plot(Lines, xs.iter(), ys.iter(), []).
-            plot(Lines, [point, point].iter(), vertical.iter(), [Title("Point")]).
+            plot(Lines, [point, point].iter(), vertical.iter(), [Title("Point estimate")]).
             plot(Lines,
                  [lb, lb, ub, ub].iter(),
                  vertical.iter().rev().chain(vertical.iter()),
@@ -146,8 +158,8 @@ pub fn ratio_distributions(d: &Distributions, e: &Estimates, dir: &Path, id: &st
     }
 }
 
-pub fn t_test(t: f64, distribution: &Distribution, path: Path, id: &str) {
-    let (xs, ys) = math::kde(distribution.as_slice());
+pub fn t_test(t: f64, distribution: &[f64], path: Path, id: &str) {
+    let (xs, ys) = kde::sweep(distribution, KDE_POINTS);
     let ys = ys.as_slice();
     let vertical = [ys.min(), ys.max()];
 
@@ -164,22 +176,21 @@ pub fn t_test(t: f64, distribution: &Distribution, path: Path, id: &str) {
         draw();
 }
 
-pub fn outliers(outliers: &Outliers, path: Path, id: &str) {
+pub fn outliers(outliers: &Outliers<f64>, filtered: &[f64], path: Path, id: &str) {
     let mut rng = rand::task_rng();
 
-    let (mut lost, mut lomt, mut himt, mut hist) = outliers.thresholds();
-    let him = outliers.high_mild();
-    let his = outliers.high_severe();
-    let lom = outliers.low_mild();
-    let los = outliers.low_severe();
-    let normal = outliers.normal();
+    let (mut lost, mut lomt, mut himt, mut hist) = outliers.thresholds;
+    let him = outliers.high_mild.as_slice();
+    let his = outliers.high_severe.as_slice();
+    let lom = outliers.low_mild.as_slice();
+    let los = outliers.low_severe.as_slice();
 
     let (scale, prefix) = scale_time(if his.is_empty() { hist } else { his.max() });
     let him = him.iter().map(|x| x * scale);
     let his = his.iter().map(|x| x * scale);
     let lom = lom.iter().map(|x| x * scale);
     let los = los.iter().map(|x| x * scale);
-    let normal = normal.iter().map(|x| x * scale);
+    let filtered = filtered.iter().map(|x| x * scale);
     himt *= scale;
     hist *= scale;
     lomt *= scale;
@@ -201,7 +212,7 @@ pub fn outliers(outliers: &Outliers, path: Path, id: &str) {
         plot(Lines, [lost, lost, hist, hist].iter(), y.iter(), []).
         plot(Points, mild, rng.gen_iter::<f64>(),
              [PointType(Circle), Title("Mild")]).
-        plot(Points, normal, rng.gen_iter::<f64>(),
+        plot(Points, filtered, rng.gen_iter::<f64>(),
              [PointType(Circle)]).
         plot(Points, severe, rng.gen_iter::<f64>(),
              [PointType(Circle), Title("Severe")]).
@@ -221,7 +232,7 @@ pub fn summarize(dir: &Path, id: &str) {
             }) {
                 let input = entry.filename_str().unwrap();
                 let path = entry.join(sample).join("bootstrap/estimates.json");
-                match Estimates::load(&path) {
+                match Estimate::load(&path) {
                     Some(estimates) => estimates_pairs.push((estimates, input)),
                     _ => {}
                 }
@@ -232,20 +243,20 @@ pub fn summarize(dir: &Path, id: &str) {
             }
 
             estimates_pairs.sort_by(|&(ref a, _), &(ref b, _)| {
-                let a = a.get(statistic).point_estimate();
-                let b = b.get(statistic).point_estimate();
+                let a = a[statistic].point_estimate;
+                let b = b[statistic].point_estimate;
                 b.partial_cmp(&a).unwrap()
             });
 
             let inputs = estimates_pairs.iter().map(|&(_, input)| input);
             let points = estimates_pairs.iter().map(|&(ref estimates, _)| {
-                estimates.get(statistic).point_estimate()
+                estimates[statistic].point_estimate
             }).collect::<Vec<f64>>();
             let lbs = estimates_pairs.iter().map(|&(ref estimates, _)| {
-                estimates.get(statistic).confidence_interval().lower_bound()
+                estimates[statistic].confidence_interval.lower_bound
             }).collect::<Vec<f64>>();
             let ubs = estimates_pairs.iter().map(|&(ref estimates, _)| {
-                estimates.get(statistic).confidence_interval().upper_bound()
+                estimates[statistic].confidence_interval.upper_bound
             }).collect::<Vec<f64>>();
 
             let (scale, prefix) = scale_time(ubs.as_slice().max());

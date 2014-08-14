@@ -7,21 +7,13 @@ use std::rand::Rng;
 use std::rand;
 use test::stats::Stats;
 
-use math;
-use statistics::Sample;
+use kde;
 use super::scale_time;
-use super::{FONT, PLOT_SIZE};
+use super::{FONT, KDE_POINTS, PLOT_SIZE};
 
-pub fn pdfs<
-    V: Vector<f64>,
-    W: Vector<f64>>(
-    base: &Sample<V>,
-    new: &Sample<W>,
-    path: Path,
-    id: &str,
-) {
-    let (base_xs, base_ys) = math::kde(base.as_slice());
-    let (new_xs, new_ys) = math::kde(new.as_slice());
+pub fn pdfs(base: &[f64], new: &[f64], path: Path, id: &str) {
+    let (base_xs, base_ys) = kde::sweep(base, KDE_POINTS);
+    let (new_xs, new_ys) = kde::sweep(new, KDE_POINTS);
 
     let (scale, prefix) =
         scale_time([base_xs.as_slice().max(), new_xs.as_slice().max()].as_slice().max());
@@ -44,17 +36,8 @@ pub fn pdfs<
         draw();
 }
 
-pub fn points<
-    V: Vector<f64>,
-    W: Vector<f64>>(
-    base: &Sample<V>,
-    new: &Sample<W>,
-    path: Path,
-    id: &str,
-) {
+pub fn points(base: &[f64], new: &[f64], path: Path, id: &str) {
     let mut rng = rand::task_rng();
-    let base = base.as_slice();
-    let new = new.as_slice();
 
     let (scale, prefix) = scale_time([base.max(), new.max()].as_slice().max());
     let base = base.iter().map(|x| x * scale);
