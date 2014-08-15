@@ -2,6 +2,7 @@
 
 use std::iter::AdditiveIterator;
 use std::ops::Fn;
+use std::{cmp, comm, mem, os, ptr, raw};
 
 use std_dev;
 
@@ -42,24 +43,68 @@ impl<'a> Kde<'a> {
     }
 
     /// Sweeps the `[a, b]` range collecting `n` points of the estimated PDF
-    // TODO This can be thread parallelized
     #[experimental]
     pub fn sweep(&self, (a, b): (f64, f64), n: uint) -> Vec<(f64, f64)> {
         assert!(a < b);
         assert!(n > 1);
 
         let dx = (b - a) / (n - 1) as f64;
+        let ncpus = os::num_cpus();
 
-        let mut pdf = Vec::with_capacity(n);
+        // TODO Under what conditions should multi thread by favored?
+        if ncpus > 1 {
+            let chunk_size = n / ncpus + 1;
+            let (tx, rx) = comm::channel();
 
-        let mut x = a;
-        for _ in range(0, n) {
-            pdf.push((x, self(x)));
+            let mut pdf = Vec::with_capacity(n);
+            unsafe { pdf.set_len(n) }
+            let pdf_ptr = pdf.as_mut_ptr();
 
-            x += dx;
+            // FIXME (when available) Use a safe fork-join API
+            let &Kde { bandwidth: bw, kernel: k, sample: sample } = self;
+            let raw::Slice { data: ptr, len: len } =
+                unsafe { mem::transmute::<&[f64], raw::Slice<f64>>(sample) };
+
+            for i in range(0, ncpus) {
+                let tx = tx.clone();
+
+                spawn(proc() {
+                    // NB This task will finish before this slice becomes invalid
+                    let sample: &[f64] =
+                        unsafe { mem::transmute(raw::Slice { data: ptr, len: len }) };
+
+                    let kde = Kde { bandwidth: bw, kernel: k, sample: sample };
+
+                    let start = cmp::min(i * chunk_size, n) as int;
+                    let end = cmp::min((i + 1) * chunk_size, n) as int;
+
+                    let mut x = a + start as f64 * dx;
+                    for j in range(start, end) {
+                        unsafe { ptr::write(pdf_ptr.offset(j), (x, kde(x))) }
+                        x += dx;
+                    }
+
+                    tx.send(());
+                });
+            }
+
+            for _ in range(0, ncpus) {
+                rx.recv();
+            }
+
+            pdf
+        } else {
+            let mut pdf = Vec::with_capacity(n);
+
+            let mut x = a;
+            for _ in range(0, n) {
+                pdf.push((x, self(x)));
+
+                x += dx;
+            }
+
+            pdf
         }
-
-        pdf
     }
 }
 
@@ -189,8 +234,8 @@ mod bench {
 
     use kde::Kde;
 
-    static KDE_POINTS: uint = 1_000;
-    static SAMPLE_SIZE: uint = 100;
+    static KDE_POINTS: uint = 500;
+    static SAMPLE_SIZE: uint = 100_000;
 
     #[bench]
     fn sweep(b: &mut Bencher) {
