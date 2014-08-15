@@ -6,11 +6,8 @@ all:
 	cargo build --release
 
 bench:
-	# TODO Replace with cargo bench
-	$(RUSTC) --test src/lib.rs
-	target/release/test --bench
+	cargo bench
 
 test:
-	# TODO Replace with cargo bench --test
-	$(RUSTC) --test src/lib.rs
-	target/release/test
+	# Without the filter, this command runs both the tests and the benchmarks!
+	cargo bench -- --test ::test::
