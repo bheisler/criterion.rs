@@ -266,6 +266,18 @@ impl Criterion {
 
 // FIXME Sorry! Everything below this point is a mess :/
 
+macro_rules! elapsed {
+    ($msg:expr, $block:expr) => ({
+        let start = time::precise_time_ns();
+        let out = $block;
+        let stop = time::precise_time_ns();
+
+        info!("{} took {}", $msg, format_time((stop - start) as f64));
+
+        out
+    })
+}
+
 fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     static ABS_STATS: &'static [Statistic] = &[Mean, Median, MedianAbsDev, StdDev];
     static REL_STATS: &'static [Statistic] = &[Mean, Median];
@@ -285,90 +297,120 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     let change_dir = root.join("change");
     let new_dir = root.join("new");
 
-    let start = time::precise_time_ns();
-    let sample = take_sample(&mut target, criterion);
-    info!("Sampling took {}", format_time((time::precise_time_ns() - start) as f64))
+    let sample = elapsed!("Sampling", take_sample(&mut target, criterion));
     let points: Vec<f64> = abs_stats_fns.iter().map(|&f| f(sample.as_slice())).collect();
-    fs::save(&sample.as_slice(), &new_dir.join("sample.json"));
+    elapsed!("Storing sample", fs::save(&sample.as_slice(), &new_dir.join("sample.json")));
     let sample = Sample::new(sample.as_slice());
 
-    plot::sample(sample.as_slice(), new_dir.join("points.svg"), id);
-    plot::pdf(sample.as_slice(), new_dir.join("pdf.svg"), id);
+    elapsed!(
+        "Plotting sample points",
+        plot::sample(sample.as_slice(), new_dir.join("points.svg"), id));
+    elapsed!(
+        "Plotting the estimated sample PDF",
+        plot::pdf(sample.as_slice(), new_dir.join("pdf.svg"), id));
 
     let (filtered, outliers) = Outliers::classify(sample.as_slice());
     report_outliers(&outliers, filtered.as_slice());
-    fs::save(&filtered, &new_dir.join("outliers/filtered.json"));
-    fs::save(&outliers, &new_dir.join("outliers/classification.json"));
-    plot::outliers(&outliers, filtered.as_slice(), new_dir.join("outliers/boxplot.svg"), id);
+    elapsed!(
+        "Storing the filtered sample",
+        fs::save(&filtered, &new_dir.join("outliers/filtered.json")));
+    elapsed!(
+        "Storing the classification of outliers",
+         fs::save(&outliers, &new_dir.join("outliers/classification.json")));
+    elapsed!(
+        "Plotting the outliers",
+        plot::outliers(&outliers, filtered.as_slice(), new_dir.join("outliers/boxplot.svg"), id));
 
     println!("> Estimating the statistics of the sample");
     let nresamples = criterion.nresamples;
     let cl = criterion.confidence_level;
     println!("  > Bootstrapping the sample with {} resamples", nresamples);
-    let start = time::precise_time_ns();
-    let distributions = sample.bootstrap_many(abs_stats_fns.as_slice(), nresamples);
-    info!("Bootstraping took {}", format_time((time::precise_time_ns() - start) as f64));
+    let distributions = elapsed!(
+        "Bootstrapping the absolute statistics",
+        sample.bootstrap_many(abs_stats_fns.as_slice(), nresamples));
     let distributions: Distributions =
         ABS_STATS.iter().map(|&x| x).zip(distributions.move_iter()).collect();
     let estimates = Estimate::new(&distributions, points.as_slice(), cl);
     fs::save(&estimates, &new_dir.join("bootstrap/estimates.json"));
 
     report_time(&estimates);
-    plot::time_distributions(&distributions,
-                             &estimates,
-                             &new_dir.join("bootstrap/distribution"),
-                             id);
+    elapsed!(
+        "Plotting the distribution of the absolute statistics",
+        plot::time_distributions(
+            &distributions,
+            &estimates,
+            &new_dir.join("bootstrap/distribution"), id));
 
     if !base_dir.exists() {
         return;
     }
 
     println!("{}: Comparing with previous sample", id);
-    let base_sample = fs::load::<Vec<f64>>(&base_dir.join("sample.json"));
+    let base_sample =
+        elapsed!("Loading previous sample", fs::load::<Vec<f64>>(&base_dir.join("sample.json")));
     let base_sample = Sample::new(base_sample.as_slice());
 
     let both_dir = root.join("both");
-    plot::both::pdfs(base_sample.as_slice(), sample.as_slice(), both_dir.join("pdfs.svg"), id);
-    plot::both::points(base_sample.as_slice(), sample.as_slice(), both_dir.join("points.svg"), id);
+    elapsed!(
+        "Plotting both sample points",
+        plot::both::pdfs(
+            base_sample.as_slice(),
+            sample.as_slice(),
+            both_dir.join("pdfs.svg"),
+            id));
+    elapsed!(
+        "Plotting both estimated PDFs",
+        plot::both::points(
+            base_sample.as_slice(),
+            sample.as_slice(),
+            both_dir.join("points.svg"),
+            id));
 
     println!("> H0: Both samples belong to the same population");
     println!("  > Bootstrapping with {} resamples", nresamples);
     let t_statistic = t(sample.as_slice(), base_sample.as_slice());
-    let start = time::precise_time_ns();
-    let t_distribution = TDistribution::new(sample.as_slice(), base_sample.as_slice(), nresamples);
-    info!("Bootstraping took {}", format_time((time::precise_time_ns() - start) as f64))
+    let t_distribution = elapsed!(
+        "Bootstrapping the T distribution",
+        TDistribution::new(sample.as_slice(), base_sample.as_slice(), nresamples));
     let p_value = t_distribution.p_value(t_statistic, TwoTailed);
     let sl = criterion.significance_level;
     let different_population = p_value < sl;
 
     println!("  > p = {}", p_value);
     println!("  > {} reject the null hypothesis",
-             if different_population { "Strong evidence to" } else { "Can't" })
-    plot::t_test(
-        t_statistic,
-        t_distribution.as_slice(),
-        change_dir.join("bootstrap/t_test.svg"),
-        id);
+             if different_population { "Strong evidence to" } else { "Can't" });
+    elapsed!(
+        "Plotting the T test",
+        plot::t_test(
+            t_statistic,
+            t_distribution.as_slice(),
+            change_dir.join("bootstrap/t_test.svg"),
+            id));
 
     println!("> Estimating relative change of statistics");
     println!("  > Bootstrapping with {} resamples", nresamples);
-    let start = time::precise_time_ns();
-    let distributions =
-        sample.bootstrap2_many(&base_sample, rel_stats_fns.as_slice(), nresamples);
-    info!("Bootstraping took {}", format_time((time::precise_time_ns() - start) as f64))
-        let points: Vec<f64> = rel_stats_fns.iter().map(|&f| {
-            f(sample.as_slice(), base_sample.as_slice())
-        }).collect();
+    let distributions = elapsed!(
+        "Bootstrapping the relative statistics",
+        sample.bootstrap2_many(&base_sample, rel_stats_fns.as_slice(), nresamples)
+    );
+    let points: Vec<f64> = rel_stats_fns.iter().map(|&f| {
+        f(sample.as_slice(), base_sample.as_slice())
+    }).collect();
     let distributions: Distributions =
         REL_STATS.iter().map(|&x| x).zip(distributions.move_iter()).collect();
     let estimates = Estimate::new(&distributions, points.as_slice(), cl);
-    fs::save(&estimates, &change_dir.join("bootstrap/estimates.json"));
+    elapsed!(
+        "Storing the relative estimates",
+        fs::save(&estimates, &change_dir.join("bootstrap/estimates.json")));
 
     report_change(&estimates);
-    plot::ratio_distributions(&distributions,
-                              &estimates,
-                              &change_dir.join("bootstrap/distribution"),
-                              id);
+    elapsed!(
+        "Plotting the distribution of the relative statistics",
+        plot::ratio_distributions(
+            &distributions,
+            &estimates,
+            &change_dir.join("bootstrap/distribution"),
+            id));
 
     let threshold = criterion.noise_threshold;
     let mut regressed = vec!();
