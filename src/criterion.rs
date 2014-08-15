@@ -312,6 +312,13 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
         "Plotting the estimated sample PDF",
         plot::pdf(sample.as_slice(), new_dir.join("pdf.svg"), id));
 
+    elapsed!(
+        "Plotting linear regression",
+        plot::regression(
+            sample_pairs.as_slice(),
+            new_dir.join("bootstrap/regression.svg"),
+            id));
+
     let (filtered, outliers) = Outliers::classify(sample.as_slice());
     report_outliers(&outliers, filtered.as_slice());
     elapsed!(

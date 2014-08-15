@@ -63,6 +63,35 @@ pub fn pdf<S: Str>(sample: &[f64], path: Path, id: S) {
         draw();
 }
 
+pub fn regression<S: Str>(s: &[(u64, u64)], path: Path, id: S) {
+    let max_elapsed =
+        s.iter().max_by(|&&(_, elapsed)| elapsed).expect("Empty sample").val1() as f64;
+    let (scale, prefix) = scale_time(max_elapsed);
+    let elapsed: Vec<f64> = s.iter().map(|&(_, y)| y as f64 * scale).collect();
+
+    let max_iters = s.iter().max_by(|&&(iters, _)| iters).expect("Empty sample").val0() as f64;
+    let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
+    let scale = 10f64.powi(-exponent);
+    let iters: Vec<f64> = s.iter().map(|&(x, _)| x as f64 * scale).collect();
+
+    let x_label = if exponent == 0 {
+        "Iterations".to_string()
+    } else {
+        format!("Iterations (x 10^{})", exponent)
+    };
+
+    Figure::new().
+        set_font(FONT).
+        set_output_file(path).
+        set_size(PLOT_SIZE).
+        set_terminal(Svg).
+        set_title(format!("{}: Linear regression", id.as_slice())).
+        set_xlabel(x_label).
+        set_ylabel(format!("Time ({}s)", prefix)).
+        plot(Points, iters.iter(), elapsed.iter(), [PointType(Circle)]).
+        draw();
+}
+
 pub fn sample<S: Str>(s: &[f64], path: Path, id: S) {
     let mut rng = rand::task_rng();
     let sample = s.as_slice();
