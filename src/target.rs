@@ -85,7 +85,7 @@ impl<'a> Target<'a> {
     }
 
     // Collects measurements, each one with different number of iterations: d, 2*d, 3*d, ..., n*d
-    pub fn bench(&mut self, n: uint, d: u64) -> Vec<f64> {
+    pub fn bench(&mut self, n: uint, d: u64) -> Vec<(u64, u64)> {
         let mut sample = Vec::with_capacity(n);
 
         match *self {
@@ -119,7 +119,7 @@ impl<'a> Target<'a> {
         }
 
         sample.move_iter().rev().zip(iter::count(d, d)).map(|(elapsed, iters)| {
-            elapsed as f64 / iters as f64
+            (iters, elapsed)
         }).collect()
     }
 }

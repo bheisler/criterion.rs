@@ -297,9 +297,12 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     let change_dir = root.join("change");
     let new_dir = root.join("new");
 
-    let sample = elapsed!("Sampling", take_sample(&mut target, criterion));
+    let sample_pairs = elapsed!("Sampling", take_sample(&mut target, criterion));
+    let sample: Vec<f64> = sample_pairs.iter().map(|&(iters, elapsed)| {
+        elapsed as f64 / iters as f64
+    }).collect();
     let points: Vec<f64> = abs_stats_fns.iter().map(|&f| f(sample.as_slice())).collect();
-    elapsed!("Storing sample", fs::save(&sample.as_slice(), &new_dir.join("sample.json")));
+    elapsed!("Storing sample", fs::save(&sample_pairs, &new_dir.join("sample.json")));
     let sample = Sample::new(sample.as_slice());
 
     elapsed!(
@@ -346,8 +349,13 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     }
 
     println!("{}: Comparing with previous sample", id);
-    let base_sample =
-        elapsed!("Loading previous sample", fs::load::<Vec<f64>>(&base_dir.join("sample.json")));
+    let base_sample_pairs =
+        elapsed!(
+            "Loading previous sample",
+            fs::load::<Vec<(u64, u64)>>(&base_dir.join("sample.json")));
+    let base_sample: Vec<f64> = base_sample_pairs.iter().map(|&(iters, elapsed)| {
+        elapsed as f64 / iters as f64
+    }).collect();
     let base_sample = Sample::new(base_sample.as_slice());
 
     let both_dir = root.join("both");
@@ -437,7 +445,7 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     }
 }
 
-fn take_sample(t: &mut Target, criterion: &Criterion) -> Vec<f64> {
+fn take_sample(t: &mut Target, criterion: &Criterion) -> Vec<(u64, u64)> {
     let wu_ns = criterion.warm_up_time.num_nanoseconds().expect("Duration overflow") as u64;
     let m_ns = criterion.measurement_time.num_nanoseconds().expect("Duration overflow") as u64;
     let n = criterion.sample_size as u64;
