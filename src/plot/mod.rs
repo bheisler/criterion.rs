@@ -32,7 +32,7 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
 // TODO This should be configurable
 static PLOT_SIZE: (uint, uint) = (880, 495);
 static FONT: &'static str = "Fantasque Sans Mono";
-static KDE_POINTS: uint = 1_000;
+static KDE_POINTS: uint = 500;
 
 pub fn pdf<S: Str>(sample: &[f64], path: Path, id: S) {
     let (xs, ys) = kde::sweep(sample, KDE_POINTS);
