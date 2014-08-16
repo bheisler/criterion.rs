@@ -15,7 +15,6 @@ use stream::Stream;
 use target::{Bencher, Function, Program, Target};
 
 /// The "criterion" for the benchmark, which is also the benchmark "manager"
-// TODO (rust-lang/rust#15934) The `*_ns` fields should use the `Duration` type
 #[experimental]
 pub struct Criterion {
     confidence_level: f64,
@@ -324,7 +323,7 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     let ub = distribution[(n * (1. + cl) / 2.).round() as uint];
     let point = StraightLine::fit(pairs);
 
-    report_regression(pairs, (&lb, &ub), cl);
+    report_regression(pairs, (&lb, &ub));
 
     elapsed!(
         "Plotting linear regression",
@@ -553,14 +552,11 @@ fn format_signed_short(n: f64) -> String {
 
 fn report_time(estimates: &Estimates) {
     for (&statistic, estimate) in estimates.iter() {
-        let p = format_time(estimate.point_estimate);
         let ci = estimate.confidence_interval;
         let lb = format_time(ci.lower_bound);
         let ub = format_time(ci.upper_bound);
-        let se = format_time(estimate.standard_error);
-        let cl = ci.confidence_level;
 
-        println!("  > {:<7} {} ± {} [{} {}] {}% CI", statistic, p, se, lb, ub, cl * 100.0);
+        println!("  > {:>6} [{} {}]", statistic, lb, ub);
     }
 }
 
@@ -580,14 +576,11 @@ fn format_time(ns: f64) -> String {
 
 fn report_change(estimates: &Estimates) {
     for (&statistic, estimate) in estimates.iter() {
-        let p = format_change(estimate.point_estimate, true);
         let ci = estimate.confidence_interval;
         let lb = format_change(ci.lower_bound, true);
         let ub = format_change(ci.upper_bound, true);
-        let se = format_change(estimate.standard_error, false);
-        let cl = ci.confidence_level;
 
-        println!("  > {:<7} {} ± {} [{} {}] {}% CI", statistic, p, se, lb, ub, cl * 100.0);
+        println!("  > {:>6} [{} {}]", statistic, lb, ub);
     }
 }
 
@@ -621,20 +614,18 @@ fn report_outliers(outliers: &Outliers<f64>, normal: &[f64]) {
 
 fn report_regression(
     pairs: &[(f64, f64)],
-    (lb, ub): (&StraightLine<f64>, &StraightLine<f64>),
-    cl: f64
+    (lb, ub): (&StraightLine<f64>, &StraightLine<f64>)
 ) {
     println!(
-        "  > {:<#6} [{} {}] {} % CI",
-        "slope:",
+        "  > {:>6} [{} {}]",
+        "slope",
         format_time(lb.slope),
         format_time(ub.slope),
-        cl * 100.
         );
 
     println!
-        ("  > {:<#6}  {:0.7} {:0.7}",
-         "R^2:",
+        ("  > {:>6}  {:0.7} {:0.7}",
+         "R^2",
          lb.r_squared(pairs),
          ub.r_squared(pairs));
 }
