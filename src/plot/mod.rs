@@ -159,7 +159,7 @@ pub fn slope_distribution(
         set_xlabel(format!("Time ({}s)", prefix)).
         set_ylabel("Density (a.u.)").
         plot(Lines, xs.iter(), ys.iter(), []).
-        plot(Lines, [point, point].iter(), vertical.iter(), []).
+        plot(Lines, [point, point].iter(), vertical.iter(), [Title("Point estimate")]).
         plot(Lines,
              [lb, lb, ub, ub].iter(),
              vertical.iter().rev().chain(vertical.iter()),
