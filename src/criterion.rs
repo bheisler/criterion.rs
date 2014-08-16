@@ -1,5 +1,5 @@
 use stats::outliers::Outliers;
-use stats::regression::StraightLine ;
+use stats::regression::Slope ;
 use stats::ttest::{TDistribution, TwoTailed};
 use stats::{Sample, t};
 use std::fmt::Show;
@@ -307,8 +307,8 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     let pairs = pairs.as_slice();
 
     println!("> Performing linear regression");
-    fn slr(sample: &[(f64, f64)]) -> StraightLine<f64> {
-        StraightLine::fit(sample)
+    fn slr(sample: &[(f64, f64)]) -> Slope<f64> {
+        Slope::fit(sample)
     }
 
     let sample = Sample::new(pairs);
@@ -317,11 +317,11 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
         sample.bootstrap(slr, nresamples).unwrap());
 
     // Non-interpolating percentiles
-    distribution.sort_by(|&x, &y| x.slope.partial_cmp(&y.slope).unwrap());
+    distribution.sort_by(|&x, &y| x.slope().partial_cmp(&y.slope()).unwrap());
     let n = distribution.len() as f64;
     let lb = distribution[(n * (1. - cl) / 2.).round() as uint];
     let ub = distribution[(n * (1. + cl) / 2.).round() as uint];
-    let point = StraightLine::fit(pairs);
+    let point = Slope::fit(pairs);
 
     report_regression(pairs, (&lb, &ub));
 
@@ -333,10 +333,10 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
             new_dir.join("regression.svg"),
             id));
 
-    let distribution: Vec<f64> = distribution.move_iter().map(|lr| lr.slope).collect();
-    let lb = lb.slope;
-    let point = point.slope;
-    let ub = ub.slope;
+    let distribution: Vec<f64> = distribution.move_iter().map(|lr| lr.slope()).collect();
+    let lb = lb.slope();
+    let point = point.slope();
+    let ub = ub.slope();
 
     elapsed!(
         "Plotting the distribution of the slope",
@@ -614,13 +614,13 @@ fn report_outliers(outliers: &Outliers<f64>, normal: &[f64]) {
 
 fn report_regression(
     pairs: &[(f64, f64)],
-    (lb, ub): (&StraightLine<f64>, &StraightLine<f64>)
+    (lb, ub): (&Slope<f64>, &Slope<f64>)
 ) {
     println!(
         "  > {:>6} [{} {}]",
         "slope",
-        format_time(lb.slope),
-        format_time(ub.slope),
+        format_time(lb.slope()),
+        format_time(ub.slope()),
         );
 
     println!

@@ -4,7 +4,7 @@ use simplot::plottype::{Lines, Points};
 use simplot::pointtype::Circle;
 use simplot::terminal::Svg;
 use stats::outliers::Outliers;
-use stats::regression::StraightLine;
+use stats::regression::Slope;
 use stats::{mean, median};
 use std::iter;
 use std::rand::{Rng, mod};
@@ -66,7 +66,7 @@ pub fn pdf<S: Str>(sample: &[f64], path: Path, id: S) {
 
 pub fn regression<S: Str>(
     pairs: &[(f64, f64)],
-    (lb, ub): (&StraightLine<f64>, &StraightLine<f64>),
+    (lb, ub): (&Slope<f64>, &Slope<f64>),
     path: Path,
     id: S
 ) {
@@ -107,13 +107,13 @@ pub fn regression<S: Str>(
     let x_min = min_iters * x_scale;
     let x_max = max_iters * x_scale;
 
-    let &StraightLine{ slope: alpha, intercept: beta, .. } = lb;
-    let y_1 = (alpha * max_iters + beta) * y_scale;
-    let y_2 = (alpha * min_iters + beta) * y_scale;
+    let alpha = lb.slope();
+    let y_1 = alpha * max_iters * y_scale;
+    let y_2 = alpha * min_iters * y_scale;
 
-    let &StraightLine { slope: alpha, intercept: beta, .. } = ub;
-    let y_3 = (alpha * min_iters + beta) * y_scale;
-    let y_4 = (alpha * max_iters + beta) * y_scale;
+    let alpha = ub.slope();
+    let y_3 = alpha * min_iters * y_scale;
+    let y_4 = alpha * max_iters * y_scale;
 
     let xs = [x_max, x_min, x_min, x_max];
     let ys = [y_1, y_2, y_3, y_4];
