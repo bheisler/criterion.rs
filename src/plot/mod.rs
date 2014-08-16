@@ -4,6 +4,7 @@ use simplot::plottype::{Lines, Points};
 use simplot::pointtype::Circle;
 use simplot::terminal::Svg;
 use stats::outliers::Outliers;
+use stats::regression::StraightLine;
 use stats::{mean, median};
 use std::iter;
 use std::rand::{Rng, mod};
@@ -63,22 +64,59 @@ pub fn pdf<S: Str>(sample: &[f64], path: Path, id: S) {
         draw();
 }
 
-pub fn regression<S: Str>(s: &[(u64, u64)], path: Path, id: S) {
-    let max_elapsed =
-        s.iter().max_by(|&&(_, elapsed)| elapsed).expect("Empty sample").val1() as f64;
-    let (scale, prefix) = scale_time(max_elapsed);
-    let elapsed: Vec<f64> = s.iter().map(|&(_, y)| y as f64 * scale).collect();
+pub fn regression<S: Str>(
+    pairs: &[(f64, f64)],
+    (lb, ub): (&StraightLine<f64>, &StraightLine<f64>),
+    path: Path,
+    id: S
+) {
+    let (mut min_iters, mut min_elapsed) = (0., 0.);
+    let (mut max_iters, mut max_elapsed) = (0., 0.);
 
-    let max_iters = s.iter().max_by(|&&(iters, _)| iters).expect("Empty sample").val0() as f64;
+    for &(iters, elapsed) in pairs.iter() {
+        if min_iters > iters {
+            min_iters = iters;
+        }
+
+        if max_iters < iters {
+            max_iters = iters;
+        }
+
+        if min_elapsed > elapsed {
+            min_elapsed = elapsed;
+        }
+
+        if max_elapsed < elapsed {
+            max_elapsed = elapsed;
+        }
+    }
+
+    let (y_scale, prefix) = scale_time(max_elapsed);
+    let elapsed: Vec<f64> = pairs.iter().map(|&(_, y)| y as f64 * y_scale).collect();
+
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
-    let scale = 10f64.powi(-exponent);
-    let iters: Vec<f64> = s.iter().map(|&(x, _)| x as f64 * scale).collect();
+    let x_scale = 10f64.powi(-exponent);
+    let iters: Vec<f64> = pairs.iter().map(|&(x, _)| x as f64 * x_scale).collect();
 
     let x_label = if exponent == 0 {
         "Iterations".to_string()
     } else {
         format!("Iterations (x 10^{})", exponent)
     };
+
+    let x_min = min_iters * x_scale;
+    let x_max = max_iters * x_scale;
+
+    let &StraightLine{ slope: alpha, intercept: beta, .. } = lb;
+    let y_1 = (alpha * max_iters + beta) * y_scale;
+    let y_2 = (alpha * min_iters + beta) * y_scale;
+
+    let &StraightLine { slope: alpha, intercept: beta, .. } = ub;
+    let y_3 = (alpha * min_iters + beta) * y_scale;
+    let y_4 = (alpha * max_iters + beta) * y_scale;
+
+    let xs = [x_max, x_min, x_min, x_max];
+    let ys = [y_1, y_2, y_3, y_4];
 
     Figure::new().
         set_font(FONT).
@@ -89,6 +127,43 @@ pub fn regression<S: Str>(s: &[(u64, u64)], path: Path, id: S) {
         set_xlabel(x_label).
         set_ylabel(format!("Time ({}s)", prefix)).
         plot(Points, iters.iter(), elapsed.iter(), [PointType(Circle)]).
+        plot(Lines, xs.iter(), ys.iter(), [Title("Confidence Interval")]).
+        draw();
+}
+
+pub fn slope_distribution(
+    distribution: &[f64],
+    (lb, point, ub): (f64, f64, f64),
+    path: Path,
+    id: &str
+) {
+    let (xs, ys) = kde::sweep(distribution, KDE_POINTS);
+
+    let (scale, prefix) = scale_time(xs.as_slice().max());
+    let rscale = scale.recip();
+    let xs = xs.move_iter().map(|x| x * scale).collect::<Vec<f64>>();
+    let ys = ys.move_iter().map(|y| y * rscale).collect::<Vec<f64>>();
+    let ys = ys.as_slice();
+
+    let lb = lb * scale;
+    let point = point * scale;
+    let ub = ub * scale;
+    let vertical = [ys.min(), ys.max()];
+
+    Figure::new().
+        set_font(FONT).
+        set_output_file(path).
+        set_size(PLOT_SIZE).
+        set_terminal(Svg).
+        set_title(format!("{}: Bootstrap distribution of the slope", id)).
+        set_xlabel(format!("Time ({}s)", prefix)).
+        set_ylabel("Density (a.u.)").
+        plot(Lines, xs.iter(), ys.iter(), []).
+        plot(Lines, [point, point].iter(), vertical.iter(), []).
+        plot(Lines,
+             [lb, lb, ub, ub].iter(),
+             vertical.iter().rev().chain(vertical.iter()),
+             [Title("Confidence Interval")]).
         draw();
 }
 

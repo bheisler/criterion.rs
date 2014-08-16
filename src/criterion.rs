@@ -1,4 +1,5 @@
 use stats::outliers::Outliers;
+use stats::regression::StraightLine ;
 use stats::ttest::{TDistribution, TwoTailed};
 use stats::{Sample, t};
 use std::fmt::Show;
@@ -297,29 +298,69 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     let change_dir = root.join("change");
     let new_dir = root.join("new");
 
-    let sample_pairs = elapsed!("Sampling", take_sample(&mut target, criterion));
-    let sample: Vec<f64> = sample_pairs.iter().map(|&(iters, elapsed)| {
-        elapsed as f64 / iters as f64
-    }).collect();
-    let points: Vec<f64> = abs_stats_fns.iter().map(|&f| f(sample.as_slice())).collect();
-    elapsed!("Storing sample", fs::save(&sample_pairs, &new_dir.join("sample.json")));
-    let sample = Sample::new(sample.as_slice());
+    let cl = criterion.confidence_level;
+    let nresamples = criterion.nresamples;
 
-    elapsed!(
-        "Plotting sample points",
-        plot::sample(sample.as_slice(), new_dir.join("points.svg"), id));
-    elapsed!(
-        "Plotting the estimated sample PDF",
-        plot::pdf(sample.as_slice(), new_dir.join("pdf.svg"), id));
+    let pairs = elapsed!("Sampling", take_sample(&mut target, criterion));
+    elapsed!("Storing sample", fs::save(&pairs, &new_dir.join("sample.json")));
+
+    let pairs: Vec<(f64, f64)> = pairs.iter().map(|&(x, y)| (x as f64, y as f64)).collect();
+    let pairs = pairs.as_slice();
+
+    println!("> Performing linear regression");
+    fn slr(sample: &[(f64, f64)]) -> StraightLine<f64> {
+        StraightLine::fit(sample)
+    }
+
+    let sample = Sample::new(pairs);
+    let mut distribution = elapsed!(
+        "Bootstrapped linear regression",
+        sample.bootstrap(slr, nresamples).unwrap());
+
+    // Non-interpolating percentiles
+    distribution.sort_by(|&x, &y| x.slope.partial_cmp(&y.slope).unwrap());
+    let n = distribution.len() as f64;
+    let lb = distribution[(n * (1. - cl) / 2.).round() as uint];
+    let ub = distribution[(n * (1. + cl) / 2.).round() as uint];
+    let point = StraightLine::fit(pairs);
+
+    report_regression(pairs, (&lb, &ub), cl);
 
     elapsed!(
         "Plotting linear regression",
         plot::regression(
-            sample_pairs.as_slice(),
-            new_dir.join("bootstrap/regression.svg"),
+            pairs,
+            (&lb, &ub),
+            new_dir.join("regression.svg"),
             id));
 
-    let (filtered, outliers) = Outliers::classify(sample.as_slice());
+    let distribution: Vec<f64> = distribution.move_iter().map(|lr| lr.slope).collect();
+    let lb = lb.slope;
+    let point = point.slope;
+    let ub = ub.slope;
+
+    elapsed!(
+        "Plotting the distribution of the slope",
+        plot::slope_distribution(
+            distribution.as_slice(),
+            (lb, point, ub),
+            new_dir.join("bootstrap/distribution/slope.svg"),
+            id));
+
+    let times: Vec<f64> = pairs.iter().map(|&(iters, elapsed)| {
+        elapsed / iters
+    }).collect();
+    let times = times.as_slice();
+
+    elapsed!(
+        "Plotting sample points",
+        plot::sample(times, new_dir.join("points.svg"), id));
+    elapsed!(
+        "Plotting the estimated sample PDF",
+        plot::pdf(times, new_dir.join("pdf.svg"), id));
+
+    let points: Vec<f64> = abs_stats_fns.iter().map(|&f| f(times)).collect();
+    let (filtered, outliers) = Outliers::classify(times);
     report_outliers(&outliers, filtered.as_slice());
     elapsed!(
         "Storing the filtered sample",
@@ -332,9 +373,7 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
         plot::outliers(&outliers, filtered.as_slice(), new_dir.join("outliers/boxplot.svg"), id));
 
     println!("> Estimating the statistics of the sample");
-    let nresamples = criterion.nresamples;
-    let cl = criterion.confidence_level;
-    println!("  > Bootstrapping the sample with {} resamples", nresamples);
+    let sample = Sample::new(times.as_slice());
     let distributions = elapsed!(
         "Bootstrapping the absolute statistics",
         sample.bootstrap_many(abs_stats_fns.as_slice(), nresamples));
@@ -356,44 +395,45 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
     }
 
     println!("{}: Comparing with previous sample", id);
-    let base_sample_pairs =
+    let base_pairs =
         elapsed!(
             "Loading previous sample",
             fs::load::<Vec<(u64, u64)>>(&base_dir.join("sample.json")));
-    let base_sample: Vec<f64> = base_sample_pairs.iter().map(|&(iters, elapsed)| {
+    let base_times: Vec<f64> = base_pairs.iter().map(|&(iters, elapsed)| {
         elapsed as f64 / iters as f64
     }).collect();
-    let base_sample = Sample::new(base_sample.as_slice());
+    let base_times = base_times.as_slice();
+    let base_sample = Sample::new(base_times);
 
     let both_dir = root.join("both");
     elapsed!(
         "Plotting both sample points",
         plot::both::pdfs(
-            base_sample.as_slice(),
-            sample.as_slice(),
+            base_times,
+            times,
             both_dir.join("pdfs.svg"),
             id));
     elapsed!(
         "Plotting both estimated PDFs",
         plot::both::points(
-            base_sample.as_slice(),
-            sample.as_slice(),
+            base_times,
+            times,
             both_dir.join("points.svg"),
             id));
 
-    println!("> H0: Both samples belong to the same population");
-    println!("  > Bootstrapping with {} resamples", nresamples);
-    let t_statistic = t(sample.as_slice(), base_sample.as_slice());
+    println!("> Performing a two-sample t-test");
+    println!("  > H0: Both samples have the same mean");
+    let t_statistic = t(times, base_times);
     let t_distribution = elapsed!(
         "Bootstrapping the T distribution",
-        TDistribution::new(sample.as_slice(), base_sample.as_slice(), nresamples));
+        TDistribution::new(times, base_times, nresamples));
     let p_value = t_distribution.p_value(t_statistic, TwoTailed);
     let sl = criterion.significance_level;
-    let different_population = p_value < sl;
+    let different_mean = p_value < sl;
 
     println!("  > p = {}", p_value);
     println!("  > {} reject the null hypothesis",
-             if different_population { "Strong evidence to" } else { "Can't" });
+             if different_mean { "Strong evidence to" } else { "Can't" });
     elapsed!(
         "Plotting the T test",
         plot::t_test(
@@ -403,13 +443,12 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
             id));
 
     println!("> Estimating relative change of statistics");
-    println!("  > Bootstrapping with {} resamples", nresamples);
     let distributions = elapsed!(
         "Bootstrapping the relative statistics",
         sample.bootstrap2_many(&base_sample, rel_stats_fns.as_slice(), nresamples)
     );
     let points: Vec<f64> = rel_stats_fns.iter().map(|&f| {
-        f(sample.as_slice(), base_sample.as_slice())
+        f(times, base_times)
     }).collect();
     let distributions: Distributions =
         REL_STATS.iter().map(|&x| x).zip(distributions.move_iter()).collect();
@@ -447,7 +486,7 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
             },
         }
     }
-    if different_population && regressed.iter().all(|&x| x) {
+    if different_mean && regressed.iter().all(|&x| x) {
         fail!("{} has regressed", id);
     }
 }
@@ -578,6 +617,26 @@ fn report_outliers(outliers: &Outliers<f64>, normal: &[f64]) {
     print(outliers.low_mild.len(), "low mild");
     print(outliers.high_mild.len(), "high mild");
     print(outliers.high_severe.len(), "high severe");
+}
+
+fn report_regression(
+    pairs: &[(f64, f64)],
+    (lb, ub): (&StraightLine<f64>, &StraightLine<f64>),
+    cl: f64
+) {
+    println!(
+        "  > {:<#6} [{} {}] {} % CI",
+        "slope:",
+        format_time(lb.slope),
+        format_time(ub.slope),
+        cl * 100.
+        );
+
+    println!
+        ("  > {:<#6}  {:0.7} {:0.7}",
+         "R^2:",
+         lb.r_squared(pairs),
+         ub.r_squared(pairs));
 }
 
 fn format_change(pct: f64, signed: bool) -> String {
