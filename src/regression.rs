@@ -1,92 +1,70 @@
 //! Regression analysis
 
-use std::num::{Zero, mod};
+use std::iter::AdditiveIterator;
+use std::num::{One, Zero, mod};
 use test::stats::Stats;
 
-use mean;
-
-/// Simple linear regression: `a * x + b`
+/// An straight line `y = m * x + b`
 #[deriving(Clone)]
 #[experimental]
-pub struct LinearRegression<A> {
-    /// The intercept of the line used to fit the data
+pub struct StraightLine<A> {
+    /// The y-intercept of the line
     pub intercept: A,
-    /// The square root of the coefficient of determination
-    pub r_value: A,
-    /// The slope of the line used to fit the data
+    /// The slope of the line
     pub slope: A,
 }
 
-/// Performs a simple linear regression
-#[experimental]
-pub fn linregress<A: FloatMath + FromPrimitive>(xy: &[(A, A)]) -> LinearRegression<A> {
-    assert!(xy.len() > 1);
+impl<A> StraightLine<A>
+where A: Clone + Div<A, A> + Mul<A, A> + NumCast + Sub<A, A> + Zero
+{
+    /// Fits the sample to a straight line using ordinary least squares
+    pub fn fit(sample: &[(A, A)]) -> StraightLine<A> {
+        assert!(sample.len() > 0);
 
-    let n = xy.len();
-    let (mut x, mut y) = (Vec::with_capacity(n), Vec::with_capacity(n));
+        let n = num::cast(sample.len()).unwrap();
+        let x2_bar = sample.iter().map(|&(ref x, _)| x.mul(x)).sum() / n;
+        let x_bar = sample.iter().map(|&(ref x, _)| x.clone()).sum() / n;
+        let xy_bar = sample.iter().map(|&(ref x, ref y)| x.mul(y)).sum() / n;
+        let y_bar = sample.iter().map(|&(_, ref y)| y.clone()).sum() / n;
 
-    // Split
-    for &(ref a, ref b) in xy.iter() {
-        x.push(a.clone());
-        y.push(b.clone());
-    }
+        let slope = {
+            let num = xy_bar - x_bar * y_bar;
+            let den = x2_bar - x_bar * x_bar;
 
-    // Normalize
-    fn max_abs<A: FloatMath + FromPrimitive>(x: &[A]) -> A {
-        let max = x.max().abs();
-        let min = x.min().abs();
+            num / den
+        };
 
-        if max > min {
-            max
-        } else {
-            min
+        let intercept = y_bar - slope * x_bar;
+
+        StraightLine {
+            intercept: intercept,
+            slope: slope,
         }
     }
+}
 
-    let k_x = max_abs(x.as_slice()).recip();
-    let k_y = max_abs(y.as_slice()).recip();
+impl<A> StraightLine<A>
+where A: Clone + Div<A, A> + Mul<A, A> + NumCast + One + Sub<A, A> + Zero
+{
+    /// Computes the goodness of fit (coefficient of determination) for this sample
+    pub fn r_squared(&self, sample: &[(A, A)]) -> A {
+        let &StraightLine { slope: ref alpha, intercept: ref beta } = self;
+        let n = num::cast(sample.len()).unwrap();
+        let y_bar = sample.iter().map(|&(_, ref y)| y.clone()).sum() / n;
 
-    let x: Vec<A> = x.move_iter().map(|x| k_x * x).collect();
-    let y: Vec<A> = y.move_iter().map(|y| k_y * y).collect();
+        let ss_res = sample.iter().map(|&(ref x, ref y)| {
+            let diff = y.sub(&alpha.mul(x)).sub(beta);
 
-    // Linear regression
-    // TODO This dot product can be accelerated via SIMD or BLAS
-    fn dot<A: Add<A, A> + Mul<A, A> + Zero>(x: &[A], y: &[A]) -> A {
-        use std::iter::AdditiveIterator;
+            diff * diff
+        }).sum();
 
-        x.iter().zip(y.iter()).map(|(x, y)| x.mul(y)).sum()
-    }
+        let ss_tot = sample.iter().map(|&(_, ref y)| {
+            let diff = y.sub(&y_bar);
 
-    let x = x.as_slice();
-    let y = y.as_slice();
+            diff * diff
+        }).sum();
 
-    let n = num::cast(n).unwrap();
-    let x2_bar = dot(x, x) / n;
-    let x_bar = mean(x);
-    let xy_bar = dot(x, y) / n;
-    let y2_bar = dot(y, y) / n;
-    let y_bar = mean(y);
-
-    let slope = {
-        let num = xy_bar - x_bar * y_bar;
-        let den = x2_bar - x_bar.powi(2);
-
-        num / den
-    };
-
-    let intercept = y_bar - slope * x_bar;
-
-    let r_value = {
-        let num = xy_bar - x_bar * y_bar;
-        let den = (x2_bar - x_bar.powi(2)) * (y2_bar - y_bar.powi(2));
-
-        num / den.sqrt()
-    };
-
-    LinearRegression {
-        intercept: intercept / k_y,
-        r_value: r_value,
-        slope: slope * k_x / k_y,
+        num::one::<A>() - ss_res / ss_tot
     }
 }
 
@@ -95,7 +73,7 @@ mod test {
     use quickcheck::TestResult;
     use std::rand::{Rng, mod};
 
-    use regression::linregress;
+    use regression::StraightLine;
     use tol::TOLERANCE;
 
     #[quickcheck]
@@ -108,9 +86,10 @@ mod test {
             return TestResult::discard();
         };
 
-        let lr = linregress(data.as_slice());
+        let data = data.as_slice();
+        let sl = StraightLine::fit(data);
 
-        let r_squared = lr.r_value.powi(2);
+        let r_squared = sl.r_squared(data);
 
         TestResult::from_bool(
             r_squared > -TOLERANCE && r_squared < 1. + TOLERANCE

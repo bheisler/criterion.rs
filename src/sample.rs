@@ -605,7 +605,7 @@ mod bench {
 
     use Sample;
     use {mean, median, median_abs_dev, std_dev, t};
-    use regression::linregress;
+    use regression::StraightLine;
 
     static NRESAMPLES: uint = 100_000;
     static SAMPLE_SIZE: uint = 100;
@@ -623,14 +623,18 @@ mod bench {
     }
 
     #[bench]
-    fn bootstrap_linregress(b: &mut Bencher) {
+    fn bootstrap_slr(b: &mut Bencher) {
+        fn slr(sample: &[(f64, f64)]) -> StraightLine<f64> {
+            StraightLine::fit(sample)
+        }
+
         let mut rng = rand::task_rng();
 
         let data = Vec::from_fn(SAMPLE_SIZE, |_| rng.gen::<(f64, f64)>());
         let sample = Sample::new(data.as_slice());
 
         b.iter(|| {
-            sample.bootstrap(linregress, NRESAMPLES)
+            sample.bootstrap(slr, NRESAMPLES)
         })
     }
 
