@@ -605,7 +605,7 @@ mod bench {
 
     use Sample;
     use {mean, median, median_abs_dev, std_dev, t};
-    use regression::StraightLine;
+    use regression::{Slope, StraightLine};
 
     static NRESAMPLES: uint = 100_000;
     static SAMPLE_SIZE: uint = 100;
@@ -623,9 +623,25 @@ mod bench {
     }
 
     #[bench]
-    fn bootstrap_slr(b: &mut Bencher) {
+    fn bootstrap_sl(b: &mut Bencher) {
         fn slr(sample: &[(f64, f64)]) -> StraightLine<f64> {
             StraightLine::fit(sample)
+        }
+
+        let mut rng = rand::task_rng();
+
+        let data = Vec::from_fn(SAMPLE_SIZE, |_| rng.gen::<(f64, f64)>());
+        let sample = Sample::new(data.as_slice());
+
+        b.iter(|| {
+            sample.bootstrap(slr, NRESAMPLES)
+        })
+    }
+
+    #[bench]
+    fn bootstrap_slope(b: &mut Bencher) {
+        fn slr(sample: &[(f64, f64)]) -> Slope<f64> {
+            Slope::fit(sample)
         }
 
         let mut rng = rand::task_rng();

@@ -4,6 +4,61 @@ use std::iter::AdditiveIterator;
 use std::num::{One, Zero, mod};
 use test::stats::Stats;
 
+/// A straight line that passes through the origin `y = m * x`
+#[deriving(Clone)]
+#[experimental]
+pub struct Slope<A>(pub A);
+
+impl<A> Slope<A>
+where A: Copy
+{
+    // TODO (rust-lang/rfcs#184) Remove this method in favor of tuple indexing
+    pub fn slope(self) -> A {
+        let Slope(slope) = self;
+
+        slope
+    }
+}
+
+impl<A> Slope<A>
+where A: Div<A, A> + Mul<A, A> + NumCast + Zero
+{
+    pub fn fit(sample: &[(A, A)]) -> Slope<A> {
+        let n = num::cast(sample.len()).unwrap();
+        let xy_bar = sample.iter().map(|&(ref x, ref y)| x.mul(y)).sum() / n;
+        let x2_bar = sample.iter().map(|&(ref x, _)| x.mul(x)).sum() / n;
+
+        let slope = xy_bar / x2_bar;
+
+        Slope(slope)
+    }
+}
+
+impl<A> Slope<A>
+where A: Div<A, A> + Mul<A, A> + NumCast + One + Sub<A, A> + Zero
+{
+    pub fn r_squared(&self, sample: &[(A, A)]) -> A {
+        let &Slope(ref alpha) = self;
+
+        let n = num::cast(sample.len()).unwrap();
+        let y_bar = sample.iter().fold(num::zero(), |ref s, &(_, ref y)| y.add(s)) / n;
+
+        let ss_res = sample.iter().map(|&(ref x, ref y)| {
+            let diff = y.sub(&alpha.mul(x));
+
+            diff * diff
+        }).sum();
+
+        let ss_tot = sample.iter().map(|&(_, ref y)| {
+            let diff = y.sub(&y_bar);
+
+            diff * diff
+        }).sum();
+
+        num::one::<A>() - ss_res / ss_tot
+    }
+}
+
 /// An straight line `y = m * x + b`
 #[deriving(Clone)]
 #[experimental]
@@ -15,7 +70,7 @@ pub struct StraightLine<A> {
 }
 
 impl<A> StraightLine<A>
-where A: Clone + Div<A, A> + Mul<A, A> + NumCast + Sub<A, A> + Zero
+where A: Div<A, A> + Mul<A, A> + NumCast + Sub<A, A> + Zero
 {
     /// Fits the sample to a straight line using ordinary least squares
     pub fn fit(sample: &[(A, A)]) -> StraightLine<A> {
@@ -23,9 +78,9 @@ where A: Clone + Div<A, A> + Mul<A, A> + NumCast + Sub<A, A> + Zero
 
         let n = num::cast(sample.len()).unwrap();
         let x2_bar = sample.iter().map(|&(ref x, _)| x.mul(x)).sum() / n;
-        let x_bar = sample.iter().map(|&(ref x, _)| x.clone()).sum() / n;
+        let x_bar = sample.iter().fold(num::zero(), |ref s, &(ref x, _)| x.add(s)) / n;
         let xy_bar = sample.iter().map(|&(ref x, ref y)| x.mul(y)).sum() / n;
-        let y_bar = sample.iter().map(|&(_, ref y)| y.clone()).sum() / n;
+        let y_bar = sample.iter().fold(num::zero(), |ref s, &(_, ref y)| y.add(s)) / n;
 
         let slope = {
             let num = xy_bar - x_bar * y_bar;
@@ -44,13 +99,14 @@ where A: Clone + Div<A, A> + Mul<A, A> + NumCast + Sub<A, A> + Zero
 }
 
 impl<A> StraightLine<A>
-where A: Clone + Div<A, A> + Mul<A, A> + NumCast + One + Sub<A, A> + Zero
+where A: Div<A, A> + Mul<A, A> + NumCast + One + Sub<A, A> + Zero
 {
     /// Computes the goodness of fit (coefficient of determination) for this sample
     pub fn r_squared(&self, sample: &[(A, A)]) -> A {
         let &StraightLine { slope: ref alpha, intercept: ref beta } = self;
+
         let n = num::cast(sample.len()).unwrap();
-        let y_bar = sample.iter().map(|&(_, ref y)| y.clone()).sum() / n;
+        let y_bar = sample.iter().fold(num::zero(), |ref s, &(_, ref y)| y.add(s)) / n;
 
         let ss_res = sample.iter().map(|&(ref x, ref y)| {
             let diff = y.sub(&alpha.mul(x)).sub(beta);
