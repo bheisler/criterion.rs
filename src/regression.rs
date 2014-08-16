@@ -74,7 +74,45 @@ mod test {
     use std::rand::{Rng, mod};
 
     use regression::StraightLine;
-    use tol::TOLERANCE;
+    use stats::{mean, std_dev};
+    use tol::{TOLERANCE, is_close};
+
+    #[quickcheck]
+    fn normalized(sample_size: uint, scale: f64) -> TestResult {
+        let data = if sample_size > 1 && scale != 0. {
+            let mut rng = rand::task_rng();
+
+            Vec::from_fn(sample_size, |_| (scale * rng.gen(), scale * rng.gen()))
+        } else {
+            return TestResult::discard();
+        };
+        let data = data.as_slice();
+
+        let (mut x, mut y) = (vec!(), vec!());
+
+        for &(a, b) in data.iter() {
+            x.push(a);
+            y.push(b);
+        }
+
+        let (x, y) = (x.as_slice(), y.as_slice());
+
+        let (x_bar, y_bar) = (mean(x), mean(y));
+        let (sigma_x, sigma_y) = (std_dev(x), std_dev(y));
+
+        let normalized_data: Vec<(f64, f64)> = data.iter().map(|&(x, y)| {
+            ((x - x_bar) / sigma_x, (y - y_bar) / sigma_y)
+        }).collect();
+        let normalized_data = normalized_data.as_slice();
+
+        let sl = StraightLine::fit(data);
+        let nsl = StraightLine::fit(normalized_data);
+
+        TestResult::from_bool(
+            is_close(sl.r_squared(data), nsl.r_squared(normalized_data)) &&
+            is_close(sl.slope, nsl.slope * sigma_y / sigma_x)
+        )
+    }
 
     #[quickcheck]
     fn r_squared(sample_size: uint) -> TestResult {
