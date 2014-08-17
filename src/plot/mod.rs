@@ -56,7 +56,7 @@ pub fn pdf<S: Str>(sample: &[f64], path: Path, id: S) {
         set_size(PLOT_SIZE).
         set_terminal(Svg).
         set_title(format!("{}: Probability Density Function", id.as_slice())).
-        set_xlabel(format!("Time ({}s)", prefix)).
+        set_xlabel(format!("Average time ({}s)", prefix)).
         set_ylabel("Density (a.u.)").
         plot(Lines, xs.iter(), ys.iter(), []).
         plot(Lines, mean.iter(), vertical.iter(), [Title("Mean")]).
@@ -125,7 +125,7 @@ pub fn regression<S: Str>(
         set_terminal(Svg).
         set_title(format!("{}: Linear regression", id.as_slice())).
         set_xlabel(x_label).
-        set_ylabel(format!("Time ({}s)", prefix)).
+        set_ylabel(format!("Total time ({}s)", prefix)).
         plot(Points, iters.iter(), elapsed.iter(), [PointType(Circle)]).
         plot(Lines, xs.iter(), ys.iter(), [Title("Confidence Interval")]).
         draw();
@@ -156,7 +156,7 @@ pub fn slope_distribution(
         set_size(PLOT_SIZE).
         set_terminal(Svg).
         set_title(format!("{}: Bootstrap distribution of the slope", id)).
-        set_xlabel(format!("Time ({}s)", prefix)).
+        set_xlabel(format!("Average time ({}s)", prefix)).
         set_ylabel("Density (a.u.)").
         plot(Lines, xs.iter(), ys.iter(), []).
         plot(Lines, [point, point].iter(), vertical.iter(), [Title("Point estimate")]).
@@ -180,7 +180,7 @@ pub fn sample<S: Str>(s: &[f64], path: Path, id: S) {
         set_size(PLOT_SIZE).
         set_terminal(Svg).
         set_title(format!("{}: Sample points", id.as_slice())).
-        set_xlabel(format!("Time ({}s)", prefix)).
+        set_xlabel(format!("Average time ({}s)", prefix)).
         plot(Points, sample.iter(), rng.gen_iter::<f64>(), [PointType(Circle)]).
         draw();
 }
@@ -214,7 +214,7 @@ pub fn time_distributions(
             set_size(PLOT_SIZE).
             set_terminal(Svg).
             set_title(format!("{}: Bootstrap distribution of the {}", id, statistic)).
-            set_xlabel(format!("Time ({}s)", prefix)).
+            set_xlabel(format!("Average time ({}s)", prefix)).
             set_ylabel("Density (a.u.)").
             plot(Lines, xs.iter(), ys.iter(), []).
             plot(Lines, [p, p].iter(), vertical.iter(), [Title("Point estimate")]).
@@ -311,7 +311,7 @@ pub fn outliers(outliers: &Outliers<f64>, filtered: &[f64], path: Path, id: &str
         set_size(PLOT_SIZE).
         set_terminal(Svg).
         set_title(format!("{}: Classification of outliers", id)).
-        set_xlabel(format!("Time ({}s)", prefix)).
+        set_xlabel(format!("Average time ({}s)", prefix)).
         plot(Lines, [lomt, lomt, himt, himt].iter(), y.iter(), []).
         plot(Lines, [lost, lost, hist, hist].iter(), y.iter(), []).
         plot(Points, mild, rng.gen_iter::<f64>(),
@@ -379,7 +379,7 @@ pub fn summarize(dir: &Path, id: &str) {
                 set_ylabel("Input").
                 set_ytics(inputs, iter::count(0u, 1)).
                 set_yrange((-0.5, estimates_pairs.len() as f64 - 0.5)).
-                set_xlabel(format!("Time ({}s)", prefix)).
+                set_xlabel(format!("Average time ({}s)", prefix)).
                 xerrorbars(
                     points.iter(), iter::count(0u, 1), lbs, ubs, [Title("Confidence Interval")]).
                 draw();

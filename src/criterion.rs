@@ -398,6 +398,7 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
         elapsed!(
             "Loading previous sample",
             fs::load::<Vec<(u64, u64)>>(&base_dir.join("sample.json")));
+    let base_pairs = base_pairs.as_slice();
     let base_times: Vec<f64> = base_pairs.iter().map(|&(iters, elapsed)| {
         elapsed as f64 / iters as f64
     }).collect();
@@ -406,14 +407,21 @@ fn bench(id: &str, mut target: Target, criterion: &Criterion) {
 
     let both_dir = root.join("both");
     elapsed!(
-        "Plotting both sample points",
+        "Plotting both linear regressions",
+        plot::both::regression(
+            base_pairs,
+            pairs,
+            both_dir.join("regression.svg"),
+            id));
+    elapsed!(
+        "Plotting both estimated PDFs",
         plot::both::pdfs(
             base_times,
             times,
             both_dir.join("pdfs.svg"),
             id));
     elapsed!(
-        "Plotting both estimated PDFs",
+        "Plotting both sample points",
         plot::both::points(
             base_times,
             times,
