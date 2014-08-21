@@ -8,7 +8,7 @@ A Rust library to do statistics.
 complex statistics require a matrix library. Plus, the main user of this
 library is [criterion.rs][criterion], which only requires these routines.
 
-## [API Docs][docs]
+## [Documentation][docs]
 
 ## Features
 
@@ -26,4 +26,4 @@ stats.rs is dual licensed under the Apache 2.0 license and the MIT license.
 See LICENSE-APACHE and LICENSE-MIT for more details.
 
 [criterion]: https://github.com/japaric/criterion.rs
-[docs]: https://japaric.github.io/stats.rs/stats/index.html
+[docs]: http://www.rust-ci.org/japaric/stats.rs/doc/stats/
