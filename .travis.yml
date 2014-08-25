@@ -1,24 +1,15 @@
+language: rust
+
 env:
   global:
     - secure: VJzoH+McZ8/5uMevsJLBCkmsKghfPDxegiXmB37R3UrVSVH+9BwIcTVQLnz7Ul2OpOgoMzgepGWrxf6b+e/qrKJlDhJ3vieXMDhY02CpXB6ODeB0cbDWJvdrHV8BvmiqhbvKPYpV94RhRVM7w+gvXMkjGDWuDGsYB9HpP8ntF9U=
-
-before_install:
-  - curl -O http://static.rust-lang.org/cargo-dist/cargo-nightly-x86_64-unknown-linux-gnu.tar.gz
-  - tar xf cargo-nightly-x86_64-unknown-linux-gnu.tar.gz
-  - yes | sudo add-apt-repository --yes ppa:hansjorg/rust
-  - sudo apt-get update -qq
-
-install:
-  - sudo apt-get install -qq rust-nightly
-  - sudo cargo-nightly-x86_64-unknown-linux-gnu/install.sh
-  - sudo rm -rf cargo-nightly-x86_64-unknown-linux-gnu
 
 script:
   - cargo build
   - cargo test
   - cargo doc && mv target/doc doc
 
-after_script:
+after_success:
   - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh'
 
 branches:
