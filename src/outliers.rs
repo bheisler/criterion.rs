@@ -5,21 +5,65 @@ use test::stats::Stats;
 
 // TODO Add more outlier classification methods
 
-/// Outliers classified by Tukey's fences
+/// Classification of outliers using Tukey's fences
 #[deriving(Encodable)]
 #[experimental]
 pub struct Outliers<A> {
-    pub high_mild: Vec<A>,
-    pub high_severe: Vec<A>,
-    pub low_mild: Vec<A>,
-    pub low_severe: Vec<A>,
-    /// Threshold (fences) used to classify
-    pub thresholds: (A, A, A, A),
+    pub count: (uint, uint, uint, uint, uint),
+    pub fences: (A, A, A, A),
+    pub labels: Vec<Label>,
+}
+
+/// Labels used to classify outliers
+#[deriving(Encodable, PartialEq)]
+pub enum Label {
+    HighMild,
+    HighSevere,
+    LowMild,
+    LowSevere,
+    NotAnOutlier,
+}
+
+impl Label {
+    pub fn is_outlier(&self) -> bool {
+        match *self {
+            NotAnOutlier => false,
+            _ => true,
+        }
+    }
+
+    pub fn is_mild(&self) -> bool {
+        match *self {
+            LowMild | HighMild => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_severe(&self) -> bool {
+        match *self {
+            LowSevere | HighSevere => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_low(&self) -> bool {
+        match *self {
+            LowMild | LowSevere => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_high(&self) -> bool {
+        match *self {
+            HighMild | HighSevere => true,
+            _ => false,
+        }
+    }
 }
 
 impl<A: FloatMath + FromPrimitive> Outliers<A> {
     /// Returns the filtered sample, and the classified outliers
-    pub fn classify(sample: &[A]) -> (Vec<A>, Outliers<A>) {
+    pub fn classify(sample: &[A]) -> Outliers<A> {
         let (q1, _, q3) = sample.quartiles();
         let iqr = q3 - q1;
 
@@ -29,37 +73,30 @@ impl<A: FloatMath + FromPrimitive> Outliers<A> {
         let (lost, lomt, himt, hist) =
             (q1 - k_h * iqr, q1 - k_m * iqr, q3 + k_m * iqr, q3 + k_h * iqr);
 
-        let (mut his, mut him, mut lom, mut los, mut normal) =
-            (vec![], vec![], vec![], vec![], Vec::with_capacity(sample.len()));
-
-        for &x in sample.iter() {
+        let (mut los, mut lom, mut nao, mut him, mut his) = (0, 0, 0, 0, 0);
+        let labels = sample.iter().map(|&x| {
             if x < lost {
-                los.push(x);
+                los += 1;
+                LowSevere
             } else if x > hist {
-                his.push(x);
+                his += 1;
+                HighSevere
             } else if x < lomt {
-                lom.push(x);
+                lom += 1;
+                LowMild
             } else if x > himt {
-                him.push(x);
+                him += 1;
+                HighMild
             } else {
-                normal.push(x);
+                nao += 1;
+                NotAnOutlier
             }
+        }).collect();
 
+        Outliers {
+            count: (los, lom, nao, him, his),
+            fences: (lost, lomt, himt, hist),
+            labels: labels,
         }
-
-        (normal, Outliers {
-            high_mild: him,
-            high_severe: his,
-            low_mild: lom,
-            low_severe: los,
-            thresholds: (lost, lomt, himt, hist),
-        })
-    }
-}
-
-impl<A> Collection for Outliers<A> {
-    /// The total number of outliers
-    fn len(&self) -> uint {
-        self.low_severe.len() + self.low_mild.len() + self.high_mild.len() + self.high_severe.len()
     }
 }
