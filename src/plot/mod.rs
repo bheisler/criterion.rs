@@ -3,11 +3,10 @@ use simplot::option::{Title, PointType};
 use simplot::plottype::{Lines, Points};
 use simplot::pointtype::Circle;
 use simplot::terminal::Svg;
-use stats::outliers::Outliers;
+use stats::outliers::{Outliers, LowMild, LowSevere, HighMild, HighSevere};
 use stats::regression::Slope;
 use stats::{mean, median};
 use std::iter;
-use std::rand::{Rng, mod};
 use test::stats::Stats;
 
 use estimate::{Distributions, Estimate, Estimates, Mean, Median};
@@ -30,12 +29,14 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
     }
 }
 
-// TODO This should be configurable
-static PLOT_SIZE: (uint, uint) = (880, 495);
+// TODO These should be configurable
 static FONT: &'static str = "Fantasque Sans Mono";
 static KDE_POINTS: uint = 500;
+static PLOT_SIZE: (uint, uint) = (1280, 720);
 
-pub fn pdf<S: Str>(sample: &[f64], path: Path, id: S) {
+pub fn pdf(sample: &[f64], id: &str) {
+    let path = Path::new(format!(".criterion/{}/new/pdf.svg", id));
+
     let (xs, ys) = kde::sweep(sample, KDE_POINTS);
 
     let (scale, prefix) = scale_time(xs.as_slice().max());
@@ -64,12 +65,13 @@ pub fn pdf<S: Str>(sample: &[f64], path: Path, id: S) {
         draw();
 }
 
-pub fn regression<S: Str>(
+pub fn regression(
     pairs: &[(f64, f64)],
     (lb, ub): (&Slope<f64>, &Slope<f64>),
-    path: Path,
-    id: S
+    id: &str,
 ) {
+    let path = Path::new(format!(".criterion/{}/new/regression.svg", id));
+
     let (mut min_iters, mut min_elapsed) = (0., 0.);
     let (mut max_iters, mut max_elapsed) = (0., 0.);
 
@@ -131,12 +133,9 @@ pub fn regression<S: Str>(
         draw();
 }
 
-pub fn slope_distribution(
-    distribution: &[f64],
-    (lb, point, ub): (f64, f64, f64),
-    path: Path,
-    id: &str
-) {
+pub fn slope(distribution: &[f64], (lb, point, ub): (f64, f64, f64), id: &str) {
+    let path = Path::new(format!(".criterion/{}/new/slope.svg", id));
+
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS);
 
     let (scale, prefix) = scale_time(xs.as_slice().max());
@@ -167,9 +166,8 @@ pub fn slope_distribution(
         draw();
 }
 
-pub fn sample<S: Str>(s: &[f64], path: Path, id: S) {
-    let mut rng = rand::task_rng();
-    let sample = s.as_slice();
+pub fn sample(sample: &[f64], id: &str) {
+    let path = Path::new(format!(".criterion/{}/new/sample.svg", id));
 
     let (scale, prefix) = scale_time(sample.max());
     let sample = sample.iter().map(|x| x * scale).collect::<Vec<f64>>();
@@ -181,16 +179,11 @@ pub fn sample<S: Str>(s: &[f64], path: Path, id: S) {
         set_terminal(Svg).
         set_title(format!("{}: Sample points", id.as_slice())).
         set_xlabel(format!("Average time ({}s)", prefix)).
-        plot(Points, sample.iter(), rng.gen_iter::<f64>(), [PointType(Circle)]).
+        plot(Points, sample.iter(), iter::count(0u, 1), [PointType(Circle)]).
         draw();
 }
 
-pub fn time_distributions(
-    distributions: &Distributions,
-    estimates: &Estimates,
-    dir: &Path,
-    id: &str
-) {
+pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, id: &str) {
     for (&statistic, distribution) in distributions.iter() {
         let estimate = estimates[statistic];
 
@@ -210,7 +203,7 @@ pub fn time_distributions(
 
         Figure::new().
             set_font(FONT).
-            set_output_file(dir.join(format!("{}.svg", statistic))).
+            set_output_file(Path::new(format!(".criterion/{}/new/{}.svg", id, statistic))).
             set_size(PLOT_SIZE).
             set_terminal(Svg).
             set_title(format!("{}: Bootstrap distribution of the {}", id, statistic)).
@@ -227,13 +220,14 @@ pub fn time_distributions(
 }
 
 // TODO DRY: This is very similar to the `time_distributions` method
-pub fn ratio_distributions(
+pub fn rel_distributions(
     distributions: &Distributions,
     estimates: &Estimates,
-    dir: &Path,
-    id: &str
+    id: &str,
 ) {
     for (&statistic, distribution) in distributions.iter() {
+        let path = Path::new(format!(".criterion/{}/change/{}.svg", id, statistic));
+
         let (xs, ys) = kde::sweep(distribution.as_slice(), KDE_POINTS);
         let xs: Vec<f64> = xs.move_iter().map(|x| x * 100.0).collect();
         let ys = ys.as_slice();
@@ -246,7 +240,7 @@ pub fn ratio_distributions(
 
         Figure::new().
             set_font(FONT).
-            set_output_file(dir.join(format!("{}.svg", statistic))).
+            set_output_file(path).
             set_size(PLOT_SIZE).
             set_terminal(Svg).
             set_title(format!("{}: Bootstrap distribution of the {}", id, statistic)).
@@ -262,7 +256,9 @@ pub fn ratio_distributions(
     }
 }
 
-pub fn t_test(t: f64, distribution: &[f64], path: Path, id: &str) {
+pub fn t_test(t: f64, distribution: &[f64], id: &str) {
+    let path = Path::new(format!(".criterion/{}/change/t-test.svg", id));
+
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS);
     let ys = ys.as_slice();
     let vertical = [ys.min(), ys.max()];
@@ -280,30 +276,34 @@ pub fn t_test(t: f64, distribution: &[f64], path: Path, id: &str) {
         draw();
 }
 
-pub fn outliers(outliers: &Outliers<f64>, filtered: &[f64], path: Path, id: &str) {
-    let mut rng = rand::task_rng();
+pub fn outliers(outliers: &Outliers<f64>, times: &[f64], id: &str) {
+    let path = Path::new(format!(".criterion/{}/new/outliers.svg", id));
 
-    let (mut lost, mut lomt, mut himt, mut hist) = outliers.thresholds;
-    let him = outliers.high_mild.as_slice();
-    let his = outliers.high_severe.as_slice();
-    let lom = outliers.low_mild.as_slice();
-    let los = outliers.low_severe.as_slice();
+    let (mut lost, mut lomt, mut himt, mut hist) = outliers.fences;
+    let (nlos, nlom, nnao, nhim, nhis) = outliers.count;
 
-    let (scale, prefix) = scale_time(if his.is_empty() { hist } else { his.max() });
-    let him = him.iter().map(|x| x * scale);
-    let his = his.iter().map(|x| x * scale);
-    let lom = lom.iter().map(|x| x * scale);
-    let los = los.iter().map(|x| x * scale);
-    let filtered = filtered.iter().map(|x| x * scale);
+    let (scale, prefix) = scale_time(times.max());
+    let mut mild = Vec::with_capacity(nlom + nhim);
+    let mut severe = Vec::with_capacity(nlos + nhis);
+    let mut normal = Vec::with_capacity(nnao);
+
+    for (time, (&label, i)) in
+        times.iter().map(|x| x * scale).zip(outliers.labels.iter().zip(iter::count(0u, 1)))
+    {
+        match label {
+            HighSevere | LowSevere => severe.push((i, time)),
+            LowMild | HighMild => mild.push((i, time)),
+            _ => normal.push((i, time)),
+
+        }
+    }
     himt *= scale;
     hist *= scale;
     lomt *= scale;
     lost *= scale;
 
-    let mild = lom.chain(him);
-    let severe = los.chain(his);
-
-    let y = [1u, 0, 0, 1];
+    let n = times.len();
+    let y = [n, 0, 0, n];
 
     Figure::new().
         set_font(FONT).
@@ -314,11 +314,11 @@ pub fn outliers(outliers: &Outliers<f64>, filtered: &[f64], path: Path, id: &str
         set_xlabel(format!("Average time ({}s)", prefix)).
         plot(Lines, [lomt, lomt, himt, himt].iter(), y.iter(), []).
         plot(Lines, [lost, lost, hist, hist].iter(), y.iter(), []).
-        plot(Points, mild, rng.gen_iter::<f64>(),
+        plot(Points, mild.iter().map(|x| x.val1()), mild.iter().map(|x| x.val0()),
              [PointType(Circle), Title("Mild")]).
-        plot(Points, filtered, rng.gen_iter::<f64>(),
+        plot(Points, normal.iter().map(|x| x.val1()), normal.iter().map(|x| x.val0()),
              [PointType(Circle)]).
-        plot(Points, severe, rng.gen_iter::<f64>(),
+        plot(Points, severe.iter().map(|x| x.val1()), severe.iter().map(|x| x.val0()),
              [PointType(Circle), Title("Severe")]).
         draw();
 }

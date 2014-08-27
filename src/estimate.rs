@@ -14,11 +14,7 @@ pub struct Estimate {
 }
 
 impl Estimate {
-    pub fn new(
-        distributions: &Distributions,
-        points: &[f64],
-        cl: f64
-    ) -> Estimates {
+    pub fn new(distributions: &Distributions, points: &[f64], cl: f64) -> Estimates {
         distributions.iter().zip(points.iter()).map(|((&statistic, distribution), &point)| {
             (statistic, Estimate {
                 confidence_interval: distribution.confidence_interval(cl),
@@ -44,6 +40,7 @@ pub enum Statistic {
     Mean,
     Median,
     MedianAbsDev,
+    Slope,
     StdDev,
 }
 
@@ -54,6 +51,7 @@ impl Statistic {
             Median => stats::median,
             MedianAbsDev => stats::median_abs_dev,
             StdDev => stats::std_dev,
+            _ => unimplemented!(),
         }
     }
 
@@ -80,6 +78,7 @@ impl Show for Statistic {
             Mean => f.pad("mean"),
             Median => f.pad("median"),
             MedianAbsDev => f.pad("MAD"),
+            Slope => f.pad("slope"),
             StdDev => f.pad("SD"),
         }
     }

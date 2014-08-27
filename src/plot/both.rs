@@ -3,15 +3,16 @@ use simplot::option::{Title, PointType};
 use simplot::plottype::{Lines, Points};
 use simplot::pointtype::Circle;
 use simplot::terminal::Svg;
-use std::rand::Rng;
-use std::rand;
+use std::iter;
 use test::stats::Stats;
 
 use kde;
 use super::scale_time;
 use super::{FONT, KDE_POINTS, PLOT_SIZE};
 
-pub fn regression(base: &[(u64, u64)], new: &[(f64, f64)], path: Path, id: &str) {
+pub fn regression(base: &[(u64, u64)], new: &[(f64, f64)], id: &str) {
+    let path = Path::new(format!(".criterion/{}/both/regression.svg", id));
+
     let (mut max_iters, mut max_elapsed) = (0., 0.);
 
     for &(iters, elapsed) in base.iter() {
@@ -62,7 +63,9 @@ pub fn regression(base: &[(u64, u64)], new: &[(f64, f64)], path: Path, id: &str)
         draw();
 }
 
-pub fn pdfs(base: &[f64], new: &[f64], path: Path, id: &str) {
+pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
+    let path = Path::new(format!(".criterion/{}/both/pdf.svg", id));
+
     let (base_xs, base_ys) = kde::sweep(base, KDE_POINTS);
     let (new_xs, new_ys) = kde::sweep(new, KDE_POINTS);
 
@@ -87,8 +90,8 @@ pub fn pdfs(base: &[f64], new: &[f64], path: Path, id: &str) {
         draw();
 }
 
-pub fn points(base: &[f64], new: &[f64], path: Path, id: &str) {
-    let mut rng = rand::task_rng();
+pub fn points(base: &[f64], new: &[f64], id: &str) {
+    let path = Path::new(format!(".criterion/{}/both/sample.svg", id));
 
     let (scale, prefix) = scale_time([base.max(), new.max()].as_slice().max());
     let base = base.iter().map(|x| x * scale);
@@ -101,7 +104,7 @@ pub fn points(base: &[f64], new: &[f64], path: Path, id: &str) {
         set_terminal(Svg).
         set_title(format!("{}: Sample points", id)).
         set_xlabel(format!("Average time ({}s)", prefix)).
-        plot(Points, base, rng.gen_iter::<f64>(), [PointType(Circle), Title("Base")]).
-        plot(Points, new, rng.gen_iter::<f64>(), [PointType(Circle), Title("New")]).
+        plot(Points, base, iter::count(0u, 1), [PointType(Circle), Title("Base")]).
+        plot(Points, new, iter::count(0u, 1), [PointType(Circle), Title("New")]).
         draw();
 }
