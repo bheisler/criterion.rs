@@ -5,7 +5,7 @@ use resamples::Resamples;
 
 /// A collection of observations drawn from the population
 #[experimental]
-pub struct Sample<'a, A>(&'a [A]);
+pub struct Sample<'a, A: 'a>(&'a [A]);
 
 impl <'a, A> Sample<'a, A> {
     /// Creates a new sample by wrapping an slice
