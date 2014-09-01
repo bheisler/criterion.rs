@@ -1,7 +1,7 @@
 use std::rand::{Rng, XorShiftRng, mod};
 use std::rand::distributions::{IndependentSample, Range};
 
-pub struct Resamples<'a, A> {
+pub struct Resamples<'a, A: 'a> {
     range: Range<uint>,
     rng: XorShiftRng,
     sample: &'a [A],
@@ -41,7 +41,7 @@ impl <'a, A: Clone> Resamples<'a, A> {
             },
         }
 
-        self.stage.get_ref().as_slice()
+        self.stage.as_ref().unwrap().as_slice()
     }
 }
 
