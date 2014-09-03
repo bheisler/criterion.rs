@@ -9,7 +9,7 @@ use time::types::Ns;
 use time::unit;
 use time;
 
-pub enum Target<'a, I> {
+pub enum Target<'a, I: 'a> {
     Function(fn (&mut Bencher)),
     FunctionFamily(fn (&mut Bencher, &I), &'a I),
     Program(Stream),

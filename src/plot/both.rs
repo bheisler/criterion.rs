@@ -13,8 +13,8 @@ use super::scale_time;
 use super::{FONT,PLOT_SIZE};
 
 pub fn pdfs<
-    V: Vector<f64>,
-    W: Vector<f64>>(
+    V: Slice<f64>,
+    W: Slice<f64>>(
     base: &Sample<V>,
     new: &Sample<W>,
     path: Path,
@@ -45,8 +45,8 @@ pub fn pdfs<
 }
 
 pub fn points<
-    V: Vector<f64>,
-    W: Vector<f64>>(
+    V: Slice<f64>,
+    W: Slice<f64>>(
     base: &Sample<V>,
     new: &Sample<W>,
     path: Path,

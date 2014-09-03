@@ -33,7 +33,7 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
 static PLOT_SIZE: (uint, uint) = (880, 495);
 static FONT: &'static str = "Fantasque Sans Mono";
 
-pub fn pdf<S: Str, V: Vector<f64>>(s: &Sample<V>, path: Path, id: S) {
+pub fn pdf<S: Str, V: Slice<f64>>(s: &Sample<V>, path: Path, id: S) {
     let (xs, ys) = math::kde(s.as_slice());
 
     let (scale, prefix) = scale_time(xs.as_slice().max());
@@ -62,7 +62,7 @@ pub fn pdf<S: Str, V: Vector<f64>>(s: &Sample<V>, path: Path, id: S) {
         draw();
 }
 
-pub fn sample<S: Str, V: Vector<f64>>(s: &Sample<V>, path: Path, id: S) {
+pub fn sample<S: Str, V: Slice<f64>>(s: &Sample<V>, path: Path, id: S) {
     let mut rng = rand::task_rng();
     let sample = s.as_slice();
 
