@@ -16,7 +16,7 @@ use super::{
 use super::resampler::Resampler;
 
 // FIXME RFC#11: Enforce bound on the `struct` rather than on the `impl`s
-//struct Sample<V: Vector<f64>>(V);
+//struct Sample<V: Slice<f64>>(V);
 pub struct Sample<V>(V);
 
 impl<V> Sample<V> {
@@ -48,8 +48,8 @@ impl<'a, V: Encodable<json::Encoder<'a>, IoError>> Sample<V> {
     }
 }
 
-impl<V: Vector<f64>> Sample<V> {
-    fn join<W: Vector<f64>>(&self, other: &Sample<W>) -> Sample<Vec<f64>> {
+impl<V: Slice<f64>> Sample<V> {
+    fn join<W: Slice<f64>>(&self, other: &Sample<W>) -> Sample<Vec<f64>> {
         let mut v = Vec::with_capacity(self.len() + other.len());
         v.push_all(self.as_slice());
         v.push_all(other.as_slice());
@@ -66,7 +66,7 @@ impl<V: Vector<f64>> Sample<V> {
     }
 
     // Returns the relative difference between the statistic of two samples
-    fn compare<W: Vector<f64>>(
+    fn compare<W: Slice<f64>>(
                &self,
                other: &Sample<W>,
                statistic: Statistic) -> f64 {
@@ -86,7 +86,7 @@ impl<V: Vector<f64>> Sample<V> {
         }
     }
 
-    pub fn t_test<W: Vector<f64>>(&self, other: &Sample<W>) -> f64 {
+    pub fn t_test<W: Slice<f64>>(&self, other: &Sample<W>) -> f64 {
         let (mu_1, mu_2) = (self.compute(Mean), other.compute(Mean));
         let (sigma_1, sigma_2) = (self.compute(StdDev).powi(2), other.compute(StdDev).powi(2));
         let (n_1, n_2) = (self.len() as f64, other.len() as f64);
@@ -131,7 +131,7 @@ impl<V: Vector<f64>> Sample<V> {
     }
 
     // FIXME DRY: This method is *very* similar to `bootstrap`
-    pub fn bootstrap_compare<W: Vector<f64>>(
+    pub fn bootstrap_compare<W: Slice<f64>>(
                              &self,
                              other: &Sample<W>,
                              statistics: &[Statistic],
@@ -174,7 +174,7 @@ impl<V: Vector<f64>> Sample<V> {
     }
 
     // FIXME DRY: This method is *very* similar to `bootstrap`
-    pub fn bootstrap_t_test<W: Vector<f64>>(
+    pub fn bootstrap_t_test<W: Slice<f64>>(
                             &self,
                             other: &Sample<W>,
                             nresamples: uint,
@@ -199,14 +199,14 @@ impl<V: Vector<f64>> Sample<V> {
     }
 }
 
-impl<V: Vector<f64>> Vector<f64> for Sample<V> {
+impl<V: Slice<f64>> Slice<f64> for Sample<V> {
     fn as_slice(&self) -> &[f64] {
         let &Sample(ref sample) = self;
         sample.as_slice()
     }
 }
 
-impl<V: Vector<f64>> Collection for Sample<V> {
+impl<V: Slice<f64>> Collection for Sample<V> {
     fn len(&self) -> uint {
         let &Sample(ref sample) = self;
         sample.as_slice().len()

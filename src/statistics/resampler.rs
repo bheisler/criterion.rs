@@ -12,7 +12,7 @@ pub struct Resampler<'a> {
 }
 
 impl<'a> Resampler<'a> {
-    pub fn new<V: Vector<f64>>(sample: &'a Sample<V>) -> Resampler<'a> {
+    pub fn new<V: Slice<f64>>(sample: &'a Sample<V>) -> Resampler<'a> {
         use std::rand;
 
         let sample = sample.as_slice();
