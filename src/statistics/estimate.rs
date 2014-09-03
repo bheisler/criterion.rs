@@ -53,7 +53,7 @@ impl Estimates {
 
     pub fn get(&self, statistic: Statistic) -> &Estimate {
         let &Estimates(ref estimates) = self;
-        estimates.get(&statistic)
+        &estimates[statistic]
     }
 
     pub fn save(&self, path: &Path) {

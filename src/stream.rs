@@ -17,9 +17,9 @@ impl Stream {
         };
 
         Stream {
-            stderr: process.stderr.take_unwrap(),
-            stdin: Some(process.stdin.take_unwrap()),
-            stdout: BufferedReader::new(process.stdout.take_unwrap()),
+            stderr: process.stderr.take().unwrap(),
+            stdin: Some(process.stdin.take().unwrap()),
+            stdout: BufferedReader::new(process.stdout.take().unwrap()),
             _process: process,
         }
     }
@@ -46,6 +46,6 @@ impl Stream {
 impl Drop for Stream {
     fn drop(&mut self) {
         // Close `stdin` first
-        drop(self.stdin.take_unwrap());
+        drop(self.stdin.take().unwrap());
     }
 }
