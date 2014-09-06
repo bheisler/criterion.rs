@@ -336,7 +336,7 @@ pub fn summarize(id: &str) {
                 entry.is_dir() && entry.filename_str() != Some("summary")
             }) {
                 let input = entry.filename_str().unwrap();
-                let path = entry.join(sample).join("bootstrap/estimates.json");
+                let path = entry.join(sample).join("estimates.json");
                 match Estimate::load(&path) {
                     Some(estimates) => estimates_pairs.push((estimates, input)),
                     _ => {}
