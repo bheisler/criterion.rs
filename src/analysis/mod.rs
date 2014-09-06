@@ -6,7 +6,17 @@ use std::fmt::Show;
 use std::io::Command;
 use time;
 
-use estimate::{Distributions, Estimate, Estimates, Mean, Median, MedianAbsDev, Statistic, StdDev, mod};
+use estimate::{
+    Distributions,
+    Estimate,
+    Estimates,
+    Mean,
+    Median,
+    MedianAbsDev,
+    Statistic,
+    StdDev,
+    mod,
+};
 use format;
 use fs;
 use plot;

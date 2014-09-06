@@ -1,6 +1,6 @@
 extern crate criterion;
 
-use criterion::{Bencher, Criterion};
+use criterion::Criterion;
 
 #[test]
 fn from_elem() {
