@@ -29,6 +29,12 @@ macro_rules! elapsed {
 
 mod compare;
 
+pub fn summarize(id: &str) {
+    print!("Summarizing results of {}... ", id);
+    plot::summarize(id);
+    println!("DONE\n");
+}
+
 pub fn function(id: &str, f: |&mut Bencher|:'static, criterion: &Criterion) {
     common(id, &mut Function(f), criterion);
 
@@ -47,9 +53,7 @@ pub fn function_with_inputs<I: Show>(
         common(id.as_slice(), &mut Function(|b| f(b, input)), criterion);
     }
 
-    print!("Summarizing results of {}... ", id);
-    plot::summarize(&Path::new(".criterion").join(id), id);
-    println!("DONE\n");
+    summarize(id);
 }
 
 pub fn program(id: &str, prog: &Command, criterion: &Criterion) {
@@ -70,9 +74,7 @@ pub fn program_with_inputs<I: Show>(
         program(id.as_slice(), prog.clone().arg(format!("{}", input)), criterion);
     }
 
-    print!("Summarizing results of {}... ", id);
-    plot::summarize(&Path::new(".criterion").join(id), id);
-    println!("DONE\n");
+    summarize(id);
 }
 
 // Common analysis procedure

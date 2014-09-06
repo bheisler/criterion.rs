@@ -323,8 +323,9 @@ pub fn outliers(outliers: &Outliers<f64>, times: &[f64], id: &str) {
         draw();
 }
 
-pub fn summarize(dir: &Path, id: &str) {
-    let contents = fs::ls(dir);
+pub fn summarize(id: &str) {
+    let dir = Path::new(".criterion").join(id);
+    let contents = fs::ls(&dir);
 
     // TODO Specially handle inputs that can be parsed as `int`s
     // TODO Need better way to handle log scale triggering

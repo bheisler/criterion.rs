@@ -21,9 +21,9 @@ impl Program {
         };
 
         Program {
-            stderr: process.stderr.take_unwrap(),
-            stdin: process.stdin.take_unwrap(),
-            stdout: BufferedReader::new(process.stdout.take_unwrap()),
+            stderr: process.stderr.take().unwrap(),
+            stdin: process.stdin.take().unwrap(),
+            stdout: BufferedReader::new(process.stdout.take().unwrap()),
             _process: process,
         }
     }
