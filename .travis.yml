@@ -1,18 +1,25 @@
+language: rust
+
+env:
+  global:
+    - secure: pQJkfFtkEXSTb/rx0rRbP9zuAbCI2NzEFNylWJlhGR3TN/bKo/RwDdl1Lc0L4JYFOxdk8hjNLSWJKA148+y4hU4rrkPX9NyfnUdbLz5vm6900PkT/aG8dceVWudkueC9fT0n4S67256DjkkTzhTwsdp8CBbrzgj/W7SAO8jZwv4=
+
 before_install:
-  - curl -O http://static.rust-lang.org/cargo-dist/cargo-nightly-x86_64-unknown-linux-gnu.tar.gz
-  - tar xf cargo-nightly-x86_64-unknown-linux-gnu.tar.gz
-  - yes | sudo add-apt-repository --yes ppa:hansjorg/rust
-  - yes | sudo add-apt-repository ppa:gladky-anton/precise-backports
+  # This PPA has a newer version of gnuplot
+  - sudo add-apt-repository ppa:gladky-anton/precise-backports -y
   - sudo apt-get update -qq
 
 install:
-  - sudo apt-get install -qq rust-nightly gnuplot
-  - sudo cargo-nightly-x86_64-unknown-linux-gnu/install.sh
-  - sudo rm -rf cargo-nightly-x86_64-unknown-linux-gnu
+  - sudo apt-get install -qq gnuplot
 
 script:
-  - make
-  - make test
+  - cargo build --verbose
+  - cargo bench --verbose -- --test
+  - cargo doc --verbose && mv target/doc doc
+  - ./check-line-length.sh
+
+after_success:
+  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh'
 
 branches:
   only: master
