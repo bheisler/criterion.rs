@@ -73,9 +73,25 @@ pub struct Criterion {
     measurement_time_ns: u64,
     noise_threshold: f64,
     nresamples: uint,
+    plotting: Plotting,
     sample_size: uint,
     significance_level: f64,
     warm_up_time_ns: u64,
+}
+
+enum Plotting {
+    Disabled,
+    Enabled,
+    NotAvailable,
+}
+
+impl Plotting {
+    fn is_enabled(&self) -> bool {
+        match *self {
+            Enabled => true,
+            _ => false,
+        }
+    }
 }
 
 #[experimental]
@@ -89,16 +105,25 @@ impl Criterion {
     /// - Noise threshold: 0.01 (1%)
     /// - Confidence level: 0.95
     /// - Significance level: 0.05
-    /// - Plots: enabled
+    /// - Plotting: enabled (if gnuplot is available)
     // TODO (UFCS) remove this method and implement the `Default` trait
     #[experimental]
     pub fn default() -> Criterion {
+        let plotting = if simplot::version().is_some() {
+            Enabled
+        } else {
+            println!("Gnuplot not found, disabling plotting");
+
+            NotAvailable
+        };
+
         Criterion {
             confidence_level: 0.95,
             measurement_time_ns: 1_000_000_000,
             noise_threshold: 0.01,
             nresamples: 100_000,
             sample_size: 100,
+            plotting: plotting,
             significance_level: 0.05,
             warm_up_time_ns: 1_000_000_000,
         }
@@ -225,6 +250,36 @@ impl Criterion {
         self
     }
 
+    /// Enables plotting
+    #[experimental]
+    pub fn with_plots(&mut self) -> &mut Criterion {
+        match self.plotting {
+            NotAvailable => {},
+            _ => self.plotting = Enabled,
+        }
+
+        self
+    }
+
+    /// Disabled plotting
+    #[experimental]
+    pub fn without_plots(&mut self) -> &mut Criterion {
+        match self.plotting {
+            NotAvailable => {},
+            _ => self.plotting = Disabled,
+        }
+
+        self
+    }
+
+    /// Checks if plotting is possible
+    pub fn can_plot(&self) -> bool {
+        match self.plotting {
+            NotAvailable => false,
+            _ => true,
+        }
+    }
+
     /// Benchmarks a function
     ///
     /// The function under test must follow the setup - bench - teardown pattern:
@@ -336,7 +391,7 @@ impl Criterion {
     /// the `summarize` method
     #[experimental]
     pub fn summarize(&mut self, id: &str) -> &mut Criterion {
-        analysis::summarize(id);
+        analysis::summarize(id, self);
 
         self
     }

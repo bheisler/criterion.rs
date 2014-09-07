@@ -39,10 +39,14 @@ macro_rules! elapsed {
 
 mod compare;
 
-pub fn summarize(id: &str) {
-    print!("Summarizing results of {}... ", id);
-    plot::summarize(id);
-    println!("DONE\n");
+pub fn summarize(id: &str, criterion: &Criterion) {
+    if criterion.plotting.is_enabled() {
+        print!("Summarizing results of {}... ", id);
+        plot::summarize(id);
+        println!("DONE\n");
+    } else {
+        println!("Plotting disabled, skipping summarization");
+    }
 }
 
 pub fn function(id: &str, f: |&mut Bencher|:'static, criterion: &Criterion) {
@@ -63,7 +67,7 @@ pub fn function_with_inputs<I: Show>(
         common(id.as_slice(), &mut Function(|b| f(b, input)), criterion);
     }
 
-    summarize(id);
+    summarize(id, criterion);
 }
 
 pub fn program(id: &str, prog: &Command, criterion: &Criterion) {
@@ -84,7 +88,7 @@ pub fn program_with_inputs<I: Show>(
         program(id.as_slice(), prog.clone().arg(format!("{}", input)), criterion);
     }
 
-    summarize(id);
+    summarize(id, criterion);
 }
 
 // Common analysis procedure
@@ -105,14 +109,16 @@ fn common(id: &str, routine: &mut Routine, criterion: &Criterion) {
     let times = times.as_slice();
 
     fs::mkdirp(&Path::new(format!(".criterion/{}/new", id)));
-    elapsed!(
-        "Plotting sample points",
-        plot::sample(times, id));
-    elapsed!(
-        "Plotting the estimated sample PDF",
-        plot::pdf(times, id));
+    if criterion.plotting.is_enabled() {
+        elapsed!(
+            "Plotting sample points",
+            plot::sample(times, id));
+        elapsed!(
+            "Plotting the estimated sample PDF",
+            plot::pdf(times, id));
+    }
 
-    let outliers = outliers(id, times);
+    let outliers = outliers(id, times, criterion);
     let slope = regression(id, pairs_f64.as_slice(), criterion);
     let mut estimates = estimates(id, times, criterion);
 
@@ -154,24 +160,28 @@ fn regression(id: &str, pairs: &[(f64, f64)], criterion: &Criterion) -> Estimate
 
     report::regression(pairs, (&lb, &ub));
 
-    elapsed!(
-        "Plotting linear regression",
-        plot::regression(
-            pairs,
-            (&lb, &ub),
-            id));
+    if criterion.plotting.is_enabled() {
+        elapsed!(
+            "Plotting linear regression",
+            plot::regression(
+                pairs,
+                (&lb, &ub),
+                id));
+    }
 
     let distribution: Vec<f64> = distribution.move_iter().map(|x| x.slope()).collect();
     let lb = lb.slope();
     let point = point.slope();
     let ub = ub.slope();
 
-    elapsed!(
-        "Plotting the distribution of the slope",
-        plot::slope(
-            distribution.as_slice(),
-            (lb, point, ub),
-            id));
+    if criterion.plotting.is_enabled() {
+        elapsed!(
+            "Plotting the distribution of the slope",
+            plot::slope(
+                distribution.as_slice(),
+                (lb, point, ub),
+                id));
+    }
 
     Estimate {
         confidence_interval: ConfidenceInterval {
@@ -185,15 +195,17 @@ fn regression(id: &str, pairs: &[(f64, f64)], criterion: &Criterion) -> Estimate
 }
 
 // Classifies the outliers in the sample
-fn outliers(id: &str, times: &[f64]) -> Outliers<f64> {
+fn outliers(id: &str, times: &[f64], criterion: &Criterion) -> Outliers<f64> {
     let outliers = Outliers::classify(times);
 
     report::outliers(&outliers);
 
     fs::save(&outliers, &Path::new(format!(".criterion/{}/new/outliers.json", id)));
-    elapsed!(
-        "Plotting the outliers",
-        plot::outliers(&outliers, times, id));
+    if criterion.plotting.is_enabled() {
+        elapsed!(
+            "Plotting the outliers",
+            plot::outliers(&outliers, times, id));
+    }
 
     outliers
 }
@@ -221,12 +233,14 @@ fn estimates(id: &str, times: &[f64], criterion: &Criterion) -> Estimates {
 
     report::abs(&estimates);
 
-    elapsed!(
-        "Plotting the distribution of the absolute statistics",
-        plot::abs_distributions(
-            &distributions,
-            &estimates,
-            id));
+    if criterion.plotting.is_enabled() {
+        elapsed!(
+            "Plotting the distribution of the absolute statistics",
+            plot::abs_distributions(
+                &distributions,
+                &estimates,
+                id));
+    }
 
     estimates
 }
