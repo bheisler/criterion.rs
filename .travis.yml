@@ -3,18 +3,25 @@ language: rust
 env:
   global:
     - secure: pQJkfFtkEXSTb/rx0rRbP9zuAbCI2NzEFNylWJlhGR3TN/bKo/RwDdl1Lc0L4JYFOxdk8hjNLSWJKA148+y4hU4rrkPX9NyfnUdbLz5vm6900PkT/aG8dceVWudkueC9fT0n4S67256DjkkTzhTwsdp8CBbrzgj/W7SAO8jZwv4=
+  matrix:
+    - WITH_GNUPLOT=true
+    - WITH_GNUPLOT=false
 
 before_install:
   # This PPA has a newer version of gnuplot
-  - sudo add-apt-repository ppa:gladky-anton/precise-backports -y
-  - sudo apt-get update -qq
+  - if [[ $WITH_GNUPLOT == 'true' ]]; then
+      sudo add-apt-repository ppa:gladky-anton/precise-backports -y;
+      sudo apt-get update -qq;
+    fi
 
 install:
-  - sudo apt-get install -qq gnuplot
+  - if [[ $WITH_GNUPLOT == 'true' ]]; then
+      sudo apt-get install -qq gnuplot;
+    fi
 
 script:
   - cargo build --verbose
-  - cargo bench --verbose -- --test
+  - cargo bench --verbose -- --test --nocapture
   - cargo doc --verbose && mv target/doc doc
   - ./check-line-length.sh
 
