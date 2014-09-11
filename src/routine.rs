@@ -23,7 +23,7 @@ pub trait Routine {
         // Solve: [d + 2*d + 3*d + ... + n*d] * met = m_ns
         let d = (2. * m_ns as f64 / met / (n * (n + 1)) as f64).ceil() as u64;
 
-        let m_iters = iter::iterate(|a| a + d, d).take(n).collect::<Vec<u64>>();
+        let m_iters = iter::iterate(d, |a| a + d).take(n).collect::<Vec<u64>>();
 
         let m_ns = m_iters.iter().map(|&x| x).sum() as f64 * met;
         println!("> Collecting {} samples in estimated {}", n, format::time(m_ns));
