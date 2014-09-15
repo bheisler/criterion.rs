@@ -10,11 +10,14 @@ use syntax::codemap::{Span, mod};
 use syntax::ext::base::{ExtCtxt, ItemModifier};
 use syntax::ext::build::AstBuilder;
 use syntax::parse::token;
+use syntax::ptr::P;
 
 #[doc(hidden)]
 #[plugin_registrar]
 pub fn plugin_registrar(reg: &mut Registry) {
-    reg.register_syntax_extension(token::intern("criterion"), ItemModifier(expand_meta_criterion));
+    reg.register_syntax_extension(
+        token::intern("criterion"),
+        ItemModifier(box expand_meta_criterion));
 }
 
 /// Expands the `#[criterion]` attribute
@@ -43,13 +46,13 @@ pub fn plugin_registrar(reg: &mut Registry) {
 fn expand_meta_criterion(
     cx: &mut ExtCtxt,
     span: Span,
-    _: Gc<MetaItem>,
-    item: Gc<Item>,
-) -> Gc<Item> {
+    _: &MetaItem,
+    item: P<Item>,
+) -> P<Item> {
     match item.node {
         ItemFn(..) => {
             // Copy original function without attributes
-            let routine = box(GC) Item { attrs: Vec::new(), .. (*item).clone() };
+            let routine = P(Item { attrs: Vec::new(), .. (*item).clone() });
 
             // `::criterion::Criterion::default()`
             let crate_ident = token::str_to_ident("criterion");
@@ -67,8 +70,8 @@ fn expand_meta_criterion(
             let bench_call = cx.stmt_expr(bench_call);
 
             // Wrap original function + bench call in a test function
-            let fn_decl = box(GC) codemap::respan(span, DeclItem(routine));
-            let inner_fn = box(GC) codemap::respan(span, StmtDecl(fn_decl, DUMMY_NODE_ID));
+            let fn_decl = P(codemap::respan(span, DeclItem(routine)));
+            let inner_fn = P(codemap::respan(span, StmtDecl(fn_decl, DUMMY_NODE_ID)));
             let body = cx.block(span, vec!(inner_fn, bench_call), None);
             let test = cx.item_fn(span, item.ident, Vec::new(), cx.ty_nil(), body);
 
@@ -77,7 +80,7 @@ fn expand_meta_criterion(
             attrs.
                 push(cx.attribute(span, cx.meta_word(span, token::intern_and_get_ident("test"))));
 
-            box(GC) Item { attrs: attrs, .. (*test).clone() }
+            P(Item { attrs: attrs, .. (*test).clone() })
         },
         _ => {
             cx.span_err(span, "#[criterion] only supported on functions");

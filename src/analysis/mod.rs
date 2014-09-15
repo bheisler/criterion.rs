@@ -4,6 +4,7 @@ use stats::regression::Slope ;
 use stats::{Sample, mod};
 use std::fmt::Show;
 use std::io::Command;
+use std::io::fs::PathExtensions;
 use time;
 
 use estimate::{

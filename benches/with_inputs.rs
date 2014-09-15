@@ -1,6 +1,7 @@
 extern crate criterion;
 
 use criterion::Criterion;
+use std::io::fs::PathExtensions;
 
 #[test]
 fn from_elem() {

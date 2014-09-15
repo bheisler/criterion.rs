@@ -6,6 +6,7 @@ use simplot::terminal::Svg;
 use stats::outliers::{Outliers, LowMild, LowSevere, HighMild, HighSevere};
 use stats::regression::Slope;
 use stats::{mean, median};
+use std::io::fs::PathExtensions;
 use std::iter;
 use test::stats::Stats;
 
