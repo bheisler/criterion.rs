@@ -73,7 +73,7 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
                 })
             }
 
-            for i in range(0, ncpus) {
+            for _ in range(0, ncpus) {
                 rx.recv();
             }
 
@@ -154,7 +154,7 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
                 })
             }
 
-            for i in range(0, ncpus) {
+            for _ in range(0, ncpus) {
                 rx.recv();
             }
 
@@ -206,7 +206,7 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
                 unsafe { v.set_len(nresamples) }
                 v
             }).collect();
-            let distribution_ptrs: Vec<*mut B> = distributions.mut_iter().map(|distribution| {
+            let distribution_ptrs: Vec<*mut B> = distributions.iter_mut().map(|distribution| {
                 distribution.as_mut_ptr()
             }).collect();
 
@@ -246,11 +246,11 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
                 })
             }
 
-            for i in range(0, ncpus) {
+            for _ in range(0, ncpus) {
                 rx.recv();
             }
 
-            distributions.move_iter().map(|distribution| {
+            distributions.into_iter().map(|distribution| {
                 Distribution::_new(distribution)
             }).collect()
         } else {
@@ -261,12 +261,12 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
             }).collect();
 
             for _ in range(0, nresamples) {
-                for (d, &statistic) in distributions.mut_iter().zip(statistics.iter()) {
+                for (d, &statistic) in distributions.iter_mut().zip(statistics.iter()) {
                     d.push(statistic(resamples.next()));
                 }
             }
 
-            distributions.move_iter().map(|distribution| {
+            distributions.into_iter().map(|distribution| {
                 Distribution::_new(distribution)
             }).collect()
         }
@@ -303,7 +303,7 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
                 unsafe { v.set_len(nresamples) }
                 v
             }).collect();
-            let d_ptrs: Vec<*mut C> = distributions.mut_iter().map(|distribution| {
+            let d_ptrs: Vec<*mut C> = distributions.iter_mut().map(|distribution| {
                 distribution.as_mut_ptr()
             }).collect();
 
@@ -359,11 +359,11 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
                 })
             }
 
-            for i in range(0, ncpus) {
+            for _ in range(0, ncpus) {
                 rx.recv();
             }
 
-            distributions.move_iter().map(|distribution| {
+            distributions.into_iter().map(|distribution| {
                 Distribution::_new(distribution)
             }).collect()
         } else {
@@ -380,13 +380,13 @@ impl <'a, A: Clone + Send> Sample<'a, A> {
                 for _ in range(0, nresamples_sqrt) {
                     let other_resample = other_resamples.next();
 
-                    for (d, &statistic) in distributions.mut_iter().zip(statistics.iter()) {
+                    for (d, &statistic) in distributions.iter_mut().zip(statistics.iter()) {
                         d.push(statistic(resample, other_resample));
                     }
                 }
             }
 
-            distributions.move_iter().map(|distribution| {
+            distributions.into_iter().map(|distribution| {
                 Distribution::_new(distribution)
             }).collect()
         }
@@ -509,7 +509,7 @@ mod test {
         TestResult::from_bool(
             // Computed the correct number of distributions
             distributions.len() == nestimators &&
-            distributions.move_iter().all(|distribution| {
+            distributions.into_iter().all(|distribution| {
                 let distribution = distribution.unwrap();
 
                 // Allocated memory in the most efficient way
@@ -584,7 +584,7 @@ mod test {
         TestResult::from_bool(
             // Computed the correct number of distributions
             distributions.len() == nestimators &&
-            distributions.move_iter().all(|distribution| {
+            distributions.into_iter().all(|distribution| {
                 let distribution = distribution.unwrap();
 
                 // Allocated memory in the most efficient way

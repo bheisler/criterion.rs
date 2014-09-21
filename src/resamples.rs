@@ -35,7 +35,7 @@ impl <'a, A: Clone> Resamples<'a, A> {
                 self.stage = Some(stage);
             },
             Some(ref mut stage) => {
-                for elem in stage.mut_iter() {
+                for elem in stage.iter_mut() {
                     *elem = self.sample[self.range.ind_sample(rng)].clone()
                 }
             },

@@ -65,7 +65,7 @@ impl<A: FloatMath + FromPrimitive + Send> TDistribution<A> {
                 })
             }
 
-            for i in range(0, ncpus) {
+            for _ in range(0, ncpus) {
                 rx.recv();
             }
 
