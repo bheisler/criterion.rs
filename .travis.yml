@@ -1,0 +1,25 @@
+language: rust
+
+env:
+  global:
+    - secure: NV6sXHnOZ2E8WV6j+a850mcwhTpg48AO93vC9oPeePJ7u2x+Q4Kmhvs/UGGcS5+GJ+1S5PLMnivG7v90e1DAxqheubVWaFPoDFMhLM9d5lvFbn9BaxM48xzBkZLTqlUM64bc7WUj+HqgTWYGAbcvlLu+tAVxu77AI6ccDqBoWi0=
+
+before_install:
+  # This PPA has a newer version of gnuplot
+  - sudo add-apt-repository ppa:gladky-anton/precise-backports -y
+  - sudo apt-get update -qq
+
+install:
+  - sudo apt-get install -qq gnuplot
+
+script:
+  - cargo build --verbose
+  - cargo test --verbose
+  - cargo doc --verbose && mv target/doc doc
+  - ./check-line-length.sh
+
+after_success:
+  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh'
+
+branches:
+  only: master
