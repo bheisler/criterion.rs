@@ -3,36 +3,41 @@ use stats::{Sample, mod};
 use time;
 
 use Criterion;
-use estimate::{Distributions, Estimate, Mean, Median, Statistic};
+use estimate::{Distributions, Estimate, Estimates, Mean, Median, Statistic};
 use format;
 use fs;
 use plot;
 use report;
 
 // Common comparison procedure
-pub fn common(id: &str, pairs: &[(f64, f64)], times: &[f64], criterion: &Criterion) {
+pub fn common(
+    id: &str,
+    pairs: &[(f64, f64)],
+    times: &[f64],
+    estimates_: &Estimates,
+    criterion: &Criterion,
+) {
     println!("{}: Comparing with previous sample", id);
 
     let base_pairs: Vec<(u64, u64)> =
         fs::load(&Path::new(format!(".criterion/{}/base/sample.json", id)));
 
+    let base_estimates: Estimates =
+        fs::load(&Path::new(format!(".criterion/{}/base/estimates.json", id)));
+
     let base_times: Vec<f64> = base_pairs.iter().map(|&(iters, elapsed)| {
         elapsed as f64 / iters as f64
     }).collect();
-    let base_times = base_times.as_slice();
+    let base_times = base_times[];
 
     fs::mkdirp(&Path::new(format!(".criterion/{}/both", id)));
     elapsed!(
-        "Plotting both sample points",
-        plot::both::points(
-            base_times,
-            times,
-            id));
-    elapsed!(
         "Plotting both linear regressions",
         plot::both::regression(
-            base_pairs.as_slice(),
+            base_pairs[],
+            &base_estimates,
             pairs,
+            estimates_,
             id));
     elapsed!(
         "Plotting both estimated PDFs",
@@ -45,7 +50,7 @@ pub fn common(id: &str, pairs: &[(f64, f64)], times: &[f64], criterion: &Criteri
     let different_mean = t_test(id, times, base_times, criterion);
     let regressed = estimates(id, times, base_times, criterion);
 
-    if different_mean && regressed.move_iter().all(|x| x) {
+    if different_mean && regressed.into_iter().all(|x| x) {
         fail!("{} has regressed", id);
     }
 }
@@ -96,15 +101,15 @@ fn estimates(id: &str, times: &[f64], base_times: &[f64], criterion: &Criterion)
     println!("> Estimating relative change of statistics");
     let distributions = elapsed!(
         "Bootstrapping the relative statistics",
-        sample.bootstrap2_many(&base_sample, rel_stats_fns.as_slice(), nresamples)
+        sample.bootstrap2_many(&base_sample, rel_stats_fns[], nresamples)
     );
 
     let points: Vec<f64> = rel_stats_fns.iter().map(|&f| {
         f(times, base_times)
     }).collect();
     let distributions: Distributions =
-        REL_STATS.iter().map(|&x| x).zip(distributions.move_iter()).collect();
-    let estimates = Estimate::new(&distributions, points.as_slice(), cl);
+        REL_STATS.iter().map(|&x| x).zip(distributions.into_iter()).collect();
+    let estimates = Estimate::new(&distributions, points[], cl);
 
     report::rel(&estimates);
 
@@ -115,7 +120,8 @@ fn estimates(id: &str, times: &[f64], base_times: &[f64], criterion: &Criterion)
         plot::rel_distributions(
             &distributions,
             &estimates,
-            id));
+            id,
+            threshold));
 
     let mut regressed = vec!();
     for (&statistic, estimate) in estimates.iter() {

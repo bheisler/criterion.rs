@@ -1,4 +1,4 @@
-#![feature(macro_rules, phase)]
+#![feature(macro_rules, phase, tuple_indexing)]
 
 //! A statistics-driven micro-benchmarking library written in Rust.
 //!
@@ -109,7 +109,7 @@ impl Criterion {
     // TODO (UFCS) remove this method and implement the `Default` trait
     #[experimental]
     pub fn default() -> Criterion {
-        let plotting = if simplot::version().is_some() {
+        let plotting = if simplot::version().is_ok() {
             Enabled
         } else {
             println!("Gnuplot not found, disabling plotting");
@@ -119,13 +119,13 @@ impl Criterion {
 
         Criterion {
             confidence_level: 0.95,
-            measurement_time_ns: 1_000_000_000,
+            measurement_time_ns: 5_000_000_000,
             noise_threshold: 0.01,
             nresamples: 100_000,
             sample_size: 100,
             plotting: plotting,
             significance_level: 0.05,
-            warm_up_time_ns: 1_000_000_000,
+            warm_up_time_ns: 3_000_000_000,
         }
     }
 

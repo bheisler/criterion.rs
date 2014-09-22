@@ -4,10 +4,9 @@ extern crate rustc;
 extern crate syntax;
 
 use rustc::plugin::Registry;
-use std::gc::{GC, Gc};
 use syntax::ast::{DUMMY_NODE_ID, DeclItem, Item, ItemFn, MetaItem, StmtDecl};
 use syntax::codemap::{Span, mod};
-use syntax::ext::base::{ExtCtxt, ItemModifier};
+use syntax::ext::base::{ExtCtxt, Modifier};
 use syntax::ext::build::AstBuilder;
 use syntax::parse::token;
 use syntax::ptr::P;
@@ -17,7 +16,7 @@ use syntax::ptr::P;
 pub fn plugin_registrar(reg: &mut Registry) {
     reg.register_syntax_extension(
         token::intern("criterion"),
-        ItemModifier(box expand_meta_criterion));
+        Modifier(box expand_meta_criterion));
 }
 
 /// Expands the `#[criterion]` attribute

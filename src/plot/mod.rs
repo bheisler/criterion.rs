@@ -1,16 +1,18 @@
-use simplot::Figure;
-use simplot::option::{Title, PointType};
-use simplot::plottype::{Lines, Points};
-use simplot::pointtype::Circle;
-use simplot::terminal::Svg;
+use simplot::axis::{BottomX, LeftY, Linear, Logarithmic, RightY};
+use simplot::color::{Color, Rgb};
+use simplot::curve::{Lines, Points};
+use simplot::errorbar::{XErrorBar, YErrorBar};
+use simplot::grid::{Major, Minor};
+use simplot::key::{Inside, Left, LeftJustified, Outside, Right, SampleText, Top};
+use simplot::{BottomXRightY, Dash, Figure, FilledCircle, Solid};
 use stats::outliers::{Outliers, LowMild, LowSevere, HighMild, HighSevere};
 use stats::regression::Slope;
-use stats::{mean, median};
+use stats::std_dev;
 use std::io::fs::PathExtensions;
-use std::iter;
+use std::{iter, str};
 use test::stats::Stats;
 
-use estimate::{Distributions, Estimate, Estimates, Mean, Median};
+use estimate::{Distributions, Estimate, Estimates, Mean, Median, mod};
 use fs;
 use kde;
 
@@ -31,62 +33,124 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
 }
 
 // TODO These should be configurable
-static FONT: &'static str = "Fantasque Sans Mono";
+static FONT: &'static str = "Helvetica";
 static KDE_POINTS: uint = 500;
 static PLOT_SIZE: (uint, uint) = (1280, 720);
+static LINEWIDTH: f64 = 2.;
+static POINT_SIZE: f64 = 0.75;
 
-pub fn pdf(sample: &[f64], id: &str) {
+static DARK_BLUE: Color = Rgb(31, 120, 180);
+static DARK_ORANGE: Color = Rgb(255, 127, 0);
+static DARK_RED: Color = Rgb(227, 26, 28);
+
+pub fn pdf(sample: &[f64], outliers: &Outliers<f64>, id: &str) {
     let path = Path::new(format!(".criterion/{}/new/pdf.svg", id));
 
-    let (xs, ys) = kde::sweep(sample, KDE_POINTS);
+    let (scale, prefix) = scale_time(sample.max());
+    let sample = sample.iter().map(|t| t * scale).collect::<Vec<_>>();
+    let sample = sample[];
 
-    let (scale, prefix) = scale_time(xs.as_slice().max());
-    let rscale = scale.recip();
-    let xs = xs.move_iter().map(|x| x * scale).collect::<Vec<f64>>();
-    let ys = ys.move_iter().map(|y| y * rscale).collect::<Vec<f64>>();
+    let (xs, ys) = kde::sweep(sample, KDE_POINTS, None);
 
-    let ys = ys.as_slice();
-    let vertical = [ys.min(), ys.max()];
-    let mean = mean(sample) * scale;
-    let median = median(sample) * scale;
-    let mean = [mean, mean];
-    let median = [median, median];
+    let (mut lost, mut lomt, mut himt, mut hist) = outliers.fences;
+    himt *= scale;
+    hist *= scale;
+    lomt *= scale;
+    lost *= scale;
 
-    Figure::new().
-        set_font(FONT).
-        set_output_file(path).
-        set_size(PLOT_SIZE).
-        set_terminal(Svg).
-        set_title(format!("{}: Probability Density Function", id.as_slice())).
-        set_xlabel(format!("Average time ({}s)", prefix)).
-        set_ylabel("Density (a.u.)").
-        plot(Lines, xs.iter(), ys.iter(), []).
-        plot(Lines, mean.iter(), vertical.iter(), [Title("Mean")]).
-        plot(Lines, median.iter(), vertical.iter(), [Title("Median")]).
-        draw();
+    let (nlos, nlom, nnao, nhim, nhis) = outliers.count;
+    let mut mild = Vec::with_capacity(nlom + nhim);
+    let mut severe = Vec::with_capacity(nlos + nhis);
+    let mut normal = Vec::with_capacity(nnao);
+
+    for (time, (&label, i)) in sample.iter().zip(outliers.labels.iter().zip(iter::count(0u, 1))) {
+        match label {
+            HighSevere | LowSevere => severe.push((i, time)),
+            LowMild | HighMild => mild.push((i, time)),
+            _ => normal.push((i, time)),
+
+        }
+    }
+
+    let vertical = [0, sample.len() - 1];
+    let zeros = iter::count(0u, 1).take(1).cycle();
+
+    let gnuplot = Figure::new().
+        font(FONT).
+        output(path).
+        size(PLOT_SIZE).
+        title(id.to_string()).
+        axis(BottomX, |a| a.
+            label(format!("Average time ({}s)", prefix)).
+            range(xs[].min(), xs[].max())).
+        axis(LeftY, |a| a.
+            label("Density (a.u.)")).
+        key(|k| k.
+            justification(LeftJustified).
+            order(SampleText).
+            position(Outside(Top, Right))).
+        filled_curve(xs.iter(), ys.iter(), zeros, |c| c.
+            color(DARK_BLUE).
+            label("PDF").
+            opacity(0.25)).
+        curve(Points, normal.iter().map(|x| x.val1()), normal.iter().map(|x| x.val0()), |c| c.
+            axes(BottomXRightY).
+            color(DARK_BLUE).
+            label("\"Clean\" sample").
+            point_type(FilledCircle).
+            point_size(POINT_SIZE)).
+        curve(Points, mild.iter().map(|x| x.val1()), mild.iter().map(|x| x.val0()), |c| c.
+            axes(BottomXRightY).
+            color(DARK_ORANGE).
+            label("Mild outliers").
+            point_type(FilledCircle).
+            point_size(POINT_SIZE)).
+        curve(Points, severe.iter().map(|x| x.val1()), severe.iter().map(|x| x.val0()), |c| c.
+            axes(BottomXRightY).
+            color(DARK_RED).
+            label("Severe outliers").
+            point_type(FilledCircle).
+            point_size(POINT_SIZE)).
+        curve(Lines, [lomt, lomt].iter(), vertical.iter(), |c| c.
+            axes(BottomXRightY).
+            color(DARK_ORANGE).
+            line_type(Dash).
+            linewidth(LINEWIDTH)).
+        curve(Lines, [himt, himt].iter(), vertical.iter(), |c| c.
+            axes(BottomXRightY).
+            color(DARK_ORANGE).
+            line_type(Dash).
+            linewidth(LINEWIDTH)).
+        curve(Lines, [lost, lost].iter(), vertical.iter(), |c| c.
+            axes(BottomXRightY).
+            color(DARK_RED).
+            line_type(Dash).
+            linewidth(LINEWIDTH)).
+        curve(Lines, [hist, hist].iter(), vertical.iter(), |c| c.
+            axes(BottomXRightY).
+            color(DARK_RED).
+            line_type(Dash).
+            linewidth(LINEWIDTH)).
+        draw().unwrap();
+
+    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
+        str::from_utf8(po.error[])
+    }))
 }
 
 pub fn regression(
     pairs: &[(f64, f64)],
+    point: &Slope<f64>,
     (lb, ub): (&Slope<f64>, &Slope<f64>),
     id: &str,
 ) {
     let path = Path::new(format!(".criterion/{}/new/regression.svg", id));
 
-    let (mut min_iters, mut min_elapsed) = (0., 0.);
     let (mut max_iters, mut max_elapsed) = (0., 0.);
 
     for &(iters, elapsed) in pairs.iter() {
-        if min_iters > iters {
-            min_iters = iters;
-        }
-
         if max_iters < iters {
             max_iters = iters;
-        }
-
-        if min_elapsed > elapsed {
-            min_elapsed = elapsed;
         }
 
         if max_elapsed < elapsed {
@@ -95,11 +159,11 @@ pub fn regression(
     }
 
     let (y_scale, prefix) = scale_time(max_elapsed);
-    let elapsed: Vec<f64> = pairs.iter().map(|&(_, y)| y as f64 * y_scale).collect();
+    let elapsed = pairs.iter().map(|&(_, y)| y as f64 * y_scale).collect::<Vec<_>>();
 
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
     let x_scale = 10f64.powi(-exponent);
-    let iters: Vec<f64> = pairs.iter().map(|&(x, _)| x as f64 * x_scale).collect();
+    let iters = pairs.iter().map(|&(x, _)| x as f64 * x_scale).collect::<Vec<_>>();
 
     let x_label = if exponent == 0 {
         "Iterations".to_string()
@@ -107,284 +171,492 @@ pub fn regression(
         format!("Iterations (x 10^{})", exponent)
     };
 
-    let x_min = min_iters * x_scale;
-    let x_max = max_iters * x_scale;
+    let lb = lb.slope() * max_iters * y_scale;
+    let point = point.slope() * max_iters * y_scale;
+    let ub = ub.slope() * max_iters * y_scale;
+    let max_iters = max_iters * x_scale;
 
-    let alpha = lb.slope();
-    let y_1 = alpha * max_iters * y_scale;
-    let y_2 = alpha * min_iters * y_scale;
+    let gnuplot = Figure::new().
+        font(FONT).
+        output(path).
+        size(PLOT_SIZE).
+        title(id.to_string()).
+        key(|k| k.
+            justification(LeftJustified).
+            order(SampleText).
+            position(Inside(Top, Left))).
+        axis(BottomX, |a| a.
+             grid(Major, |g| g.
+                 show()).
+             // FIXME (unboxed closures) Remove cloning
+            label(x_label.to_string())).
+        axis(LeftY, |a| a.
+             grid(Major, |g| g.
+                 show()).
+            label(format!("Total time ({}s)", prefix))).
+        curve(Points, iters.iter(), elapsed.iter(), |c| c.
+            color(DARK_BLUE).
+            label("Sample").
+            point_type(FilledCircle).
+            point_size(0.5)).
+        curve(Lines, [0., max_iters].iter(), [0., point].iter(), |c| c.
+            color(DARK_BLUE).
+            label("Linear regression").
+            line_type(Solid).
+            linewidth(LINEWIDTH)).
+        filled_curve([0., max_iters].iter(), [0., lb].iter(), [0., ub].iter(), |c| c.
+            color(DARK_BLUE).
+            label("Confidence interval").
+            opacity(0.25)).
+        draw().unwrap();
 
-    let alpha = ub.slope();
-    let y_3 = alpha * min_iters * y_scale;
-    let y_4 = alpha * max_iters * y_scale;
-
-    let xs = [x_max, x_min, x_min, x_max];
-    let ys = [y_1, y_2, y_3, y_4];
-
-    Figure::new().
-        set_font(FONT).
-        set_output_file(path).
-        set_size(PLOT_SIZE).
-        set_terminal(Svg).
-        set_title(format!("{}: Linear regression", id.as_slice())).
-        set_xlabel(x_label).
-        set_ylabel(format!("Total time ({}s)", prefix)).
-        plot(Points, iters.iter(), elapsed.iter(), [PointType(Circle)]).
-        plot(Lines, xs.iter(), ys.iter(), [Title("Confidence Interval")]).
-        draw();
-}
-
-pub fn slope(distribution: &[f64], (lb, point, ub): (f64, f64, f64), id: &str) {
-    let path = Path::new(format!(".criterion/{}/new/slope.svg", id));
-
-    let (xs, ys) = kde::sweep(distribution, KDE_POINTS);
-
-    let (scale, prefix) = scale_time(xs.as_slice().max());
-    let rscale = scale.recip();
-    let xs = xs.move_iter().map(|x| x * scale).collect::<Vec<f64>>();
-    let ys = ys.move_iter().map(|y| y * rscale).collect::<Vec<f64>>();
-    let ys = ys.as_slice();
-
-    let lb = lb * scale;
-    let point = point * scale;
-    let ub = ub * scale;
-    let vertical = [ys.min(), ys.max()];
-
-    Figure::new().
-        set_font(FONT).
-        set_output_file(path).
-        set_size(PLOT_SIZE).
-        set_terminal(Svg).
-        set_title(format!("{}: Bootstrap distribution of the slope", id)).
-        set_xlabel(format!("Average time ({}s)", prefix)).
-        set_ylabel("Density (a.u.)").
-        plot(Lines, xs.iter(), ys.iter(), []).
-        plot(Lines, [point, point].iter(), vertical.iter(), [Title("Point estimate")]).
-        plot(Lines,
-             [lb, lb, ub, ub].iter(),
-             vertical.iter().rev().chain(vertical.iter()),
-             [Title("Confidence Interval")]).
-        draw();
-}
-
-pub fn sample(sample: &[f64], id: &str) {
-    let path = Path::new(format!(".criterion/{}/new/sample.svg", id));
-
-    let (scale, prefix) = scale_time(sample.max());
-    let sample = sample.iter().map(|x| x * scale).collect::<Vec<f64>>();
-
-    Figure::new().
-        set_font(FONT).
-        set_output_file(path).
-        set_size(PLOT_SIZE).
-        set_terminal(Svg).
-        set_title(format!("{}: Sample points", id.as_slice())).
-        set_xlabel(format!("Average time ({}s)", prefix)).
-        plot(Points, sample.iter(), iter::count(0u, 1), [PointType(Circle)]).
-        draw();
+    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
+        str::from_utf8(po.error[])
+    }))
 }
 
 pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, id: &str) {
-    for (&statistic, distribution) in distributions.iter() {
+    let gnuplots = distributions.iter().map(|(&statistic, distribution)| {
         let estimate = estimates[statistic];
 
-        let (xs, ys) = kde::sweep(distribution.as_slice(), KDE_POINTS);
-
-        let (scale, prefix) = scale_time(xs.as_slice().max());
-        let rscale = scale.recip();
-        let xs = xs.move_iter().map(|x| x * scale).collect::<Vec<f64>>();
-        let ys = ys.move_iter().map(|y| y * rscale).collect::<Vec<f64>>();
-
-        let ys = ys.as_slice();
-        let vertical = [ys.min(), ys.max()];
-
         let ci = estimate.confidence_interval;
+        let (lb, ub) = (ci.lower_bound, ci.upper_bound);
+
+        let start = lb - (ub - lb) / 9.;
+        let end = ub + (ub - lb) / 9.;
+        let (xs, ys) = kde::sweep(distribution.as_slice(), KDE_POINTS, Some((start, end)));
+
+        let (scale, prefix) = scale_time(xs[].max());
+        let rscale = scale.recip();
+        let xs = xs.into_iter().map(|x| x * scale).collect::<Vec<_>>();
+        let ys = ys.into_iter().map(|y| y * rscale).collect::<Vec<_>>();
+
+        let (lb, ub) = (lb * scale, ub * scale);
         let p = estimate.point_estimate * scale;
-        let (lb, ub) = (ci.lower_bound * scale, ci.upper_bound * scale);
+        let n_p = xs.iter().enumerate().filter(|&(_, &x)| x >= p).next().unwrap().0;
+        let y_p =
+            ys[n_p - 1] + (ys[n_p] - ys[n_p - 1]) / (xs[n_p] - xs[n_p - 1]) * (p - xs[n_p - 1]);
+
+        let zero = iter::count(0u, 1).take(1).cycle();
+
+        let start = xs.iter().enumerate().filter(|&(_, &x)| x >= lb).next().unwrap().0;
+        let end = xs.iter().enumerate().rev().filter(|&(_, &x)| x <= ub).next().unwrap().0;
+        let len = end - start;
 
         Figure::new().
-            set_font(FONT).
-            set_output_file(Path::new(format!(".criterion/{}/new/{}.svg", id, statistic))).
-            set_size(PLOT_SIZE).
-            set_terminal(Svg).
-            set_title(format!("{}: Bootstrap distribution of the {}", id, statistic)).
-            set_xlabel(format!("Average time ({}s)", prefix)).
-            set_ylabel("Density (a.u.)").
-            plot(Lines, xs.iter(), ys.iter(), []).
-            plot(Lines, [p, p].iter(), vertical.iter(), [Title("Point estimate")]).
-            plot(Lines,
-                 [lb, lb, ub, ub].iter(),
-                 vertical.iter().rev().chain(vertical.iter()),
-                 [Title("Confidence Interval")]).
-            draw();
+            font(FONT).
+            output(Path::new(format!(".criterion/{}/new/{}.svg", id, statistic))).
+            size(PLOT_SIZE).
+            title(format!("{}: {}", id, statistic)).
+            axis(BottomX, |a| a.
+                label(format!("Average time ({}s)", prefix)).
+                range(xs[].min(), xs[].max())).
+            axis(LeftY, |a| a.
+                label("Density (a.u.)")).
+            key(|k| k.
+                justification(LeftJustified).
+                order(SampleText).
+                position(Outside(Top, Right))).
+            curve(Lines, xs.iter(), ys.iter(), |c| c.
+                color(DARK_BLUE).
+                label("Bootstrap distribution").
+                line_type(Solid).
+                linewidth(LINEWIDTH)).
+            filled_curve(xs.iter().skip(start).take(len), ys.iter().skip(start), zero, |c| c.
+                color(DARK_BLUE).
+                label("Confidence interval").
+                opacity(0.25)).
+            curve(Lines, [p, p].iter(), [0., y_p].iter(), |c| c.
+                color(DARK_BLUE).
+                label("Point estimate").
+                line_type(Dash).
+                linewidth(LINEWIDTH)).
+            draw().unwrap()
+    }).collect::<Vec<_>>();
+
+    for gnuplot in gnuplots.into_iter() {
+        assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
+            str::from_utf8(po.error[])
+        }))
     }
 }
 
-// TODO DRY: This is very similar to the `time_distributions` method
+// TODO DRY: This is very similar to the `abs_distributions` method
 pub fn rel_distributions(
     distributions: &Distributions,
     estimates: &Estimates,
     id: &str,
+    nt: f64,
 ) {
-    for (&statistic, distribution) in distributions.iter() {
+    let mut figure = Figure::new();
+
+    figure.
+        font(FONT).
+        size(PLOT_SIZE).
+        axis(LeftY, |a| a.
+            label("Density (a.u.)")).
+        key(|k| k.
+            justification(LeftJustified).
+            order(SampleText).
+            position(Outside(Top, Right)));
+
+    let gnuplots = distributions.iter().map(|(&statistic, distribution)| {
         let path = Path::new(format!(".criterion/{}/change/{}.svg", id, statistic));
 
-        let (xs, ys) = kde::sweep(distribution.as_slice(), KDE_POINTS);
-        let xs: Vec<f64> = xs.move_iter().map(|x| x * 100.0).collect();
-        let ys = ys.as_slice();
-        let vertical = [ys.min(), ys.max()];
-
         let estimate = estimates[statistic];
-        let point = estimate.point_estimate * 100.0;
         let ci = estimate.confidence_interval;
-        let (lb, ub) = (ci.lower_bound * 100.0, ci.upper_bound * 100.0);
+        let (lb, ub) = (ci.lower_bound, ci.upper_bound);
 
-        Figure::new().
-            set_font(FONT).
-            set_output_file(path).
-            set_size(PLOT_SIZE).
-            set_terminal(Svg).
-            set_title(format!("{}: Bootstrap distribution of the {}", id, statistic)).
-            set_xlabel("Relative change (%)").
-            set_ylabel("Density (a.u.)").
-            plot(Lines, xs.iter(), ys.iter(), []).
-            plot(Lines, [point, point].iter(), vertical.iter(), [Title("Point estimate")]).
-            plot(Lines,
-                 [lb, lb, ub, ub].iter(),
-                 vertical.iter().rev().chain(vertical.iter()),
-                 [Title("Confidence Interval")]).
-            draw();
+        let start = lb - (ub - lb) / 9.;
+        let end = ub + (ub - lb) / 9.;
+        let (xs, ys) = kde::sweep(distribution.as_slice(), KDE_POINTS, Some((start, end)));
+        let xs = xs.into_iter().map(|x| x * 100.).collect::<Vec<_>>();
+        let xs = xs[];
+        let ys = ys[];
+
+        let nt = nt * 100.;
+        let (lb, ub) = (lb * 100., ub * 100.);
+        let p = estimate.point_estimate * 100.;
+        let n_p = xs.iter().enumerate().filter(|&(_, &x)| x >= p).next().unwrap().0;
+        let y_p =
+            ys[n_p - 1] + (ys[n_p] - ys[n_p - 1]) / (xs[n_p] - xs[n_p - 1]) * (p - xs[n_p - 1]);
+
+        let one = iter::count(1u, 2).take(1).cycle();
+        let zero = iter::count(0u, 1).take(1).cycle();
+
+        let start = xs.iter().enumerate().filter(|&(_, &x)| x >= lb).next().unwrap().0;
+        let end = xs.iter().enumerate().rev().filter(|&(_, &x)| x <= ub).next().unwrap().0;
+        let len = end - start;
+
+        let x_min = xs.min();
+        let x_max = xs.max();
+
+        let (fc_start, fc_end) = if nt < x_min || -nt > x_max {
+            let middle = (x_min + x_max) / 2.;
+
+            (middle, middle)
+        } else {
+            (if -nt < x_min { x_min } else { -nt }, if nt > x_max { x_max } else { nt })
+        };
+
+        figure.clone().
+            output(path).
+            title(format!("{}: {}", id, statistic)).
+            axis(BottomX, |a| a.
+                label("Relative change (%)").
+                range(x_min, x_max)).
+            curve(Lines, xs.iter(), ys.iter(), |c| c.
+                color(DARK_BLUE).
+                label("Bootstrap distribution").
+                line_type(Solid).
+                linewidth(LINEWIDTH)).
+            filled_curve(xs.iter().skip(start).take(len), ys.iter().skip(start), zero, |c| c.
+                color(DARK_BLUE).
+                label("Confidence interval").
+                opacity(0.25)).
+            curve(Lines, [p, p].iter(), [0., y_p].iter(), |c| c.
+                color(DARK_BLUE).
+                label("Point estimate").
+                line_type(Dash).
+                linewidth(LINEWIDTH)).
+            filled_curve([fc_start, fc_end].iter(), one, zero, |c| c.
+                axes(BottomXRightY).
+                color(DARK_RED).
+                label("Noise threshold").
+                opacity(0.1)).
+            draw().unwrap()
+    }).collect::<Vec<_>>();
+
+    // FIXME This sometimes fails!
+    for gnuplot in gnuplots.into_iter() {
+        assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
+            str::from_utf8(po.error[])
+        }))
     }
 }
 
 pub fn t_test(t: f64, distribution: &[f64], id: &str) {
     let path = Path::new(format!(".criterion/{}/change/t-test.svg", id));
 
-    let (xs, ys) = kde::sweep(distribution, KDE_POINTS);
-    let ys = ys.as_slice();
-    let vertical = [ys.min(), ys.max()];
+    let (xs, ys) = kde::sweep(distribution, KDE_POINTS, None);
+    let ys = ys[];
+    let zero = iter::count(0u, 1).take(1).cycle();
 
-    Figure::new().
-        set_font(FONT).
-        set_output_file(path).
-        set_size(PLOT_SIZE).
-        set_terminal(Svg).
-        set_title(format!("{}: Welch's t test", id)).
-        set_xlabel("t score").
-        set_ylabel("Density").
-        plot(Lines, xs.iter(), ys.iter(), [Title("t distribution")]).
-        plot(Lines, [t, t].iter(), vertical.iter(), [Title("t statistic")]).
-        draw();
+    let gnuplot = Figure::new().
+        font(FONT).
+        output(path).
+        size(PLOT_SIZE).
+        title(format!("{}: Welch t test", id)).
+        axis(BottomX, |a| a.
+            label("t score")).
+        axis(LeftY, |a| a.
+            label("Density")).
+        key(|k| k.
+            justification(LeftJustified).
+            order(SampleText).
+            position(Outside(Top, Right))).
+        filled_curve(xs.iter(), ys.iter(), zero, |c| c.
+            color(DARK_BLUE).
+            label("t distribution").
+            opacity(0.25)).
+        curve(Lines, [t, t].iter(), [0u, 1].iter(), |c| c.
+            axes(BottomXRightY).
+            color(DARK_BLUE).
+            label("t statistic").
+            line_type(Solid).
+            linewidth(LINEWIDTH)).
+        draw().unwrap();
+
+    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
+        str::from_utf8(po.error[])
+    }))
 }
 
-pub fn outliers(outliers: &Outliers<f64>, times: &[f64], id: &str) {
-    let path = Path::new(format!(".criterion/{}/new/outliers.svg", id));
+fn log_ceil(x: f64) -> f64 {
+    let t = (10f64).powi(x.log10().floor() as i32);
+    (x / t).ceil() * t
+}
 
-    let (mut lost, mut lomt, mut himt, mut hist) = outliers.fences;
-    let (nlos, nlom, nnao, nhim, nhis) = outliers.count;
-
-    let (scale, prefix) = scale_time(times.max());
-    let mut mild = Vec::with_capacity(nlom + nhim);
-    let mut severe = Vec::with_capacity(nlos + nhis);
-    let mut normal = Vec::with_capacity(nnao);
-
-    for (time, (&label, i)) in
-        times.iter().map(|x| x * scale).zip(outliers.labels.iter().zip(iter::count(0u, 1)))
-    {
-        match label {
-            HighSevere | LowSevere => severe.push((i, time)),
-            LowMild | HighMild => mild.push((i, time)),
-            _ => normal.push((i, time)),
-
-        }
-    }
-    himt *= scale;
-    hist *= scale;
-    lomt *= scale;
-    lost *= scale;
-
-    let n = times.len();
-    let y = [n, 0, 0, n];
-
-    Figure::new().
-        set_font(FONT).
-        set_output_file(path).
-        set_size(PLOT_SIZE).
-        set_terminal(Svg).
-        set_title(format!("{}: Classification of outliers", id)).
-        set_xlabel(format!("Average time ({}s)", prefix)).
-        plot(Lines, [lomt, lomt, himt, himt].iter(), y.iter(), []).
-        plot(Lines, [lost, lost, hist, hist].iter(), y.iter(), []).
-        plot(Points, mild.iter().map(|x| x.val1()), mild.iter().map(|x| x.val0()),
-             [PointType(Circle), Title("Mild")]).
-        plot(Points, normal.iter().map(|x| x.val1()), normal.iter().map(|x| x.val0()),
-             [PointType(Circle)]).
-        plot(Points, severe.iter().map(|x| x.val1()), severe.iter().map(|x| x.val0()),
-             [PointType(Circle), Title("Severe")]).
-        draw();
+fn log_floor(x: f64) -> f64 {
+    let t = (10f64).powi(x.log10().floor() as i32);
+    (x / t).floor() * t
 }
 
 pub fn summarize(id: &str) {
+    fn diff(s: &[f64]) -> Vec<f64> {
+        s.windows(2).map(|w| w[1] - w[0]).collect()
+    }
+
     let dir = Path::new(".criterion").join(id);
     let contents = fs::ls(&dir);
 
-    // TODO Specially handle inputs that can be parsed as `int`s
-    // TODO Need better way to handle log scale triggering
+    // XXX Plot both summaries?
     for &sample in ["new", "base"].iter() {
-        for &statistic in [Mean, Median].iter() {
-            let mut estimates_pairs = Vec::new();
-            for entry in contents.iter().filter(|entry| {
-                entry.is_dir() && entry.filename_str() != Some("summary")
-            }) {
-                let input = entry.filename_str().unwrap();
+        let mut benches = contents.iter().filter_map(|entry| {
+            if entry.is_dir() && entry.filename_str() != Some("summary") {
+                let label = entry.filename_str().unwrap();
                 let path = entry.join(sample).join("estimates.json");
-                match Estimate::load(&path) {
-                    Some(estimates) => estimates_pairs.push((estimates, input)),
-                    _ => {}
-                }
-            }
 
-            if estimates_pairs.is_empty() {
-                continue;
+                Estimate::load(&path).map(|estimates| {
+                    (label, from_str::<uint>(label), estimates)
+                })
+            } else {
+                None
             }
+        }).collect::<Vec<_>>();
 
-            estimates_pairs.sort_by(|&(ref a, _), &(ref b, _)| {
-                let a = a[statistic].point_estimate;
-                let b = b[statistic].point_estimate;
-                b.partial_cmp(&a).unwrap()
+        if benches.is_empty() {
+            continue;
+        }
+
+        fs::mkdirp(&dir.join(format!("summary/{}", sample)));
+
+        let gnuplots: Vec<_> = if benches.iter().all(|&(_, input, _)| input.is_some()) {
+            // TODO trendline
+            let mut benches = benches.into_iter().map(|(label, input, estimates)| {
+                (label, input.unwrap(), estimates)
+            }).collect::<Vec<_>>();
+
+            benches.sort_by(|&(_, a, _), &(_, b, _)| {
+                a.cmp(&b)
             });
 
-            let inputs = estimates_pairs.iter().map(|&(_, input)| input);
-            let points = estimates_pairs.iter().map(|&(ref estimates, _)| {
-                estimates[statistic].point_estimate
-            }).collect::<Vec<f64>>();
-            let lbs = estimates_pairs.iter().map(|&(ref estimates, _)| {
-                estimates[statistic].confidence_interval.lower_bound
-            }).collect::<Vec<f64>>();
-            let ubs = estimates_pairs.iter().map(|&(ref estimates, _)| {
-                estimates[statistic].confidence_interval.upper_bound
-            }).collect::<Vec<f64>>();
+            [Mean, Median, estimate::Slope].iter().map(|&statistic| {
+                let points = benches.iter().map(|&(_, _, ref estimates)| {
+                    estimates[statistic].point_estimate
+                }).collect::<Vec<_>>();
+                let lbs = benches.iter().map(|&(_, _, ref estimates)| {
+                    estimates[statistic].confidence_interval.lower_bound
+                }).collect::<Vec<_>>();
+                let ubs = benches.iter().map(|&(_, _, ref estimates)| {
+                    estimates[statistic].confidence_interval.upper_bound
+                }).collect::<Vec<_>>();
 
-            let (scale, prefix) = scale_time(ubs.as_slice().max());
-            let points = points.iter().map(|x| x * scale).collect::<Vec<f64>>();
-            let lbs = lbs.iter().map(|x| x * scale);
-            let ubs = ubs.iter().map(|x| x * scale);
+                // XXX scale inputs?
+                let inputs = benches.iter().map(|&(_, input, _)| input).collect::<Vec<_>>();
 
-            fs::mkdirp(&dir.join(format!("summary/{}", sample)));
-            Figure::new().
-                set_font(FONT).
-                set_logscale((points[0] / *points.last().unwrap() > 50.0, false)).
-                set_output_file(dir.join(format!("summary/{}/{}s.svg", sample, statistic))).
-                set_size(PLOT_SIZE).
-                set_terminal(Svg).
-                set_title(format!("{}: Estimates of the {}s", id, statistic)).
-                set_ylabel("Input").
-                set_ytics(inputs, iter::count(0u, 1)).
-                set_yrange((-0.5, estimates_pairs.len() as f64 - 0.5)).
-                set_xlabel(format!("Average time ({}s)", prefix)).
-                xerrorbars(
-                    points.iter(), iter::count(0u, 1), lbs, ubs, [Title("Confidence Interval")]).
-                draw();
+                let (scale, prefix) = scale_time(ubs[].max());
+                let points = points.iter().map(|x| x * scale).collect::<Vec<_>>();
+                let lbs = lbs.iter().map(|x| x * scale).collect::<Vec<_>>();
+                let ubs = ubs.iter().map(|x| x * scale).collect::<Vec<_>>();
+
+                // XXX Logscale triggering may need tweaking
+                let xscale = if inputs.len() < 3 {
+                    Linear
+                } else {
+                    let inputs = inputs.iter().map(|&x| x as f64).collect::<Vec<_>>();
+                    let linear = std_dev(diff(inputs[])[]);
+                    let log = {
+                        let v = inputs.iter().map(|x| x.ln()).collect::<Vec<_>>();
+                        std_dev(diff(v[])[])
+                    };
+
+                    if linear < log {
+                        Linear
+                    } else {
+                        Logarithmic
+                    }
+                };
+
+                let yscale = if points.len() < 3 {
+                    Linear
+                } else {
+                    let linear = std_dev(diff(points[])[]);
+                    let log = {
+                        let v = points.iter().map(|x| x.ln()).collect::<Vec<_>>();
+                        std_dev(diff(v[])[])
+                    };
+
+                    if linear < log {
+                        Linear
+                    } else {
+                        Logarithmic
+                    }
+                };
+
+                let points = points.iter();
+                // TODO Review axis scaling
+                Figure::new().
+                    font(FONT).
+                    output(dir.join(format!("summary/{}/{}s.svg", sample, statistic))).
+                    size(PLOT_SIZE).
+                    title(format!("{}", id)).
+                    axis(BottomX, |a| a.
+                        grid(Major, |g| g.
+                            show()).
+                        grid(Minor, |g| match xscale {
+                            Linear => g.hide(),
+                            Logarithmic => g.show(),
+                        }).
+                        label("Input").
+                        scale(xscale)).
+                    axis(BottomX, |a| match xscale {
+                        Linear => a,
+                        Logarithmic => {
+                            let start = inputs[0] as f64;
+                            let end = *inputs.last().unwrap() as f64;
+
+                            a.range(log_floor(start), log_ceil(end))
+                        },
+                    }).
+                    axis(LeftY, |a| a.
+                        grid(Major, |g| g.
+                            show()).
+                        grid(Minor, |g| match xscale {
+                            Linear => g.hide(),
+                            Logarithmic => g.show(),
+                        }).
+                        label(format!("Average time ({}s)", prefix)).
+                        scale(yscale)).
+                    axis(LeftY, |a| match yscale {
+                        Linear => a,
+                        Logarithmic => {
+                            let start = lbs[].min();
+                            let end = ubs[].max();
+
+                            a.range(log_floor(start), log_ceil(end))
+                        },
+                    }).
+                    key(|k| k.
+                        justification(LeftJustified).
+                        order(SampleText).
+                        position(Inside(Top, Left))).
+                    error_bar(YErrorBar, inputs.iter(), points, lbs.iter(), ubs.iter(), |eb| eb.
+                        label(format!("{}", statistic)).
+                        linewidth(LINEWIDTH).
+                        point_size(POINT_SIZE).
+                        point_type(FilledCircle)).
+                    draw().unwrap()
+            }).collect()
+        } else {
+            [Mean, Median, estimate::Slope].iter().map(|&statistic| {
+                benches.sort_by(|&(_, _, ref a), &(_, _, ref b)| {
+                    let a = a[statistic].point_estimate;
+                    let b = b[statistic].point_estimate;
+                    b.partial_cmp(&a).unwrap()
+                });
+
+                let points = benches.iter().map(|&(_, _, ref estimates)| {
+                    estimates[statistic].point_estimate
+                }).collect::<Vec<_>>();
+                let lbs = benches.iter().map(|&(_, _, ref estimates)| {
+                    estimates[statistic].confidence_interval.lower_bound
+                }).collect::<Vec<_>>();
+                let ubs = benches.iter().map(|&(_, _, ref estimates)| {
+                    estimates[statistic].confidence_interval.upper_bound
+                }).collect::<Vec<_>>();
+
+                let (scale, prefix) = scale_time(ubs[].max());
+                let points = points.iter().map(|x| x * scale).collect::<Vec<_>>();
+                let lbs = lbs.iter().map(|x| x * scale).collect::<Vec<_>>();
+                let ubs = ubs.iter().map(|x| x * scale).collect::<Vec<_>>();
+
+                let xscale = if points.len() < 3 {
+                    Linear
+                } else {
+                    let linear = std_dev(diff(points[])[]);
+                    let log = {
+                        let v = points.iter().map(|x| x.ln()).collect::<Vec<_>>();
+                        std_dev(diff(v[])[])
+                    };
+
+                    if linear < log {
+                        Linear
+                    } else {
+                        Logarithmic
+                    }
+                };
+
+                let min = *points.last().unwrap();
+                let rel = points.iter().map(|x| format!("{:.02}", x / min)).collect::<Vec<_>>();
+
+                let points = points.iter();
+                let y = iter::count(0.5, 1f64);
+                // TODO Review axis scaling
+                Figure::new().
+                    font(FONT).
+                    output(dir.join(format!("summary/{}/{}s.svg", sample, statistic))).
+                    size(PLOT_SIZE).
+                    title(format!("{}: Estimates of the {}s", id, statistic)).
+                    axis(BottomX, |a| a.
+                        grid(Major, |g| g.
+                            show()).
+                        grid(Minor, |g| match xscale {
+                            Linear => g.hide(),
+                            Logarithmic => g.show(),
+                        }).
+                        label(format!("Average time ({}s)", prefix)).
+                        scale(xscale)).
+                    axis(BottomX, |a| match xscale {
+                        Linear => a,
+                        Logarithmic => {
+                            let start = lbs[].min();
+                            let end = ubs[].max();
+
+                            a.range(log_floor(start), log_ceil(end))
+                        },
+                    }).
+                    axis(LeftY, |a| a.
+                        label("Input").
+                        range(0., benches.len() as f64).
+                        tics(iter::count(0.5, 1f64), benches.iter().map(|&(label, _, _)| label))).
+                    axis(RightY, |a| a.
+                        label("Relative time").
+                        range(0., benches.len() as f64).
+                        tics(iter::count(0.5, 1f64), rel.iter().map(|x| x.as_slice()))).
+                    error_bar(XErrorBar, points, y, lbs.iter(), ubs.iter(), |eb| eb.
+                        label("Confidence Interval").
+                        linewidth(LINEWIDTH).
+                        point_type(FilledCircle).
+                        point_size(POINT_SIZE)).
+                    draw().unwrap()
+            }).collect()
+        };
+
+        for gnuplot in gnuplots.into_iter() {
+            assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
+                str::from_utf8(po.error[])
+            }))
         }
     }
 }
