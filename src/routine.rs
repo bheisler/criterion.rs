@@ -29,7 +29,7 @@ pub trait Routine {
         println!("> Collecting {} samples in estimated {}", n, format::time(m_ns));
         let m_elapsed = self.bench(m_iters.iter().map(|&x| x));
 
-        m_iters.move_iter().zip(m_elapsed.move_iter()).collect()
+        m_iters.into_iter().zip(m_elapsed.into_iter()).collect()
     }
 }
 

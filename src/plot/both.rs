@@ -1,16 +1,25 @@
-use simplot::Figure;
-use simplot::option::{Title, PointType};
-use simplot::plottype::{Lines, Points};
-use simplot::pointtype::Circle;
-use simplot::terminal::Svg;
-use std::iter;
+use simplot::axis::{BottomX, LeftY, RightY};
+use simplot::curve::Lines;
+use simplot::grid::Major;
+use simplot::key::{Inside, Left, LeftJustified, Outside, Right, SampleText, Top};
+use simplot::{Figure, Solid};
+use stats::ConfidenceInterval;
+use std::str;
 use test::stats::Stats;
 
+use estimate::{Estimate, Estimates, Slope};
 use kde;
 use super::scale_time;
+use super::{DARK_BLUE, DARK_RED};
 use super::{FONT, KDE_POINTS, PLOT_SIZE};
 
-pub fn regression(base: &[(u64, u64)], new: &[(f64, f64)], id: &str) {
+pub fn regression(
+    base: &[(u64, u64)],
+    base_estimates: &Estimates,
+    new: &[(f64, f64)],
+    new_estimates: &Estimates,
+    id: &str,
+) {
     let path = Path::new(format!(".criterion/{}/both/regression.svg", id));
 
     let (mut max_iters, mut max_elapsed) = (0., 0.);
@@ -36,13 +45,9 @@ pub fn regression(base: &[(u64, u64)], new: &[(f64, f64)], id: &str) {
     }
 
     let (y_scale, prefix) = scale_time(max_elapsed);
-    let base_elapsed: Vec<f64> = base.iter().map(|&(_, y)| y as f64 * y_scale).collect();
-    let new_elapsed: Vec<f64> = new.iter().map(|&(_, y)| y * y_scale).collect();
 
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
     let x_scale = 10f64.powi(-exponent);
-    let base_iters: Vec<f64> = base.iter().map(|&(x, _)| x as f64 * x_scale).collect();
-    let new_iters: Vec<f64> = new.iter().map(|&(x, _)| x * x_scale).collect();
 
     let x_label = if exponent == 0 {
         "Iterations".to_string()
@@ -50,61 +55,107 @@ pub fn regression(base: &[(u64, u64)], new: &[(f64, f64)], id: &str) {
         format!("Iterations (x 10^{})", exponent)
     };
 
-    Figure::new().
-        set_font(FONT).
-        set_output_file(path).
-        set_size(PLOT_SIZE).
-        set_terminal(Svg).
-        set_title(format!("{}: Linear regression", id)).
-        set_xlabel(x_label).
-        set_ylabel(format!("Total time ({}s)", prefix)).
-        plot(Points, base_iters.iter(), base_elapsed.iter(), [PointType(Circle), Title("Base")]).
-        plot(Points, new_iters.iter(), new_elapsed.iter(), [PointType(Circle), Title("New")]).
-        draw();
+    let Estimate {
+        confidence_interval: ConfidenceInterval { lower_bound: lb, upper_bound: ub, .. },
+        point_estimate: point,
+        ..
+    } = base_estimates[Slope];
+    let base_lb = lb * max_iters * y_scale;
+    let base_point = point * max_iters * y_scale;
+    let base_ub = ub * max_iters * y_scale;
+
+    let Estimate {
+        confidence_interval: ConfidenceInterval { lower_bound: lb, upper_bound: ub, .. },
+        point_estimate: point,
+        ..
+    } = new_estimates[Slope];
+    let new_lb = lb * max_iters * y_scale;
+    let new_point = point * max_iters * y_scale;
+    let new_ub = ub * max_iters * y_scale;
+
+    let max_iters = max_iters * x_scale;
+
+    let gnuplot = Figure::new().
+        font(FONT).
+        output(path).
+        size(PLOT_SIZE).
+        title(id.to_string()).
+        axis(BottomX, |a| a.
+            grid(Major, |g| g.
+                show()).
+             // FIXME (unboxed closures) remove cloning
+            label(x_label.to_string())).
+        axis(LeftY, |a| a.
+            grid(Major, |g| g.
+                show()).
+            label(format!("Total time ({}s)", prefix))).
+        key(|k| k.
+            justification(LeftJustified).
+            order(SampleText).
+            position(Inside(Top, Left))).
+        filled_curve([0., max_iters].iter(), [0., base_lb].iter(), [0., base_ub].iter(), |c| c.
+            color(DARK_RED).
+            opacity(0.25)).
+        filled_curve([0., max_iters].iter(), [0., new_lb].iter(), [0., new_ub].iter(), |c| c.
+            color(DARK_BLUE).
+            opacity(0.25)).
+        curve(Lines, [0., max_iters].iter(), [0., base_point].iter(), |c| c.
+            color(DARK_RED).
+            label("Base sample").
+            line_type(Solid).
+            linewidth(2.)).
+        curve(Lines, [0., max_iters].iter(), [0., new_point].iter(), |c| c.
+            color(DARK_BLUE).
+            label("New sample").
+            line_type(Solid).
+            linewidth(2.)).
+        draw().unwrap();
+
+    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
+        str::from_utf8(po.error[])
+    }))
 }
 
 pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
     let path = Path::new(format!(".criterion/{}/both/pdf.svg", id));
 
-    let (base_xs, base_ys) = kde::sweep(base, KDE_POINTS);
-    let (new_xs, new_ys) = kde::sweep(new, KDE_POINTS);
+    let (base_xs, base_ys) = kde::sweep(base, KDE_POINTS, None);
+    let (new_xs, new_ys) = kde::sweep(new, KDE_POINTS, None);
 
-    let (scale, prefix) =
-        scale_time([base_xs.as_slice().max(), new_xs.as_slice().max()].as_slice().max());
+    let (scale, prefix) = scale_time([base_xs[].max(), new_xs[].max()][].max());
     let rscale = scale.recip();
     let base_xs = base_xs.iter().map(|x| x * scale);
     let base_ys = base_ys.iter().map(|x| x * rscale);
     let new_xs = new_xs.iter().map(|x| x * scale);
     let new_ys = new_ys.iter().map(|x| x * rscale);
+    let zeros = range(0u, 1).take(1).cycle();
 
-    Figure::new().
-        set_font(FONT).
-        set_output_file(path).
-        set_size(PLOT_SIZE).
-        set_terminal(Svg).
-        set_title(format!("{}: Probability Density Functions", id)).
-        set_xlabel(format!("Average time ({}s)", prefix)).
-        set_ylabel("Density (a.u.)").
-        plot(Lines, base_xs, base_ys, [Title("Base")]).
-        plot(Lines, new_xs, new_ys, [Title("New")]).
-        draw();
-}
+    let gnuplot = Figure::new().
+        font(FONT).
+        output(path).
+        size(PLOT_SIZE).
+        title(id.to_string()).
+        axis(BottomX, |a| a.
+            label(format!("Average time ({}s)", prefix))).
+        axis(LeftY, |a| a.
+            label("Density (a.u.)")).
+        axis(RightY, |a| a.
+            hide()).
+        key(|k| k.
+            justification(LeftJustified).
+            order(SampleText).
+            position(Outside(Top, Right))).
+        filled_curve(base_xs, base_ys, zeros, |c| c.
+            color(DARK_RED).
+            label("Base PDF").
+            opacity(0.5)).
+        filled_curve(new_xs, new_ys, zeros, |c| c.
+            color(DARK_BLUE).
+            label("New PDF").
+            opacity(0.5)).
+        draw().unwrap();
 
-pub fn points(base: &[f64], new: &[f64], id: &str) {
-    let path = Path::new(format!(".criterion/{}/both/sample.svg", id));
-
-    let (scale, prefix) = scale_time([base.max(), new.max()].as_slice().max());
-    let base = base.iter().map(|x| x * scale);
-    let new = new.iter().map(|x| x * scale);
-
-    Figure::new().
-        set_font(FONT).
-        set_output_file(path).
-        set_size(PLOT_SIZE).
-        set_terminal(Svg).
-        set_title(format!("{}: Sample points", id)).
-        set_xlabel(format!("Average time ({}s)", prefix)).
-        plot(Points, base, iter::count(0u, 1), [PointType(Circle), Title("Base")]).
-        plot(Points, new, iter::count(0u, 1), [PointType(Circle), Title("New")]).
-        draw();
+    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
+        str::from_utf8(po.error[])
+    }))
 }

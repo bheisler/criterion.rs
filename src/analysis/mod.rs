@@ -1,7 +1,7 @@
 use stats::ConfidenceInterval;
 use stats::outliers::Outliers;
 use stats::regression::Slope ;
-use stats::{Sample, mod};
+use stats::{Distribution, Sample};
 use std::fmt::Show;
 use std::io::Command;
 use std::io::fs::PathExtensions;
@@ -107,30 +107,37 @@ fn common(id: &str, routine: &mut Routine, criterion: &Criterion) {
     let times = pairs.iter().map(|&(iters, elapsed)| {
         elapsed as f64 / iters as f64
     }).collect::<Vec<f64>>();
-    let times = times.as_slice();
+    let times = times[];
 
     fs::mkdirp(&Path::new(format!(".criterion/{}/new", id)));
+
+    let outliers = outliers(id, times);
     if criterion.plotting.is_enabled() {
         elapsed!(
-            "Plotting sample points",
-            plot::sample(times, id));
-        elapsed!(
             "Plotting the estimated sample PDF",
-            plot::pdf(times, id));
+            plot::pdf(times, &outliers, id));
     }
-
-    let outliers = outliers(id, times, criterion);
-    let slope = regression(id, pairs_f64.as_slice(), criterion);
-    let mut estimates = estimates(id, times, criterion);
+    let (distribution, slope) = regression(id, pairs_f64[], criterion);
+    let (mut distributions, mut estimates) = estimates(times, criterion);
 
     estimates.insert(estimate::Slope, slope);
+    distributions.insert(estimate::Slope, distribution);
+
+    if criterion.plotting.is_enabled() {
+        elapsed!(
+            "Plotting the distribution of the absolute statistics",
+            plot::abs_distributions(
+                &distributions,
+                &estimates,
+                id));
+    }
 
     fs::save(&pairs, &Path::new(format!(".criterion/{}/new/sample.json", id)));
     fs::save(&outliers, &Path::new(format!(".criterion/{}/new/outliers.json", id)));
     fs::save(&estimates, &Path::new(format!(".criterion/{}/new/estimates.json", id)));
 
     if base_dir_exists(id) {
-        compare::common(id, pairs_f64.as_slice(), times, criterion);
+        compare::common(id, pairs_f64[], times, &estimates, criterion);
     }
 }
 
@@ -138,7 +145,11 @@ fn base_dir_exists(id: &str) -> bool {
     Path::new(format!(".criterion/{}/base", id)).exists()
 }
 // Performs a simple linear regression on the sample
-fn regression(id: &str, pairs: &[(f64, f64)], criterion: &Criterion) -> Estimate {
+fn regression(
+    id: &str,
+    pairs: &[(f64, f64)],
+    criterion: &Criterion,
+) -> (Distribution<f64>, Estimate) {
     fn slr(sample: &[(f64, f64)]) -> Slope<f64> {
         Slope::fit(sample)
     }
@@ -148,71 +159,58 @@ fn regression(id: &str, pairs: &[(f64, f64)], criterion: &Criterion) -> Estimate
     println!("> Performing linear regression");
 
     let sample = Sample::new(pairs);
-    let mut distribution = elapsed!(
+    let distribution = elapsed!(
         "Bootstrapped linear regression",
-        sample.bootstrap(slr, criterion.nresamples).unwrap());
+        sample.bootstrap(slr, criterion.nresamples)).unwrap();
 
-    // Non-interpolating percentiles
-    distribution.sort_by(|&x, &y| x.slope().partial_cmp(&y.slope()).unwrap());
-    let n = distribution.len() as f64;
-    let lb = distribution[(n * (1. - cl) / 2.).round() as uint];
-    let ub = distribution[(n * (1. + cl) / 2.).round() as uint];
+    let distribution =
+        Distribution::_new(distribution.into_iter().map(|x| x.slope()).collect::<Vec<f64>>());
     let point = Slope::fit(pairs);
+    let ConfidenceInterval { lower_bound: lb, upper_bound: ub, .. } =
+        distribution.confidence_interval(criterion.confidence_level);
+    let se = distribution.standard_error();
 
-    report::regression(pairs, (&lb, &ub));
+    let (lb_, ub_) = (Slope(lb), Slope(ub));
+
+    report::regression(pairs, (&lb_, &ub_));
 
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting linear regression",
             plot::regression(
                 pairs,
-                (&lb, &ub),
+                &point,
+                (&lb_, &ub_),
                 id));
     }
 
-    let distribution: Vec<f64> = distribution.move_iter().map(|x| x.slope()).collect();
-    let lb = lb.slope();
-    let point = point.slope();
-    let ub = ub.slope();
-
-    if criterion.plotting.is_enabled() {
-        elapsed!(
-            "Plotting the distribution of the slope",
-            plot::slope(
-                distribution.as_slice(),
-                (lb, point, ub),
-                id));
-    }
-
-    Estimate {
+    (distribution, Estimate {
         confidence_interval: ConfidenceInterval {
             confidence_level: cl,
             lower_bound: lb,
             upper_bound: ub,
         },
-        point_estimate: point,
-        standard_error: stats::std_dev(distribution.as_slice()),
-    }
+        point_estimate: point.0,
+        standard_error: se,
+    })
 }
 
 // Classifies the outliers in the sample
-fn outliers(id: &str, times: &[f64], criterion: &Criterion) -> Outliers<f64> {
+fn outliers(id: &str, times: &[f64]) -> Outliers<f64> {
     let outliers = Outliers::classify(times);
 
     report::outliers(&outliers);
-
+    // FIXME Remove labels before saving
     fs::save(&outliers, &Path::new(format!(".criterion/{}/new/outliers.json", id)));
-    if criterion.plotting.is_enabled() {
-        elapsed!(
-            "Plotting the outliers",
-            plot::outliers(&outliers, times, id));
-    }
 
     outliers
 }
 
 // Estimates the statistics of the population from the sample
-fn estimates(id: &str, times: &[f64], criterion: &Criterion) -> Estimates {
+fn estimates(
+    times: &[f64],
+    criterion: &Criterion,
+) -> (Distributions, Estimates) {
     static ABS_STATS: &'static [Statistic] = &[Mean, Median, MedianAbsDev, StdDev];
 
     let abs_stats_fns: Vec<fn(&[f64]) -> f64> =
@@ -224,26 +222,17 @@ fn estimates(id: &str, times: &[f64], criterion: &Criterion) -> Estimates {
     let points: Vec<f64> = abs_stats_fns.iter().map(|&f| f(times)).collect();
 
     println!("> Estimating the statistics of the sample");
-    let sample = Sample::new(times.as_slice());
+    let sample = Sample::new(times[]);
     let distributions = elapsed!(
         "Bootstrapping the absolute statistics",
-        sample.bootstrap_many(abs_stats_fns.as_slice(), nresamples));
+        sample.bootstrap_many(abs_stats_fns[], nresamples));
     let distributions: Distributions =
-        ABS_STATS.iter().map(|&x| x).zip(distributions.move_iter()).collect();
-    let estimates = Estimate::new(&distributions, points.as_slice(), cl);
+        ABS_STATS.iter().map(|&x| x).zip(distributions.into_iter()).collect();
+    let estimates = Estimate::new(&distributions, points[], cl);
 
     report::abs(&estimates);
 
-    if criterion.plotting.is_enabled() {
-        elapsed!(
-            "Plotting the distribution of the absolute statistics",
-            plot::abs_distributions(
-                &distributions,
-                &estimates,
-                id));
-    }
-
-    estimates
+    (distributions, estimates)
 }
 
 fn rename_new_dir_to_base(id: &str) {
