@@ -4,6 +4,7 @@ use simplot::grid::Major;
 use simplot::key::{Inside, Left, LeftJustified, Outside, Right, SampleText, Top};
 use simplot::{Figure, Solid};
 use stats::ConfidenceInterval;
+use std::iter::Repeat;
 use std::str;
 use test::stats::Stats;
 
@@ -128,7 +129,7 @@ pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
     let base_ys = base_ys.iter().map(|x| x * rscale);
     let new_xs = new_xs.iter().map(|x| x * scale);
     let new_ys = new_ys.iter().map(|x| x * rscale);
-    let zeros = range(0u, 1).take(1).cycle();
+    let zeros = Repeat::new(0u);
 
     let gnuplot = Figure::new().
         font(FONT).

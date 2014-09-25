@@ -9,7 +9,8 @@ use stats::outliers::{Outliers, LowMild, LowSevere, HighMild, HighSevere};
 use stats::regression::Slope;
 use stats::std_dev;
 use std::io::fs::PathExtensions;
-use std::{iter, str};
+use std::iter::{Repeat, mod};
+use std::str;
 use test::stats::Stats;
 
 use estimate::{Distributions, Estimate, Estimates, Mean, Median, mod};
@@ -73,7 +74,7 @@ pub fn pdf(sample: &[f64], outliers: &Outliers<f64>, id: &str) {
     }
 
     let vertical = [0, sample.len() - 1];
-    let zeros = iter::count(0u, 1).take(1).cycle();
+    let zeros = Repeat::new(0u);
 
     let gnuplot = Figure::new().
         font(FONT).
@@ -237,7 +238,7 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
         let y_p =
             ys[n_p - 1] + (ys[n_p] - ys[n_p - 1]) / (xs[n_p] - xs[n_p - 1]) * (p - xs[n_p - 1]);
 
-        let zero = iter::count(0u, 1).take(1).cycle();
+        let zero = Repeat::new(0u);
 
         let start = xs.iter().enumerate().filter(|&(_, &x)| x >= lb).next().unwrap().0;
         let end = xs.iter().enumerate().rev().filter(|&(_, &x)| x <= ub).next().unwrap().0;
@@ -321,8 +322,8 @@ pub fn rel_distributions(
         let y_p =
             ys[n_p - 1] + (ys[n_p] - ys[n_p - 1]) / (xs[n_p] - xs[n_p - 1]) * (p - xs[n_p - 1]);
 
-        let one = iter::count(1u, 2).take(1).cycle();
-        let zero = iter::count(0u, 1).take(1).cycle();
+        let one = Repeat::new(1u);
+        let zero = Repeat::new(0u);
 
         let start = xs.iter().enumerate().filter(|&(_, &x)| x >= lb).next().unwrap().0;
         let end = xs.iter().enumerate().rev().filter(|&(_, &x)| x <= ub).next().unwrap().0;
@@ -380,7 +381,7 @@ pub fn t_test(t: f64, distribution: &[f64], id: &str) {
 
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, None);
     let ys = ys[];
-    let zero = iter::count(0u, 1).take(1).cycle();
+    let zero = Repeat::new(0u);
 
     let gnuplot = Figure::new().
         font(FONT).
