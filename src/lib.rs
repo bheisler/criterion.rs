@@ -17,6 +17,7 @@ mod plot;
 mod zip;
 
 pub mod axis;
+pub mod candlestick;
 pub mod color;
 pub mod curve;
 pub mod errorbar;
@@ -28,6 +29,7 @@ macro_rules! zip {
     ($a:expr, $b:expr) => { $a.zip($b) };
     ($a:expr, $b:expr, $c:expr) => { zip::Zip3::new($a, $b, $c) };
     ($a:expr, $b:expr, $c:expr, $d:expr) => { zip::Zip4::new($a, $b, $c, $d) };
+    ($a:expr, $b:expr, $c:expr, $d:expr, $e:expr) => { zip::Zip5::new($a, $b, $c, $d, $e) };
 }
 
 /// Plot container
@@ -35,6 +37,7 @@ macro_rules! zip {
 pub struct Figure {
     alpha: Option<f64>,
     axes: TreeMap<axis::Axis, axis::Properties>,
+    box_width: Option<f64>,
     font: Option<MaybeOwned<'static>>,
     font_size: Option<f64>,
     key: Option<key::Properties>,
@@ -52,6 +55,7 @@ impl Figure {
         Figure {
             alpha: None,
             axes: TreeMap::new(),
+            box_width: None,
             font: None,
             font_size: None,
             key: None,
@@ -68,6 +72,11 @@ impl Figure {
         let mut s = String::new();
 
         s.push_str(format!("set output '{}'\n", self.output.display()).as_slice());
+
+        match self.box_width {
+            Some(width) => s.push_str(format!("set boxwidth {}\n", width).as_slice()),
+            None => {},
+        }
 
         match self.title {
             Some(ref title) => s.push_str(format!("set title '{}'\n", title).as_slice()),
@@ -242,6 +251,88 @@ impl Figure {
             configure(&mut properties);
             self.axes.insert(which, properties);
         }
+        self
+    }
+
+    /// Changes the box width of all the box related plots (bars, candlesticks, etc)
+    ///
+    /// **Note** The default value is 0
+    ///
+    /// # Failure
+    ///
+    /// Fails if `width` is a negative value
+    pub fn box_width(&mut self, width: f64) -> &mut Figure {
+        assert!(width >= 0.);
+        self.box_width = Some(width);
+        self
+    }
+
+    /// Plots candlesticks
+    ///
+    /// # Example
+    ///
+    /// Based on [`candlesticks.dem`](http://gnuplot.sourceforge.net/demo/candlesticks.html)
+    ///
+    /// ![Plot](candlesticks.svg)
+    ///
+    /// ```
+    /// # use std::io::{UserRWX, fs};
+    /// use simplot::Figure;
+    /// use simplot::axis::BottomX;
+    /// use simplot::color::{Black, Rgb};
+    /// use std::rand::{Rng, mod};
+    ///
+    /// let xs = range(1u, 11).collect::<Vec<_>>();
+    ///
+    /// // Fake some data
+    /// let mut rng = rand::task_rng();
+    /// let bh = xs.iter().map(|_| 5f64 + 2.5 * rng.gen()).collect::<Vec<_>>();
+    /// let bm = xs.iter().map(|_| 2.5f64 + 2.5 * rng.gen()).collect::<Vec<_>>();
+    /// let wh = bh.iter().map(|&y| y + (10. - y) * rng.gen()).collect::<Vec<_>>();
+    /// let wm = bm.iter().map(|&y| y * rng.gen()).collect::<Vec<_>>();
+    /// let m = bm.iter().zip(bh.iter()).map(|(&l, &h)| {
+    ///     (h - l) * rng.gen() + l
+    /// }).collect::<Vec<_>>();
+    ///
+    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), UserRWX).unwrap();
+    /// # assert_eq!(Some(String::new()),
+    /// Figure::new().
+    /// #   font("Helvetica").
+    /// #   font_size(12.).
+    /// #   output(Path::new("target/doc/simplot/candlesticks.svg")).
+    /// #   size((1280, 720)).
+    ///     axis(BottomX, |a| a.
+    ///         range(0., 11.)).
+    ///     box_width(0.2).
+    ///     candlesticks(xs.iter(), wm.iter(), bm.iter(), bh.iter(), wh.iter(), |c| c.
+    ///         color(Rgb(86, 180, 233)).
+    ///         label("Quartiles").
+    ///         linewidth(2.)).
+    ///     // trick to plot the median
+    ///     candlesticks(xs.iter(), m.iter(), m.iter(), m.iter(), m.iter(), |c| c.
+    ///         color(Black).
+    ///         linewidth(2.)).
+    ///     draw().  // (rest of the chain has been omitted)
+    /// #   ok().and_then(|gnuplot| {
+    /// #       gnuplot.wait_with_output().ok().and_then(|p| {
+    /// #           String::from_utf8(p.error).ok()
+    /// #       })
+    /// #   }));
+    /// ```
+    pub fn candlesticks<A, B, C, D, E, X, WM, BM, BH, WH>(
+        &mut self,
+        x: X,
+        whisker_min: WM,
+        box_min: BM,
+        box_high: BH,
+        whisker_high: WH,
+        configure: <'a> |&'a mut candlestick::Properties| -> &'a mut candlestick::Properties,
+    ) -> &mut Figure where
+        A: Data, B: Data, C: Data, D: Data, E: Data,
+        X: Iterator<A>, WM: Iterator<B>, BM: Iterator<C>, BH: Iterator<D>, WH: Iterator<E>,
+    {
+        let data = Matrix::new(zip!(x, box_min, whisker_min, whisker_high, box_high));
+        self.plots.push(Plot::new(data, configure(&mut candlestick::Properties::_new())));
         self
     }
 

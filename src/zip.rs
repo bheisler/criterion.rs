@@ -79,3 +79,46 @@ where AI: Iterator<A>, BI: Iterator<B>, CI: Iterator<C>, DI: Iterator<D>
         (min!(a, b, c, d), None)
     }
 }
+
+pub struct Zip5<A, B, C, D, E> {
+    a: A,
+    b: B,
+    c: C,
+    d: D,
+    e: E,
+}
+
+impl<A, B, C, D, E> Zip5<A, B, C, D, E> {
+    pub fn new(a: A, b: B, c: C, d: D, e: E) -> Zip5<A, B, C, D, E> {
+        Zip5 {
+            a: a,
+            b: b,
+            c: c,
+            d: d,
+            e: e,
+        }
+    }
+}
+
+impl<A, B, C, D, E, AI, BI, CI, DI, EI> Iterator<(A, B, C, D, E)>
+for Zip5<AI, BI, CI, DI, EI>
+where AI: Iterator<A>, BI: Iterator<B>, CI: Iterator<C>, DI: Iterator<D>, EI: Iterator<E>
+{
+    fn next(&mut self) -> Option<(A, B, C, D, E)> {
+        match (self.a.next(), self.b.next(), self.c.next(), self.d.next(), self.e.next()) {
+            (Some(a), Some(b), Some(c), Some(d), Some(e)) => Some((a, b, c, d, e)),
+            _ => None,
+        }
+    }
+
+    fn size_hint(&self) -> (uint, Option<uint>) {
+        let (a, _) = self.a.size_hint();
+        let (b, _) = self.b.size_hint();
+        let (c, _) = self.c.size_hint();
+        let (d, _) = self.d.size_hint();
+        let (e, _) = self.e.size_hint();
+
+        // NB Upper bound can be calculated, but only the lower bound is required in this library
+        (min!(a, b, c, d, e), None)
+    }
+}

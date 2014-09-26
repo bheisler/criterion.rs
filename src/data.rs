@@ -106,3 +106,19 @@ impl<A: Data, B: Data, C: Data, D: Data> Row for (A, B, C, D) {
         4
     }
 }
+
+impl<A: Data, B: Data, C: Data, D: Data, E: Data> Row for (A, B, C, D, E) {
+    fn append_to(self, buffer: &mut MemWriter) {
+        let (a, b, c, d, e) = self;
+
+        buffer.write_le_f64(a.f64()).unwrap();
+        buffer.write_le_f64(b.f64()).unwrap();
+        buffer.write_le_f64(c.f64()).unwrap();
+        buffer.write_le_f64(d.f64()).unwrap();
+        buffer.write_le_f64(e.f64()).unwrap();
+    }
+
+    fn ncols(_: Option<(A, B, C, D, E)>) -> uint {
+        5
+    }
+}
