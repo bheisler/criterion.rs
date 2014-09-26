@@ -177,7 +177,7 @@ impl Figure {
     /// use simplot::curve::Lines;
     /// use simplot::grid::Major;
     /// use simplot::key::{Center, Inside, Top};
-    /// use simplot::{BottomXRightY, Figure, Solid, logspace};
+    /// use simplot::{BottomXRightY, Figure, logspace};
     /// use std::f64::consts::PI;
     ///
     /// fn tf(x: f64) -> Complex<f64> {
@@ -221,7 +221,6 @@ impl Figure {
     ///         axes(BottomXRightY).
     ///         color(Rgb(0, 158, 115)).
     ///         label("Phase").
-    ///         line_type(Solid).
     ///         linewidth(2.)).
     ///     draw().  // (rest of the chain has been omitted)
     /// #   ok().and_then(|gnuplot| {
@@ -259,7 +258,7 @@ impl Figure {
     /// use simplot::color::{DarkViolet, Rgb};
     /// use simplot::curve::{Impulses, LinesPoints, Steps};
     /// use simplot::key::{Inside, Left, Top};
-    /// use simplot::{Circle, Dash, Figure, Solid, linspace};
+    /// use simplot::{Circle, Dash, Figure, linspace};
     ///
     /// let xs = linspace::<f64>(-10., 10., 51);
     ///
@@ -282,12 +281,10 @@ impl Figure {
     ///     curve(Steps, xs, xs.map(|x| x.atan()), |c| c.
     ///         color(Rgb(0, 158, 115)).
     ///         label("atan(x)").
-    ///         line_type(Solid).
     ///         linewidth(2.)).
     ///     curve(Impulses, xs, xs.map(|x| x.atan().cos()), |c| c.
     ///         color(Rgb(86, 180, 233)).
-    ///         label("cos(atan(x))").
-    ///         line_type(Solid)).
+    ///         label("cos(atan(x))")).
     ///     draw().  // (rest of the chain has been omitted)
     /// #   ok().and_then(|gnuplot| {
     /// #       gnuplot.wait_with_output().ok().and_then(|p| {
@@ -338,7 +335,7 @@ impl Figure {
     /// use simplot::curve::Lines;
     /// use simplot::errorbar::YErrorBar;
     /// use simplot::key::{Outside, Right, Top};
-    /// use simplot::{Figure, FilledCircle, Solid, linspace};
+    /// use simplot::{Figure, FilledCircle, linspace};
     /// use std::f64::consts::PI;
     /// use std::rand::{Rng, mod};
     ///
@@ -378,7 +375,6 @@ impl Figure {
     ///         linewidth(2.)).
     ///     error_bar(YErrorBar, xs, ys.iter(), lows.iter(), highs.iter(), |eb| eb.
     ///         color(DarkViolet).
-    ///         line_type(Solid).
     ///         linewidth(2.).
     ///         point_type(FilledCircle).
     ///         label("measured")).
@@ -492,7 +488,7 @@ impl Figure {
     ///
     /// Fails if `size` is a non-positive value
     pub fn font_size(&mut self, size: f64) -> &mut Figure {
-        assert!(size > 0.);
+        assert!(size >= 0.);
 
         self.font_size = Some(size);
         self

@@ -40,6 +40,12 @@ impl Properties {
         self
     }
 
+    /// Sets the line color
+    pub fn color(&mut self, color: Color) -> &mut Properties {
+        self.color = Some(color);
+        self
+    }
+
     /// Sets the legend label
     pub fn label<S: IntoMaybeOwned<'static>>(&mut self, label: S) -> &mut Properties {
         self.label = Some(label.into_maybe_owned());
@@ -47,6 +53,8 @@ impl Properties {
     }
 
     /// Changes the line type
+    ///
+    /// **Note** By default `Solid` lines are used
     pub fn line_type(&mut self, lt: LineType) -> &mut Properties {
         self.line_type = Some(lt);
         self
@@ -81,12 +89,6 @@ impl Properties {
         self.point_type = Some(pt);
         self
     }
-
-    /// Sets the line color
-    pub fn color(&mut self, color: Color) -> &mut Properties {
-        self.color = Some(color);
-        self
-    }
 }
 
 #[doc(hidden)]
@@ -101,7 +103,7 @@ impl Script for Properties {
 
         match self.line_type {
             Some(lt) => script.push_str(format!("lt {} ", lt.display()).as_slice()),
-            None => {},
+            None => script.push_str("lt -1"),
         }
 
         match self.linewidth {

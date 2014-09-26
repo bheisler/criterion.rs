@@ -41,6 +41,8 @@ impl Properties {
     }
 
     /// Change the line type
+    ///
+    /// **Note** By default `Solid` lines are used
     pub fn line_type(&mut self, lt: LineType) -> &mut Properties {
         self.line_type = Some(lt);
         self
@@ -84,7 +86,7 @@ impl Script for Properties {
 
         match self.line_type {
             Some(lt) => script.push_str(format!("lt {} ", lt.display()).as_slice()),
-            None => {},
+            None => script.push_str("lt -1 "),
         }
 
         match self.linewidth {
