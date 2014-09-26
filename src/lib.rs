@@ -145,11 +145,11 @@ impl Figure {
                 if is_first_col {
                     is_first_col = false;
                 } else {
-                    s.push_char(':');
+                    s.push(':');
                 }
                 s.push_str((col + 1).to_string().as_slice());
             }
-            s.push_char(' ');
+            s.push(' ');
 
             s.push_str(plot.script().as_slice());
         }

@@ -128,7 +128,7 @@ impl<'a, 'b> Script for (&'a Axis, &'b Properties) {
             None => {},
         }
 
-        script.push_char('\n');
+        script.push('\n');
 
         match properties.label {
             Some(ref label) => {

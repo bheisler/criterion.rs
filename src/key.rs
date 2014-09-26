@@ -110,7 +110,7 @@ impl Script for Properties {
         match self.stack {
             Some(stack) => {
                 script.push_str(stack.display());
-                script.push_char(' ');
+                script.push(' ');
             },
             None => {},
         }
@@ -118,7 +118,7 @@ impl Script for Properties {
         match self.justification {
             Some(justification) => {
                 script.push_str(justification.display());
-                script.push_char(' ');
+                script.push(' ');
             },
             None => {},
         }
@@ -126,7 +126,7 @@ impl Script for Properties {
         match self.order {
             Some(order) => {
                 script.push_str(order.display());
-                script.push_char(' ');
+                script.push(' ');
             },
             None => {},
         }
@@ -140,7 +140,7 @@ impl Script for Properties {
             script.push_str("box ")
         }
 
-        script.push_char('\n');
+        script.push('\n');
         script
     }
 }

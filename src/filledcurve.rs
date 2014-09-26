@@ -89,7 +89,7 @@ impl Script for Properties {
             Some(ref label) => {
                 script.push_str("title '");
                 script.push_str(label.as_slice());
-                script.push_char('\'')
+                script.push('\'')
             },
             None => script.push_str("notitle"),
         }
