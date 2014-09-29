@@ -1,5 +1,6 @@
 //! Simple 2D plotting using `gnuplot`
 
+#![deny(warnings)]
 #![feature(macro_rules)]
 
 use std::collections::TreeMap;
