@@ -1,3 +1,4 @@
+#![deny(warnings)]
 #![feature(overloaded_calls, phase)]
 
 #[cfg(test)]
