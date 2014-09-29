@@ -5,9 +5,9 @@ env:
     - secure: VJzoH+McZ8/5uMevsJLBCkmsKghfPDxegiXmB37R3UrVSVH+9BwIcTVQLnz7Ul2OpOgoMzgepGWrxf6b+e/qrKJlDhJ3vieXMDhY02CpXB6ODeB0cbDWJvdrHV8BvmiqhbvKPYpV94RhRVM7w+gvXMkjGDWuDGsYB9HpP8ntF9U=
 
 script:
-  - cargo build
-  - cargo test
-  - cargo doc && mv target/doc doc
+  - cargo build --verbose
+  - cargo test --verbose
+  - cargo doc --verbose && mv target/doc doc
 
 after_success:
   - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh'
