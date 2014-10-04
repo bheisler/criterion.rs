@@ -60,38 +60,32 @@ impl Properties {
 #[doc(hidden)]
 impl Script for Properties {
     fn script(&self) -> String {
-        let mut script = match self.axes {
-            None => String::new(),
-            Some(axes) => format!("axes {} ", axes.display()),
+        let mut script = if let Some(axes) = self.axes {
+            format!("axes {} ", axes.display())
+        } else {
+            String::new()
         };
         script.push_str(format!("with filledcurves ").as_slice());
 
         script.push_str("fillstyle ");
 
-        match self.opacity {
-            Some(opacity) => {
-                script.push_str(format!("solid {} ", opacity).as_slice())
-            },
-            None => {},
+        if let Some(opacity) = self.opacity {
+            script.push_str(format!("solid {} ", opacity).as_slice())
         }
 
         // TODO border shoulde be configurable
         script.push_str("noborder ");
 
-        match self.color {
-            Some(ref color) => {
-                script.push_str(format!("lc rgb '{}' ", color.display()).as_slice());
-            },
-            None => {},
+        if let Some(color) =  self.color {
+            script.push_str(format!("lc rgb '{}' ", color.display()).as_slice());
         }
 
-        match self.label {
-            Some(ref label) => {
-                script.push_str("title '");
-                script.push_str(label.as_slice());
-                script.push('\'')
-            },
-            None => script.push_str("notitle"),
+        if let Some(ref label) = self.label {
+            script.push_str("title '");
+            script.push_str(label.as_slice());
+            script.push('\'')
+        } else {
+            script.push_str("notitle")
         }
 
         script

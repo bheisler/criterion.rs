@@ -60,30 +60,24 @@ impl Script for Properties {
     fn script(&self) -> String {
         let mut script = "with candlesticks ".to_string();
 
-        match self.line_type {
-            Some(lt) => script.push_str(format!("lt {} ", lt.display()).as_slice()),
-            None => script.push_str("lt -1 "),
+        if let Some(lt) = self.line_type {
+            script.push_str(format!("lt {} ", lt.display()).as_slice())
         }
 
-        match self.linewidth {
-            Some(lw) => script.push_str(format!("lw {} ", lw).as_slice()),
-            None => {},
+        if let Some(lw) = self.linewidth {
+            script.push_str(format!("lw {} ", lw).as_slice())
         }
 
-        match self.color {
-            Some(color) => {
-                script.push_str(format!("lc rgb '{}' ", color.display()).as_slice());
-            },
-            None => {},
+        if let Some(color) = self.color {
+            script.push_str(format!("lc rgb '{}' ", color.display()).as_slice());
         }
 
-        match self.label {
-            Some(ref label) => {
-                script.push_str("title '");
-                script.push_str(label.as_slice());
-                script.push('\'')
-            },
-            None => script.push_str("notitle"),
+        if let Some(ref label) = self.label {
+            script.push_str("title '");
+            script.push_str(label.as_slice());
+            script.push('\'')
+        } else {
+            script.push_str("notitle")
         }
 
         script

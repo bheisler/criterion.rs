@@ -107,33 +107,23 @@ impl Script for Properties {
             },
         }
 
-        match self.stack {
-            Some(stack) => {
-                script.push_str(stack.display());
-                script.push(' ');
-            },
-            None => {},
+        if let Some(stack) =  self.stack {
+            script.push_str(stack.display());
+            script.push(' ');
         }
 
-        match self.justification {
-            Some(justification) => {
-                script.push_str(justification.display());
-                script.push(' ');
-            },
-            None => {},
+        if let Some(justification) = self.justification {
+            script.push_str(justification.display());
+            script.push(' ');
         }
 
-        match self.order {
-            Some(order) => {
-                script.push_str(order.display());
-                script.push(' ');
-            },
-            None => {},
+        if let Some(order) =  self.order {
+            script.push_str(order.display());
+            script.push(' ');
         }
 
-        match self.title {
-            Some(ref title) => script.push_str(format!("title '{}' ", title).as_slice()),
-            None => {},
+        if let Some(ref title) = self.title {
+            script.push_str(format!("title '{}' ", title).as_slice())
         }
 
         if self.boxed {

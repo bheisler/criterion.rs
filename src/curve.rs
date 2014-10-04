@@ -94,47 +94,42 @@ impl Properties {
 #[doc(hidden)]
 impl Script for Properties {
     fn script(&self) -> String {
-        let mut script = match self.axes {
-            None => String::new(),
-            Some(axes) => format!("axes {} ", axes.display()),
+        let mut script = if let Some(axes) = self.axes {
+            format!("axes {} ", axes.display())
+        } else {
+            String::new()
         };
 
         script.push_str(format!("with {} ", self.style.display()).as_slice());
 
-        match self.line_type {
-            Some(lt) => script.push_str(format!("lt {} ", lt.display()).as_slice()),
-            None => script.push_str("lt -1"),
+        if let Some(lt) = self.line_type {
+            script.push_str(format!("lt {} ", lt.display()).as_slice())
+        } else {
+            script.push_str("lt -1")
         }
 
-        match self.linewidth {
-            Some(lw) => script.push_str(format!("lw {} ", lw).as_slice()),
-            None => {},
+        if let Some(lw) = self.linewidth {
+            script.push_str(format!("lw {} ", lw).as_slice())
         }
 
-        match self.color {
-            Some(color) => {
-                script.push_str(format!("lc rgb '{}' ", color.display()).as_slice());
-            },
-            None => {},
+        if let Some(color) = self.color {
+            script.push_str(format!("lc rgb '{}' ", color.display()).as_slice())
         }
 
-        match self.point_type {
-            Some(pt) => script.push_str(format!("pt {} ", pt.display()).as_slice()),
-            None => {},
+        if let Some(pt) = self.point_type {
+            script.push_str(format!("pt {} ", pt.display()).as_slice())
         }
 
-        match self.point_size {
-            Some(ps) => script.push_str(format!("ps {} ", ps).as_slice()),
-            None => {},
+        if let Some(ps) = self.point_size {
+            script.push_str(format!("ps {} ", ps).as_slice())
         }
 
-        match self.label {
-            Some(ref label) => {
-                script.push_str("title '");
-                script.push_str(label.as_slice());
-                script.push('\'')
-            },
-            None => script.push_str("notitle"),
+        if let Some(ref label) = self.label {
+            script.push_str("title '");
+            script.push_str(label.as_slice());
+            script.push('\'')
+        } else {
+            script.push_str("notitle")
         }
 
         script

@@ -123,25 +123,18 @@ impl<'a, 'b> Script for (&'a Axis, &'b Properties) {
             format!("set {}tics nomirror ", axis_)
         };
 
-        match properties.tics {
-            Some(ref tics) => script.push_str(format!("({})", tics).as_slice()),
-            None => {},
+        if let Some(ref tics) = properties.tics {
+            script.push_str(format!("({})", tics).as_slice())
         }
 
         script.push('\n');
 
-        match properties.label {
-            Some(ref label) => {
-                script.push_str(format!("set {}label '{}'\n", axis_, label).as_slice())
-            },
-            None => {},
+        if let Some(ref label) = properties.label {
+            script.push_str(format!("set {}label '{}'\n", axis_, label).as_slice())
         }
 
-        match properties.range {
-            Some((low, high)) => {
-                script.push_str(format!("set {}range [{}:{}]\n", axis_, low, high).as_slice());
-            },
-            None => {},
+        if let Some((low, high)) = properties.range {
+            script.push_str(format!("set {}range [{}:{}]\n", axis_, low, high).as_slice())
         }
 
         if properties.logarithmic {
