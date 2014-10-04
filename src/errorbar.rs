@@ -2,12 +2,12 @@ use std::str::MaybeOwned;
 
 use color::Color;
 use display::Display;
-use {LineType, PointType, Script};
+use {LineType, PointType, Script, Solid};
 
 pub struct Properties {
     color: Option<Color>,
     label: Option<MaybeOwned<'static>>,
-    line_type: Option<LineType>,
+    line_type: LineType,
     linewidth: Option<f64>,
     point_size: Option<f64>,
     point_type: Option<PointType>,
@@ -20,7 +20,7 @@ impl Properties {
         Properties {
             color: None,
             label: None,
-            line_type: None,
+            line_type: Solid,
             linewidth: None,
             point_type: None,
             point_size: None,
@@ -35,7 +35,7 @@ impl Properties {
     }
 
     /// Sets the legend label
-    pub fn label<S: IntoMaybeOwned<'static>>(&mut self, label: S) -> &mut Properties {
+    pub fn label<S>(&mut self, label: S) -> &mut Properties where S: IntoMaybeOwned<'static> {
         self.label = Some(label.into_maybe_owned());
         self
     }
@@ -44,7 +44,7 @@ impl Properties {
     ///
     /// **Note** By default `Solid` lines are used
     pub fn line_type(&mut self, lt: LineType) -> &mut Properties {
-        self.line_type = Some(lt);
+        self.line_type = lt;
         self
     }
 
@@ -84,26 +84,22 @@ impl Script for Properties {
     fn script(&self) -> String {
         let mut script = format!("with {} ", self.style.display());
 
-        if let Some(lt) = self.line_type {
-            script.push_str(format!("lt {} ", lt.display()).as_slice())
-        } else {
-            script.push_str("lt -1 ")
-        }
+        script.push_str(format!("lt {} ", self.line_type.display())[]);
 
         if let Some(lw) = self.linewidth {
-            script.push_str(format!("lw {} ", lw).as_slice())
+            script.push_str(format!("lw {} ", lw)[])
         }
 
         if let Some(color) = self.color {
-            script.push_str(format!("lc rgb '{}' ", color.display()).as_slice())
+            script.push_str(format!("lc rgb '{}' ", color.display())[])
         }
 
         if let Some(pt) = self.point_type {
-            script.push_str(format!("pt {} ", pt.display()).as_slice())
+            script.push_str(format!("pt {} ", pt.display())[])
         }
 
         if let Some(ps) = self.point_size {
-            script.push_str(format!("ps {} ", ps).as_slice())
+            script.push_str(format!("ps {} ", ps)[])
         }
 
         if let Some(ref label) =  self.label {

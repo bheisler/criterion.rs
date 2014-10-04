@@ -19,6 +19,6 @@ impl Plot {
     }
 
     pub fn script(&self) -> &str {
-        self.script.as_slice()
+        self.script[]
     }
 }

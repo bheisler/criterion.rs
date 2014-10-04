@@ -29,7 +29,7 @@ pub struct Matrix {
 }
 
 impl Matrix {
-    pub fn new<A: Row, I: Iterator<A>>(mut rows: I) -> Matrix {
+    pub fn new<A, I>(mut rows: I) -> Matrix where A: Row, I: Iterator<A> {
         let ncols = Row::ncols(None::<A>);
         let bytes_per_row = ncols * mem::size_of::<f64>();
         let mut buffer = MemWriter::with_capacity(rows.size_hint().val0() * bytes_per_row);
@@ -48,7 +48,7 @@ impl Matrix {
     }
 
     pub fn bytes(&self) -> &[u8] {
-        self.bytes.as_slice()
+        self.bytes[]
     }
 
     pub fn ncols(&self) -> uint {
@@ -65,7 +65,7 @@ trait Row {
     fn ncols(Option<Self>) -> uint;
 }
 
-impl<A: Data, B: Data> Row for (A, B) {
+impl<A, B> Row for (A, B) where A: Data, B: Data {
     fn append_to(self, buffer: &mut MemWriter) {
         let (a, b) = self;
 
@@ -78,7 +78,7 @@ impl<A: Data, B: Data> Row for (A, B) {
     }
 }
 
-impl<A: Data, B: Data, C: Data> Row for (A, B, C) {
+impl<A, B, C> Row for (A, B, C) where A: Data, B: Data, C: Data {
     fn append_to(self, buffer: &mut MemWriter) {
         let (a, b, c) = self;
 
@@ -92,7 +92,7 @@ impl<A: Data, B: Data, C: Data> Row for (A, B, C) {
     }
 }
 
-impl<A: Data, B: Data, C: Data, D: Data> Row for (A, B, C, D) {
+impl<A, B, C, D> Row for (A, B, C, D) where A: Data, B: Data, C: Data, D: Data {
     fn append_to(self, buffer: &mut MemWriter) {
         let (a, b, c, d) = self;
 
@@ -107,7 +107,7 @@ impl<A: Data, B: Data, C: Data, D: Data> Row for (A, B, C, D) {
     }
 }
 
-impl<A: Data, B: Data, C: Data, D: Data, E: Data> Row for (A, B, C, D, E) {
+impl<A, B, C, D, E> Row for (A, B, C, D, E) where A: Data, B: Data, C: Data, D: Data, E: Data {
     fn append_to(self, buffer: &mut MemWriter) {
         let (a, b, c, d, e) = self;
 

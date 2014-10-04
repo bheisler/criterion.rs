@@ -39,7 +39,7 @@ impl Properties {
     }
 
     /// Sets the legend label
-    pub fn label<S: IntoMaybeOwned<'static>>(&mut self, label: S) -> &mut Properties {
+    pub fn label<S>(&mut self, label: S) -> &mut Properties where S: IntoMaybeOwned<'static> {
         self.label = Some(label.into_maybe_owned());
         self
     }
@@ -65,19 +65,19 @@ impl Script for Properties {
         } else {
             String::new()
         };
-        script.push_str(format!("with filledcurves ").as_slice());
+        script.push_str(format!("with filledcurves ")[]);
 
         script.push_str("fillstyle ");
 
         if let Some(opacity) = self.opacity {
-            script.push_str(format!("solid {} ", opacity).as_slice())
+            script.push_str(format!("solid {} ", opacity)[])
         }
 
         // TODO border shoulde be configurable
         script.push_str("noborder ");
 
         if let Some(color) =  self.color {
-            script.push_str(format!("lc rgb '{}' ", color.display()).as_slice());
+            script.push_str(format!("lc rgb '{}' ", color.display())[]);
         }
 
         if let Some(ref label) = self.label {

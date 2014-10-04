@@ -72,49 +72,49 @@ impl Figure {
     fn script(&self) -> Vec<u8> {
         let mut s = String::new();
 
-        s.push_str(format!("set output '{}'\n", self.output.display()).as_slice());
+        s.push_str(format!("set output '{}'\n", self.output.display())[]);
 
         match self.box_width {
-            Some(width) => s.push_str(format!("set boxwidth {}\n", width).as_slice()),
+            Some(width) => s.push_str(format!("set boxwidth {}\n", width)[]),
             None => {},
         }
 
         match self.title {
-            Some(ref title) => s.push_str(format!("set title '{}'\n", title).as_slice()),
+            Some(ref title) => s.push_str(format!("set title '{}'\n", title)[]),
             None => {},
         }
 
         for axis in self.axes.iter() {
-            s.push_str(axis.script().as_slice());
+            s.push_str(axis.script()[]);
         }
 
         for (_, script) in self.tics.iter() {
-            s.push_str(script.as_slice());
+            s.push_str(script[]);
         }
 
         match self.key {
-            Some(ref key) => s.push_str(key.script().as_slice()),
+            Some(ref key) => s.push_str(key.script()[]),
             None => {},
         }
 
         match self.alpha {
             Some(alpha) => {
-                s.push_str(format!("set style fill transparent solid {}\n", alpha).as_slice());
+                s.push_str(format!("set style fill transparent solid {}\n", alpha)[]);
             },
             None => {},
         }
 
-        s.push_str(format!("set terminal {} dashed", self.terminal.display()).as_slice());
+        s.push_str(format!("set terminal {} dashed", self.terminal.display())[]);
 
         match self.size {
-            Some((width, height)) => s.push_str(format!(" size {}, {}", width, height).as_slice()),
+            Some((width, height)) => s.push_str(format!(" size {}, {}", width, height)[]),
             None => {},
         }
 
         match self.font {
             Some(ref name) => match self.font_size {
-                Some(size) => s.push_str(format!(" font '{},{}'", name, size).as_slice()),
-                None => s.push_str(format!(" font '{}'", name).as_slice()),
+                Some(size) => s.push_str(format!(" font '{},{}'", name, size)[]),
+                None => s.push_str(format!(" font '{}'", name)[]),
             },
             None => {},
         }
@@ -139,7 +139,7 @@ impl Figure {
 
             s.push_str(format!(
                     "'-' binary endian=little record={} format='%float64' using ",
-                    data.nrows()).as_slice());
+                    data.nrows())[]);
 
             let mut is_first_col = true;
             for col in range(0, data.ncols()) {
@@ -148,11 +148,11 @@ impl Figure {
                 } else {
                     s.push(':');
                 }
-                s.push_str((col + 1).to_string().as_slice());
+                s.push_str((col + 1).to_string()[]);
             }
             s.push(' ');
 
-            s.push_str(plot.script().as_slice());
+            s.push_str(plot.script()[]);
         }
 
         let mut buffer = s.into_bytes();
@@ -406,8 +406,8 @@ impl Figure {
     }
 
     /// Dumps the script required to produce the figure into `sink`
-    pub fn dump<W: Writer>(&mut self, sink: &mut W) -> IoResult<&mut Figure> {
-        try!(sink.write(self.script().as_slice()));
+    pub fn dump<W>(&mut self, sink: &mut W) -> IoResult<&mut Figure> where W: Writer {
+        try!(sink.write(self.script()[]));
         Ok(self)
     }
 
@@ -569,7 +569,7 @@ impl Figure {
     }
 
     /// Changes the font
-    pub fn font<S: IntoMaybeOwned<'static>>(&mut self, name: S) -> &mut Figure {
+    pub fn font<S>(&mut self, name: S) -> &mut Figure where S: IntoMaybeOwned<'static> {
         self.font = Some(name.into_maybe_owned());
         self
     }
@@ -611,7 +611,7 @@ impl Figure {
 
     /// Saves the script required to produce the figure to `path`
     pub fn save(&mut self, path: &Path) -> IoResult<&mut Figure> {
-        try!((try!(File::create(path))).write(self.script().as_slice()))
+        try!((try!(File::create(path))).write(self.script()[]))
         Ok(self)
     }
 
@@ -630,21 +630,21 @@ impl Figure {
     }
 
     /// Sets the title
-    pub fn title<S: IntoMaybeOwned<'static>>(&mut self, title: S) -> &mut Figure {
+    pub fn title<S>(&mut self, title: S) -> &mut Figure where S: IntoMaybeOwned<'static> {
         self.title = Some(title.into_maybe_owned());
         self
     }
 }
 
 /// Iterator that yields equally spaced values in the linear scale
-pub struct Linspace<T: Float> {
+pub struct Linspace<T> where T: Float {
     start: T,
     step: T,
     state: uint,
     stop: uint,
 }
 
-impl<T: Float> DoubleEndedIterator<T> for Linspace<T> {
+impl<T> DoubleEndedIterator<T> for Linspace<T> where T: Float {
     fn next_back(&mut self) -> Option<T> {
         if self.state == self.stop {
             None
@@ -655,7 +655,7 @@ impl<T: Float> DoubleEndedIterator<T> for Linspace<T> {
     }
 }
 
-impl<T: Float> Iterator<T> for Linspace<T> {
+impl<T> Iterator<T> for Linspace<T> where T: Float {
     fn next(&mut self) -> Option<T> {
         if self.state == self.stop {
             None
@@ -673,14 +673,14 @@ impl<T: Float> Iterator<T> for Linspace<T> {
 }
 
 /// Iterator that yields equally spaced values in the logarithmic scale
-pub struct Logspace<T: Float> {
+pub struct Logspace<T> where T: Float {
     start: T,
     step: T,
     state: uint,
     stop: uint,
 }
 
-impl<T: Float> DoubleEndedIterator<T> for Logspace<T> {
+impl<T> DoubleEndedIterator<T> for Logspace<T> where T: Float {
     fn next_back(&mut self) -> Option<T> {
         if self.state == self.stop {
             None
@@ -691,7 +691,7 @@ impl<T: Float> DoubleEndedIterator<T> for Logspace<T> {
     }
 }
 
-impl<T: Float> Iterator<T> for Logspace<T> {
+impl<T> Iterator<T> for Logspace<T> where T: Float {
     fn next(&mut self) -> Option<T> {
         if self.state == self.stop {
             None
@@ -754,7 +754,7 @@ trait Script {
     fn script(&self) -> String;
 }
 
-pub fn linspace<T: Float>(start: T, end: T, n: uint) -> Linspace<T> {
+pub fn linspace<T>(start: T, end: T, n: uint) -> Linspace<T> where T: Float {
     let step = if n < 2 {
         // NB The value of `step` doesn't matter in these cases
         num::zero()
@@ -770,7 +770,7 @@ pub fn linspace<T: Float>(start: T, end: T, n: uint) -> Linspace<T> {
     }
 }
 
-pub fn logspace<T: Float>(start: T, end: T, n: uint) -> Logspace<T> {
+pub fn logspace<T>(start: T, end: T, n: uint) -> Logspace<T> where T: Float {
     assert!(start > num::zero() && end > num::zero());
 
     let (start, end) = (start.ln(), end.ln());
@@ -794,7 +794,7 @@ pub fn logspace<T: Float>(start: T, end: T, n: uint) -> Logspace<T> {
 // FIXME Parsing may fail
 pub fn version() -> IoResult<(uint, uint, uint)> {
     let stdout = try!(Command::new("gnuplot").arg("--version").output()).output;
-    let mut words = str::from_utf8(stdout.as_slice()).unwrap().words().skip(1);
+    let mut words = str::from_utf8(stdout[]).unwrap().words().skip(1);
     let mut version = words.next().unwrap().split('.');
     let major = from_str(version.next().unwrap()).unwrap();
     let minor = from_str(version.next().unwrap()).unwrap();
