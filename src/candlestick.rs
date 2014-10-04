@@ -60,14 +60,14 @@ impl Script for Properties {
     fn script(&self) -> String {
         let mut script = "with candlesticks ".to_string();
 
-        script.push_str(format!("lt {} ", self.line_type.display()).as_slice());
+        script.push_str(format!("lt {} ", self.line_type.display())[]);
 
         if let Some(lw) = self.linewidth {
-            script.push_str(format!("lw {} ", lw).as_slice())
+            script.push_str(format!("lw {} ", lw)[])
         }
 
         if let Some(color) = self.color {
-            script.push_str(format!("lc rgb '{}' ", color.display()).as_slice());
+            script.push_str(format!("lc rgb '{}' ", color.display())[]);
         }
 
         if let Some(ref label) = self.label {

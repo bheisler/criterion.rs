@@ -48,7 +48,7 @@ impl Matrix {
     }
 
     pub fn bytes(&self) -> &[u8] {
-        self.bytes.as_slice()
+        self.bytes[]
     }
 
     pub fn ncols(&self) -> uint {

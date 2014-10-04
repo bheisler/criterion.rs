@@ -100,10 +100,10 @@ impl Script for Properties {
         match self.position {
             None => {},
             Some(Inside(v, h)) => {
-                script.push_str(format!("inside {} {} ", v.display(), h.display()).as_slice())
+                script.push_str(format!("inside {} {} ", v.display(), h.display())[])
             },
             Some(Outside(v, h)) => {
-                script.push_str(format!("outside {} {} ", v.display(), h.display()).as_slice())
+                script.push_str(format!("outside {} {} ", v.display(), h.display())[])
             },
         }
 
@@ -123,7 +123,7 @@ impl Script for Properties {
         }
 
         if let Some(ref title) = self.title {
-            script.push_str(format!("title '{}' ", title).as_slice())
+            script.push_str(format!("title '{}' ", title)[])
         }
 
         if self.boxed {
