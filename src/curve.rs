@@ -3,13 +3,13 @@ use std::str::MaybeOwned;
 use Script;
 use color::Color;
 use display::Display;
-use {Axes, LineType, PointType};
+use {Axes, LineType, PointType, Solid};
 
 pub struct Properties {
     axes: Option<Axes>,
     color: Option<Color>,
     label: Option<MaybeOwned<'static>>,
-    line_type: Option<LineType>,
+    line_type: LineType,
     linewidth: Option<f64>,
     point_type: Option<PointType>,
     point_size: Option<f64>,
@@ -24,7 +24,7 @@ impl Properties {
             axes: None,
             color: None,
             label: None,
-            line_type: None,
+            line_type: Solid,
             linewidth: None,
             point_size: None,
             point_type: None,
@@ -56,7 +56,7 @@ impl Properties {
     ///
     /// **Note** By default `Solid` lines are used
     pub fn line_type(&mut self, lt: LineType) -> &mut Properties {
-        self.line_type = Some(lt);
+        self.line_type = lt;
         self
     }
 
@@ -101,12 +101,7 @@ impl Script for Properties {
         };
 
         script.push_str(format!("with {} ", self.style.display()).as_slice());
-
-        if let Some(lt) = self.line_type {
-            script.push_str(format!("lt {} ", lt.display()).as_slice())
-        } else {
-            script.push_str("lt -1")
-        }
+        script.push_str(format!("lt {} ", self.line_type.display()).as_slice());
 
         if let Some(lw) = self.linewidth {
             script.push_str(format!("lw {} ", lw).as_slice())
