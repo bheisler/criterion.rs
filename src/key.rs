@@ -82,7 +82,7 @@ impl Properties {
     }
 
     /// Sets the title of the key
-    pub fn title<S: IntoMaybeOwned<'static>>(&mut self, title: S) -> &mut Properties {
+    pub fn title<S>(&mut self, title: S) -> &mut Properties where S: IntoMaybeOwned<'static> {
         self.title = Some(title.into_maybe_owned());
         self
     }

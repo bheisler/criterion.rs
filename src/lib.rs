@@ -406,7 +406,7 @@ impl Figure {
     }
 
     /// Dumps the script required to produce the figure into `sink`
-    pub fn dump<W: Writer>(&mut self, sink: &mut W) -> IoResult<&mut Figure> {
+    pub fn dump<W>(&mut self, sink: &mut W) -> IoResult<&mut Figure> where W: Writer {
         try!(sink.write(self.script().as_slice()));
         Ok(self)
     }
@@ -569,7 +569,7 @@ impl Figure {
     }
 
     /// Changes the font
-    pub fn font<S: IntoMaybeOwned<'static>>(&mut self, name: S) -> &mut Figure {
+    pub fn font<S>(&mut self, name: S) -> &mut Figure where S: IntoMaybeOwned<'static> {
         self.font = Some(name.into_maybe_owned());
         self
     }
@@ -630,21 +630,21 @@ impl Figure {
     }
 
     /// Sets the title
-    pub fn title<S: IntoMaybeOwned<'static>>(&mut self, title: S) -> &mut Figure {
+    pub fn title<S>(&mut self, title: S) -> &mut Figure where S: IntoMaybeOwned<'static> {
         self.title = Some(title.into_maybe_owned());
         self
     }
 }
 
 /// Iterator that yields equally spaced values in the linear scale
-pub struct Linspace<T: Float> {
+pub struct Linspace<T> where T: Float {
     start: T,
     step: T,
     state: uint,
     stop: uint,
 }
 
-impl<T: Float> DoubleEndedIterator<T> for Linspace<T> {
+impl<T> DoubleEndedIterator<T> for Linspace<T> where T: Float {
     fn next_back(&mut self) -> Option<T> {
         if self.state == self.stop {
             None
@@ -655,7 +655,7 @@ impl<T: Float> DoubleEndedIterator<T> for Linspace<T> {
     }
 }
 
-impl<T: Float> Iterator<T> for Linspace<T> {
+impl<T> Iterator<T> for Linspace<T> where T: Float {
     fn next(&mut self) -> Option<T> {
         if self.state == self.stop {
             None
@@ -673,14 +673,14 @@ impl<T: Float> Iterator<T> for Linspace<T> {
 }
 
 /// Iterator that yields equally spaced values in the logarithmic scale
-pub struct Logspace<T: Float> {
+pub struct Logspace<T> where T: Float {
     start: T,
     step: T,
     state: uint,
     stop: uint,
 }
 
-impl<T: Float> DoubleEndedIterator<T> for Logspace<T> {
+impl<T> DoubleEndedIterator<T> for Logspace<T> where T: Float {
     fn next_back(&mut self) -> Option<T> {
         if self.state == self.stop {
             None
@@ -691,7 +691,7 @@ impl<T: Float> DoubleEndedIterator<T> for Logspace<T> {
     }
 }
 
-impl<T: Float> Iterator<T> for Logspace<T> {
+impl<T> Iterator<T> for Logspace<T> where T: Float {
     fn next(&mut self) -> Option<T> {
         if self.state == self.stop {
             None
@@ -754,7 +754,7 @@ trait Script {
     fn script(&self) -> String;
 }
 
-pub fn linspace<T: Float>(start: T, end: T, n: uint) -> Linspace<T> {
+pub fn linspace<T>(start: T, end: T, n: uint) -> Linspace<T> where T: Float {
     let step = if n < 2 {
         // NB The value of `step` doesn't matter in these cases
         num::zero()
@@ -770,7 +770,7 @@ pub fn linspace<T: Float>(start: T, end: T, n: uint) -> Linspace<T> {
     }
 }
 
-pub fn logspace<T: Float>(start: T, end: T, n: uint) -> Logspace<T> {
+pub fn logspace<T>(start: T, end: T, n: uint) -> Logspace<T> where T: Float {
     assert!(start > num::zero() && end > num::zero());
 
     let (start, end) = (start.ln(), end.ln());

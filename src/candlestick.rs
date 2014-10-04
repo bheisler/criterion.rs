@@ -29,7 +29,7 @@ impl Properties {
     }
 
     /// Sets the legend label
-    pub fn label<S: IntoMaybeOwned<'static>>(&mut self, label: S) -> &mut Properties {
+    pub fn label<S>(&mut self, label: S) -> &mut Properties where S: IntoMaybeOwned<'static> {
         self.label = Some(label.into_maybe_owned());
         self
     }
