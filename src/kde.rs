@@ -167,7 +167,7 @@ mod test {
         // Any [a b] integral should be in the range [0 1]
         #[quickcheck]
         fn integral(a: f64, b: f64) -> TestResult {
-            static dX: f64 = 1e-3;
+            static DX: f64 = 1e-3;
 
             if a > b {
                 TestResult::discard()
@@ -177,12 +177,12 @@ mod test {
                 let mut y = gaussian(a);
 
                 while x < b {
-                    acc += dX * y / 2.;
+                    acc += DX * y / 2.;
 
-                    x += dX;
+                    x += DX;
                     y = gaussian(x);
 
-                    acc += dX * y / 2.;
+                    acc += DX * y / 2.;
                 }
 
                 TestResult::from_bool(acc >= -TOLERANCE && acc <= 1. + TOLERANCE)
@@ -193,7 +193,7 @@ mod test {
     // The [-inf inf] integral of the estimated PDF should be one
     #[quickcheck]
     fn integral(sample_size: uint) -> TestResult {
-        static dX: f64 = 1e-3;
+        static DX: f64 = 1e-3;
 
         let data = if sample_size > 1 {
             let mut rng = rand::task_rng();
@@ -215,12 +215,12 @@ mod test {
         let mut y = kde(a);
 
         while x < b {
-            acc += dX * y / 2.;
+            acc += DX * y / 2.;
 
-            x += dX;
+            x += DX;
             y = kde(x);
 
-            acc += dX * y / 2.;
+            acc += DX * y / 2.;
         }
 
         TestResult::from_bool(is_close(acc, 1.))
