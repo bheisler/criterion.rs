@@ -1,10 +1,10 @@
 use simplot::axis::{BottomX, LeftY, Linear, Logarithmic, RightY};
-use simplot::color::{Color, Rgb};
+use simplot::color::{Black, Color, Rgb};
 use simplot::curve::{Lines, Points};
 use simplot::errorbar::{XErrorBar, YErrorBar};
 use simplot::grid::{Major, Minor};
 use simplot::key::{Inside, Left, LeftJustified, Outside, Right, SampleText, Top};
-use simplot::{BottomXRightY, Dash, Figure, FilledCircle, Solid};
+use simplot::{BottomXRightY, Dash, Figure, FilledCircle, Plus, Solid};
 use stats::outliers::{Outliers, LowMild, LowSevere, HighMild, HighSevere};
 use stats::regression::Slope;
 use stats::std_dev;
@@ -37,6 +37,7 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
 static FONT: &'static str = "Helvetica";
 static KDE_POINTS: uint = 500;
 static PLOT_SIZE: (uint, uint) = (1280, 720);
+
 static LINEWIDTH: f64 = 2.;
 static POINT_SIZE: f64 = 0.75;
 
@@ -423,6 +424,18 @@ fn log_floor(x: f64) -> f64 {
     (x / t).floor() * t
 }
 
+trait Append<T> {
+    fn append_(self, item: T) -> Self;
+}
+
+// NB I wish this was in the standard library
+impl<T> Append<T> for Vec<T> {
+    fn append_(mut self, item: T) -> Vec<T> {
+        self.push(item);
+        self
+    }
+}
+
 pub fn summarize(id: &str) {
     fn diff(s: &[f64]) -> Vec<f64> {
         s.windows(2).map(|w| w[1] - w[0]).collect()
@@ -436,11 +449,18 @@ pub fn summarize(id: &str) {
         let mut benches = contents.iter().filter_map(|entry| {
             if entry.is_dir() && entry.filename_str() != Some("summary") {
                 let label = entry.filename_str().unwrap();
-                let path = entry.join(sample).join("estimates.json");
+                let root = entry.join(sample);
 
-                Estimate::load(&path).map(|estimates| {
-                    (label, from_str::<uint>(label), estimates)
-                })
+                if let Some(estimates) = Estimate::load(&root.join("estimates.json")) {
+                    let sample: Vec<(u64, u64)> = fs::load(&root.join("sample.json"));
+                    let sample = sample.into_iter().map(|(iters, time)| {
+                        time as f64 / iters as f64
+                    }).collect::<Vec<_>>();
+
+                    Some((label, from_str::<uint>(label), estimates, sample))
+                } else {
+                    None
+                }
             } else {
                 None
             }
@@ -452,29 +472,29 @@ pub fn summarize(id: &str) {
 
         fs::mkdirp(&dir.join(format!("summary/{}", sample)));
 
-        let gnuplots: Vec<_> = if benches.iter().all(|&(_, input, _)| input.is_some()) {
+        let gnuplots = if benches.iter().all(|&(_, input, _, _)| input.is_some()) {
             // TODO trendline
-            let mut benches = benches.into_iter().map(|(label, input, estimates)| {
-                (label, input.unwrap(), estimates)
+            let mut benches = benches.into_iter().map(|(label, input, estimates, sample)| {
+                (label, input.unwrap(), estimates, sample)
             }).collect::<Vec<_>>();
 
-            benches.sort_by(|&(_, a, _), &(_, b, _)| {
+            benches.sort_by(|&(_, a, _, _), &(_, b, _, _)| {
                 a.cmp(&b)
             });
 
             [Mean, Median, estimate::Slope].iter().map(|&statistic| {
-                let points = benches.iter().map(|&(_, _, ref estimates)| {
+                let points = benches.iter().map(|&(_, _, ref estimates, _)| {
                     estimates[statistic].point_estimate
                 }).collect::<Vec<_>>();
-                let lbs = benches.iter().map(|&(_, _, ref estimates)| {
+                let lbs = benches.iter().map(|&(_, _, ref estimates, _)| {
                     estimates[statistic].confidence_interval.lower_bound
                 }).collect::<Vec<_>>();
-                let ubs = benches.iter().map(|&(_, _, ref estimates)| {
+                let ubs = benches.iter().map(|&(_, _, ref estimates, _)| {
                     estimates[statistic].confidence_interval.upper_bound
                 }).collect::<Vec<_>>();
 
                 // XXX scale inputs?
-                let inputs = benches.iter().map(|&(_, input, _)| input).collect::<Vec<_>>();
+                let inputs = benches.iter().map(|&(_, input, _, _)| input).collect::<Vec<_>>();
 
                 let (scale, prefix) = scale_time(ubs[].max());
                 let points = points.iter().map(|x| x * scale).collect::<Vec<_>>();
@@ -568,22 +588,23 @@ pub fn summarize(id: &str) {
                         point_size(POINT_SIZE).
                         point_type(FilledCircle)).
                     draw().unwrap()
-            }).collect()
+            }).collect::<Vec<_>>()
         } else {
-            [Mean, Median, estimate::Slope].iter().map(|&statistic| {
-                benches.sort_by(|&(_, _, ref a), &(_, _, ref b)| {
+            // NB median go last because we reuse the ordered set in the next step (summary)
+            [Mean, estimate::Slope, Median].iter().map(|&statistic| {
+                benches.sort_by(|&(_, _, ref a, _), &(_, _, ref b, _)| {
                     let a = a[statistic].point_estimate;
                     let b = b[statistic].point_estimate;
                     b.partial_cmp(&a).unwrap()
                 });
 
-                let points = benches.iter().map(|&(_, _, ref estimates)| {
+                let points = benches.iter().map(|&(_, _, ref estimates, _)| {
                     estimates[statistic].point_estimate
                 }).collect::<Vec<_>>();
-                let lbs = benches.iter().map(|&(_, _, ref estimates)| {
+                let lbs = benches.iter().map(|&(_, _, ref estimates, _)| {
                     estimates[statistic].confidence_interval.lower_bound
                 }).collect::<Vec<_>>();
-                let ubs = benches.iter().map(|&(_, _, ref estimates)| {
+                let ubs = benches.iter().map(|&(_, _, ref estimates, _)| {
                     estimates[statistic].confidence_interval.upper_bound
                 }).collect::<Vec<_>>();
 
@@ -611,6 +632,7 @@ pub fn summarize(id: &str) {
                 let min = *points.last().unwrap();
                 let rel = points.iter().map(|x| format!("{:.02}", x / min)).collect::<Vec<_>>();
 
+                let tics = iter::count(0.5, 1f64);
                 let points = points.iter();
                 let y = iter::count(0.5, 1f64);
                 // TODO Review axis scaling
@@ -640,18 +662,118 @@ pub fn summarize(id: &str) {
                     axis(LeftY, |a| a.
                         label("Input").
                         range(0., benches.len() as f64).
-                        tics(iter::count(0.5, 1f64), benches.iter().map(|&(label, _, _)| label))).
+                        tics(tics, benches.iter().map(|&(label, _, _, _)| label))).
                     axis(RightY, |a| a.
                         label("Relative time").
                         range(0., benches.len() as f64).
-                        tics(iter::count(0.5, 1f64), rel.iter().map(|x| x.as_slice()))).
+                        tics(tics, rel.iter().map(|x| x.as_slice()))).
                     error_bar(XErrorBar, points, y, lbs.iter(), ubs.iter(), |eb| eb.
                         label("Confidence Interval").
                         linewidth(LINEWIDTH).
                         point_type(FilledCircle).
                         point_size(POINT_SIZE)).
                     draw().unwrap()
-            }).collect()
+            }).collect::<Vec<_>>().append_({
+                let kdes = benches.iter().map(|&(_, _, _, ref sample)| {
+                    let (x, mut y) = kde::sweep(sample[], KDE_POINTS, None);
+                    let y_max = y[].max();
+                    for y in y.iter_mut() {
+                        *y /= y_max;
+                    }
+
+                    (x, y)
+                }).collect::<Vec<_>>();
+                let medians = benches.iter().map(|&(_, _, _, ref sample)| {
+                    sample[].median()
+                }).collect::<Vec<_>>();
+                let mut xs = kdes.iter().flat_map(|&(ref x, _)| x.iter());
+                let (mut min, mut max) = {
+                    let first = *xs.next().unwrap();
+                    (first, first)
+                };
+                for &e in xs {
+                    if e < min {
+                        min = e;
+                    } else if e > max {
+                        max = e;
+                    }
+                }
+                let (scale, prefix) = scale_time(max);
+                min *= scale;
+                max *= scale;
+
+                let xscale = if medians.len() < 3 {
+                    Linear
+                } else {
+                    let linear = std_dev(diff(medians[])[]);
+                    let log = {
+                        let v = medians.iter().map(|x| x.ln()).collect::<Vec<_>>();
+                        std_dev(diff(v[])[])
+                    };
+
+                    if linear < log {
+                        Linear
+                    } else {
+                        Logarithmic
+                    }
+                };
+
+                let tics = iter::count(0.5, 1f64);
+                let mut f = Figure::new();
+                f.
+                    font(FONT).
+                    output(dir.join(format!("summary/{}/violin_plot.svg", sample))).
+                    size(PLOT_SIZE).
+                    title(format!("{}: Violin plot", id)).
+                    axis(BottomX, |a| a.
+                        grid(Major, |g| g.
+                            show()).
+                        grid(Minor, |g| match xscale {
+                            Linear => g.hide(),
+                            Logarithmic => g.show(),
+                        }).
+                        label(format!("Average time ({}s)", prefix)).
+                        scale(xscale)).
+                    axis(BottomX, |a| match xscale {
+                        Linear => a,
+                        Logarithmic => {
+                            a.range(log_floor(min), log_ceil(max))
+                        },
+                    }).
+                    axis(LeftY, |a| a.
+                        label("Input").
+                        range(0., benches.len() as f64).
+                        tics(tics, benches.iter().map(|&(label, _, _, _)| label))).
+                    curve(Points, medians.iter().map(|median| median * scale), tics, |c| c.
+                        color(Black).
+                        label("Median").
+                        point_type(Plus).
+                        point_size(2. * POINT_SIZE));
+
+                let mut is_first = true;
+                for (i, &(ref x, ref y)) in kdes.iter().enumerate() {
+                    let i = i as f64 + 0.5;
+                    let x = x.iter().map(|&x| x * scale);
+                    let y1 = y.iter().map(|&y| i + y * 0.5);
+                    let y2 = y.iter().map(|&y| i - y * 0.5);
+
+                    f.
+                        filled_curve(x, y1, y2, |c| if is_first {
+                            is_first = false;
+
+                            c.
+                                color(DARK_BLUE).
+                                label("PDF").
+                                opacity(0.25)
+                        } else {
+                            c.
+                                color(DARK_BLUE).
+                                opacity(0.25)
+                        });
+                }
+
+                f.draw().unwrap()
+            })
         };
 
         for gnuplot in gnuplots.into_iter() {
