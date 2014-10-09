@@ -180,7 +180,7 @@ impl Figure {
     /// # extern crate num;
     /// # extern crate simplot;
     /// # fn main() {
-    /// # use std::io::{UserRWX, fs};
+    /// # use std::io::{fs, USER_RWX};
     /// use num::Complex;
     /// use simplot::axis::{BottomX, LeftY, Logarithmic, RightY};
     /// use simplot::color::{DarkViolet, Rgb};
@@ -199,7 +199,7 @@ impl Figure {
     /// let phase = xs.map(|x| tf(x).arg() * 180. / PI);
     /// let magnitude = xs.map(|x| tf(x).norm());
     ///
-    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), UserRWX).unwrap();
+    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
     /// # assert_eq!(Some(String::new()),
     /// Figure::new().
     /// #   font("Helvetica").
@@ -277,7 +277,7 @@ impl Figure {
     /// ![Plot](candlesticks.svg)
     ///
     /// ```
-    /// # use std::io::{UserRWX, fs};
+    /// # use std::io::{USER_RWX, fs};
     /// use simplot::Figure;
     /// use simplot::axis::BottomX;
     /// use simplot::color::{Black, Rgb};
@@ -295,7 +295,7 @@ impl Figure {
     ///     (h - l) * rng.gen() + l
     /// }).collect::<Vec<_>>();
     ///
-    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), UserRWX).unwrap();
+    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
     /// # assert_eq!(Some(String::new()),
     /// Figure::new().
     /// #   font("Helvetica").
@@ -346,7 +346,7 @@ impl Figure {
     /// ![Plot](curve.svg)
     ///
     /// ```
-    /// # use std::io::{UserRWX, fs};
+    /// # use std::io::{USER_RWX, fs};
     /// use simplot::color::{DarkViolet, Rgb};
     /// use simplot::curve::{Impulses, LinesPoints, Steps};
     /// use simplot::key::{Inside, Left, Top};
@@ -354,7 +354,7 @@ impl Figure {
     ///
     /// let xs = linspace::<f64>(-10., 10., 51);
     ///
-    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), UserRWX).unwrap();
+    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
     /// # assert_eq!(Some(String::new()),
     /// Figure::new().
     /// #   font("Helvetica").
@@ -421,7 +421,7 @@ impl Figure {
     /// ![Plot](error_bar.svg)
     ///
     /// ```
-    /// # use std::io::{UserRWX, fs};
+    /// # use std::io::{USER_RWX, fs};
     /// use simplot::axis::BottomX;
     /// use simplot::color::{DarkViolet, Rgb};
     /// use simplot::curve::Lines;
@@ -450,7 +450,7 @@ impl Figure {
     /// let highs = ys.iter().map(|y| y + 0.025 + 0.075 * rng.gen()).collect::<Vec<f64>>();
     /// let xs = xs.iter().map(|x| x + 0.2 * rng.gen() - 0.1);
     ///
-    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), UserRWX).unwrap();
+    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
     /// # assert_eq!(Some(String::new()),
     /// Figure::new().
     /// #   font("Helvetica").
@@ -503,7 +503,7 @@ impl Figure {
     /// ![Plot](filled_curve.svg)
     ///
     /// ```
-    /// # use std::io::{UserRWX, fs};
+    /// # use std::io::{USER_RWX, fs};
     /// use simplot::axis::{BottomX, LeftY};
     /// use simplot::color::{ForestGreen, Gold, Red};
     /// use simplot::key::{Inside, Left, LeftJustified, SampleText, Top};
@@ -519,7 +519,7 @@ impl Figure {
     ///     (((x - mu).powi(2) / 2. / sigma.powi(2)).exp() * sigma * (2. * PI).sqrt()).recip()
     /// }
     ///
-    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), UserRWX).unwrap();
+    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
     /// # assert_eq!(Some(String::new()),
     /// Figure::new().
     /// #   font("Helvetica").
