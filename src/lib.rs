@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(if_let, macro_rules, phase, tuple_indexing)]
+#![feature(if_let, macro_rules, phase, slicing_syntax, tuple_indexing)]
 
 //! A statistics-driven micro-benchmarking library written in Rust.
 //!
