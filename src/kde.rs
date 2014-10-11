@@ -1,8 +1,9 @@
 //! Kernel density estimation
 
+use parallel;
 use std::iter::AdditiveIterator;
 use std::ops::Fn;
-use std::{cmp, comm, mem, os, ptr, raw};
+use std::{os, ptr};
 
 use std_dev;
 
@@ -53,44 +54,18 @@ impl<'a> Kde<'a> {
 
         // TODO Under what conditions should multi thread by favored?
         if ncpus > 1 {
-            let chunk_size = n / ncpus + 1;
-            let (tx, rx) = comm::channel();
-
+            let granularity = n / ncpus + 1;
             let mut pdf = Vec::with_capacity(n);
             unsafe { pdf.set_len(n) }
-            let pdf_ptr = pdf.as_mut_ptr();
 
-            // FIXME (when available) Use a safe fork-join API
-            let &Kde { bandwidth: bw, kernel: k, sample: sample } = self;
-            let raw::Slice { data: ptr, len: len } =
-                unsafe { mem::transmute::<&[f64], raw::Slice<f64>>(sample) };
+            parallel::divide(pdf[mut], granularity, |data, offset| {
+                let mut x = a + offset as f64 * dx;
 
-            for i in range(0, ncpus) {
-                let tx = tx.clone();
-
-                spawn(proc() {
-                    // NB This task will finish before this slice becomes invalid
-                    let sample: &[f64] =
-                        unsafe { mem::transmute(raw::Slice { data: ptr, len: len }) };
-
-                    let kde = Kde { bandwidth: bw, kernel: k, sample: sample };
-
-                    let start = cmp::min(i * chunk_size, n) as int;
-                    let end = cmp::min((i + 1) * chunk_size, n) as int;
-
-                    let mut x = a + start as f64 * dx;
-                    for j in range(start, end) {
-                        unsafe { ptr::write(pdf_ptr.offset(j), (x, kde(x))) }
-                        x += dx;
-                    }
-
-                    tx.send(());
-                });
-            }
-
-            for _ in range(0, ncpus) {
-                rx.recv();
-            }
+                for ptr in data.iter_mut() {
+                    unsafe { ptr::write(ptr, (x, self(x))) }
+                    x += dx;
+                }
+            });
 
             pdf
         } else {
