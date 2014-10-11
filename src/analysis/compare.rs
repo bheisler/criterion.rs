@@ -3,7 +3,7 @@ use stats::{Sample, mod};
 use time;
 
 use Criterion;
-use estimate::{Distributions, Estimate, Estimates, Mean, Median, Statistic};
+use estimate::{Distributions, Estimate, Estimates, Mean, Median};
 use format;
 use fs;
 use plot;
@@ -86,10 +86,9 @@ fn t_test(id: &str, times: &[f64], base_times: &[f64], criterion: &Criterion) ->
 
 // Estimates the relative change in the statistics of the population
 fn estimates(id: &str, times: &[f64], base_times: &[f64], criterion: &Criterion) -> Vec<bool> {
-    static REL_STATS: &'static [Statistic] = &[Mean, Median];
-
-    let rel_stats_fns: Vec<fn(&[f64], &[f64]) -> f64> =
-        REL_STATS.iter().map(|st| st.rel_fn()).collect();
+    fn stats(a: &[f64], b: &[f64]) -> (f64, f64) {
+        (Mean.rel_fn()(a, b), Median.rel_fn()(a, b))
+    }
 
     let cl = criterion.confidence_level;
     let nresamples = criterion.nresamples;
@@ -99,16 +98,21 @@ fn estimates(id: &str, times: &[f64], base_times: &[f64], criterion: &Criterion)
     let base_sample = Sample::new(base_times);
 
     println!("> Estimating relative change of statistics");
-    let distributions = elapsed!(
-        "Bootstrapping the relative statistics",
-        sample.bootstrap2_many(&base_sample, rel_stats_fns[], nresamples)
-    );
+    let distributions = {
+        let (a, b) = elapsed!(
+            "Bootstrapping the relative statistics",
+            sample.bootstrap2(&base_sample, stats, nresamples)
+        ).split2();
 
-    let points: Vec<f64> = rel_stats_fns.iter().map(|&f| {
-        f(times, base_times)
-    }).collect();
+        vec![a, b]
+    };
+
+    let points = {
+        let (a, b) = stats(times, base_times);
+        [a, b]
+    };
     let distributions: Distributions =
-        REL_STATS.iter().map(|&x| x).zip(distributions.into_iter()).collect();
+        [Mean, Median].iter().map(|&x| x).zip(distributions.into_iter()).collect();
     let estimates = Estimate::new(&distributions, points[], cl);
 
     report::rel(&estimates);

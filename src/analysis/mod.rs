@@ -14,7 +14,6 @@ use estimate::{
     Mean,
     Median,
     MedianAbsDev,
-    Statistic,
     StdDev,
     mod,
 };
@@ -150,8 +149,8 @@ fn regression(
     pairs: &[(f64, f64)],
     criterion: &Criterion,
 ) -> (Distribution<f64>, Estimate) {
-    fn slr(sample: &[(f64, f64)]) -> Slope<f64> {
-        Slope::fit(sample)
+    fn slr(sample: &[(f64, f64)]) -> f64 {
+        Slope::fit(sample).0
     }
 
     let cl = criterion.confidence_level;
@@ -161,10 +160,8 @@ fn regression(
     let sample = Sample::new(pairs);
     let distribution = elapsed!(
         "Bootstrapped linear regression",
-        sample.bootstrap(slr, criterion.nresamples)).unwrap();
+        sample.bootstrap(slr, criterion.nresamples));
 
-    let distribution =
-        Distribution::_new(distribution.into_iter().map(|x| x.slope()).collect::<Vec<f64>>());
     let point = Slope::fit(pairs);
     let ConfidenceInterval { lower_bound: lb, upper_bound: ub, .. } =
         distribution.confidence_interval(criterion.confidence_level);
@@ -211,23 +208,31 @@ fn estimates(
     times: &[f64],
     criterion: &Criterion,
 ) -> (Distributions, Estimates) {
-    static ABS_STATS: &'static [Statistic] = &[Mean, Median, MedianAbsDev, StdDev];
-
-    let abs_stats_fns: Vec<fn(&[f64]) -> f64> =
-        ABS_STATS.iter().map(|st| st.abs_fn()).collect();
+    fn stats(a: &[f64]) -> (f64, f64, f64, f64) {
+        (Mean.abs_fn()(a), Median.abs_fn()(a), MedianAbsDev.abs_fn()(a), StdDev.abs_fn()(a))
+    }
 
     let cl = criterion.confidence_level;
     let nresamples = criterion.nresamples;
 
-    let points: Vec<f64> = abs_stats_fns.iter().map(|&f| f(times)).collect();
+    let points = {
+        let (a, b, c, d) = stats(times);
+
+        [a, b, c, d]
+    };
 
     println!("> Estimating the statistics of the sample");
-    let sample = Sample::new(times[]);
-    let distributions = elapsed!(
+    let sample = Sample::new(times);
+    let distributions = {
+        let (a, b, c, d) = elapsed!(
         "Bootstrapping the absolute statistics",
-        sample.bootstrap_many(abs_stats_fns[], nresamples));
-    let distributions: Distributions =
-        ABS_STATS.iter().map(|&x| x).zip(distributions.into_iter()).collect();
+        sample.bootstrap(stats, nresamples)).split4();
+
+        vec![a, b, c, d]
+    };
+    let distributions: Distributions = [Mean, Median, MedianAbsDev, StdDev].iter().map(|&x| {
+        x
+    }).zip(distributions.into_iter()).collect();
     let estimates = Estimate::new(&distributions, points[], cl);
 
     report::abs(&estimates);
