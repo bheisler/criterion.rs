@@ -4,6 +4,9 @@ name = "stats"
 version = "0.0.0"
 authors = ["Jorge Aparicio <japaric@linux.com>"]
 
+[dependencies.parallel]
+git = "https://github.com/japaric/parallel.rs"
+
 [dev-dependencies.quickcheck]
 git = "https://github.com/BurntSushi/quickcheck"
 
