@@ -1,13 +1,14 @@
 //! t-test
 
-use std::{cmp, comm, mem, num, os, ptr, raw};
+use std::{num, os, ptr};
 
+use parallel;
 use resamples::Resamples;
 
 /// A bootstrapped t distribution
 pub struct TDistribution<A>(Vec<A>);
 
-impl<A: FloatMath + FromPrimitive + Send> TDistribution<A> {
+impl<A: FloatMath + FromPrimitive + Send + Sync> TDistribution<A> {
     /// Computes a t distribution by bootstrapping the t-statistic between two samples
     ///
     /// * Bootstrap method: Case resampling
@@ -24,50 +25,22 @@ impl<A: FloatMath + FromPrimitive + Send> TDistribution<A> {
 
         // TODO Under what conditions should multi thread by favored?
         if ncpus > 1 && nresamples > a.len() + b.len() {
-            let chunk_size = nresamples / ncpus + 1;
-            let (tx, rx) = comm::channel();
-
+            let granularity = nresamples / ncpus + 1;
             let mut distribution = Vec::with_capacity(nresamples);
             unsafe { distribution.set_len(nresamples) }
-            let distribution_ptr = distribution.as_mut_ptr();
 
-            // FIXME (when available) Use a safe fork-join API
-            let raw::Slice { data: ptr, len: len } =
-                unsafe { mem::transmute::<&[A], raw::Slice<A>>(joint_sample) };
+            parallel::divide(distribution[mut], granularity, |data, _| {
+                let mut resamples = Resamples::new(joint_sample);
 
-            for i in range(0, ncpus) {
-                let tx = tx.clone();
+                for ptr in data.iter_mut() {
+                    let joint_resample = resamples.next();
 
-                spawn(proc() {
-                    // NB This task will finish before this slice becomes invalid
-                    let slice: &[A] =
-                        unsafe { mem::transmute(raw::Slice { data: ptr, len: len }) };
+                    let resample = joint_resample[..n];
+                    let other_resample = joint_resample[n..];
 
-                    let mut resamples = Resamples::new(slice);
-
-                    let start = cmp::min(i * chunk_size, nresamples) as int;
-                    let end = cmp::min((i + 1) * chunk_size, nresamples) as int;
-
-                    for j in range(start, end) {
-                        let joint_resample = resamples.next();
-
-                        let resample = joint_resample.slice_to(n);
-                        let other_resample = joint_resample.slice_from(n);
-
-                        unsafe {
-                            ptr::write(
-                                distribution_ptr.offset(j),
-                                ::stats::t(resample, other_resample))
-                        }
-                    }
-
-                    tx.send(());
-                })
-            }
-
-            for _ in range(0, ncpus) {
-                rx.recv();
-            }
+                    unsafe { ptr::write(ptr, ::stats::t(resample, other_resample)) }
+                }
+            });
 
             TDistribution(distribution)
         } else {
