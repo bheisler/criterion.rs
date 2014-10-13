@@ -4,8 +4,6 @@ use std::collections::TreeMap;
 use std::io::File;
 use std::fmt::{Formatter, Show, mod};
 
-use stats;
-
 #[deriving(Decodable, Encodable, PartialEq)]
 pub struct Estimate {
     pub confidence_interval: ConfidenceInterval<f64>,
@@ -42,34 +40,6 @@ pub enum Statistic {
     MedianAbsDev,
     Slope,
     StdDev,
-}
-
-impl Statistic {
-    pub fn abs_fn(&self) -> fn(&[f64]) -> f64 {
-        match *self {
-            Mean => stats::mean,
-            Median => stats::median,
-            MedianAbsDev => stats::median_abs_dev,
-            StdDev => stats::std_dev,
-            _ => unimplemented!(),
-        }
-    }
-
-    pub fn rel_fn(&self) -> fn(&[f64], &[f64]) -> f64 {
-        fn rel_diff_mean(x: &[f64], y: &[f64]) -> f64 {
-            stats::mean(x) / stats::mean(y) - 1.
-        }
-
-        fn rel_diff_median(x: &[f64], y: &[f64]) -> f64 {
-            stats::median(x) / stats::median(y) - 1.
-        }
-
-        match *self {
-            Mean => rel_diff_mean,
-            Median => rel_diff_median,
-            _ => unimplemented!(),
-        }
-    }
 }
 
 impl Show for Statistic {

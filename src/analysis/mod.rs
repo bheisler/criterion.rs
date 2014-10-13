@@ -1,6 +1,6 @@
 use stats::ConfidenceInterval;
 use stats::outliers::Outliers;
-use stats::regression::Slope ;
+use stats::regression::Slope;
 use stats::{Distribution, Sample};
 use std::fmt::Show;
 use std::io::Command;
@@ -208,8 +208,15 @@ fn estimates(
     times: &[f64],
     criterion: &Criterion,
 ) -> (Distributions, Estimates) {
-    fn stats(a: &[f64]) -> (f64, f64, f64, f64) {
-        (Mean.abs_fn()(a), Median.abs_fn()(a), MedianAbsDev.abs_fn()(a), StdDev.abs_fn()(a))
+    fn stats(sample: &[f64]) -> (f64, f64, f64, f64) {
+        use stats::Stats;
+
+        let mean = sample.mean();
+        let std_dev = sample.std_dev(Some(mean));
+        let median = sample.percentiles().median();
+        let mad = sample.median_abs_dev(Some(median));
+
+        (mean, median, mad, std_dev)
     }
 
     let cl = criterion.confidence_level;

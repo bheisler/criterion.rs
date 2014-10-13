@@ -5,13 +5,12 @@ use simplot::errorbar::{XErrorBar, YErrorBar};
 use simplot::grid::{Major, Minor};
 use simplot::key::{Inside, Left, LeftJustified, Outside, Right, SampleText, Top};
 use simplot::{BottomXRightY, Dash, Figure, FilledCircle, Plus, Solid};
+use stats::Stats;
 use stats::outliers::{Outliers, LowMild, LowSevere, HighMild, HighSevere};
 use stats::regression::Slope;
-use stats::std_dev;
 use std::io::fs::PathExtensions;
 use std::iter::{Repeat, mod};
 use std::str;
-use test::stats::Stats;
 
 use estimate::{Distributions, Estimate, Estimates, Mean, Median, mod};
 use fs;
@@ -173,9 +172,9 @@ pub fn regression(
         format!("Iterations (x 10^{})", exponent)
     };
 
-    let lb = lb.slope() * max_iters * y_scale;
-    let point = point.slope() * max_iters * y_scale;
-    let ub = ub.slope() * max_iters * y_scale;
+    let lb = lb.0 * max_iters * y_scale;
+    let point = point.0 * max_iters * y_scale;
+    let ub = ub.0 * max_iters * y_scale;
     let max_iters = max_iters * x_scale;
 
     let gnuplot = Figure::new().
@@ -506,10 +505,10 @@ pub fn summarize(id: &str) {
                     Linear
                 } else {
                     let inputs = inputs.iter().map(|&x| x as f64).collect::<Vec<_>>();
-                    let linear = std_dev(diff(inputs[])[]);
+                    let linear = diff(inputs[])[].std_dev(None);
                     let log = {
                         let v = inputs.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        std_dev(diff(v[])[])
+                        diff(v[])[].std_dev(None)
                     };
 
                     if linear < log {
@@ -522,10 +521,10 @@ pub fn summarize(id: &str) {
                 let yscale = if points.len() < 3 {
                     Linear
                 } else {
-                    let linear = std_dev(diff(points[])[]);
+                    let linear = diff(points[])[].std_dev(None);
                     let log = {
                         let v = points.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        std_dev(diff(v[])[])
+                        diff(v[])[].std_dev(None)
                     };
 
                     if linear < log {
@@ -616,10 +615,10 @@ pub fn summarize(id: &str) {
                 let xscale = if points.len() < 3 {
                     Linear
                 } else {
-                    let linear = std_dev(diff(points[])[]);
+                    let linear = diff(points[])[].std_dev(None);
                     let log = {
                         let v = points.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        std_dev(diff(v[])[])
+                        diff(v[])[].std_dev(None)
                     };
 
                     if linear < log {
@@ -684,7 +683,7 @@ pub fn summarize(id: &str) {
                     (x, y)
                 }).collect::<Vec<_>>();
                 let medians = benches.iter().map(|&(_, _, _, ref sample)| {
-                    sample[].median()
+                    sample[].percentiles().median()
                 }).collect::<Vec<_>>();
                 let mut xs = kdes.iter().flat_map(|&(ref x, _)| x.iter());
                 let (mut min, mut max) = {
@@ -705,10 +704,10 @@ pub fn summarize(id: &str) {
                 let xscale = if medians.len() < 3 {
                     Linear
                 } else {
-                    let linear = std_dev(diff(medians[])[]);
+                    let linear = diff(medians[])[].std_dev(None);
                     let log = {
                         let v = medians.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        std_dev(diff(v[])[])
+                        diff(v[])[].std_dev(None)
                     };
 
                     if linear < log {
