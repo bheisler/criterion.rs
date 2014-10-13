@@ -1,7 +1,6 @@
 //! Classification of outliers
 
 use std::num;
-use test::stats::Stats;
 
 // TODO Add more outlier classification methods
 
@@ -64,6 +63,8 @@ impl Label {
 impl<A: FloatMath + FromPrimitive> Outliers<A> {
     /// Returns the filtered sample, and the classified outliers
     pub fn classify(sample: &[A]) -> Outliers<A> {
+        use std_test::stats::Stats;
+
         let (q1, _, q3) = sample.quartiles();
         let iqr = q3 - q1;
 

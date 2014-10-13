@@ -41,7 +41,7 @@ impl <'a, A: Clone> Resamples<'a, A> {
             },
         }
 
-        self.stage.as_ref().unwrap().as_slice()
+        self.stage.as_ref().unwrap()[]
     }
 }
 
@@ -49,29 +49,25 @@ impl <'a, A: Clone> Resamples<'a, A> {
 mod test {
     use quickcheck::TestResult;
     use std::collections::TreeSet;
-    use std::rand::{Rng, mod};
 
     use super::Resamples;
+    use test;
 
     // Check that the resample is a subset of the sample
     #[quickcheck]
-    fn subset(sample_size: uint, nresamples: uint) -> TestResult {
-        let sample = if sample_size > 1 {
-            let mut rng = rand::task_rng();
+    fn subset(size: uint, nresamples: uint) -> TestResult {
+        if let Some(sample) = test::vec::<int>(size) {
+            let mut resamples = Resamples::new(sample[]);
+            let sample = sample.iter().map(|&x| x).collect::<TreeSet<_>>();
 
-            Vec::from_fn(sample_size, |_| rng.gen::<int>())
+            TestResult::from_bool(range(0, nresamples).all(|_| {
+                let resample = resamples.next().iter().map(|&x| x).collect::<TreeSet<_>>();
+
+                resample.is_subset(&sample)
+            }))
         } else {
-            return TestResult::discard();
-        };
-
-        let mut resamples = Resamples::new(sample.as_slice());
-        let sample: TreeSet<int> = sample.iter().map(|&x| x).collect();
-
-        TestResult::from_bool(range(0, nresamples).all(|_| {
-            let resample: TreeSet<int> = resamples.next().iter().map(|&x| x).collect();
-
-            resample.is_subset(&sample)
-        }))
+            TestResult::discard()
+        }
     }
 
     // XXX Perhaps add a check that the resamples are different
