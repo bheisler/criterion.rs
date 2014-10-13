@@ -20,7 +20,7 @@ impl<A: FloatMath + FromPrimitive + Send> TDistribution<A> {
         let mut joint_sample = Vec::with_capacity(n + b.len());
         joint_sample.push_all(a);
         joint_sample.push_all(b);
-        let joint_sample = joint_sample.as_slice();
+        let joint_sample = joint_sample[];
 
         // TODO Under what conditions should multi thread by favored?
         if ncpus > 1 && nresamples > a.len() + b.len() {
@@ -88,17 +88,13 @@ impl<A: FloatMath + FromPrimitive + Send> TDistribution<A> {
 impl<A> TDistribution<A> {
     /// Returns an slice to the data points of the distribution
     pub fn as_slice(&self) -> &[A] {
-        let &TDistribution(ref distribution) = self;
-
-        distribution.as_slice()
+        self.0[]
     }
 
 
     /// Returns a vector that contains the data points of the distribution
     pub fn unwrap(self) -> Vec<A> {
-        let TDistribution(distribution) = self;
-
-        distribution
+        self.0
     }
 }
 
@@ -107,8 +103,9 @@ impl<A: Float> TDistribution<A> {
     pub fn p_value(&self, t_statistic: A, tails: Tails) -> A {
         let t = t_statistic.abs();
 
-        let hits = self.as_slice().iter().filter(|&&x| x < -t || x > t).count();
-        let n = self.as_slice().len();
+        let distribution = self.as_slice();
+        let hits = distribution.iter().filter(|&&x| x < -t || x > t).count();
+        let n = distribution.len();
 
         let p_value = num::cast::<_, A>(hits).unwrap() / num::cast::<_, A>(n).unwrap();
 
@@ -128,23 +125,21 @@ pub enum Tails {
 
 #[cfg(test)]
 mod bench {
-    use test::Bencher;
-    use std::rand::{Rng, mod};
+    use std_test::Bencher;
 
     use super::TDistribution;
+    use test;
 
     static SAMPLE_SIZE: uint = 100;
     static NRESAMPLES: uint = 100_000;
 
     #[bench]
     fn new(b: &mut Bencher) {
-        let mut rng = rand::task_rng();
-
-        let a = Vec::from_fn(SAMPLE_SIZE, |_| rng.gen::<f64>());
-        let c = Vec::from_fn(SAMPLE_SIZE, |_| rng.gen::<f64>());
+        let a = test::vec::<f64>(SAMPLE_SIZE).unwrap();
+        let c = test::vec::<f64>(SAMPLE_SIZE).unwrap();
 
         b.iter(|| {
-            TDistribution::new(a.as_slice(), c.as_slice(), NRESAMPLES)
+            TDistribution::new(a[], c[], NRESAMPLES)
         })
     }
 

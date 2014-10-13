@@ -19,9 +19,7 @@ impl <'a, A> Sample<'a, A> {
     /// Returns an slice that contains all the data points contained in the sample
     #[experimental]
     pub fn as_slice(&self) -> &[A] {
-        let &Sample(data) = self;
-
-        data
+        self.0
     }
 }
 
@@ -131,91 +129,88 @@ impl<'a, A> Collection for Sample<'a, A> {
 #[cfg(test)]
 mod test {
     use quickcheck::TestResult;
-    use std::rand::{Rng, mod};
 
-    use Sample;
-    use {mean, t};
+    use {Sample, Stats};
+    use test;
 
     #[quickcheck]
     fn bootstrap(sample_size: uint, nresamples: uint) -> TestResult {
-        let data = if sample_size > 0 {
-            let mut rng = rand::task_rng();
+        fn mean(sample: &[f64]) -> f64 {
+            sample.mean()
+        }
 
-            Vec::from_fn(sample_size, |_| rng.gen::<f64>())
+        if let Some(data) = test::vec::<f64>(sample_size) {
+            let sample = Sample::new(data[]);
+
+            let distribution = if nresamples > 0 {
+                sample.bootstrap(mean, nresamples).unwrap()
+            } else {
+                return TestResult::discard();
+            };
+
+            TestResult::from_bool(
+                // Allocated memory in the most efficient way
+                distribution.capacity() == distribution.len() &&
+                // Computed the correct number of resamples
+                distribution.len() == nresamples &&
+                // No uninitialized values
+                distribution.iter().all(|&x| x >= 0. && x <= 1.)
+            )
         } else {
-            return TestResult::discard();
-        };
-
-        let sample = Sample::new(data.as_slice());
-
-        let distribution = if nresamples > 0 {
-            sample.bootstrap(mean, nresamples).unwrap()
-        } else {
-            return TestResult::discard();
-        };
-
-        TestResult::from_bool(
-            // Allocated memory in the most efficient way
-            distribution.capacity() == distribution.len() &&
-            // Computed the correct number of resamples
-            distribution.len() == nresamples &&
-            // No uninitialized values
-            distribution.iter().all(|&x| x >= 0. && x <= 1.)
-        )
+            TestResult::discard()
+        }
     }
 
     #[quickcheck]
     fn bootstrap2((ssize, other_ssize): (uint, uint), nresamples: uint) -> TestResult {
-        let (data, other_data) = if ssize > 0 && other_ssize > 0 {
-            let mut rng = rand::task_rng();
+        if let (Some(data), Some(other_data)) =
+            (test::vec::<f64>(ssize), test::vec::<f64>(other_ssize))
+        {
+            let sample = Sample::new(data[]);
+            let other_sample = Sample::new(other_data[]);
 
-            (
-                Vec::from_fn(ssize, |_| rng.gen::<f64>()),
-                Vec::from_fn(other_ssize, |_| rng.gen::<f64>()),
+            let distribution = if nresamples > 0 {
+                sample.bootstrap2(&other_sample, ::t, nresamples).unwrap()
+            } else {
+                return TestResult::discard();
+            };
+
+            let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as uint;
+            let nresamples = nresamples_sqrt * nresamples_sqrt;
+
+            TestResult::from_bool(
+                // Allocated memory in the most efficient way
+                distribution.capacity() == distribution.len() &&
+                // Computed the correct number of resamples
+                distribution.len() == nresamples
             )
         } else {
-            return TestResult::discard();
-        };
+            TestResult::discard()
+        }
 
-        let sample = Sample::new(data.as_slice());
-        let other_sample = Sample::new(other_data.as_slice());
-
-        let distribution = if nresamples > 0 {
-            sample.bootstrap2(&other_sample, t, nresamples).unwrap()
-        } else {
-            return TestResult::discard();
-        };
-
-        let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as uint;
-        let nresamples = nresamples_sqrt * nresamples_sqrt;
-
-        TestResult::from_bool(
-            // Allocated memory in the most efficient way
-            distribution.capacity() == distribution.len() &&
-            // Computed the correct number of resamples
-            distribution.len() == nresamples
-        )
     }
 }
 
 #[cfg(test)]
 mod bench {
-    use std::rand::{Rng, mod};
-    use test::Bencher;
+    use std_test::Bencher;
 
-    use Sample;
-    use mean;
+    use {Sample, Stats};
     use regression::{Slope, StraightLine};
+    use test;
 
     static NRESAMPLES: uint = 100_000;
     static SAMPLE_SIZE: uint = 100;
 
     #[bench]
     fn bootstrap_mean(b: &mut Bencher) {
-        let mut rng = rand::task_rng();
-        let data = Vec::from_fn(SAMPLE_SIZE, |_| rng.gen::<f64>());
+        fn mean(sample: &[f64]) -> f64 {
+            sample.mean()
+        }
 
-        let sample = Sample::new(data.as_slice());
+        let data = test::vec::<f64>(SAMPLE_SIZE).unwrap();
+
+        let sample = Sample::new(data[]);
 
         b.iter(|| {
             sample.bootstrap(mean, NRESAMPLES)
@@ -228,10 +223,8 @@ mod bench {
             StraightLine::fit(sample)
         }
 
-        let mut rng = rand::task_rng();
-
-        let data = Vec::from_fn(SAMPLE_SIZE, |_| rng.gen::<(f64, f64)>());
-        let sample = Sample::new(data.as_slice());
+        let data = test::vec::<(f64, f64)>(SAMPLE_SIZE).unwrap();
+        let sample = Sample::new(data[]);
 
         b.iter(|| {
             sample.bootstrap(slr, NRESAMPLES)
@@ -244,10 +237,8 @@ mod bench {
             Slope::fit(sample)
         }
 
-        let mut rng = rand::task_rng();
-
-        let data = Vec::from_fn(SAMPLE_SIZE, |_| rng.gen::<(f64, f64)>());
-        let sample = Sample::new(data.as_slice());
+        let data = test::vec::<(f64, f64)>(SAMPLE_SIZE).unwrap();
+        let sample = Sample::new(data[]);
 
         b.iter(|| {
             sample.bootstrap(slr, NRESAMPLES)

@@ -5,7 +5,7 @@ use std::iter::AdditiveIterator;
 use std::ops::Fn;
 use std::{os, ptr};
 
-use std_dev;
+use Stats;
 
 /// Univariate Kernel Density Estimator
 #[experimental]
@@ -105,7 +105,7 @@ fn silverman(x: &[f64]) -> f64 {
     static EXPONENT: f64 = 1. / 5.;
 
     let n = x.len() as f64;
-    let sigma = std_dev(x);
+    let sigma = x.std_dev(None);
 
     sigma * (FACTOR / n).powf(EXPONENT)
 }
@@ -122,21 +122,20 @@ fn gaussian(x: f64) -> f64 {
 #[cfg(test)]
 mod test {
     use quickcheck::TestResult;
-    use std::rand::{Rng, mod};
-    use test::stats::Stats;
+    use std_test::stats::Stats;
 
     use kde::Kde;
-    use tol::is_close;
+    use test::{ApproxEq, mod};
 
     mod gaussian {
         use quickcheck::TestResult;
 
         use super::super::gaussian;
-        use tol::{TOLERANCE, is_close};
+        use test::ApproxEq;
 
         #[quickcheck]
         fn symmetric(x: f64) -> bool {
-            is_close(gaussian(-x), gaussian(x))
+            gaussian(-x).approx_eq(gaussian(x))
         }
 
         // Any [a b] integral should be in the range [0 1]
@@ -160,63 +159,60 @@ mod test {
                     acc += DX * y / 2.;
                 }
 
-                TestResult::from_bool(acc >= -TOLERANCE && acc <= 1. + TOLERANCE)
+                TestResult::from_bool(
+                    (acc > 0. || acc.approx_eq(0.)) && (acc < 1. || acc.approx_eq(1.)))
             }
         }
     }
 
     // The [-inf inf] integral of the estimated PDF should be one
     #[quickcheck]
-    fn integral(sample_size: uint) -> TestResult {
+    fn integral(size: uint) -> TestResult {
         static DX: f64 = 1e-3;
 
-        let data = if sample_size > 1 {
-            let mut rng = rand::task_rng();
+        if let Some(data) = test::vec::<f64>(size) {
+            let data = data[];
 
-            Vec::from_fn(sample_size, |_| rng.gen::<f64>())
+            let kde = Kde::new(data);
+            let h = kde.bandwidth();
+            // NB Obviously a [-inf inf] integral is not feasible, but this range works quite well
+            let (a, b) = (data.min() - 5. * h, data.max() + 5. * h);
+
+            let mut acc = 0.;
+            let mut x = a;
+            let mut y = kde(a);
+
+            while x < b {
+                acc += DX * y / 2.;
+
+                x += DX;
+                y = kde(x);
+
+                acc += DX * y / 2.;
+            }
+
+            TestResult::from_bool(acc.approx_eq(1.))
         } else {
-            return TestResult::discard();
-        };
-
-        let data = data.as_slice();
-
-        let kde = Kde::new(data);
-        let h = kde.bandwidth();
-        // NB Obviously a [-inf inf] integral is not feasible, but this range works quite well
-        let (a, b) = (data.min() - 5. * h, data.max() + 5. * h);
-
-        let mut acc = 0.;
-        let mut x = a;
-        let mut y = kde(a);
-
-        while x < b {
-            acc += DX * y / 2.;
-
-            x += DX;
-            y = kde(x);
-
-            acc += DX * y / 2.;
+            TestResult::discard()
         }
 
-        TestResult::from_bool(is_close(acc, 1.))
     }
 }
 
 #[cfg(test)]
 mod bench {
-    use test::Bencher;
-    use std::rand::{Rng, mod};
+    use std_test::Bencher;
 
     use kde::Kde;
+    use test;
 
     static KDE_POINTS: uint = 500;
     static SAMPLE_SIZE: uint = 100_000;
 
     #[bench]
     fn sweep(b: &mut Bencher) {
-        let mut rng = rand::task_rng();
-        let data = Vec::from_fn(SAMPLE_SIZE, |_| rng.gen::<f64>());
-        let kde = Kde::new(data.as_slice());
+        let data = test::vec(SAMPLE_SIZE).unwrap();
+        let kde = Kde::new(data[]);
 
         b.iter(|| {
             kde.sweep((0., 1.), KDE_POINTS)
