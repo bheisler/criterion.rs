@@ -1,5 +1,5 @@
 use stats::ttest::{TDistribution, TwoTailed};
-use stats::{Sample, mod};
+use stats::{Sample, Stats, mod};
 use time;
 
 use Criterion;
@@ -87,7 +87,7 @@ fn t_test(id: &str, times: &[f64], base_times: &[f64], criterion: &Criterion) ->
 // Estimates the relative change in the statistics of the population
 fn estimates(id: &str, times: &[f64], base_times: &[f64], criterion: &Criterion) -> Vec<bool> {
     fn stats(a: &[f64], b: &[f64]) -> (f64, f64) {
-        (Mean.rel_fn()(a, b), Median.rel_fn()(a, b))
+        (a.mean() / b.mean() - 1., a.percentiles().median() / b.percentiles().median() - 1.)
     }
 
     let cl = criterion.confidence_level;

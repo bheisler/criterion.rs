@@ -56,8 +56,8 @@ pub fn regression(pairs: &[(f64, f64)], (lb, ub): (&Slope<f64>, &Slope<f64>)) {
     println!(
         "  > {:>6} [{} {}]",
         "slope",
-        format::time(lb.slope()),
-        format::time(ub.slope()),
+        format::time(lb.0),
+        format::time(ub.0),
         );
 
     println!(
