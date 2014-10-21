@@ -102,6 +102,7 @@ fn common(id: &str, routine: &mut Routine, criterion: &Criterion) {
     let pairs_f64 = pairs.iter().map(|&(iters, elapsed)| {
         (iters as f64, elapsed as f64)
     }).collect::<Vec<(f64, f64)>>();
+    let pairs_f64 = pairs_f64[];
 
     let times = pairs.iter().map(|&(iters, elapsed)| {
         elapsed as f64 / iters as f64
@@ -114,9 +115,9 @@ fn common(id: &str, routine: &mut Routine, criterion: &Criterion) {
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting the estimated sample PDF",
-            plot::pdf(times, &outliers, id));
+            plot::pdf(pairs_f64, times, &outliers, id));
     }
-    let (distribution, slope) = regression(id, pairs_f64[], criterion);
+    let (distribution, slope) = regression(id, pairs_f64, criterion);
     let (mut distributions, mut estimates) = estimates(times, criterion);
 
     estimates.insert(estimate::Slope, slope);
@@ -136,7 +137,7 @@ fn common(id: &str, routine: &mut Routine, criterion: &Criterion) {
     fs::save(&estimates, &Path::new(format!(".criterion/{}/new/estimates.json", id)));
 
     if base_dir_exists(id) {
-        compare::common(id, pairs_f64[], times, &estimates, criterion);
+        compare::common(id, pairs_f64, times, &estimates, criterion);
     }
 }
 

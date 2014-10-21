@@ -44,12 +44,23 @@ static DARK_BLUE: Color = Rgb(31, 120, 180);
 static DARK_ORANGE: Color = Rgb(255, 127, 0);
 static DARK_RED: Color = Rgb(227, 26, 28);
 
-pub fn pdf(sample: &[f64], outliers: &Outliers<f64>, id: &str) {
+pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &str) {
     let path = Path::new(format!(".criterion/{}/new/pdf.svg", id));
 
     let (scale, prefix) = scale_time(sample.max());
     let sample = sample.iter().map(|t| t * scale).collect::<Vec<_>>();
     let sample = sample[];
+
+    let max_iters = pairs.iter().map(|&(iters, _)| iters).max_by(|&iters| iters as u64).unwrap();
+    let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
+    let y_scale = 10f64.powi(-exponent);
+    let iters = pairs.iter().map(|&(x, _)| x * y_scale).collect::<Vec<_>>();
+
+    let y_label = if exponent == 0 {
+        "Iterations".to_string()
+    } else {
+        format!("Iterations (x 10^{})", exponent)
+    };
 
     let (xs, ys) = kde::sweep(sample, KDE_POINTS, None);
 
@@ -64,7 +75,7 @@ pub fn pdf(sample: &[f64], outliers: &Outliers<f64>, id: &str) {
     let mut severe = Vec::with_capacity(nlos + nhis);
     let mut normal = Vec::with_capacity(nnao);
 
-    for (time, (&label, i)) in sample.iter().zip(outliers.labels.iter().zip(iter::count(0u, 1))) {
+    for (time, (&label, i)) in sample.iter().zip(outliers.labels.iter().zip(iters.iter())) {
         match label {
             HighSevere | LowSevere => severe.push((i, time)),
             LowMild | HighMild => mild.push((i, time)),
@@ -73,7 +84,7 @@ pub fn pdf(sample: &[f64], outliers: &Outliers<f64>, id: &str) {
         }
     }
 
-    let vertical = [0, sample.len() - 1];
+    let vertical = [0., max_iters * y_scale];
     let zeros = Repeat::new(0u);
 
     let gnuplot = Figure::new().
@@ -85,50 +96,48 @@ pub fn pdf(sample: &[f64], outliers: &Outliers<f64>, id: &str) {
             label(format!("Average time ({}s)", prefix)).
             range(xs[].min(), xs[].max())).
         axis(LeftY, |a| a.
+            // FIXME (unboxed closures) Remove cloning
+            label(y_label.to_string()).
+            range(0., max_iters * y_scale)).
+        axis(RightY, |a| a.
             label("Density (a.u.)")).
         key(|k| k.
             justification(LeftJustified).
             order(SampleText).
             position(Outside(Top, Right))).
         filled_curve(xs.iter(), ys.iter(), zeros, |c| c.
+            axes(BottomXRightY).
             color(DARK_BLUE).
             label("PDF").
             opacity(0.25)).
         curve(Points, normal.iter().map(|x| x.val1()), normal.iter().map(|x| x.val0()), |c| c.
-            axes(BottomXRightY).
             color(DARK_BLUE).
             label("\"Clean\" sample").
             point_type(FilledCircle).
             point_size(POINT_SIZE)).
         curve(Points, mild.iter().map(|x| x.val1()), mild.iter().map(|x| x.val0()), |c| c.
-            axes(BottomXRightY).
             color(DARK_ORANGE).
             label("Mild outliers").
             point_type(FilledCircle).
             point_size(POINT_SIZE)).
         curve(Points, severe.iter().map(|x| x.val1()), severe.iter().map(|x| x.val0()), |c| c.
-            axes(BottomXRightY).
             color(DARK_RED).
             label("Severe outliers").
             point_type(FilledCircle).
             point_size(POINT_SIZE)).
         curve(Lines, [lomt, lomt].iter(), vertical.iter(), |c| c.
-            axes(BottomXRightY).
             color(DARK_ORANGE).
             line_type(Dash).
             linewidth(LINEWIDTH)).
         curve(Lines, [himt, himt].iter(), vertical.iter(), |c| c.
-            axes(BottomXRightY).
             color(DARK_ORANGE).
             line_type(Dash).
             linewidth(LINEWIDTH)).
         curve(Lines, [lost, lost].iter(), vertical.iter(), |c| c.
-            axes(BottomXRightY).
             color(DARK_RED).
             line_type(Dash).
             linewidth(LINEWIDTH)).
         curve(Lines, [hist, hist].iter(), vertical.iter(), |c| c.
-            axes(BottomXRightY).
             color(DARK_RED).
             line_type(Dash).
             linewidth(LINEWIDTH)).
@@ -187,9 +196,9 @@ pub fn regression(
             order(SampleText).
             position(Inside(Top, Left))).
         axis(BottomX, |a| a.
-             grid(Major, |g| g.
-                 show()).
-             // FIXME (unboxed closures) Remove cloning
+            grid(Major, |g| g.
+                show()).
+            // FIXME (unboxed closures) Remove cloning
             label(x_label.to_string())).
         axis(LeftY, |a| a.
              grid(Major, |g| g.
