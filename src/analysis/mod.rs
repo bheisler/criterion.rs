@@ -92,7 +92,7 @@ pub fn program_with_inputs<I: Show>(
 }
 
 // Common analysis procedure
-fn common(id: &str, routine: &mut Routine, criterion: &Criterion) {
+fn common<R: Routine>(id: &str, routine: &mut R, criterion: &Criterion) {
     println!("Benchmarking {}", id);
 
     let pairs = routine.sample(criterion);
