@@ -16,7 +16,7 @@ pub struct Program {
 impl Program {
     pub fn spawn(cmd: &Command) -> Program {
         let mut process = match cmd.spawn() {
-            Err(e) => fail!("`{}`: {}", cmd, e),
+            Err(e) => panic!("`{}`: {}", cmd, e),
             Ok(process) => process,
         };
 
@@ -30,7 +30,7 @@ impl Program {
 
     pub fn send<T: Show>(&mut self, line: T) -> &mut Program {
         match writeln!(self.stdin, "{}", line) {
-            Err(e) => fail!("`write into child stdin`: {}", e),
+            Err(e) => panic!("`write into child stdin`: {}", e),
             Ok(_) => self,
         }
     }
@@ -40,7 +40,7 @@ impl Program {
             Err(e) => {
                 println!("stderr:\n{}", self.stderr.read_to_string().unwrap());
 
-                fail!("`read from child stdout`: {}", e);
+                panic!("`read from child stdout`: {}", e);
             },
             Ok(line) => line,
         }

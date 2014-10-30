@@ -67,7 +67,7 @@ impl Bencher {
 /// reported to stdout, stored in files, and plotted
 /// - **Comparison**: The current sample is compared with the sample obtained in the previous
 /// benchmark. If a significant regression in performance is spotted, `Criterion` will trigger a
-/// task failure
+/// task panic
 #[experimental]
 pub struct Criterion {
     confidence_level: f64,
@@ -135,9 +135,9 @@ impl Criterion {
     /// A bigger sample should yield more accurate results, if paired with a "sufficiently" large
     /// measurement time, on the other hand, it also increases the analysis time
     ///
-    /// # Failure
+    /// # Panics
     ///
-    /// Fails if set to zero
+    /// Panics if set to zero
     #[experimental]
     pub fn sample_size(&mut self, n: uint) -> &mut Criterion {
         assert!(n > 0);
@@ -148,9 +148,9 @@ impl Criterion {
 
     /// Changes the warm up time
     ///
-    /// # Failure
+    /// # Panics
     ///
-    /// Fails if the warm up time is set to a non-positive value
+    /// Panics if the warm up time is set to a non-positive value
     #[experimental]
     pub fn warm_up_time(&mut self, dur: Duration) -> &mut Criterion {
         let ns = dur.num_nanoseconds().expect("duration overflow");
@@ -168,9 +168,9 @@ impl Criterion {
     ///
     /// **Note**: If the measurement time is too "low", Criterion will automatically increase it
     ///
-    /// # Failure
+    /// # Panics
     ///
-    /// Fails if the measurement time is set to a non-positive value
+    /// Panics if the measurement time is set to a non-positive value
     #[experimental]
     pub fn measurement_time(&mut self, dur: Duration) -> &mut Criterion {
         let ns = dur.num_nanoseconds().expect("duration overflow");
@@ -189,9 +189,9 @@ impl Criterion {
     /// A larger number of resamples reduces the random sampling errors, which are inherent to the
     /// bootstrap method, but also increases the analysis time
     ///
-    /// # Failure
+    /// # Panics
     ///
-    /// Fails if the number of resamples is set to zero
+    /// Panics if the number of resamples is set to zero
     #[experimental]
     pub fn nresamples(&mut self, n: uint) -> &mut Criterion {
         assert!(n > 0);
@@ -207,9 +207,9 @@ impl Criterion {
     ///
     /// *Note:* A value of `0.02` is equivalent to `2%`
     ///
-    /// # Failure
+    /// # Panics
     ///
-    /// Fails is the threshold is set to a negative value
+    /// Panics is the threshold is set to a negative value
     #[experimental]
     pub fn noise_threshold(&mut self, threshold: f64) -> &mut Criterion {
         assert!(threshold >= 0.0);
@@ -224,9 +224,9 @@ impl Criterion {
     /// [confidence intervals](https://en.wikipedia.org/wiki/Confidence_interval) of the estimated
     /// statistics
     ///
-    /// # Failure
+    /// # Panics
     ///
-    /// Fails if the confidence level is set to a value outside the `(0, 1)` range
+    /// Panics if the confidence level is set to a value outside the `(0, 1)` range
     #[experimental]
     pub fn confidence_level(&mut self, cl: f64) -> &mut Criterion {
         assert!(cl > 0.0 && cl < 1.0);
@@ -240,9 +240,9 @@ impl Criterion {
     /// The significance level is used for
     /// [hypothesis testing](https://en.wikipedia.org/wiki/Statistical_hypothesis_testing)
     ///
-    /// # Failure
+    /// # Panics
     ///
-    /// Fails if the significance level is set to a value outside the `(0, 1)` range
+    /// Panics if the significance level is set to a value outside the `(0, 1)` range
     #[experimental]
     pub fn significance_level(&mut self, sl: f64) -> &mut Criterion {
         assert!(sl > 0.0 && sl < 1.0);

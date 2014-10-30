@@ -6,11 +6,11 @@ use std::mem;
 // TODO Proper error handling
 pub fn load<A: Decodable<json::Decoder, json::DecoderError>>(path: &Path) -> A {
     match File::open(path) {
-        Err(e) => fail!("{}", e),
+        Err(e) => panic!("{}", e),
         Ok(mut f) => match f.read_to_string() {
-            Err(e) => fail!("{}", e),
+            Err(e) => panic!("{}", e),
             Ok(s) => match json::decode(s[]) {
-                Err(e) => fail!("Couldn't decode {} ({})", s, e),
+                Err(e) => panic!("Couldn't decode {} ({})", s, e),
                 Ok(thing) => thing,
             }
         }
@@ -19,26 +19,26 @@ pub fn load<A: Decodable<json::Decoder, json::DecoderError>>(path: &Path) -> A {
 
 pub fn ls(dir: &Path) -> Vec<Path> {
     match fs::readdir(dir) {
-        Err(e) => fail!("`ls {}`: {}", dir.display(), e),
+        Err(e) => panic!("`ls {}`: {}", dir.display(), e),
         Ok(contents) => contents,
     }
 }
 
 pub fn mkdirp(path: &Path) {
     if let Err(e) = fs::mkdir_recursive(path, USER_RWX) {
-        fail!("`mkdir -p {}`: {}", path.display(), e)
+        panic!("`mkdir -p {}`: {}", path.display(), e)
     }
 }
 
 pub fn mv(from: &Path, to: &Path) {
     if let Err(e) = fs::rename(from, to) {
-        fail!("`mv {} {}`: {}", from.display(), to.display(), e)
+        panic!("`mv {} {}`: {}", from.display(), to.display(), e)
     }
 }
 
 pub fn rmrf(path: &Path) {
     if let Err(e) = fs::rmdir_recursive(path) {
-        fail!("`rm -rf {}`: {}", path.display(), e)
+        panic!("`rm -rf {}`: {}", path.display(), e)
     }
 }
 

@@ -51,7 +51,7 @@ pub fn common(
     let regressed = estimates(id, times, base_times, criterion);
 
     if different_mean && regressed.into_iter().all(|x| x) {
-        fail!("{} has regressed", id);
+        panic!("{} has regressed", id);
     }
 }
 
