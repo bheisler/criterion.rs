@@ -8,11 +8,11 @@ extern crate quickcheck;
 #[phase(plugin)]
 extern crate quickcheck_macros;
 extern crate serialize;
+#[cfg(test)]
 extern crate "test" as std_test;
 
 pub use bootstrap::bootstrap;
 pub use ci::ConfidenceInterval;
-pub use stats::t;
 
 pub mod kde;
 pub mod outliers;
@@ -22,6 +22,7 @@ pub mod ttest;
 mod bootstrap;
 mod ci;
 mod resamples;
+mod simd;
 mod stats;
 #[cfg(test)]
 mod test;
@@ -86,40 +87,35 @@ impl<A, B, C, D> Distribution<(A, B, C, D)> {
     }
 }
 
-impl<A: FromPrimitive + FloatMath> Distribution<A> {
+impl<A: Simd> Distribution<A> {
     /// Computes the confidence interval of the population parameter using percentiles
     // TODO Add more methods to find the confidence interval (e.g. with bias correction)
     pub fn confidence_interval(&self, confidence_level: A) -> ConfidenceInterval<A> {
         use std::num;
-        use std_test::stats::Stats;
 
         assert!(confidence_level > num::zero() && confidence_level < num::one());
 
-        let distribution = self.as_slice();
+        let percentiles = self.as_slice().percentiles();
 
         let one = num::one::<A>();
         let fifty = num::cast::<f64, A>(50.).unwrap();
 
         ConfidenceInterval {
             confidence_level: confidence_level,
-            lower_bound: distribution.percentile(fifty * (one - confidence_level)),
-            upper_bound: distribution.percentile(fifty * (one + confidence_level)),
+            lower_bound: percentiles.at(fifty * (one - confidence_level)),
+            upper_bound: percentiles.at(fifty * (one + confidence_level)),
         }
     }
 
     /// Computes the standard error of the population parameter
     pub fn standard_error(&self) -> A {
-        use std_test::stats::Stats;
-
-        self.as_slice().std_dev()
+        self.as_slice().std_dev(None)
     }
 }
 
-static EMPTY_MSG: &'static str = "sample is empty";
-
 /// SIMD accelerated statistics
 // XXX T should be an associated type (?)
-pub trait Stats<T: FloatMath + FromPrimitive> for Sized?: AsSlice<T> {
+pub trait Stats<T: Simd> for Sized? {
     /// Returns the biggest element in the sample
     ///
     /// - Time: `O(length)`
@@ -127,14 +123,7 @@ pub trait Stats<T: FloatMath + FromPrimitive> for Sized?: AsSlice<T> {
     /// # Panics
     ///
     /// Panics if the sample is empty
-    fn max(&self) -> T {
-        let mut elems = self.as_slice().iter();
-
-        match elems.next() {
-            Some(&head) => elems.fold(head, |a, &b| a.max(b)),
-            None => panic!(EMPTY_MSG),
-        }
-    }
+    fn max(&self) -> T;
 
     /// Returns the arithmetic average of the sample
     ///
@@ -143,13 +132,7 @@ pub trait Stats<T: FloatMath + FromPrimitive> for Sized?: AsSlice<T> {
     /// # Panics
     ///
     /// Panics if the sample is empty
-    fn mean(&self) -> T {
-        let n = self.as_slice().len();
-
-        assert!(n > 0);
-
-        self.sum() / FromPrimitive::from_uint(n).unwrap()
-    }
+    fn mean(&self) -> T;
 
     /// Returns the median absolute deviation
     ///
@@ -171,13 +154,7 @@ pub trait Stats<T: FloatMath + FromPrimitive> for Sized?: AsSlice<T> {
     /// # Panics
     ///
     /// Panics if the sample is empty or if the sample contains NaN
-    fn median_abs_dev_pct(&self) -> T {
-        let hundred = FromPrimitive::from_uint(100).unwrap();
-        let median = self.percentiles().median();
-        let mad = self.median_abs_dev(Some(median));
-
-        (mad / median) * hundred
-    }
+    fn median_abs_dev_pct(&self) -> T;
 
     /// Returns the smallest element in the sample
     ///
@@ -186,14 +163,7 @@ pub trait Stats<T: FloatMath + FromPrimitive> for Sized?: AsSlice<T> {
     /// # Panics
     ///
     /// Panics if the sample is empty
-    fn min(&self) -> T {
-        let mut elems = self.as_slice().iter();
-
-        match elems.next() {
-            Some(&elem) => elems.fold(elem, |a, &b| a.min(b)),
-            None => panic!(EMPTY_MSG),
-        }
-    }
+    fn min(&self) -> T;
 
     /// Returns a "view" into the percentiles of the sample
     ///
@@ -205,26 +175,7 @@ pub trait Stats<T: FloatMath + FromPrimitive> for Sized?: AsSlice<T> {
     /// # Panics
     ///
     /// Panics if the sample is empty or if the sample contains NaN
-    fn percentiles(&self) -> Percentiles<T> {
-        // NB This function assumes that there are no NaNs in the sample
-        fn cmp<T: PartialOrd>(a: &T, b: &T) -> Ordering {
-            if a < b {
-                Less
-            } else if a == b {
-                Equal
-            } else {
-                Greater
-            }
-        }
-
-        let slice = self.as_slice();
-
-        assert!(slice.len() > 0 && !slice.iter().any(|x| x.is_nan()));
-
-        let mut v = slice.to_vec();
-        v[mut].sort_by(|a, b| cmp(a, b));
-        Percentiles(v)
-    }
+    fn percentiles(&self) -> Percentiles<T>;
 
     /// Returns the standard deviation of the sample
     ///
@@ -235,9 +186,7 @@ pub trait Stats<T: FloatMath + FromPrimitive> for Sized?: AsSlice<T> {
     /// # Panics
     ///
     /// Panics if the sample contains less than 2 elements
-    fn std_dev(&self, mean: Option<T>) -> T {
-        self.var(mean).sqrt()
-    }
+    fn std_dev(&self, mean: Option<T>) -> T;
 
     /// Returns the standard deviation as a percentage of the mean
     ///
@@ -246,13 +195,7 @@ pub trait Stats<T: FloatMath + FromPrimitive> for Sized?: AsSlice<T> {
     /// # Panics
     ///
     /// Panics if the sample contains less than 2 elements
-    fn std_dev_pct(&self) -> T {
-        let hundred = FromPrimitive::from_uint(100).unwrap();
-        let mean = self.mean();
-        let std_dev = self.std_dev(Some(mean));
-
-        (std_dev / mean) * hundred
-    }
+    fn std_dev_pct(&self) -> T;
 
     /// Returns the sum of all the elements of the sample
     ///
@@ -260,16 +203,7 @@ pub trait Stats<T: FloatMath + FromPrimitive> for Sized?: AsSlice<T> {
     fn sum(&self) -> T;
 
     /// Returns the t score between these two samples
-    fn t(&self, other: &Self) -> T {
-        let (x_bar, y_bar) = (self.mean(), other.mean());
-        let (s2_x, s2_y) = (self.var(Some(x_bar)), other.var(Some(y_bar)));
-        let n_x = FromPrimitive::from_uint(self.as_slice().len()).unwrap();
-        let n_y = FromPrimitive::from_uint(other.as_slice().len()).unwrap();
-        let num = x_bar - y_bar;
-        let den = (s2_x / n_x + s2_y / n_y).sqrt();
-
-        num / den
-    }
+    fn t(&self, other: &Self) -> T;
 
     /// Returns the variance of the sample
     ///
@@ -292,21 +226,18 @@ pub trait Stats<T: FloatMath + FromPrimitive> for Sized?: AsSlice<T> {
     fn quartiles(&self) -> (T, T, T) { self.percentiles().quartiles() }
 }
 
-#[doc(hidden)]
-pub trait AsSlice<T> for Sized? {
-    fn as_slice<'a>(&'a self) -> &'a [T];
-}
-
-impl<T> AsSlice<T> for [T] {
-    fn as_slice(&self) -> &[T] {
-        self
-    }
+/// Types than can be SIMD accelerated
+///
+/// *Note* You shouldn't use these methods, instead use the methods under the `Stats` trait
+pub trait Simd: FloatMath + FromPrimitive {
+    fn sum(sample: &[Self]) -> Self;
+    fn var(sample: &[Self], mean: Option<Self>) -> Self;
 }
 
 /// A "view" into the percentiles of a sample
-pub struct Percentiles<T: FloatMath + FromPrimitive>(Vec<T>);
+pub struct Percentiles<T>(Vec<T>);
 
-impl<T: FloatMath + FromPrimitive> Percentiles<T> {
+impl<T: Float + FromPrimitive> Percentiles<T> {
     /// Returns the percentile at `p`%
     pub fn at(&self, p: T) -> T {
         let zero = FromPrimitive::from_uint(0).unwrap();

@@ -2,6 +2,8 @@
 
 use std::num;
 
+use {Simd, Stats};
+
 // TODO Add more outlier classification methods
 
 /// Classification of outliers using Tukey's fences
@@ -60,12 +62,10 @@ impl Label {
     }
 }
 
-impl<A: FloatMath + FromPrimitive> Outliers<A> {
+impl<A: Simd> Outliers<A> {
     /// Returns the filtered sample, and the classified outliers
     pub fn classify(sample: &[A]) -> Outliers<A> {
-        use std_test::stats::Stats;
-
-        let (q1, _, q3) = sample.quartiles();
+        let (q1, _, q3) = sample.percentiles().quartiles();
         let iqr = q3 - q1;
 
         let k_h: A = num::cast(3f64).unwrap();

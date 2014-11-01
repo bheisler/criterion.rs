@@ -1,14 +1,15 @@
 //! t-test
 
+use parallel;
 use std::{num, os, ptr};
 
-use parallel;
 use resamples::Resamples;
+use {Simd, Stats};
 
 /// A bootstrapped t distribution
 pub struct TDistribution<A>(Vec<A>);
 
-impl<A: FloatMath + FromPrimitive + Send + Sync> TDistribution<A> {
+impl<A: Simd + Send + Sync> TDistribution<A> {
     /// Computes a t distribution by bootstrapping the t-statistic between two samples
     ///
     /// * Bootstrap method: Case resampling
@@ -38,7 +39,7 @@ impl<A: FloatMath + FromPrimitive + Send + Sync> TDistribution<A> {
                     let resample = joint_resample[..n];
                     let other_resample = joint_resample[n..];
 
-                    unsafe { ptr::write(ptr, ::stats::t(resample, other_resample)) }
+                    unsafe { ptr::write(ptr, resample.t(other_resample)) }
                 }
             });
 
@@ -52,7 +53,7 @@ impl<A: FloatMath + FromPrimitive + Send + Sync> TDistribution<A> {
                 let resample = joint_resample.slice_to(n);
                 let other_resample = joint_resample.slice_from(n);
 
-                ::stats::t(resample, other_resample)
+                resample.t(other_resample)
             }).collect())
         }
     }
