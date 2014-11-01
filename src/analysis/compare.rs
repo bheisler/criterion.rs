@@ -63,7 +63,7 @@ fn t_test(id: &str, times: &[f64], base_times: &[f64], criterion: &Criterion) ->
     println!("> Performing a two-sample t-test");
     println!("  > H0: Both samples have the same mean");
 
-    let t_statistic = stats::t(times, base_times);
+    let t_statistic = times.t(base_times);
     let t_distribution = elapsed!(
         "Bootstrapping the T distribution",
         TDistribution::new(times, base_times, nresamples));
