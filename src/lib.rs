@@ -10,8 +10,8 @@ extern crate quickcheck_macros;
 extern crate serialize;
 extern crate "test" as std_test;
 
+pub use bootstrap::bootstrap;
 pub use ci::ConfidenceInterval;
-pub use sample::Sample;
 pub use stats::t;
 
 pub mod kde;
@@ -19,12 +19,20 @@ pub mod outliers;
 pub mod regression;
 pub mod ttest;
 
+mod bootstrap;
 mod ci;
 mod resamples;
-mod sample;
 mod stats;
 #[cfg(test)]
 mod test;
+
+/// [T] extension trait that provides the `bootstrap` method
+pub trait Bootstrap for Sized? {
+    /// Returns the bootstrap distribution of the parameter estimated by the 1-sample statistic
+    ///
+    /// * Bootstrap method: Case resampling
+    fn bootstrap<A: Send>(&self, statistic: fn(&Self) -> A, nresamples: uint) -> Distribution<A>;
+}
 
 /// The bootstrap distribution of a population parameter
 #[experimental]
@@ -118,7 +126,7 @@ pub trait Stats<T: FloatMath + FromPrimitive>: AsSlice<T> + Copy {
     ///
     /// # Panics
     ///
-    /// Paincs if the sample is empty
+    /// Panics if the sample is empty
     fn max(self) -> T {
         let mut elems = self.as_slice().iter();
 
