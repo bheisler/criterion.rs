@@ -119,7 +119,7 @@ static EMPTY_MSG: &'static str = "sample is empty";
 
 /// SIMD accelerated statistics
 // XXX T should be an associated type (?)
-pub trait Stats<T: FloatMath + FromPrimitive>: AsSlice<T> + Copy {
+pub trait Stats<T: FloatMath + FromPrimitive> for Sized?: AsSlice<T> {
     /// Returns the biggest element in the sample
     ///
     /// - Time: `O(length)`
@@ -127,11 +127,11 @@ pub trait Stats<T: FloatMath + FromPrimitive>: AsSlice<T> + Copy {
     /// # Panics
     ///
     /// Panics if the sample is empty
-    fn max(self) -> T {
+    fn max(&self) -> T {
         let mut elems = self.as_slice().iter();
 
         match elems.next() {
-            Some(&elem) => elems.fold(elem, |a, &b| a.max(b)),
+            Some(&head) => elems.fold(head, |a, &b| a.max(b)),
             None => panic!(EMPTY_MSG),
         }
     }
@@ -143,12 +143,12 @@ pub trait Stats<T: FloatMath + FromPrimitive>: AsSlice<T> + Copy {
     /// # Panics
     ///
     /// Panics if the sample is empty
-    fn mean(self) -> T {
-        let len = self.as_slice().len();
+    fn mean(&self) -> T {
+        let n = self.as_slice().len();
 
-        assert!(len > 0);
+        assert!(n > 0);
 
-        self.sum() / FromPrimitive::from_uint(len).unwrap()
+        self.sum() / FromPrimitive::from_uint(n).unwrap()
     }
 
     /// Returns the median absolute deviation
@@ -161,7 +161,7 @@ pub trait Stats<T: FloatMath + FromPrimitive>: AsSlice<T> + Copy {
     /// # Panics
     ///
     /// Panics if the sample is empty or if the sample contains NaN
-    fn median_abs_dev(self, median: Option<T>) -> T;
+    fn median_abs_dev(&self, median: Option<T>) -> T;
 
     /// Returns the median absolute deviation as a percentage of the median
     ///
@@ -171,7 +171,7 @@ pub trait Stats<T: FloatMath + FromPrimitive>: AsSlice<T> + Copy {
     /// # Panics
     ///
     /// Panics if the sample is empty or if the sample contains NaN
-    fn median_abs_dev_pct(self) -> T {
+    fn median_abs_dev_pct(&self) -> T {
         let hundred = FromPrimitive::from_uint(100).unwrap();
         let median = self.percentiles().median();
         let mad = self.median_abs_dev(Some(median));
@@ -186,7 +186,7 @@ pub trait Stats<T: FloatMath + FromPrimitive>: AsSlice<T> + Copy {
     /// # Panics
     ///
     /// Panics if the sample is empty
-    fn min(self) -> T {
+    fn min(&self) -> T {
         let mut elems = self.as_slice().iter();
 
         match elems.next() {
@@ -205,7 +205,7 @@ pub trait Stats<T: FloatMath + FromPrimitive>: AsSlice<T> + Copy {
     /// # Panics
     ///
     /// Panics if the sample is empty or if the sample contains NaN
-    fn percentiles(self) -> Percentiles<T> {
+    fn percentiles(&self) -> Percentiles<T> {
         // NB This function assumes that there are no NaNs in the sample
         fn cmp<T: PartialOrd>(a: &T, b: &T) -> Ordering {
             if a < b {
@@ -235,7 +235,7 @@ pub trait Stats<T: FloatMath + FromPrimitive>: AsSlice<T> + Copy {
     /// # Panics
     ///
     /// Panics if the sample contains less than 2 elements
-    fn std_dev(self, mean: Option<T>) -> T {
+    fn std_dev(&self, mean: Option<T>) -> T {
         self.var(mean).sqrt()
     }
 
@@ -246,7 +246,7 @@ pub trait Stats<T: FloatMath + FromPrimitive>: AsSlice<T> + Copy {
     /// # Panics
     ///
     /// Panics if the sample contains less than 2 elements
-    fn std_dev_pct(self) -> T {
+    fn std_dev_pct(&self) -> T {
         let hundred = FromPrimitive::from_uint(100).unwrap();
         let mean = self.mean();
         let std_dev = self.std_dev(Some(mean));
@@ -257,16 +257,14 @@ pub trait Stats<T: FloatMath + FromPrimitive>: AsSlice<T> + Copy {
     /// Returns the sum of all the elements of the sample
     ///
     /// - Time: `O(length)`
-    fn sum(self) -> T;
+    fn sum(&self) -> T;
 
     /// Returns the t score between these two samples
-    fn t(self, other: Self) -> T {
-        use std::num;
-
+    fn t(&self, other: &Self) -> T {
         let (x_bar, y_bar) = (self.mean(), other.mean());
         let (s2_x, s2_y) = (self.var(Some(x_bar)), other.var(Some(y_bar)));
-        let n_x = num::cast::<_, T>(self.as_slice().len()).unwrap();
-        let n_y = num::cast::<_, T>(other.as_slice().len()).unwrap();
+        let n_x = FromPrimitive::from_uint(self.as_slice().len()).unwrap();
+        let n_y = FromPrimitive::from_uint(other.as_slice().len()).unwrap();
         let num = x_bar - y_bar;
         let den = (s2_x / n_x + s2_y / n_y).sqrt();
 
@@ -282,16 +280,27 @@ pub trait Stats<T: FloatMath + FromPrimitive>: AsSlice<T> + Copy {
     /// # Panics
     ///
     /// Panics if the sample contains less than 2 elements
-    fn var(self, mean: Option<T>) -> T;
+    fn var(&self, mean: Option<T>) -> T;
 
     #[cfg(test)]
-    fn iqr(self) -> T { self.percentiles().iqr() }
+    fn iqr(&self) -> T { self.percentiles().iqr() }
 
     #[cfg(test)]
-    fn median(self) -> T { self.percentiles().median() }
+    fn median(&self) -> T { self.percentiles().median() }
 
     #[cfg(test)]
-    fn quartiles(self) -> (T, T, T) { self.percentiles().quartiles() }
+    fn quartiles(&self) -> (T, T, T) { self.percentiles().quartiles() }
+}
+
+#[doc(hidden)]
+pub trait AsSlice<T> for Sized? {
+    fn as_slice<'a>(&'a self) -> &'a [T];
+}
+
+impl<T> AsSlice<T> for [T] {
+    fn as_slice(&self) -> &[T] {
+        self
+    }
 }
 
 /// A "view" into the percentiles of a sample

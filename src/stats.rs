@@ -19,8 +19,8 @@ pub fn t<A: FloatMath + FromPrimitive>(x: &[A], y: &[A]) -> A {
     num / den
 }
 
-impl<'a> Stats<f32> for &'a [f32] {
-    fn median_abs_dev(self, median: Option<f32>) -> f32 {
+impl Stats<f32> for [f32] {
+    fn median_abs_dev(&self, median: Option<f32>) -> f32 {
         static FACTOR: f32 = 1.4826;
 
         let median = median.unwrap_or_else(|| self.percentiles().median());
@@ -31,7 +31,7 @@ impl<'a> Stats<f32> for &'a [f32] {
         abs_devs[].percentiles().median() * FACTOR
     }
 
-    fn sum(self) -> f32 {
+    fn sum(&self) -> f32 {
         let raw::Slice { data, len } = self.repr();
 
         if len < 8 {
@@ -50,7 +50,7 @@ impl<'a> Stats<f32> for &'a [f32] {
         }
     }
 
-    fn var(self, mean: Option<f32>) -> f32 {
+    fn var(&self, mean: Option<f32>) -> f32 {
         let raw::Slice { data, len } = self.repr();
 
         assert!(len > 1);
@@ -82,8 +82,8 @@ impl<'a> Stats<f32> for &'a [f32] {
     }
 }
 
-impl<'a> Stats<f64> for &'a [f64] {
-    fn median_abs_dev(self, median: Option<f64>) -> f64 {
+impl Stats<f64> for [f64] {
+    fn median_abs_dev(&self, median: Option<f64>) -> f64 {
         static FACTOR: f64 = 1.4826;
 
         let median = median.unwrap_or_else(|| self.percentiles().median());
@@ -94,7 +94,7 @@ impl<'a> Stats<f64> for &'a [f64] {
         abs_devs[].percentiles().median() * FACTOR
     }
 
-    fn sum(self) -> f64 {
+    fn sum(&self) -> f64 {
         let raw::Slice { data, len } = self.repr();
 
         if len < 4 {
@@ -113,7 +113,7 @@ impl<'a> Stats<f64> for &'a [f64] {
         }
     }
 
-    fn var(self, mean: Option<f64>) -> f64 {
+    fn var(&self, mean: Option<f64>) -> f64 {
         let raw::Slice { data, len } = self.repr();
 
         assert!(len > 1);

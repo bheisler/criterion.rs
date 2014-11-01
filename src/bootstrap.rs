@@ -132,7 +132,7 @@ mod test {
             (test::vec::<f64>(size), test::vec::<f64>(another_size))
         {
             let distribution = if nresamples > 0 {
-                super::bootstrap(first[], second[], ::t, nresamples).unwrap()
+                super::bootstrap(first[], second[], ::Stats::t, nresamples).unwrap()
             } else {
                 return TestResult::discard();
             };
