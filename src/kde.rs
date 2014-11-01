@@ -122,8 +122,8 @@ fn gaussian(x: f64) -> f64 {
 #[cfg(test)]
 mod test {
     use quickcheck::TestResult;
-    use std_test::stats::Stats;
 
+    use Stats;
     use kde::Kde;
     use test::{ApproxEq, mod};
 

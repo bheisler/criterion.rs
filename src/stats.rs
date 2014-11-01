@@ -1,147 +1,101 @@
 use std::iter::AdditiveIterator;
-use std::num;
-use std::raw::{Repr, mod};
-use std::simd::{f32x4, f64x2};
 
-use Stats;
+use {Percentiles, Simd, Stats};
 
-/// Non accelerated version of Stats::t
-pub fn t<A: FloatMath + FromPrimitive>(x: &[A], y: &[A]) -> A {
-    use std_test::stats::Stats;
+static EMPTY_MSG: &'static str = "sample is empty";
 
-    let (x_bar, y_bar) = (x.mean(), y.mean());
-    let (s2_x, s2_y) = (x.var(), y.var());
-    let (n_x, n_y) = (num::cast::<_, A>(x.len()).unwrap(), num::cast::<_, A>(y.len()).unwrap());
+impl<T> Stats<T> for [T] where T: Simd {
+    fn max(&self) -> T {
+        let mut elems = self.iter();
 
-    let num = x_bar - y_bar;
-    let den = (s2_x / n_x + s2_y / n_y).sqrt();
+        match elems.next() {
+            Some(&head) => elems.fold(head, |a, &b| a.max(b)),
+            None => panic!(EMPTY_MSG),
+        }
+    }
 
-    num / den
-}
+    fn mean(&self) -> T {
+        let n = self.len();
 
-impl Stats<f32> for [f32] {
-    fn median_abs_dev(&self, median: Option<f32>) -> f32 {
-        static FACTOR: f32 = 1.4826;
+        assert!(n > 0);
 
+        self.sum() / FromPrimitive::from_uint(n).unwrap()
+    }
+
+    fn median_abs_dev(&self, median: Option<T>) -> T {
         let median = median.unwrap_or_else(|| self.percentiles().median());
         // NB Although this operation can be SIMD accelerated, the gain is negligible because the
         // bottle neck is the sorting operation which is part of the computation of the median
         let abs_devs = self.iter().map(|&x| (x - median).abs()).collect::<Vec<_>>();
 
-        abs_devs[].percentiles().median() * FACTOR
+        abs_devs[].percentiles().median() * FromPrimitive::from_f64(1.4826).unwrap()
     }
 
-    fn sum(&self) -> f32 {
-        let raw::Slice { data, len } = self.repr();
+    fn median_abs_dev_pct(&self) -> T {
+        let hundred = FromPrimitive::from_uint(100).unwrap();
+        let median = self.percentiles().median();
+        let mad = self.median_abs_dev(Some(median));
 
-        if len < 8 {
-            self.iter().map(|&x| x).sum()
-        } else {
-            let data = data as *const f32x4;
+        (mad / median) * hundred
+    }
 
-            let mut sum = unsafe { *data };
-            for i in range(1, (len / 4) as int) {
-                sum += unsafe { *data.offset(i) };
-            }
+    fn min(&self) -> T {
+        let mut elems = self.iter();
 
-            let tail = self.iter().rev().take(len % 4).map(|&x| x).sum();
-
-            sum.0 + sum.1 + sum.2 + sum.3 + tail
+        match elems.next() {
+            Some(&elem) => elems.fold(elem, |a, &b| a.min(b)),
+            None => panic!(EMPTY_MSG),
         }
     }
 
-    fn var(&self, mean: Option<f32>) -> f32 {
-        let raw::Slice { data, len } = self.repr();
-
-        assert!(len > 1);
-
-        let mean = mean.unwrap_or_else(|| self.mean());
-        let squared_deviation = |&x: &f32| {
-            let diff = x - mean;
-            diff * diff
-        };
-
-        let sum = if len < 8 {
-            self.iter().map(squared_deviation).sum()
-        } else {
-            let data = data as *const f32x4;
-
-            let mean4 = f32x4(mean, mean, mean, mean);
-            let mut sum = f32x4(0., 0., 0., 0.);
-            for i in range(0, (len / 4) as int) {
-                let diff = unsafe { *data.offset(i) } - mean4;
-                sum += diff * diff;
+    fn percentiles(&self) -> Percentiles<T> {
+        // NB This function assumes that there are no NaNs in the sample
+        fn cmp<T: PartialOrd>(a: &T, b: &T) -> Ordering {
+            if a < b {
+                Less
+            } else if a == b {
+                Equal
+            } else {
+                Greater
             }
-
-            let tail = self.iter().rev().take(len % 4).map(squared_deviation).sum();
-
-            sum.0 + sum.1 + sum.2 + sum.3 + tail
-        };
-
-        sum / (len - 1) as f32
-    }
-}
-
-impl Stats<f64> for [f64] {
-    fn median_abs_dev(&self, median: Option<f64>) -> f64 {
-        static FACTOR: f64 = 1.4826;
-
-        let median = median.unwrap_or_else(|| self.percentiles().median());
-        // NB Although this operation can be SIMD accelerated, the gain is negligible because the
-        // bottle neck is the sorting operation which is part of the computation of the median
-        let abs_devs = self.iter().map(|&x| (x - median).abs()).collect::<Vec<_>>();
-
-        abs_devs[].percentiles().median() * FACTOR
-    }
-
-    fn sum(&self) -> f64 {
-        let raw::Slice { data, len } = self.repr();
-
-        if len < 4 {
-            self.iter().map(|&x| x).sum()
-        } else {
-            let data = data as *const f64x2;
-
-            let mut sum = unsafe { *data };
-            for i in range(1, (len / 2) as int) {
-                sum += unsafe { *data.offset(i) };
-            }
-
-            let tail = self.iter().rev().take(len % 2).map(|&x| x).sum();
-
-            sum.0 + sum.1 + tail
         }
+
+        assert!(self.len() > 0 && !self.iter().any(|x| x.is_nan()));
+
+        let mut v = self.to_vec();
+        v[mut].sort_by(|a, b| cmp(a, b));
+        Percentiles(v)
     }
 
-    fn var(&self, mean: Option<f64>) -> f64 {
-        let raw::Slice { data, len } = self.repr();
+    fn std_dev(&self, mean: Option<T>) -> T {
+        self.var(mean).sqrt()
+    }
 
-        assert!(len > 1);
+    fn std_dev_pct(&self) -> T {
+        let hundred = FromPrimitive::from_uint(100).unwrap();
+        let mean = self.mean();
+        let std_dev = self.std_dev(Some(mean));
 
-        let mean = mean.unwrap_or_else(|| self.mean());
-        let squared_deviation = |&x: &f64| {
-            let diff = x - mean;
-            diff * diff
-        };
+        (std_dev / mean) * hundred
+    }
 
-        let sum = if len < 4 {
-            self.iter().map(squared_deviation).sum()
-        } else {
-            let data = data as *const f64x2;
+    fn sum(&self) -> T {
+        Simd::sum(self)
+    }
 
-            let mean2 = f64x2(mean, mean);
-            let mut sum = f64x2(0., 0.);
-            for i in range(0, (len / 2) as int) {
-                let diff = unsafe { *data.offset(i) } - mean2;
-                sum += diff * diff;
-            }
+    fn t(&self, other: &[T]) -> T {
+        let (x_bar, y_bar) = (self.mean(), other.mean());
+        let (s2_x, s2_y) = (self.var(Some(x_bar)), other.var(Some(y_bar)));
+        let n_x = FromPrimitive::from_uint(self.len()).unwrap();
+        let n_y = FromPrimitive::from_uint(other.len()).unwrap();
+        let num = x_bar - y_bar;
+        let den = (s2_x / n_x + s2_y / n_y).sqrt();
 
-            let tail = self.iter().rev().take(len % 2).map(squared_deviation).sum();
+        num / den
+    }
 
-            sum.0 + sum.1 + tail
-        };
-
-        sum / (len - 1) as f64
+    fn var(&self, mean: Option<T>) -> T {
+        Simd::var(self, mean)
     }
 }
 
