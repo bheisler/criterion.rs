@@ -1,5 +1,5 @@
 use stats::ttest::{TDistribution, TwoTailed};
-use stats::{Sample, Stats, mod};
+use stats::{Stats, mod};
 use time;
 
 use Criterion;
@@ -94,14 +94,11 @@ fn estimates(id: &str, times: &[f64], base_times: &[f64], criterion: &Criterion)
     let nresamples = criterion.nresamples;
     let threshold = criterion.noise_threshold;
 
-    let sample = Sample::new(times);
-    let base_sample = Sample::new(base_times);
-
     println!("> Estimating relative change of statistics");
     let distributions = {
         let (a, b) = elapsed!(
             "Bootstrapping the relative statistics",
-            sample.bootstrap2(&base_sample, stats, nresamples)
+            stats::bootstrap(times, base_times, stats, nresamples)
         ).split2();
 
         vec![a, b]

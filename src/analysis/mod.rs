@@ -1,7 +1,6 @@
-use stats::ConfidenceInterval;
+use stats::{Bootstrap, ConfidenceInterval, Distribution};
 use stats::outliers::Outliers;
 use stats::regression::Slope;
-use stats::{Distribution, Sample};
 use std::fmt::Show;
 use std::io::Command;
 use std::io::fs::PathExtensions;
@@ -158,10 +157,9 @@ fn regression(
 
     println!("> Performing linear regression");
 
-    let sample = Sample::new(pairs);
     let distribution = elapsed!(
         "Bootstrapped linear regression",
-        sample.bootstrap(slr, criterion.nresamples));
+        pairs.bootstrap(slr, criterion.nresamples));
 
     let point = Slope::fit(pairs);
     let ConfidenceInterval { lower_bound: lb, upper_bound: ub, .. } =
@@ -230,11 +228,10 @@ fn estimates(
     };
 
     println!("> Estimating the statistics of the sample");
-    let sample = Sample::new(times);
     let distributions = {
         let (a, b, c, d) = elapsed!(
         "Bootstrapping the absolute statistics",
-        sample.bootstrap(stats, nresamples)).split4();
+        times.bootstrap(stats, nresamples)).split4();
 
         vec![a, b, c, d]
     };
