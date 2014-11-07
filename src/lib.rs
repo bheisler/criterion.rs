@@ -246,7 +246,7 @@ impl Figure {
         configure: <'a> |&'a mut axis::Properties| -> &'a mut axis::Properties,
     ) -> &mut Figure {
         if self.axes.contains_key(&which) {
-            configure(self.axes.find_mut(&which).unwrap());
+            configure(self.axes.get_mut(&which).unwrap());
         } else {
             let mut properties = axis::Properties::_new();
             configure(&mut properties);

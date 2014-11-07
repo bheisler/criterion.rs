@@ -43,7 +43,7 @@ impl Properties {
         configure: <'a> |&'a mut grid::Properties| -> &'a mut grid::Properties,
     ) -> &mut Properties {
         if self.grids.contains_key(&which) {
-            configure(self.grids.find_mut(&which).unwrap());
+            configure(self.grids.get_mut(&which).unwrap());
         } else {
             let mut properties = grid::Properties::_new();
             configure(&mut properties);
