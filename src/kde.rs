@@ -62,7 +62,7 @@ impl<'a> Kde<'a> {
                 let mut x = a + offset as f64 * dx;
 
                 for ptr in data.iter_mut() {
-                    unsafe { ptr::write(ptr, (x, self(x))) }
+                    unsafe { ptr::write(ptr, (x, self.call((x, )))) }
                     x += dx;
                 }
             });
@@ -73,7 +73,7 @@ impl<'a> Kde<'a> {
 
             let mut x = a;
             for _ in range(0, n) {
-                pdf.push((x, self(x)));
+                pdf.push((x, self.call((x,))));
 
                 x += dx;
             }
