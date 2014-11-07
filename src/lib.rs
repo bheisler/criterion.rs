@@ -446,9 +446,9 @@ impl Figure {
     /// let mut rng = rand::task_rng();
     /// let xs = linspace(-4_f64, 4., 13).skip(1).take(11).collect::<Vec<f64>>();
     /// let ys = xs.iter().map(|&x| sinc(x) + 0.05 * rng.gen() - 0.025).collect::<Vec<f64>>();
-    /// let lows = ys.iter().map(|y| y - 0.025 - 0.075 * rng.gen()).collect::<Vec<f64>>();
-    /// let highs = ys.iter().map(|y| y + 0.025 + 0.075 * rng.gen()).collect::<Vec<f64>>();
-    /// let xs = xs.iter().map(|x| x + 0.2 * rng.gen() - 0.1);
+    /// let lows = ys.iter().map(|&y| y - 0.025 - 0.075 * rng.gen()).collect::<Vec<f64>>();
+    /// let highs = ys.iter().map(|&y| y + 0.025 + 0.075 * rng.gen()).collect::<Vec<f64>>();
+    /// let xs = xs.iter().map(|&x| x + 0.2 * rng.gen() - 0.1);
     ///
     /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
     /// # assert_eq!(Some(String::new()),
