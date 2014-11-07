@@ -125,10 +125,10 @@ pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
 
     let (scale, prefix) = scale_time([base_xs[].max(), new_xs[].max()][].max());
     let rscale = scale.recip();
-    let base_xs = base_xs.iter().map(|x| x * scale);
-    let base_ys = base_ys.iter().map(|x| x * rscale);
-    let new_xs = new_xs.iter().map(|x| x * scale);
-    let new_ys = new_ys.iter().map(|x| x * rscale);
+    let base_xs = base_xs.iter().map(|&x| x * scale);
+    let base_ys = base_ys.iter().map(|&x| x * rscale);
+    let new_xs = new_xs.iter().map(|&x| x * scale);
+    let new_ys = new_ys.iter().map(|&x| x * rscale);
     let zeros = Repeat::new(0u);
 
     let gnuplot = Figure::new().

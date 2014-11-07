@@ -48,7 +48,7 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
     let path = Path::new(format!(".criterion/{}/new/pdf.svg", id));
 
     let (scale, prefix) = scale_time(sample.max());
-    let sample = sample.iter().map(|t| t * scale).collect::<Vec<_>>();
+    let sample = sample.iter().map(|&t| t * scale).collect::<Vec<_>>();
     let sample = sample[];
 
     let max_iters = pairs.iter().map(|&(iters, _)| iters).max_by(|&iters| iters as u64).unwrap();
@@ -505,9 +505,9 @@ pub fn summarize(id: &str) {
                 let inputs = benches.iter().map(|&(_, input, _, _)| input).collect::<Vec<_>>();
 
                 let (scale, prefix) = scale_time(ubs[].max());
-                let points = points.iter().map(|x| x * scale).collect::<Vec<_>>();
-                let lbs = lbs.iter().map(|x| x * scale).collect::<Vec<_>>();
-                let ubs = ubs.iter().map(|x| x * scale).collect::<Vec<_>>();
+                let points = points.iter().map(|&x| x * scale).collect::<Vec<_>>();
+                let lbs = lbs.iter().map(|&x| x * scale).collect::<Vec<_>>();
+                let ubs = ubs.iter().map(|&x| x * scale).collect::<Vec<_>>();
 
                 // XXX Logscale triggering may need tweaking
                 let xscale = if inputs.len() < 3 {
@@ -617,9 +617,9 @@ pub fn summarize(id: &str) {
                 }).collect::<Vec<_>>();
 
                 let (scale, prefix) = scale_time(ubs[].max());
-                let points = points.iter().map(|x| x * scale).collect::<Vec<_>>();
-                let lbs = lbs.iter().map(|x| x * scale).collect::<Vec<_>>();
-                let ubs = ubs.iter().map(|x| x * scale).collect::<Vec<_>>();
+                let points = points.iter().map(|&x| x * scale).collect::<Vec<_>>();
+                let lbs = lbs.iter().map(|&x| x * scale).collect::<Vec<_>>();
+                let ubs = ubs.iter().map(|&x| x * scale).collect::<Vec<_>>();
 
                 let xscale = if points.len() < 3 {
                     Linear
@@ -638,7 +638,7 @@ pub fn summarize(id: &str) {
                 };
 
                 let min = *points.last().unwrap();
-                let rel = points.iter().map(|x| format!("{:.02}", x / min)).collect::<Vec<_>>();
+                let rel = points.iter().map(|&x| format!("{:.02}", x / min)).collect::<Vec<_>>();
 
                 let tics = iter::count(0.5, 1f64);
                 let points = points.iter();
@@ -752,7 +752,7 @@ pub fn summarize(id: &str) {
                         label("Input").
                         range(0., benches.len() as f64).
                         tics(tics, benches.iter().map(|&(label, _, _, _)| label))).
-                    curve(Points, medians.iter().map(|median| median * scale), tics, |c| c.
+                    curve(Points, medians.iter().map(|&median| median * scale), tics, |c| c.
                         color(Black).
                         label("Median").
                         point_type(Plus).
