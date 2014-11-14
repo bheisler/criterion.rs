@@ -11,6 +11,8 @@ extern crate serialize;
 #[cfg(test)]
 extern crate "test" as std_test;
 
+use std::num::{Float, FloatMath};
+
 pub use bootstrap::bootstrap;
 pub use ci::ConfidenceInterval;
 
@@ -93,17 +95,17 @@ impl<A: Simd> Distribution<A> {
     pub fn confidence_interval(&self, confidence_level: A) -> ConfidenceInterval<A> {
         use std::num;
 
-        assert!(confidence_level > num::zero() && confidence_level < num::one());
+        assert!(confidence_level > Float::zero() && confidence_level < Float::one());
 
         let percentiles = self.as_slice().percentiles();
 
-        let one = num::one::<A>();
+        let _1: A = Float::one();
         let fifty = num::cast::<f64, A>(50.).unwrap();
 
         ConfidenceInterval {
             confidence_level: confidence_level,
-            lower_bound: percentiles.at(fifty * (one - confidence_level)),
-            upper_bound: percentiles.at(fifty * (one + confidence_level)),
+            lower_bound: percentiles.at(fifty * (_1 - confidence_level)),
+            upper_bound: percentiles.at(fifty * (_1 + confidence_level)),
         }
     }
 
@@ -283,5 +285,15 @@ impl<T: Float + FromPrimitive> Percentiles<T> {
         let q3 = self.at(FromPrimitive::from_uint(75).unwrap());
 
         q3 - q1
+    }
+}
+
+trait Sum<T> {
+    fn sum(self) -> T;
+}
+
+impl<T: Float, I: Iterator<T>> Sum<T> for I {
+    fn sum(mut self) -> T {
+        self.fold(Float::zero(), |s, x| x + s)
     }
 }

@@ -2,6 +2,7 @@
 
 use parallel;
 use std::iter::AdditiveIterator;
+use std::num::Float;
 use std::ops::Fn;
 use std::{os, ptr};
 

@@ -1,7 +1,9 @@
 //! Regression analysis
 
 use std::iter::AdditiveIterator;
-use std::num;
+use std::num::{Float, mod};
+
+use Sum;
 
 /// A straight line that passes through the origin `y = m * x`
 #[deriving(Clone)]
@@ -43,7 +45,9 @@ where A: Float
             diff * diff
         }).sum();
 
-        num::one::<A>() - ss_res / ss_tot
+        let _1: A = Float::one();
+
+        _1 - ss_res / ss_tot
     }
 }
 
@@ -105,7 +109,9 @@ impl<A> StraightLine<A> where A: Float {
             diff * diff
         }).sum();
 
-        num::one::<A>() - ss_res / ss_tot
+        let _1: A = Float::one();
+
+        _1 - ss_res / ss_tot
     }
 }
 
