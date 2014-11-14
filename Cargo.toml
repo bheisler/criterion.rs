@@ -11,3 +11,6 @@ git = "https://github.com/japaric/simplot.rs"
 
 [dependencies.stats]
 git = "https://github.com/japaric/stats.rs"
+
+[dependencies.time]
+git = "https://github.com/rust-lang/time"
