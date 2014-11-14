@@ -40,7 +40,7 @@ impl Properties {
     pub fn grid(
         &mut self,
         which: grid::Grid,
-        configure: <'a> |&'a mut grid::Properties| -> &'a mut grid::Properties,
+        configure: for<'a> |&'a mut grid::Properties| -> &'a mut grid::Properties,
     ) -> &mut Properties {
         if self.grids.contains_key(&which) {
             configure(self.grids.get_mut(&which).unwrap());

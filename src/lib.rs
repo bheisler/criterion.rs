@@ -243,7 +243,7 @@ impl Figure {
     pub fn axis(
         &mut self,
         which: axis::Axis,
-        configure: <'a> |&'a mut axis::Properties| -> &'a mut axis::Properties,
+        configure: for<'a> |&'a mut axis::Properties| -> &'a mut axis::Properties,
     ) -> &mut Figure {
         if self.axes.contains_key(&which) {
             configure(self.axes.get_mut(&which).unwrap());
@@ -327,7 +327,7 @@ impl Figure {
         box_min: BM,
         box_high: BH,
         whisker_high: WH,
-        configure: <'a> |&'a mut candlestick::Properties| -> &'a mut candlestick::Properties,
+        configure: for<'a> |&'a mut candlestick::Properties| -> &'a mut candlestick::Properties,
     ) -> &mut Figure where
         A: Data, B: Data, C: Data, D: Data, E: Data,
         X: Iterator<A>, WM: Iterator<B>, BM: Iterator<C>, BH: Iterator<D>, WH: Iterator<E>,
@@ -389,7 +389,7 @@ impl Figure {
         style: curve::Style,
         x: X,
         y: Y,
-        configure: <'a> |&'a mut curve::Properties| -> &'a mut curve::Properties,
+        configure: for<'a> |&'a mut curve::Properties| -> &'a mut curve::Properties,
     ) -> &mut Figure where
         A: Data, B: Data, X: Iterator<A>, Y: Iterator<B>
     {
@@ -484,7 +484,7 @@ impl Figure {
         y: Y,
         low: L,
         high: H,
-        configure: <'a> |&'a mut errorbar::Properties| -> &'a mut errorbar::Properties,
+        configure: for<'a> |&'a mut errorbar::Properties| -> &'a mut errorbar::Properties,
     ) -> &mut Figure where
         A: Data, B: Data, C: Data, D: Data,
         X: Iterator<A>, Y: Iterator<B>, L: Iterator<C>, H: Iterator<D>,
@@ -559,7 +559,7 @@ impl Figure {
         x: X,
         y1: Y1,
         y2: Y2,
-        configure: <'a> |&'a mut filledcurve::Properties| -> &'a mut filledcurve::Properties,
+        configure: for<'a> |&'a mut filledcurve::Properties| -> &'a mut filledcurve::Properties,
     ) -> &mut Figure where
         A: Data, B: Data, C: Data, X: Iterator<A>, Y1: Iterator<B>, Y2: Iterator<C>
     {
@@ -589,7 +589,7 @@ impl Figure {
     /// Configures the key (legend)
     pub fn key(
         &mut self,
-        configure: <'a> |&'a mut key::Properties| -> &'a mut key::Properties,
+        configure: for<'a> |&'a mut key::Properties| -> &'a mut key::Properties,
     ) -> &mut Figure {
         if self.key.is_some() {
             configure(self.key.as_mut().unwrap());
