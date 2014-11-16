@@ -1,7 +1,8 @@
 //! t-test
 
 use parallel;
-use std::{num, os, ptr};
+use std::num::{Float, mod};
+use std::{os, ptr};
 
 use resamples::Resamples;
 use {Simd, Stats};

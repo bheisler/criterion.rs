@@ -1,3 +1,4 @@
+use std::num::Float;
 use std::rand::{Rand, Rng, XorShiftRng, mod};
 
 pub const BENCH_SIZE: uint = 1_000_000;

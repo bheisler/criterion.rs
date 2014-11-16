@@ -1,5 +1,5 @@
 use parallel;
-//use std::{cmp, comm, mem, os, ptr, raw};
+use std::num::Float;
 use std::{os, ptr};
 
 use {Bootstrap, Distribution};
@@ -96,6 +96,7 @@ pub fn bootstrap<A: Clone + Sync, B: Clone + Sync, C: Send>(
 #[cfg(test)]
 mod test {
     use quickcheck::TestResult;
+    use std::num::Float;
 
     use {Bootstrap, Stats};
     use test;
