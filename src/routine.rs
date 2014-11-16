@@ -1,4 +1,5 @@
 use std::iter::{AdditiveIterator, mod};
+use std::num::Float;
 use time;
 
 use format;

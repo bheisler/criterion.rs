@@ -5,6 +5,7 @@ use simplot::key::{Inside, Left, LeftJustified, Outside, Right, SampleText, Top}
 use simplot::{Figure, Solid};
 use stats::ConfidenceInterval;
 use std::iter::Repeat;
+use std::num::Float;
 use std::str;
 use test::stats::Stats;
 
