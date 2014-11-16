@@ -10,6 +10,7 @@ use stats::outliers::{Outliers, LowMild, LowSevere, HighMild, HighSevere};
 use stats::regression::Slope;
 use std::io::fs::PathExtensions;
 use std::iter::{Repeat, mod};
+use std::num::Float;
 use std::str;
 
 use estimate::{Distributions, Estimate, Estimates, Mean, Median, mod};
