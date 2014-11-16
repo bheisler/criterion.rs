@@ -4,5 +4,5 @@ name = "simplot"
 version = "0.0.0"
 authors = ["Jorge Aparicio <japaric@linux.com>"]
 
-[dev-dependencies.num]
-git = "https://github.com/rust-lang/num"
+[dev-dependencies.complex]
+git = "https://github.com/japaric/complex.rs"
