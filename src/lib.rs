@@ -5,7 +5,7 @@
 
 use std::collections::TreeMap;
 use std::io::{Command, File, IoResult, Process};
-use std::num;
+use std::num::{Float, mod};
 use std::str::{MaybeOwned, mod};
 
 use data::Matrix;
@@ -177,11 +177,11 @@ impl Figure {
     /// ![Plot](multiaxis.svg)
     ///
     /// ```
-    /// # extern crate num;
+    /// # extern crate complex;
     /// # extern crate simplot;
     /// # fn main() {
     /// # use std::io::{fs, USER_RWX};
-    /// use num::Complex;
+    /// use complex::Complex;
     /// use simplot::axis::{BottomX, LeftY, Logarithmic, RightY};
     /// use simplot::color::{DarkViolet, Rgb};
     /// use simplot::curve::Lines;
@@ -189,6 +189,7 @@ impl Figure {
     /// use simplot::key::{Center, Inside, Top};
     /// use simplot::{BottomXRightY, Figure, logspace};
     /// use std::f64::consts::PI;
+    /// use std::num::Float;
     ///
     /// fn tf(x: f64) -> Complex<f64> {
     ///     Complex::new(0., x) / Complex::new(10., x) / Complex::new(1., x / 10_000.)
@@ -197,7 +198,7 @@ impl Figure {
     /// let (start, end) = (1.1, 90_000.);
     /// let xs = logspace(start, end, 101);
     /// let phase = xs.map(|x| tf(x).arg() * 180. / PI);
-    /// let magnitude = xs.map(|x| tf(x).norm());
+    /// let magnitude = xs.map(|x| tf(x).abs());
     ///
     /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
     /// # assert_eq!(Some(String::new()),
@@ -351,6 +352,7 @@ impl Figure {
     /// use simplot::curve::{Impulses, LinesPoints, Steps};
     /// use simplot::key::{Inside, Left, Top};
     /// use simplot::{Circle, Dash, Figure, linspace};
+    /// use std::num::FloatMath;
     ///
     /// let xs = linspace::<f64>(-10., 10., 51);
     ///
@@ -429,6 +431,7 @@ impl Figure {
     /// use simplot::key::{Outside, Right, Top};
     /// use simplot::{Figure, FilledCircle, linspace};
     /// use std::f64::consts::PI;
+    /// use std::num::FloatMath;
     /// use std::rand::{Rng, mod};
     ///
     /// fn sinc(mut x: f64) -> f64 {
@@ -510,6 +513,7 @@ impl Figure {
     /// use simplot::{Figure, linspace};
     /// use std::f64::consts::PI;
     /// use std::iter;
+    /// use std::num::Float;
     ///
     /// let (start, end) = (-5., 5.);
     /// let xs = linspace(start, end, 101);
@@ -757,7 +761,7 @@ trait Script {
 pub fn linspace<T>(start: T, end: T, n: uint) -> Linspace<T> where T: Float {
     let step = if n < 2 {
         // NB The value of `step` doesn't matter in these cases
-        num::zero()
+        Float::zero()
     } else {
         (end - start) / num::cast(n - 1).unwrap()
     };
@@ -771,13 +775,13 @@ pub fn linspace<T>(start: T, end: T, n: uint) -> Linspace<T> where T: Float {
 }
 
 pub fn logspace<T>(start: T, end: T, n: uint) -> Logspace<T> where T: Float {
-    assert!(start > num::zero() && end > num::zero());
+    assert!(start > Float::zero() && end > Float::zero());
 
     let (start, end) = (start.ln(), end.ln());
 
     let step = if n < 2 {
         // NB The value of `step` doesn't matter in these cases
-        num::zero()
+        Float::zero()
     } else {
         (end - start) / num::cast(n - 1).unwrap()
     };
