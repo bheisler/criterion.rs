@@ -86,16 +86,16 @@ impl<A: Float> TDistribution<A> {
 
         match tails {
             // XXX This division by two assumes that the t-distribution is symmetric
-            OneTailed => p_value / num::cast(2f64).unwrap(),
-            TwoTailed => p_value,
+            Tails::One => p_value / num::cast(2f64).unwrap(),
+            Tails::Two => p_value,
         }
     }
 }
 
 /// Number of tails to consider for the t-test
 pub enum Tails {
-    OneTailed,
-    TwoTailed,
+    One,
+    Two,
 }
 
 #[cfg(test)]
