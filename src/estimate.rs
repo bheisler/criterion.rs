@@ -45,11 +45,11 @@ pub enum Statistic {
 impl Show for Statistic {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match *self {
-            Mean => f.pad("mean"),
-            Median => f.pad("median"),
-            MedianAbsDev => f.pad("MAD"),
-            Slope => f.pad("slope"),
-            StdDev => f.pad("SD"),
+            Statistic::Mean => f.pad("mean"),
+            Statistic::Median => f.pad("median"),
+            Statistic::MedianAbsDev => f.pad("MAD"),
+            Statistic::Slope => f.pad("slope"),
+            Statistic::StdDev => f.pad("SD"),
         }
     }
 }

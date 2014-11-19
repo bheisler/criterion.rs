@@ -4,7 +4,7 @@ extern crate rustc;
 extern crate syntax;
 
 use rustc::plugin::Registry;
-use syntax::ast::{DUMMY_NODE_ID, DeclItem, Item, ItemFn, MetaItem, StmtDecl};
+use syntax::ast::{DUMMY_NODE_ID, DeclItem, Item, ItemFn, MetaItem, StmtDecl, mod};
 use syntax::codemap::{Span, mod};
 use syntax::ext::base::{ExtCtxt, Modifier};
 use syntax::ext::build::AstBuilder;
@@ -72,7 +72,12 @@ fn expand_meta_criterion(
             let fn_decl = P(codemap::respan(span, DeclItem(routine)));
             let inner_fn = P(codemap::respan(span, StmtDecl(fn_decl, DUMMY_NODE_ID)));
             let body = cx.block(span, vec!(inner_fn, bench_call), None);
-            let test = cx.item_fn(span, item.ident, Vec::new(), cx.ty_nil(), body);
+            let nil = P(ast::Ty {
+                id: ast::DUMMY_NODE_ID,
+                node: ast::TyTup(vec![]),
+                span: codemap::DUMMY_SP,
+            });
+            let test = cx.item_fn(span, item.ident, Vec::new(), nil, body);
 
             // Add the `#[test]` attribute to existing attributes
             let mut attrs = item.attrs.clone();

@@ -1,15 +1,14 @@
-use simplot::axis::{BottomX, LeftY, RightY};
-use simplot::curve::Lines;
-use simplot::grid::Major;
-use simplot::key::{Inside, Left, LeftJustified, Outside, Right, SampleText, Top};
-use simplot::{Figure, Solid};
+use simplot::curve::Style::{Lines};
+use simplot::key::{Horizontal, Justification, Order, Position, Vertical};
+use simplot::{Axis, Figure, Grid, LineType};
 use stats::ConfidenceInterval;
 use std::iter::Repeat;
 use std::num::Float;
 use std::str;
 use test::stats::Stats;
 
-use estimate::{Estimate, Estimates, Slope};
+use estimate::{Estimate, Estimates};
+use estimate::Statistic::Slope;
 use kde;
 use super::scale_time;
 use super::{DARK_BLUE, DARK_RED};
@@ -82,19 +81,19 @@ pub fn regression(
         output(path).
         size(PLOT_SIZE).
         title(id.to_string()).
-        axis(BottomX, |a| a.
-            grid(Major, |g| g.
+        axis(Axis::BottomX, |a| a.
+            grid(Grid::Major, |g| g.
                 show()).
              // FIXME (unboxed closures) remove cloning
             label(x_label.to_string())).
-        axis(LeftY, |a| a.
-            grid(Major, |g| g.
+        axis(Axis::LeftY, |a| a.
+            grid(Grid::Major, |g| g.
                 show()).
             label(format!("Total time ({}s)", prefix))).
         key(|k| k.
-            justification(LeftJustified).
-            order(SampleText).
-            position(Inside(Top, Left))).
+            justification(Justification::Left).
+            order(Order::SampleText).
+            position(Position::Inside(Vertical::Top, Horizontal::Left))).
         filled_curve([0., max_iters].iter(), [0., base_lb].iter(), [0., base_ub].iter(), |c| c.
             color(DARK_RED).
             opacity(0.25)).
@@ -104,12 +103,12 @@ pub fn regression(
         curve(Lines, [0., max_iters].iter(), [0., base_point].iter(), |c| c.
             color(DARK_RED).
             label("Base sample").
-            line_type(Solid).
+            line_type(LineType::Solid).
             linewidth(2.)).
         curve(Lines, [0., max_iters].iter(), [0., new_point].iter(), |c| c.
             color(DARK_BLUE).
             label("New sample").
-            line_type(Solid).
+            line_type(LineType::Solid).
             linewidth(2.)).
         draw().unwrap();
 
@@ -137,16 +136,16 @@ pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
         output(path).
         size(PLOT_SIZE).
         title(id.to_string()).
-        axis(BottomX, |a| a.
+        axis(Axis::BottomX, |a| a.
             label(format!("Average time ({}s)", prefix))).
-        axis(LeftY, |a| a.
+        axis(Axis::LeftY, |a| a.
             label("Density (a.u.)")).
-        axis(RightY, |a| a.
+        axis(Axis::RightY, |a| a.
             hide()).
         key(|k| k.
-            justification(LeftJustified).
-            order(SampleText).
-            position(Outside(Top, Right))).
+            justification(Justification::Left).
+            order(Order::SampleText).
+            position(Position::Outside(Vertical::Top, Horizontal::Right))).
         filled_curve(base_xs, base_ys, zeros, |c| c.
             color(DARK_RED).
             label("Base PDF").

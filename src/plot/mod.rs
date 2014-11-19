@@ -1,10 +1,7 @@
-use simplot::axis::{BottomX, LeftY, Linear, Logarithmic, RightY};
-use simplot::color::{Black, Color, Rgb};
-use simplot::curve::{Lines, Points};
-use simplot::errorbar::{XErrorBar, YErrorBar};
-use simplot::grid::{Major, Minor};
-use simplot::key::{Inside, Left, LeftJustified, Outside, Right, SampleText, Top};
-use simplot::{BottomXRightY, Dash, Figure, FilledCircle, Plus, Solid};
+use simplot::curve::Style::{Lines, Points};
+use simplot::errorbar::Style::{XErrorBar, YErrorBar};
+use simplot::key::{Horizontal, Justification, Order, Position, Vertical};
+use simplot::{Axes, Axis, Color, Figure, Grid, LineType, PointType, Scale};
 use stats::Stats;
 use stats::outliers::{Outliers, LowMild, LowSevere, HighMild, HighSevere};
 use stats::regression::Slope;
@@ -13,7 +10,8 @@ use std::iter::{Repeat, mod};
 use std::num::Float;
 use std::str;
 
-use estimate::{Distributions, Estimate, Estimates, Mean, Median, mod};
+use estimate::Statistic;
+use estimate::{Distributions, Estimate, Estimates};
 use fs;
 use kde;
 
@@ -41,9 +39,9 @@ static PLOT_SIZE: (uint, uint) = (1280, 720);
 static LINEWIDTH: f64 = 2.;
 static POINT_SIZE: f64 = 0.75;
 
-static DARK_BLUE: Color = Rgb(31, 120, 180);
-static DARK_ORANGE: Color = Rgb(255, 127, 0);
-static DARK_RED: Color = Rgb(227, 26, 28);
+static DARK_BLUE: Color = Color::Rgb(31, 120, 180);
+static DARK_ORANGE: Color = Color::Rgb(255, 127, 0);
+static DARK_RED: Color = Color::Rgb(227, 26, 28);
 
 pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &str) {
     let path = Path::new(format!(".criterion/{}/new/pdf.svg", id));
@@ -93,54 +91,54 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
         output(path).
         size(PLOT_SIZE).
         title(id.to_string()).
-        axis(BottomX, |a| a.
+        axis(Axis::BottomX, |a| a.
             label(format!("Average time ({}s)", prefix)).
             range(xs[].min(), xs[].max())).
-        axis(LeftY, |a| a.
+        axis(Axis::LeftY, |a| a.
             // FIXME (unboxed closures) Remove cloning
             label(y_label.to_string()).
             range(0., max_iters * y_scale)).
-        axis(RightY, |a| a.
+        axis(Axis::RightY, |a| a.
             label("Density (a.u.)")).
         key(|k| k.
-            justification(LeftJustified).
-            order(SampleText).
-            position(Outside(Top, Right))).
+            justification(Justification::Left).
+            order(Order::SampleText).
+            position(Position::Outside(Vertical::Top, Horizontal::Right))).
         filled_curve(xs.iter(), ys.iter(), zeros, |c| c.
-            axes(BottomXRightY).
+            axes(Axes::BottomXRightY).
             color(DARK_BLUE).
             label("PDF").
             opacity(0.25)).
         curve(Points, normal.iter().map(|x| x.val1()), normal.iter().map(|x| x.val0()), |c| c.
             color(DARK_BLUE).
             label("\"Clean\" sample").
-            point_type(FilledCircle).
+            point_type(PointType::FilledCircle).
             point_size(POINT_SIZE)).
         curve(Points, mild.iter().map(|x| x.val1()), mild.iter().map(|x| x.val0()), |c| c.
             color(DARK_ORANGE).
             label("Mild outliers").
-            point_type(FilledCircle).
+            point_type(PointType::FilledCircle).
             point_size(POINT_SIZE)).
         curve(Points, severe.iter().map(|x| x.val1()), severe.iter().map(|x| x.val0()), |c| c.
             color(DARK_RED).
             label("Severe outliers").
-            point_type(FilledCircle).
+            point_type(PointType::FilledCircle).
             point_size(POINT_SIZE)).
         curve(Lines, [lomt, lomt].iter(), vertical.iter(), |c| c.
             color(DARK_ORANGE).
-            line_type(Dash).
+            line_type(LineType::Dash).
             linewidth(LINEWIDTH)).
         curve(Lines, [himt, himt].iter(), vertical.iter(), |c| c.
             color(DARK_ORANGE).
-            line_type(Dash).
+            line_type(LineType::Dash).
             linewidth(LINEWIDTH)).
         curve(Lines, [lost, lost].iter(), vertical.iter(), |c| c.
             color(DARK_RED).
-            line_type(Dash).
+            line_type(LineType::Dash).
             linewidth(LINEWIDTH)).
         curve(Lines, [hist, hist].iter(), vertical.iter(), |c| c.
             color(DARK_RED).
-            line_type(Dash).
+            line_type(LineType::Dash).
             linewidth(LINEWIDTH)).
         draw().unwrap();
 
@@ -193,27 +191,27 @@ pub fn regression(
         size(PLOT_SIZE).
         title(id.to_string()).
         key(|k| k.
-            justification(LeftJustified).
-            order(SampleText).
-            position(Inside(Top, Left))).
-        axis(BottomX, |a| a.
-            grid(Major, |g| g.
+            justification(Justification::Left).
+            order(Order::SampleText).
+            position(Position::Inside(Vertical::Top, Horizontal::Left))).
+        axis(Axis::BottomX, |a| a.
+            grid(Grid::Major, |g| g.
                 show()).
             // FIXME (unboxed closures) Remove cloning
             label(x_label.to_string())).
-        axis(LeftY, |a| a.
-             grid(Major, |g| g.
+        axis(Axis::LeftY, |a| a.
+             grid(Grid::Major, |g| g.
                  show()).
             label(format!("Total time ({}s)", prefix))).
         curve(Points, iters.iter(), elapsed.iter(), |c| c.
             color(DARK_BLUE).
             label("Sample").
-            point_type(FilledCircle).
+            point_type(PointType::FilledCircle).
             point_size(0.5)).
         curve(Lines, [0., max_iters].iter(), [0., point].iter(), |c| c.
             color(DARK_BLUE).
             label("Linear regression").
-            line_type(Solid).
+            line_type(LineType::Solid).
             linewidth(LINEWIDTH)).
         filled_curve([0., max_iters].iter(), [0., lb].iter(), [0., ub].iter(), |c| c.
             color(DARK_BLUE).
@@ -259,19 +257,19 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
             output(Path::new(format!(".criterion/{}/new/{}.svg", id, statistic))).
             size(PLOT_SIZE).
             title(format!("{}: {}", id, statistic)).
-            axis(BottomX, |a| a.
+            axis(Axis::BottomX, |a| a.
                 label(format!("Average time ({}s)", prefix)).
                 range(xs[].min(), xs[].max())).
-            axis(LeftY, |a| a.
+            axis(Axis::LeftY, |a| a.
                 label("Density (a.u.)")).
             key(|k| k.
-                justification(LeftJustified).
-                order(SampleText).
-                position(Outside(Top, Right))).
+                justification(Justification::Left).
+                order(Order::SampleText).
+                position(Position::Outside(Vertical::Top, Horizontal::Right))).
             curve(Lines, xs.iter(), ys.iter(), |c| c.
                 color(DARK_BLUE).
                 label("Bootstrap distribution").
-                line_type(Solid).
+                line_type(LineType::Solid).
                 linewidth(LINEWIDTH)).
             filled_curve(xs.iter().skip(start).take(len), ys.iter().skip(start), zero, |c| c.
                 color(DARK_BLUE).
@@ -280,7 +278,7 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
             curve(Lines, [p, p].iter(), [0., y_p].iter(), |c| c.
                 color(DARK_BLUE).
                 label("Point estimate").
-                line_type(Dash).
+                line_type(LineType::Dash).
                 linewidth(LINEWIDTH)).
             draw().unwrap()
     }).collect::<Vec<_>>();
@@ -304,12 +302,12 @@ pub fn rel_distributions(
     figure.
         font(FONT).
         size(PLOT_SIZE).
-        axis(LeftY, |a| a.
+        axis(Axis::LeftY, |a| a.
             label("Density (a.u.)")).
         key(|k| k.
-            justification(LeftJustified).
-            order(SampleText).
-            position(Outside(Top, Right)));
+            justification(Justification::Left).
+            order(Order::SampleText).
+            position(Position::Outside(Vertical::Top, Horizontal::Right)));
 
     let gnuplots = distributions.iter().map(|(&statistic, distribution)| {
         let path = Path::new(format!(".criterion/{}/change/{}.svg", id, statistic));
@@ -353,13 +351,13 @@ pub fn rel_distributions(
         figure.clone().
             output(path).
             title(format!("{}: {}", id, statistic)).
-            axis(BottomX, |a| a.
+            axis(Axis::BottomX, |a| a.
                 label("Relative change (%)").
                 range(x_min, x_max)).
             curve(Lines, xs.iter(), ys.iter(), |c| c.
                 color(DARK_BLUE).
                 label("Bootstrap distribution").
-                line_type(Solid).
+                line_type(LineType::Solid).
                 linewidth(LINEWIDTH)).
             filled_curve(xs.iter().skip(start).take(len), ys.iter().skip(start), zero, |c| c.
                 color(DARK_BLUE).
@@ -368,10 +366,10 @@ pub fn rel_distributions(
             curve(Lines, [p, p].iter(), [0., y_p].iter(), |c| c.
                 color(DARK_BLUE).
                 label("Point estimate").
-                line_type(Dash).
+                line_type(LineType::Dash).
                 linewidth(LINEWIDTH)).
             filled_curve([fc_start, fc_end].iter(), one, zero, |c| c.
-                axes(BottomXRightY).
+                axes(Axes::BottomXRightY).
                 color(DARK_RED).
                 label("Noise threshold").
                 opacity(0.1)).
@@ -398,23 +396,23 @@ pub fn t_test(t: f64, distribution: &[f64], id: &str) {
         output(path).
         size(PLOT_SIZE).
         title(format!("{}: Welch t test", id)).
-        axis(BottomX, |a| a.
+        axis(Axis::BottomX, |a| a.
             label("t score")).
-        axis(LeftY, |a| a.
+        axis(Axis::LeftY, |a| a.
             label("Density")).
         key(|k| k.
-            justification(LeftJustified).
-            order(SampleText).
-            position(Outside(Top, Right))).
+            justification(Justification::Left).
+            order(Order::SampleText).
+            position(Position::Outside(Vertical::Top, Horizontal::Right))).
         filled_curve(xs.iter(), ys.iter(), zero, |c| c.
             color(DARK_BLUE).
             label("t distribution").
             opacity(0.25)).
         curve(Lines, [t, t].iter(), [0u, 1].iter(), |c| c.
-            axes(BottomXRightY).
+            axes(Axes::BottomXRightY).
             color(DARK_BLUE).
             label("t statistic").
-            line_type(Solid).
+            line_type(LineType::Solid).
             linewidth(LINEWIDTH)).
         draw().unwrap();
 
@@ -491,7 +489,7 @@ pub fn summarize(id: &str) {
                 a.cmp(&b)
             });
 
-            [Mean, Median, estimate::Slope].iter().map(|&statistic| {
+            [Statistic::Mean, Statistic::Median, Statistic::Slope].iter().map(|&statistic| {
                 let points = benches.iter().map(|&(_, _, ref estimates, _)| {
                     estimates[statistic].point_estimate
                 }).collect::<Vec<_>>();
@@ -512,7 +510,7 @@ pub fn summarize(id: &str) {
 
                 // XXX Logscale triggering may need tweaking
                 let xscale = if inputs.len() < 3 {
-                    Linear
+                    Scale::Linear
                 } else {
                     let inputs = inputs.iter().map(|&x| x as f64).collect::<Vec<_>>();
                     let linear = diff(inputs[])[].std_dev(None);
@@ -522,14 +520,14 @@ pub fn summarize(id: &str) {
                     };
 
                     if linear < log {
-                        Linear
+                        Scale::Linear
                     } else {
-                        Logarithmic
+                        Scale::Logarithmic
                     }
                 };
 
                 let yscale = if points.len() < 3 {
-                    Linear
+                    Scale::Linear
                 } else {
                     let linear = diff(points[])[].std_dev(None);
                     let log = {
@@ -538,9 +536,9 @@ pub fn summarize(id: &str) {
                     };
 
                     if linear < log {
-                        Linear
+                        Scale::Linear
                     } else {
-                        Logarithmic
+                        Scale::Logarithmic
                     }
                 };
 
@@ -551,36 +549,36 @@ pub fn summarize(id: &str) {
                     output(dir.join(format!("summary/{}/{}s.svg", sample, statistic))).
                     size(PLOT_SIZE).
                     title(format!("{}", id)).
-                    axis(BottomX, |a| a.
-                        grid(Major, |g| g.
+                    axis(Axis::BottomX, |a| a.
+                        grid(Grid::Major, |g| g.
                             show()).
-                        grid(Minor, |g| match xscale {
-                            Linear => g.hide(),
-                            Logarithmic => g.show(),
+                        grid(Grid::Minor, |g| match xscale {
+                            Scale::Linear => g.hide(),
+                            Scale::Logarithmic => g.show(),
                         }).
                         label("Input").
                         scale(xscale)).
-                    axis(BottomX, |a| match xscale {
-                        Linear => a,
-                        Logarithmic => {
+                    axis(Axis::BottomX, |a| match xscale {
+                        Scale::Linear => a,
+                        Scale::Logarithmic => {
                             let start = inputs[0] as f64;
                             let end = *inputs.last().unwrap() as f64;
 
                             a.range(log_floor(start), log_ceil(end))
                         },
                     }).
-                    axis(LeftY, |a| a.
-                        grid(Major, |g| g.
+                    axis(Axis::LeftY, |a| a.
+                        grid(Grid::Major, |g| g.
                             show()).
-                        grid(Minor, |g| match xscale {
-                            Linear => g.hide(),
-                            Logarithmic => g.show(),
+                        grid(Grid::Minor, |g| match xscale {
+                            Scale::Linear => g.hide(),
+                            Scale::Logarithmic => g.show(),
                         }).
                         label(format!("Average time ({}s)", prefix)).
                         scale(yscale)).
-                    axis(LeftY, |a| match yscale {
-                        Linear => a,
-                        Logarithmic => {
+                    axis(Axis::LeftY, |a| match yscale {
+                        Scale::Linear => a,
+                        Scale::Logarithmic => {
                             let start = lbs[].min();
                             let end = ubs[].max();
 
@@ -588,19 +586,19 @@ pub fn summarize(id: &str) {
                         },
                     }).
                     key(|k| k.
-                        justification(LeftJustified).
-                        order(SampleText).
-                        position(Inside(Top, Left))).
-                    error_bar(YErrorBar, inputs.iter(), points, lbs.iter(), ubs.iter(), |eb| eb.
+                        justification(Justification::Left).
+                        order(Order::SampleText).
+                        position(Position::Inside(Vertical::Top, Horizontal::Left))).
+                    error_bar(YErrorBar, inputs.iter(), points, lbs.iter(), ubs.iter(), |e| e.
                         label(format!("{}", statistic)).
                         linewidth(LINEWIDTH).
                         point_size(POINT_SIZE).
-                        point_type(FilledCircle)).
+                        point_type(PointType::FilledCircle)).
                     draw().unwrap()
             }).collect::<Vec<_>>()
         } else {
             // NB median go last because we reuse the ordered set in the next step (summary)
-            [Mean, estimate::Slope, Median].iter().map(|&statistic| {
+            [Statistic::Mean, Statistic::Slope, Statistic::Median].iter().map(|&statistic| {
                 benches.sort_by(|&(_, _, ref a, _), &(_, _, ref b, _)| {
                     let a = a[statistic].point_estimate;
                     let b = b[statistic].point_estimate;
@@ -623,7 +621,7 @@ pub fn summarize(id: &str) {
                 let ubs = ubs.iter().map(|&x| x * scale).collect::<Vec<_>>();
 
                 let xscale = if points.len() < 3 {
-                    Linear
+                    Scale::Linear
                 } else {
                     let linear = diff(points[])[].std_dev(None);
                     let log = {
@@ -632,9 +630,9 @@ pub fn summarize(id: &str) {
                     };
 
                     if linear < log {
-                        Linear
+                        Scale::Linear
                     } else {
-                        Logarithmic
+                        Scale::Logarithmic
                     }
                 };
 
@@ -650,36 +648,36 @@ pub fn summarize(id: &str) {
                     output(dir.join(format!("summary/{}/{}s.svg", sample, statistic))).
                     size(PLOT_SIZE).
                     title(format!("{}: Estimates of the {}s", id, statistic)).
-                    axis(BottomX, |a| a.
-                        grid(Major, |g| g.
+                    axis(Axis::BottomX, |a| a.
+                        grid(Grid::Major, |g| g.
                             show()).
-                        grid(Minor, |g| match xscale {
-                            Linear => g.hide(),
-                            Logarithmic => g.show(),
+                        grid(Grid::Minor, |g| match xscale {
+                            Scale::Linear => g.hide(),
+                            Scale::Logarithmic => g.show(),
                         }).
                         label(format!("Average time ({}s)", prefix)).
                         scale(xscale)).
-                    axis(BottomX, |a| match xscale {
-                        Linear => a,
-                        Logarithmic => {
+                    axis(Axis::BottomX, |a| match xscale {
+                        Scale::Linear => a,
+                        Scale::Logarithmic => {
                             let start = lbs[].min();
                             let end = ubs[].max();
 
                             a.range(log_floor(start), log_ceil(end))
                         },
                     }).
-                    axis(LeftY, |a| a.
+                    axis(Axis::LeftY, |a| a.
                         label("Input").
                         range(0., benches.len() as f64).
                         tics(tics, benches.iter().map(|&(label, _, _, _)| label))).
-                    axis(RightY, |a| a.
+                    axis(Axis::RightY, |a| a.
                         label("Relative time").
                         range(0., benches.len() as f64).
                         tics(tics, rel.iter().map(|x| x.as_slice()))).
                     error_bar(XErrorBar, points, y, lbs.iter(), ubs.iter(), |eb| eb.
                         label("Confidence Interval").
                         linewidth(LINEWIDTH).
-                        point_type(FilledCircle).
+                        point_type(PointType::FilledCircle).
                         point_size(POINT_SIZE)).
                     draw().unwrap()
             }).collect::<Vec<_>>().append_({
@@ -712,7 +710,7 @@ pub fn summarize(id: &str) {
                 max *= scale;
 
                 let xscale = if medians.len() < 3 {
-                    Linear
+                    Scale::Linear
                 } else {
                     let linear = diff(medians[])[].std_dev(None);
                     let log = {
@@ -721,9 +719,9 @@ pub fn summarize(id: &str) {
                     };
 
                     if linear < log {
-                        Linear
+                        Scale::Linear
                     } else {
-                        Logarithmic
+                        Scale::Logarithmic
                     }
                 };
 
@@ -734,29 +732,29 @@ pub fn summarize(id: &str) {
                     output(dir.join(format!("summary/{}/violin_plot.svg", sample))).
                     size(PLOT_SIZE).
                     title(format!("{}: Violin plot", id)).
-                    axis(BottomX, |a| a.
-                        grid(Major, |g| g.
+                    axis(Axis::BottomX, |a| a.
+                        grid(Grid::Major, |g| g.
                             show()).
-                        grid(Minor, |g| match xscale {
-                            Linear => g.hide(),
-                            Logarithmic => g.show(),
+                        grid(Grid::Minor, |g| match xscale {
+                            Scale::Linear => g.hide(),
+                            Scale::Logarithmic => g.show(),
                         }).
                         label(format!("Average time ({}s)", prefix)).
                         scale(xscale)).
-                    axis(BottomX, |a| match xscale {
-                        Linear => a,
-                        Logarithmic => {
+                    axis(Axis::BottomX, |a| match xscale {
+                        Scale::Linear => a,
+                        Scale::Logarithmic => {
                             a.range(log_floor(min), log_ceil(max))
                         },
                     }).
-                    axis(LeftY, |a| a.
+                    axis(Axis::LeftY, |a| a.
                         label("Input").
                         range(0., benches.len() as f64).
                         tics(tics, benches.iter().map(|&(label, _, _, _)| label))).
                     curve(Points, medians.iter().map(|&median| median * scale), tics, |c| c.
-                        color(Black).
+                        color(Color::Black).
                         label("Median").
-                        point_type(Plus).
+                        point_type(PointType::Plus).
                         point_size(2. * POINT_SIZE));
 
                 let mut is_first = true;
