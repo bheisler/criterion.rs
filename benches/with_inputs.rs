@@ -9,7 +9,7 @@ fn from_elem() {
 
     let can_plot = Criterion::default().bench_with_inputs("from_elem", |b, &size| {
         b.iter(|| Vec::from_elem(size, 0u8));
-    }, [KB, 2 * KB, 4 * KB, 8 * KB, 16 * KB]).can_plot();
+    }, &[KB, 2 * KB, 4 * KB, 8 * KB, 16 * KB]).can_plot();
 
     if can_plot {
         // Check that the summary plots have been generated
