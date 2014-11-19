@@ -1,11 +1,11 @@
-use std::collections::TreeMap;
 use std::str::MaybeOwned;
 
+use map;
 use {Axis, Data, Default, Display, Grid, Scale, Script, grid};
 
 #[deriving(Clone)]
 pub struct Properties {
-    grids: TreeMap<Grid, grid::Properties>,
+    grids: map::grid::Map<grid::Properties>,
     hidden: bool,
     label: Option<MaybeOwned<'static>>,
     logarithmic: bool,
@@ -16,7 +16,7 @@ pub struct Properties {
 impl Default for Properties {
     fn default() -> Properties {
         Properties {
-            grids: TreeMap::new(),
+            grids: map::grid::Map::new(),
             hidden: false,
             label: None,
             logarithmic: false,
@@ -41,8 +41,8 @@ impl Properties {
         which: Grid,
         configure: for<'a> |&'a mut grid::Properties| -> &'a mut grid::Properties,
     ) -> &mut Properties {
-        if self.grids.contains_key(&which) {
-            configure(self.grids.get_mut(&which).unwrap());
+        if self.grids.contains_key(which) {
+            configure(self.grids.get_mut(which).unwrap());
         } else {
             let mut properties = Default::default();
             configure(&mut properties);
@@ -111,7 +111,7 @@ impl Properties {
     }
 }
 
-impl<'a, 'b> Script for (&'a Axis, &'b Properties) {
+impl<'a> Script for (Axis, &'a Properties) {
     fn script(&self) -> String {
         let &(axis, properties) = self;
         let axis_ = axis.display();

@@ -1,9 +1,8 @@
 //! Simple 2D plotting using `gnuplot`
 
 #![deny(warnings)]
-#![feature(if_let, macro_rules, slicing_syntax)]
+#![feature(if_let, macro_rules, slicing_syntax, tuple_indexing)]
 
-use std::collections::TreeMap;
 use std::io::{Command, File, IoResult, Process};
 use std::str::{MaybeOwned, mod};
 
@@ -12,6 +11,7 @@ use plot::Plot;
 
 mod data;
 mod display;
+mod map;
 mod plot;
 mod zip;
 
@@ -34,7 +34,7 @@ macro_rules! zip {
 #[deriving(Clone)]
 pub struct Figure {
     alpha: Option<f64>,
-    axes: TreeMap<Axis, axis::Properties>,
+    axes: map::axis::Map<axis::Properties>,
     box_width: Option<f64>,
     font: Option<MaybeOwned<'static>>,
     font_size: Option<f64>,
@@ -43,7 +43,7 @@ pub struct Figure {
     plots: Vec<Plot>,
     size: Option<(uint, uint)>,
     terminal: Terminal,
-    tics: TreeMap<Axis, String>,
+    tics: map::axis::Map<String>,
     title: Option<MaybeOwned<'static>>,
 }
 
@@ -52,7 +52,7 @@ impl Figure {
     pub fn new() -> Figure {
         Figure {
             alpha: None,
-            axes: TreeMap::new(),
+            axes: map::axis::Map::new(),
             box_width: None,
             font: None,
             font_size: None,
@@ -61,7 +61,7 @@ impl Figure {
             plots: Vec::new(),
             size: None,
             terminal: Terminal::Svg,
-            tics: TreeMap::new(),
+            tics: map::axis::Map::new(),
             title: None,
         }
     }
@@ -242,8 +242,8 @@ impl Figure {
         which: Axis,
         configure: for<'a> |&'a mut axis::Properties| -> &'a mut axis::Properties,
     ) -> &mut Figure {
-        if self.axes.contains_key(&which) {
-            configure(self.axes.get_mut(&which).unwrap());
+        if self.axes.contains_key(which) {
+            configure(self.axes.get_mut(which).unwrap());
         } else {
             let mut properties = Default::default();
             configure(&mut properties);
@@ -645,7 +645,7 @@ impl Figure {
 }
 
 /// A coordinate axis
-#[deriving(Clone, Eq, Ord, PartialEq, PartialOrd)]
+#[deriving(FromPrimitive)]
 pub enum Axis {
     BottomX,
     LeftY,
@@ -702,7 +702,7 @@ pub enum PointType {
 }
 
 /// Grid line
-#[deriving(Clone, Eq, Ord, PartialEq, PartialOrd)]
+#[deriving(FromPrimitive)]
 pub enum Grid {
     Major,
     Minor,
