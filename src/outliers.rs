@@ -2,6 +2,7 @@
 
 use std::num;
 
+use outliers::Label::{HighMild, HighSevere, LowMild, LowSevere, NotAnOutlier};
 use {Simd, Stats};
 
 // TODO Add more outlier classification methods
