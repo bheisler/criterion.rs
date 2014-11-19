@@ -1,8 +1,6 @@
 use std::str::MaybeOwned;
 
-use color::Color;
-use display::Display;
-use {LineType, Script, Solid};
+use {Color, Default, Display, LineType, Script};
 
 pub struct Properties {
     color: Option<Color>,
@@ -11,17 +9,18 @@ pub struct Properties {
     linewidth: Option<f64>,
 }
 
-impl Properties {
-    #[doc(hidden)]
-    pub fn _new() -> Properties {
+impl Default for Properties {
+    fn default() -> Properties {
         Properties {
             color: None,
             label: None,
-            line_type: Solid,
+            line_type: LineType::Solid,
             linewidth: None,
         }
     }
+}
 
+impl Properties {
     /// Sets the line color
     pub fn color(&mut self, color: Color) -> &mut Properties {
         self.color = Some(color);

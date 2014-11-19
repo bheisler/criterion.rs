@@ -1,12 +1,11 @@
 use std::collections::TreeMap;
 use std::str::MaybeOwned;
 
-use {Data, Script, grid};
-use display::Display;
+use {Axis, Data, Default, Display, Grid, Scale, Script, grid};
 
 #[deriving(Clone)]
 pub struct Properties {
-    grids: TreeMap<grid::Grid, grid::Properties>,
+    grids: TreeMap<Grid, grid::Properties>,
     hidden: bool,
     label: Option<MaybeOwned<'static>>,
     logarithmic: bool,
@@ -14,10 +13,8 @@ pub struct Properties {
     tics: Option<String>,
 }
 
-impl Properties {
-    // NB I dislike the visibility rules within the same crate
-    #[doc(hidden)]
-    pub fn _new() -> Properties {
+impl Default for Properties {
+    fn default() -> Properties {
         Properties {
             grids: TreeMap::new(),
             hidden: false,
@@ -27,7 +24,9 @@ impl Properties {
             tics: None,
         }
     }
+}
 
+impl Properties {
     /// Autoscales the range of the axis to show all the plot elements
     ///
     /// **Note** All axes are auto-scaled by default
@@ -39,13 +38,13 @@ impl Properties {
     /// Configures the gridlines
     pub fn grid(
         &mut self,
-        which: grid::Grid,
+        which: Grid,
         configure: for<'a> |&'a mut grid::Properties| -> &'a mut grid::Properties,
     ) -> &mut Properties {
         if self.grids.contains_key(&which) {
             configure(self.grids.get_mut(&which).unwrap());
         } else {
-            let mut properties = grid::Properties::_new();
+            let mut properties = Default::default();
             configure(&mut properties);
             self.grids.insert(which, properties);
         }
@@ -79,8 +78,8 @@ impl Properties {
     pub fn scale(&mut self, scale: Scale) -> &mut Properties {
         self.hidden = false;
         match scale {
-            Linear => self.logarithmic = false,
-            Logarithmic => self.logarithmic = true,
+            Scale::Linear => self.logarithmic = false,
+            Scale::Logarithmic => self.logarithmic = true,
         }
         self
     }
@@ -147,29 +146,4 @@ impl<'a, 'b> Script for (&'a Axis, &'b Properties) {
 
         script
     }
-}
-
-#[deriving(Clone, Eq, Ord, PartialEq, PartialOrd)]
-pub enum Axis {
-    BottomX,
-    LeftY,
-    RightY,
-    TopX,
-}
-
-#[doc(hidden)]
-impl Display<&'static str> for Axis {
-    fn display(&self) -> &'static str {
-        match *self {
-            BottomX => "x",
-            LeftY => "y",
-            RightY => "y2",
-            TopX => "x2",
-        }
-    }
-}
-
-pub enum Scale {
-    Linear,
-    Logarithmic,
 }

@@ -5,11 +5,9 @@
 
 use std::collections::TreeMap;
 use std::io::{Command, File, IoResult, Process};
-use std::num::{Float, mod};
 use std::str::{MaybeOwned, mod};
 
 use data::Matrix;
-use display::Display;
 use plot::Plot;
 
 mod data;
@@ -19,7 +17,6 @@ mod zip;
 
 pub mod axis;
 pub mod candlestick;
-pub mod color;
 pub mod curve;
 pub mod errorbar;
 pub mod filledcurve;
@@ -37,7 +34,7 @@ macro_rules! zip {
 #[deriving(Clone)]
 pub struct Figure {
     alpha: Option<f64>,
-    axes: TreeMap<axis::Axis, axis::Properties>,
+    axes: TreeMap<Axis, axis::Properties>,
     box_width: Option<f64>,
     font: Option<MaybeOwned<'static>>,
     font_size: Option<f64>,
@@ -46,7 +43,7 @@ pub struct Figure {
     plots: Vec<Plot>,
     size: Option<(uint, uint)>,
     terminal: Terminal,
-    tics: TreeMap<axis::Axis, String>,
+    tics: TreeMap<Axis, String>,
     title: Option<MaybeOwned<'static>>,
 }
 
@@ -63,7 +60,7 @@ impl Figure {
             output: Path::new("output.plot"),
             plots: Vec::new(),
             size: None,
-            terminal: Svg,
+            terminal: Terminal::Svg,
             tics: TreeMap::new(),
             title: None,
         }
@@ -177,24 +174,23 @@ impl Figure {
     /// ![Plot](multiaxis.svg)
     ///
     /// ```
-    /// # extern crate complex;
-    /// # extern crate simplot;
-    /// # fn main() {
+    /// extern crate complex;
+    /// extern crate simplot;
+    /// extern crate space;
+    ///
     /// # use std::io::{fs, USER_RWX};
-    /// use complex::Complex;
-    /// use simplot::axis::{BottomX, LeftY, Logarithmic, RightY};
-    /// use simplot::color::{DarkViolet, Rgb};
-    /// use simplot::curve::Lines;
-    /// use simplot::grid::Major;
-    /// use simplot::key::{Center, Inside, Top};
-    /// use simplot::{BottomXRightY, Figure, logspace};
+    /// use complex::f64::I;
+    /// use complex::{Complex, Math};
+    /// use simplot::key::{Horizontal, Position, Vertical};
+    /// use simplot::{Axes, Axis, Color, Figure, Grid, Scale, curve};
+    /// use space::logspace;
     /// use std::f64::consts::PI;
-    /// use std::num::Float;
     ///
     /// fn tf(x: f64) -> Complex<f64> {
-    ///     Complex::new(0., x) / Complex::new(10., x) / Complex::new(1., x / 10_000.)
+    ///     (I * x) / (I * x + 10.) / (I * x / 10_000. + 1.)
     /// }
     ///
+    /// # fn main() {
     /// let (start, end) = (1.1, 90_000.);
     /// let xs = logspace(start, end, 101);
     /// let phase = xs.map(|x| tf(x).arg() * 180. / PI);
@@ -207,30 +203,30 @@ impl Figure {
     /// #   font_size(12.).
     /// #   output(Path::new("target/doc/simplot/multiaxis.svg")).
     /// #   size((1280, 720)).
-    ///     axis(BottomX, |a| a.
-    ///         grid(Major, |g| g.
+    ///     axis(Axis::BottomX, |a| a.
+    ///         grid(Grid::Major, |g| g.
     ///             show()).
     ///         label("Angular frequency (rad/s)").
     ///         range(start, end).
-    ///         scale(Logarithmic)).
-    ///     axis(LeftY, |a| a.
+    ///         scale(Scale::Logarithmic)).
+    ///     axis(Axis::LeftY, |a| a.
     ///         label("Gain").
-    ///         scale(Logarithmic)).
-    ///     axis(RightY, |a| a.
-    ///         grid(Major, |g| g.
+    ///         scale(Scale::Logarithmic)).
+    ///     axis(Axis::RightY, |a| a.
+    ///         grid(Grid::Major, |g| g.
     ///             show()).
     ///         label("Phase shift (°)")).
     ///     key(|k| k.
-    ///         position(Inside(Top, Center)).
+    ///         position(Position::Inside(Vertical::Top, Horizontal::Center)).
     ///         title(" ")).
     ///     title("Frequency response").
-    ///     curve(Lines, xs, magnitude, |c| c.
-    ///         color(DarkViolet).
+    ///     curve(curve::Style::Lines, xs, magnitude, |c| c.
+    ///         color(Color::DarkViolet).
     ///         label("Magnitude").
     ///         linewidth(2.)).
-    ///     curve(Lines, xs, phase, |c| c.
-    ///         axes(BottomXRightY).
-    ///         color(Rgb(0, 158, 115)).
+    ///     curve(curve::Style::Lines, xs, phase, |c| c.
+    ///         axes(Axes::BottomXRightY).
+    ///         color(Color::Rgb(0, 158, 115)).
     ///         label("Phase").
     ///         linewidth(2.)).
     ///     draw().  // (rest of the chain has been omitted)
@@ -243,13 +239,13 @@ impl Figure {
     /// ```
     pub fn axis(
         &mut self,
-        which: axis::Axis,
+        which: Axis,
         configure: for<'a> |&'a mut axis::Properties| -> &'a mut axis::Properties,
     ) -> &mut Figure {
         if self.axes.contains_key(&which) {
             configure(self.axes.get_mut(&which).unwrap());
         } else {
-            let mut properties = axis::Properties::_new();
+            let mut properties = Default::default();
             configure(&mut properties);
             self.axes.insert(which, properties);
         }
@@ -279,9 +275,7 @@ impl Figure {
     ///
     /// ```
     /// # use std::io::{USER_RWX, fs};
-    /// use simplot::Figure;
-    /// use simplot::axis::BottomX;
-    /// use simplot::color::{Black, Rgb};
+    /// use simplot::{Axis, Color, Figure};
     /// use std::rand::{Rng, mod};
     ///
     /// let xs = range(1u, 11).collect::<Vec<_>>();
@@ -303,16 +297,16 @@ impl Figure {
     /// #   font_size(12.).
     /// #   output(Path::new("target/doc/simplot/candlesticks.svg")).
     /// #   size((1280, 720)).
-    ///     axis(BottomX, |a| a.
+    ///     axis(Axis::BottomX, |a| a.
     ///         range(0., 11.)).
     ///     box_width(0.2).
     ///     candlesticks(xs.iter(), wm.iter(), bm.iter(), bh.iter(), wh.iter(), |c| c.
-    ///         color(Rgb(86, 180, 233)).
+    ///         color(Color::Rgb(86, 180, 233)).
     ///         label("Quartiles").
     ///         linewidth(2.)).
     ///     // trick to plot the median
     ///     candlesticks(xs.iter(), m.iter(), m.iter(), m.iter(), m.iter(), |c| c.
-    ///         color(Black).
+    ///         color(Color::Black).
     ///         linewidth(2.)).
     ///     draw().  // (rest of the chain has been omitted)
     /// #   ok().and_then(|gnuplot| {
@@ -334,7 +328,7 @@ impl Figure {
         X: Iterator<A>, WM: Iterator<B>, BM: Iterator<C>, BH: Iterator<D>, WH: Iterator<E>,
     {
         let data = Matrix::new(zip!(x, box_min, whisker_min, whisker_high, box_high));
-        self.plots.push(Plot::new(data, configure(&mut candlestick::Properties::_new())));
+        self.plots.push(Plot::new(data, configure(&mut Default::default())));
         self
     }
 
@@ -347,13 +341,16 @@ impl Figure {
     /// ![Plot](curve.svg)
     ///
     /// ```
+    /// extern crate simplot;
+    /// extern crate space;
+    //
     /// # use std::io::{USER_RWX, fs};
-    /// use simplot::color::{DarkViolet, Rgb};
-    /// use simplot::curve::{Impulses, LinesPoints, Steps};
-    /// use simplot::key::{Inside, Left, Top};
-    /// use simplot::{Circle, Dash, Figure, linspace};
+    /// use simplot::key::{Horizontal, Position, Vertical};
+    /// use simplot::{Color, Figure, LineType, PointType, curve};
+    /// use space::linspace;
     /// use std::num::FloatMath;
     ///
+    /// # fn main() {
     /// let xs = linspace::<f64>(-10., 10., 51);
     ///
     /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
@@ -365,19 +362,19 @@ impl Figure {
     /// #   size((1280, 720)).
     ///     key(|k| k.
     ///         boxed().
-    ///         position(Inside(Top, Left))).
-    ///     curve(LinesPoints, xs, xs.map(|x| x.sin()), |c| c.
-    ///         color(DarkViolet).
+    ///         position(Position::Inside(Vertical::Top, Horizontal::Left))).
+    ///     curve(curve::Style::LinesPoints, xs, xs.map(|x| x.sin()), |c| c.
+    ///         color(Color::DarkViolet).
     ///         label("sin(x)").
-    ///         line_type(Dash).
-    ///         point_type(Circle).
+    ///         line_type(LineType::Dash).
+    ///         point_type(PointType::Circle).
     ///         point_size(1.5)).
-    ///     curve(Steps, xs, xs.map(|x| x.atan()), |c| c.
-    ///         color(Rgb(0, 158, 115)).
+    ///     curve(curve::Style::Steps, xs, xs.map(|x| x.atan()), |c| c.
+    ///         color(Color::Rgb(0, 158, 115)).
     ///         label("atan(x)").
     ///         linewidth(2.)).
-    ///     curve(Impulses, xs, xs.map(|x| x.atan().cos()), |c| c.
-    ///         color(Rgb(86, 180, 233)).
+    ///     curve(curve::Style::Impulses, xs, xs.map(|x| x.atan().cos()), |c| c.
+    ///         color(Color::Rgb(86, 180, 233)).
     ///         label("cos(atan(x))")).
     ///     draw().  // (rest of the chain has been omitted)
     /// #   ok().and_then(|gnuplot| {
@@ -385,6 +382,7 @@ impl Figure {
     /// #           String::from_utf8(p.error).ok()
     /// #       })
     /// #   }));
+    /// # }
     /// ```
     pub fn curve<A, B, X, Y>(
         &mut self,
@@ -396,7 +394,7 @@ impl Figure {
         A: Data, B: Data, X: Iterator<A>, Y: Iterator<B>
     {
         let data = Matrix::new(zip!(x, y));
-        self.plots.push(Plot::new(data, configure(&mut curve::Properties::_new(style))));
+        self.plots.push(Plot::new(data, configure(&mut CurveDefault::default(style))));
         self
     }
 
@@ -423,13 +421,13 @@ impl Figure {
     /// ![Plot](error_bar.svg)
     ///
     /// ```
+    /// extern crate simplot;
+    /// extern crate space;
+    ///
     /// # use std::io::{USER_RWX, fs};
-    /// use simplot::axis::BottomX;
-    /// use simplot::color::{DarkViolet, Rgb};
-    /// use simplot::curve::Lines;
-    /// use simplot::errorbar::YErrorBar;
-    /// use simplot::key::{Outside, Right, Top};
-    /// use simplot::{Figure, FilledCircle, linspace};
+    /// use simplot::key::{Horizontal, Position, Vertical};
+    /// use simplot::{Axis, Color, Figure, PointType, curve, errorbar};
+    /// use space::linspace;
     /// use std::f64::consts::PI;
     /// use std::num::FloatMath;
     /// use std::rand::{Rng, mod};
@@ -443,6 +441,7 @@ impl Figure {
     ///     }
     /// }
     ///
+    /// # fn main() {
     /// let xs_ = linspace(-4., 4., 101);
     ///
     /// // Fake some data
@@ -460,18 +459,18 @@ impl Figure {
     /// #   font_size(12.).
     /// #   output(Path::new("target/doc/simplot/error_bar.svg")).
     /// #   size((1280, 720)).
-    ///     axis(BottomX, |a| a.
+    ///     axis(Axis::BottomX, |a| a.
     ///         tics([-PI, 0., PI].iter(), ["-π", "0", "π"].iter().map(|&x| x))).
     ///     key(|k| k.
-    ///         position(Outside(Top, Right))).
-    ///     curve(Lines, xs_, xs_.map(|x| sinc(x)), |c| c.
-    ///         color(Rgb(0, 158, 115)).
+    ///         position(Position::Outside(Vertical::Top, Horizontal::Right))).
+    ///     curve(curve::Style::Lines, xs_, xs_.map(|x| sinc(x)), |c| c.
+    ///         color(Color::Rgb(0, 158, 115)).
     ///         label("sinc(x)").
     ///         linewidth(2.)).
-    ///     error_bar(YErrorBar, xs, ys.iter(), lows.iter(), highs.iter(), |eb| eb.
-    ///         color(DarkViolet).
+    ///     error_bar(errorbar::Style::YErrorBar, xs, ys.iter(), lows.iter(), highs.iter(), |e| e.
+    ///         color(Color::DarkViolet).
     ///         linewidth(2.).
-    ///         point_type(FilledCircle).
+    ///         point_type(PointType::FilledCircle).
     ///         label("measured")).
     ///     draw().  // (rest of the chain has been omitted)
     /// #   ok().and_then(|gnuplot| {
@@ -479,6 +478,7 @@ impl Figure {
     /// #           String::from_utf8(p.error).ok()
     /// #       })
     /// #   }));
+    /// # }
     /// ```
     pub fn error_bar<A, B, C, D, X, Y, L, H>(
         &mut self,
@@ -493,7 +493,7 @@ impl Figure {
         X: Iterator<A>, Y: Iterator<B>, L: Iterator<C>, H: Iterator<D>,
     {
         let data = Matrix::new(zip!(x, y, low, high));
-        self.plots.push(Plot::new(data, configure(&mut errorbar::Properties::_new(style))));
+        self.plots.push(Plot::new(data, configure(&mut ErrorBarDefault::default(style))));
         self
     }
 
@@ -506,15 +506,18 @@ impl Figure {
     /// ![Plot](filled_curve.svg)
     ///
     /// ```
+    /// extern crate simplot;
+    /// extern crate space;
+    ///
     /// # use std::io::{USER_RWX, fs};
-    /// use simplot::axis::{BottomX, LeftY};
-    /// use simplot::color::{ForestGreen, Gold, Red};
-    /// use simplot::key::{Inside, Left, LeftJustified, SampleText, Top};
-    /// use simplot::{Figure, linspace};
+    /// use simplot::key::{Horizontal, Justification, Order, Position, Vertical};
+    /// use simplot::{Axis, Color, Figure};
+    /// use space::linspace;
     /// use std::f64::consts::PI;
     /// use std::iter;
     /// use std::num::Float;
     ///
+    /// # fn main() {
     /// let (start, end) = (-5., 5.);
     /// let xs = linspace(start, end, 101);
     /// let zeros = iter::count(0, 1u).take(1).cycle();
@@ -530,25 +533,25 @@ impl Figure {
     /// #   font_size(12.).
     /// #   output(Path::new("target/doc/simplot/filled_curve.svg")).
     /// #   size((1280, 720)).
-    ///     axis(BottomX, |a| a.
+    ///     axis(Axis::BottomX, |a| a.
     ///         range(start, end)).
-    ///     axis(LeftY, |a| a.
+    ///     axis(Axis::LeftY, |a| a.
     ///         range(0., 1.)).
     ///     key(|k| k.
-    ///         justification(LeftJustified).
-    ///         order(SampleText).
-    ///         position(Inside(Top, Left)).
+    ///         justification(Justification::Left).
+    ///         order(Order::SampleText).
+    ///         position(Position::Inside(Vertical::Top, Horizontal::Left)).
     ///         title("Gaussian Distribution")).
     ///     title("Transparent filled curve").
     ///     filled_curve(xs, xs.map(|x| gaussian(x, 0.5, 0.5)), zeros, |fc| fc.
     ///         label("μ = 0.5 σ = 0.5").
-    ///         color(ForestGreen)).
+    ///         color(Color::ForestGreen)).
     ///     filled_curve(xs, xs.map(|x| gaussian(x, 2.0, 1.0)), zeros, |fc| fc.
-    ///         color(Gold).
+    ///         color(Color::Gold).
     ///         label("μ = 2.0 σ = 1.0").
     ///         opacity(0.5)).
     ///     filled_curve(xs, xs.map(|x| gaussian(x, -1.0, 2.0)), zeros, |fc| fc.
-    ///         color(Red).
+    ///         color(Color::Red).
     ///         label("μ = -1.0 σ = 2.0").
     ///         opacity(0.5)).
     ///     draw().  // (rest of the chain has been omitted)
@@ -557,6 +560,7 @@ impl Figure {
     /// #           String::from_utf8(p.error).ok()
     /// #       })
     /// #   }));
+    /// # }
     /// ```
     pub fn filled_curve<A, B, C, X, Y1, Y2>(
         &mut self,
@@ -568,7 +572,7 @@ impl Figure {
         A: Data, B: Data, C: Data, X: Iterator<A>, Y1: Iterator<B>, Y2: Iterator<C>
     {
         let data = Matrix::new(zip!(x, y1, y2));
-        self.plots.push(Plot::new(data, configure(&mut filledcurve::Properties::_new())));
+        self.plots.push(Plot::new(data, configure(&mut Default::default())));
         self
     }
 
@@ -598,7 +602,7 @@ impl Figure {
         if self.key.is_some() {
             configure(self.key.as_mut().unwrap());
         } else {
-            let mut key = key::Properties::_new();
+            let mut key = Default::default();
             configure(&mut key);
             self.key = Some(key);
         }
@@ -640,79 +644,16 @@ impl Figure {
     }
 }
 
-/// Iterator that yields equally spaced values in the linear scale
-pub struct Linspace<T> where T: Float {
-    start: T,
-    step: T,
-    state: uint,
-    stop: uint,
+/// A coordinate axis
+#[deriving(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub enum Axis {
+    BottomX,
+    LeftY,
+    RightY,
+    TopX,
 }
 
-impl<T> DoubleEndedIterator<T> for Linspace<T> where T: Float {
-    fn next_back(&mut self) -> Option<T> {
-        if self.state == self.stop {
-            None
-        } else {
-            self.stop -= 1;
-            Some(self.start + self.step * num::cast(self.stop).unwrap())
-        }
-    }
-}
-
-impl<T> Iterator<T> for Linspace<T> where T: Float {
-    fn next(&mut self) -> Option<T> {
-        if self.state == self.stop {
-            None
-        } else {
-            let next = self.start + self.step * num::cast(self.state).unwrap();
-            self.state += 1;
-            Some(next)
-        }
-    }
-
-    fn size_hint(&self) -> (uint, Option<uint>) {
-        let exact = self.stop - self.state;
-        (exact, Some(exact))
-    }
-}
-
-/// Iterator that yields equally spaced values in the logarithmic scale
-pub struct Logspace<T> where T: Float {
-    start: T,
-    step: T,
-    state: uint,
-    stop: uint,
-}
-
-impl<T> DoubleEndedIterator<T> for Logspace<T> where T: Float {
-    fn next_back(&mut self) -> Option<T> {
-        if self.state == self.stop {
-            None
-        } else {
-            self.stop -= 1;
-            Some((self.start + self.step * num::cast(self.stop).unwrap()).exp())
-        }
-    }
-}
-
-impl<T> Iterator<T> for Logspace<T> where T: Float {
-    fn next(&mut self) -> Option<T> {
-        if self.state == self.stop {
-            None
-        } else {
-            let next = self.start + self.step * num::cast(self.state).unwrap();
-            self.state += 1;
-            Some(next.exp())
-        }
-    }
-
-    fn size_hint(&self) -> (uint, Option<uint>) {
-        let exact = self.stop - self.state;
-        (exact, Some(exact))
-    }
-}
-
-/// Pairs of axes that define a coordinate system
+/// A pair of axes that define a coordinate system
 pub enum Axes {
     BottomXLeftY,
     BottomXRightY,
@@ -720,6 +661,24 @@ pub enum Axes {
     TopXRightY,
 }
 
+/// Colour
+pub enum Color {
+    Black,
+    Blue,
+    Cyan,
+    DarkViolet,
+    ForestGreen,
+    Gold,
+    Gray,
+    Green,
+    Magenta,
+    Red,
+    Rgb(u8, u8, u8),
+    White,
+    Yellow,
+}
+
+/// Line type
 pub enum LineType {
     Dash,
     Dot,
@@ -729,6 +688,7 @@ pub enum LineType {
     Solid,
 }
 
+/// Point type
 pub enum PointType {
     Circle,
     FilledCircle,
@@ -741,7 +701,20 @@ pub enum PointType {
     X,
 }
 
-/// Output terminals
+/// Grid line
+#[deriving(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub enum Grid {
+    Major,
+    Minor,
+}
+
+/// Axis scale
+pub enum Scale {
+    Linear,
+    Logarithmic,
+}
+
+/// Output terminal
 #[deriving(Clone)]
 pub enum Terminal {
     Svg,
@@ -752,46 +725,28 @@ pub trait Data {
     fn f64(self) -> f64;
 }
 
-// FIXME (rust-lang/rust#16563) Remove `#[doc(hidden)]`
-#[doc(hidden)]
+// NB Not public version of std::default::Default, used to not leak default constructors into the
+// public API
+trait Default {
+    fn default() -> Self;
+}
+
+trait Display<S> {
+    fn display(&self) -> S;
+}
+
+// NB Curve variant of Default
+trait CurveDefault {
+    fn default(curve::Style) -> Self;
+}
+
+// NB Error bar variant of Default
+trait ErrorBarDefault {
+    fn default(errorbar::Style) -> Self;
+}
+
 trait Script {
     fn script(&self) -> String;
-}
-
-pub fn linspace<T>(start: T, end: T, n: uint) -> Linspace<T> where T: Float {
-    let step = if n < 2 {
-        // NB The value of `step` doesn't matter in these cases
-        Float::zero()
-    } else {
-        (end - start) / num::cast(n - 1).unwrap()
-    };
-
-    Linspace {
-        start: start,
-        state: 0,
-        step: step,
-        stop: n,
-    }
-}
-
-pub fn logspace<T>(start: T, end: T, n: uint) -> Logspace<T> where T: Float {
-    assert!(start > Float::zero() && end > Float::zero());
-
-    let (start, end) = (start.ln(), end.ln());
-
-    let step = if n < 2 {
-        // NB The value of `step` doesn't matter in these cases
-        Float::zero()
-    } else {
-        (end - start) / num::cast(n - 1).unwrap()
-    };
-
-    Logspace {
-        start: start,
-        state: 0,
-        step: step,
-        stop: n,
-    }
 }
 
 /// Returns `gnuplot` version

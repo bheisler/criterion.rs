@@ -1,8 +1,6 @@
 use std::str::MaybeOwned;
 
-use color::Color;
-use display::Display;
-use {LineType, PointType, Script, Solid};
+use {Color, Display, ErrorBarDefault, LineType, PointType, Script};
 
 pub struct Properties {
     color: Option<Color>,
@@ -14,20 +12,21 @@ pub struct Properties {
     style: Style,
 }
 
-impl Properties {
-    // NB I dislike the visibility rules within the same crate
-    pub fn _new(style: Style) -> Properties {
+impl ErrorBarDefault for Properties {
+    fn default(style: Style) -> Properties {
         Properties {
             color: None,
             label: None,
-            line_type: Solid,
+            line_type: LineType::Solid,
             linewidth: None,
             point_type: None,
             point_size: None,
             style: style,
         }
     }
+}
 
+impl Properties {
     /// Changes the color of the error bars
     pub fn color(&mut self, color: Color) -> &mut Properties {
         self.color = Some(color);
@@ -79,7 +78,6 @@ impl Properties {
     }
 }
 
-#[doc(hidden)]
 impl Script for Properties {
     fn script(&self) -> String {
         let mut script = format!("with {} ", self.style.display());
@@ -119,16 +117,4 @@ pub enum Style {
     XErrorLines,
     YErrorBar,
     YErrorLines,
-}
-
-#[doc(hidden)]
-impl Display<&'static str> for Style {
-    fn display(&self) -> &'static str {
-        match *self {
-            XErrorBar => "xerrorbars",
-            XErrorLines => "xerrorlines",
-            YErrorBar => "yerrorbars",
-            YErrorLines => "yerrorlines",
-        }
-    }
 }
