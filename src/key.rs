@@ -1,7 +1,6 @@
 use std::str::MaybeOwned;
 
-use display::Display;
-use Script;
+use {Default, Display, Script};
 
 #[deriving(Clone)]
 pub struct Properties {
@@ -14,10 +13,8 @@ pub struct Properties {
     title: Option<MaybeOwned<'static>>,
 }
 
-impl Properties {
-    // NB I dislike the visibility rules within the same crate
-    #[doc(hidden)]
-    pub fn _new() -> Properties {
+impl Default for Properties {
+    fn default() -> Properties {
         Properties {
             boxed: false,
             hidden: false,
@@ -28,7 +25,9 @@ impl Properties {
             title: None,
         }
     }
+}
 
+impl Properties {
     /// Surrounds the key with a box
     ///
     /// **Note** The key is unboxed by default
@@ -88,7 +87,6 @@ impl Properties {
     }
 }
 
-#[doc(hidden)]
 impl Script for Properties {
     fn script(&self) -> String {
         let mut script = if self.hidden {
@@ -99,10 +97,10 @@ impl Script for Properties {
 
         match self.position {
             None => {},
-            Some(Inside(v, h)) => {
+            Some(Position::Inside(v, h)) => {
                 script.push_str(format!("inside {} {} ", v.display(), h.display())[])
             },
-            Some(Outside(v, h)) => {
+            Some(Position::Outside(v, h)) => {
                 script.push_str(format!("outside {} {} ", v.display(), h.display())[])
             },
         }
@@ -135,60 +133,34 @@ impl Script for Properties {
     }
 }
 
+/// Horizontal position of the key
 #[deriving(Clone)]
-pub enum HorizontalPosition {
+pub enum Horizontal {
     Center,
     Left,
     Right,
 }
 
-#[doc(hidden)]
-impl Display<&'static str> for HorizontalPosition {
-    fn display(&self) -> &'static str {
-        match *self {
-            Center => "center",
-            Left => "left",
-            Right => "right",
-        }
-    }
-}
-
+/// Text justification of the key
 #[deriving(Clone)]
 pub enum Justification {
-    LeftJustified,
-    RightJustified,
+    Left,
+    Right,
 }
 
-impl Display<&'static str> for Justification {
-    fn display(&self) -> &'static str {
-        match *self {
-            LeftJustified => "Left",
-            RightJustified => "Rigth",
-        }
-    }
-}
-
+/// Order of the elements of the key
 #[deriving(Clone)]
 pub enum Order {
     SampleText,
     TextSample,
 }
 
-#[doc(hidden)]
-impl Display<&'static str> for Order {
-    fn display(&self) -> &'static str {
-        match *self {
-            TextSample => "noreverse",
-            SampleText => "reverse",
-        }
-    }
-}
-
+/// Position of the key
 // TODO XY position
 #[deriving(Clone)]
 pub enum Position {
-    Inside(VerticalPosition, HorizontalPosition),
-    Outside(VerticalPosition, HorizontalPosition),
+    Inside(Vertical, Horizontal),
+    Outside(Vertical, Horizontal),
 }
 
 /// How the entries of the key are stacked
@@ -198,30 +170,10 @@ pub enum Stack {
     Vertical,
 }
 
-#[doc(hidden)]
-impl Display<&'static str> for Stack {
-    fn display(&self) -> &'static str {
-        match *self {
-            Horizontal => "horizontal",
-            Vertical => "vertical",
-        }
-    }
-}
-
+/// Vertical position of the key
 #[deriving(Clone)]
-pub enum VerticalPosition {
+pub enum Vertical{
     Bottom,
-    Middle,
+    Center,
     Top,
-}
-
-#[doc(hidden)]
-impl Display<&'static str> for VerticalPosition {
-    fn display(&self) -> &'static str {
-        match *self {
-            Bottom => "bottom",
-            Middle => "center",
-            Top => "top",
-        }
-    }
 }

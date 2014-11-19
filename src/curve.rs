@@ -1,9 +1,6 @@
 use std::str::MaybeOwned;
 
-use Script;
-use color::Color;
-use display::Display;
-use {Axes, LineType, PointType, Solid};
+use {Axes, Color, CurveDefault, Display, LineType, PointType, Script};
 
 pub struct Properties {
     axes: Option<Axes>,
@@ -16,22 +13,22 @@ pub struct Properties {
     style: Style,
 }
 
-impl Properties {
-    // NB I dislike the visibility rules within the same crate
-    #[doc(hidden)]
-    pub fn _new(style: Style) -> Properties {
+impl CurveDefault for Properties {
+    fn default(style: Style) -> Properties {
         Properties {
             axes: None,
             color: None,
             label: None,
-            line_type: Solid,
+            line_type: LineType::Solid,
             linewidth: None,
             point_size: None,
             point_type: None,
             style: style,
         }
     }
+}
 
+impl Properties {
     /// Select the axes to plot against
     ///
     /// **Note** By default, the `BottomXLeftY` axes are used
@@ -91,7 +88,6 @@ impl Properties {
     }
 }
 
-#[doc(hidden)]
 impl Script for Properties {
     fn script(&self) -> String {
         let mut script = if let Some(axes) = self.axes {
@@ -138,18 +134,4 @@ pub enum Style {
     LinesPoints,
     Points,
     Steps,
-}
-
-#[doc(hidden)]
-impl Display<&'static str> for Style {
-    fn display(&self) -> &'static str {
-        match *self {
-            Dots => "dots",
-            Impulses => "impulses",
-            Lines => "lines",
-            LinesPoints => "linespoints",
-            Points => "points",
-            Steps => "steps",
-        }
-    }
 }

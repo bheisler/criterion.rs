@@ -1,9 +1,6 @@
 use std::str::MaybeOwned;
 
-use Axes;
-use Script;
-use color::Color;
-use display::Display;
+use {Axes, Color, Default, Display, Script};
 
 pub struct Properties {
     axes: Option<Axes>,
@@ -12,10 +9,8 @@ pub struct Properties {
     opacity: Option<f64>,
 }
 
-impl Properties {
-    // NB I dislike the visibility rules within the same crate
-    #[doc(hidden)]
-    pub fn _new() -> Properties {
+impl Default for Properties {
+    fn default() -> Properties {
         Properties {
             axes: None,
             color: None,
@@ -23,7 +18,9 @@ impl Properties {
             opacity: None,
         }
     }
+}
 
+impl Properties {
     /// Select axes to plot against
     ///
     /// **Note** By default, the `BottomXLeftY` axes are used
@@ -57,7 +54,6 @@ impl Properties {
     }
 }
 
-#[doc(hidden)]
 impl Script for Properties {
     fn script(&self) -> String {
         let mut script = if let Some(axes) = self.axes {

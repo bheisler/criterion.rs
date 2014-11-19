@@ -1,23 +1,20 @@
-use Script;
-
-use axis::Axis;
-use display::Display;
+use {Axis, Default, Display, Grid, Script};
 
 #[deriving(Clone)]
 pub struct Properties {
     hidden: bool
 }
 
-// TODO Lots of configuration pending: linetype, linewidth, etc
-impl Properties {
-    // NB I dislike the visibility rules within the same crate
-    #[doc(hidden)]
-    pub fn _new() -> Properties {
+impl Default for Properties {
+    fn default() -> Properties {
         Properties {
             hidden: true,
         }
     }
+}
 
+// TODO Lots of configuration pending: linetype, linewidth, etc
+impl Properties {
     /// Hides the gridlines
     ///
     /// **Note** Both `Major` and `Minor` gridlines are hidden by default
@@ -43,21 +40,6 @@ impl<'a, 'b, 'c> Script for (&'a Axis, &'b Grid, &'c Properties) {
             String::new()
         } else {
             format!("set grid {}{}tics\n", grid, axis)
-        }
-    }
-}
-
-#[deriving(Clone, Eq, Ord, PartialEq, PartialOrd)]
-pub enum Grid {
-    Major,
-    Minor,
-}
-
-impl Display<&'static str> for Grid {
-    fn display(&self) -> &'static str {
-        match *self {
-            Major => "",
-            Minor => "m",
         }
     }
 }
