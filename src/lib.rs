@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(if_let, macro_rules, overloaded_calls, phase, slicing_syntax, tuple_indexing)]
+#![feature(if_let, macro_rules, phase, slicing_syntax, tuple_indexing, unboxed_closures)]
 
 extern crate parallel;
 #[cfg(test)]
