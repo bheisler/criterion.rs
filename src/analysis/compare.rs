@@ -1,13 +1,15 @@
-use stats::ttest::{TDistribution, TwoTailed};
+use stats::ttest::{TDistribution, Tails};
 use stats::{Stats, mod};
 use time;
 
 use Criterion;
-use estimate::{Distributions, Estimate, Estimates, Mean, Median};
+use estimate::Statistic::{Mean, Median};
+use estimate::{Distributions, Estimate, Estimates};
 use format;
 use fs;
 use plot;
 use report;
+use self::ComparisonResult::{Improved, NonSignificant, Regressed};
 
 // Common comparison procedure
 pub fn common(
@@ -67,7 +69,7 @@ fn t_test(id: &str, times: &[f64], base_times: &[f64], criterion: &Criterion) ->
     let t_distribution = elapsed!(
         "Bootstrapping the T distribution",
         TDistribution::new(times, base_times, nresamples));
-    let p_value = t_distribution.p_value(t_statistic, TwoTailed);
+    let p_value = t_distribution.p_value(t_statistic, Tails::Two);
     let different_mean = p_value < sl;
 
     println!("  > p = {}", p_value);

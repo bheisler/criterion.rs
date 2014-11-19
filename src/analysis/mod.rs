@@ -10,12 +10,8 @@ use estimate::{
     Distributions,
     Estimate,
     Estimates,
-    Mean,
-    Median,
-    MedianAbsDev,
-    StdDev,
-    mod,
 };
+use estimate::Statistic;
 use format;
 use fs;
 use plot;
@@ -119,8 +115,8 @@ fn common<R: Routine>(id: &str, routine: &mut R, criterion: &Criterion) {
     let (distribution, slope) = regression(id, pairs_f64, criterion);
     let (mut distributions, mut estimates) = estimates(times, criterion);
 
-    estimates.insert(estimate::Slope, slope);
-    distributions.insert(estimate::Slope, distribution);
+    estimates.insert(Statistic::Slope, slope);
+    distributions.insert(Statistic::Slope, distribution);
 
     if criterion.plotting.is_enabled() {
         elapsed!(
@@ -235,7 +231,13 @@ fn estimates(
 
         vec![a, b, c, d]
     };
-    let distributions: Distributions = [Mean, Median, MedianAbsDev, StdDev].iter().map(|&x| {
+    let statistics = [
+        Statistic::Mean,
+        Statistic::Median,
+        Statistic::MedianAbsDev,
+        Statistic::StdDev,
+    ];
+    let distributions: Distributions = statistics.iter().map(|&x| {
         x
     }).zip(distributions.into_iter()).collect();
     let estimates = Estimate::new(&distributions, points[], cl);

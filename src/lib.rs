@@ -89,7 +89,7 @@ enum Plotting {
 impl Plotting {
     fn is_enabled(&self) -> bool {
         match *self {
-            Enabled => true,
+            Plotting::Enabled => true,
             _ => false,
         }
     }
@@ -111,11 +111,11 @@ impl Criterion {
     #[experimental]
     pub fn default() -> Criterion {
         let plotting = if simplot::version().is_ok() {
-            Enabled
+            Plotting::Enabled
         } else {
             println!("Gnuplot not found, disabling plotting");
 
-            NotAvailable
+            Plotting::NotAvailable
         };
 
         Criterion {
@@ -255,8 +255,8 @@ impl Criterion {
     #[experimental]
     pub fn with_plots(&mut self) -> &mut Criterion {
         match self.plotting {
-            NotAvailable => {},
-            _ => self.plotting = Enabled,
+            Plotting::NotAvailable => {},
+            _ => self.plotting = Plotting::Enabled,
         }
 
         self
@@ -266,8 +266,8 @@ impl Criterion {
     #[experimental]
     pub fn without_plots(&mut self) -> &mut Criterion {
         match self.plotting {
-            NotAvailable => {},
-            _ => self.plotting = Disabled,
+            Plotting::NotAvailable => {},
+            _ => self.plotting = Plotting::Disabled,
         }
 
         self
@@ -276,7 +276,7 @@ impl Criterion {
     /// Checks if plotting is possible
     pub fn can_plot(&self) -> bool {
         match self.plotting {
-            NotAvailable => false,
+            Plotting::NotAvailable => false,
             _ => true,
         }
     }
