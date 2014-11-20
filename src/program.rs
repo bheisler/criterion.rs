@@ -29,7 +29,7 @@ impl Program {
     }
 
     pub fn send<T: Show>(&mut self, line: T) -> &mut Program {
-        match writeln!(self.stdin, "{}", line) {
+        match writeln!(&mut self.stdin, "{}", line) {
             Err(e) => panic!("`write into child stdin`: {}", e),
             Ok(_) => self,
         }
