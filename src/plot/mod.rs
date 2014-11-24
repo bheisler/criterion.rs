@@ -1,7 +1,4 @@
-use simplot::curve::Style::{Lines, Points};
-use simplot::errorbar::Style::{XErrorBar, YErrorBar};
-use simplot::key::{Horizontal, Justification, Order, Position, Vertical};
-use simplot::{Axes, Axis, Color, Figure, Grid, LineType, PointType, Scale};
+use simplot::prelude::*;
 use stats::Stats;
 use stats::outliers::{Outliers, LowMild, LowSevere, HighMild, HighSevere};
 use stats::regression::Slope;
@@ -32,16 +29,16 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
 }
 
 // TODO These should be configurable
-static FONT: &'static str = "Helvetica";
+static FONT: Font<&'static str> = Font("Helvetica");
 static KDE_POINTS: uint = 500;
-static PLOT_SIZE: (uint, uint) = (1280, 720);
+static SIZE: Size = Size(1280, 720);
 
-static LINEWIDTH: f64 = 2.;
-static POINT_SIZE: f64 = 0.75;
+const LINEWIDTH: LineWidth = LineWidth(2.);
+const POINT_SIZE: PointSize = PointSize(0.75);
 
-static DARK_BLUE: Color = Color::Rgb(31, 120, 180);
-static DARK_ORANGE: Color = Color::Rgb(255, 127, 0);
-static DARK_RED: Color = Color::Rgb(227, 26, 28);
+const DARK_BLUE: Color = Color::Rgb(31, 120, 180);
+const DARK_ORANGE: Color = Color::Rgb(255, 127, 0);
+const DARK_RED: Color = Color::Rgb(227, 26, 28);
 
 pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &str) {
     let path = Path::new(format!(".criterion/{}/new/pdf.svg", id));
@@ -83,63 +80,88 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
         }
     }
 
-    let vertical = [0., max_iters * y_scale];
+    let vertical = &[0., max_iters * y_scale];
     let zeros = Repeat::new(0u);
 
     let gnuplot = Figure::new().
-        font(FONT).
-        output(path).
-        size(PLOT_SIZE).
-        title(id.to_string()).
-        axis(Axis::BottomX, |a| a.
-            label(format!("Average time ({}s)", prefix)).
-            range(xs[].min(), xs[].max())).
-        axis(Axis::LeftY, |a| a.
+        set(FONT).
+        set(Output(path)).
+        set(SIZE).
+        set(Title(id.to_string())).
+        configure(Axis::BottomX, |a| a.
+            set(Label(format!("Average time ({}s)", prefix))).
+            set(Range::Limits(xs.min(), xs.max()))).
+        configure(Axis::LeftY, move |:a| a.
             // FIXME (unboxed closures) Remove cloning
-            label(y_label.to_string()).
-            range(0., max_iters * y_scale)).
-        axis(Axis::RightY, |a| a.
-            label("Density (a.u.)")).
-        key(|k| k.
-            justification(Justification::Left).
-            order(Order::SampleText).
-            position(Position::Outside(Vertical::Top, Horizontal::Right))).
-        filled_curve(xs.iter(), ys.iter(), zeros, |c| c.
-            axes(Axes::BottomXRightY).
-            color(DARK_BLUE).
-            label("PDF").
-            opacity(0.25)).
-        curve(Points, normal.iter().map(|x| x.val1()), normal.iter().map(|x| x.val0()), |c| c.
-            color(DARK_BLUE).
-            label("\"Clean\" sample").
-            point_type(PointType::FilledCircle).
-            point_size(POINT_SIZE)).
-        curve(Points, mild.iter().map(|x| x.val1()), mild.iter().map(|x| x.val0()), |c| c.
-            color(DARK_ORANGE).
-            label("Mild outliers").
-            point_type(PointType::FilledCircle).
-            point_size(POINT_SIZE)).
-        curve(Points, severe.iter().map(|x| x.val1()), severe.iter().map(|x| x.val0()), |c| c.
-            color(DARK_RED).
-            label("Severe outliers").
-            point_type(PointType::FilledCircle).
-            point_size(POINT_SIZE)).
-        curve(Lines, [lomt, lomt].iter(), vertical.iter(), |c| c.
-            color(DARK_ORANGE).
-            line_type(LineType::Dash).
-            linewidth(LINEWIDTH)).
-        curve(Lines, [himt, himt].iter(), vertical.iter(), |c| c.
-            color(DARK_ORANGE).
-            line_type(LineType::Dash).
-            linewidth(LINEWIDTH)).
-        curve(Lines, [lost, lost].iter(), vertical.iter(), |c| c.
-            color(DARK_RED).
-            line_type(LineType::Dash).
-            linewidth(LINEWIDTH)).
-        curve(Lines, [hist, hist].iter(), vertical.iter(), |c| c.
-            color(DARK_RED).
-            line_type(LineType::Dash).
-            linewidth(LINEWIDTH)).
+            set(Label(y_label)).
+            set(Range::Limits(0., max_iters * y_scale))).
+        configure(Axis::RightY, |a| a.
+            set(Label("Density (a.u.)"))).
+        configure(Key, |k| k.
+            set(Justification::Left).
+            set(Order::SampleText).
+            set(Position::Outside(Vertical::Top, Horizontal::Right))).
+        plot(FilledCurve {
+            x: &*xs,
+            y1: &*ys,
+            y2: zeros,
+        }, |c| c.
+            set(Axes::BottomXRightY).
+            set(DARK_BLUE).
+            set(Label("PDF")).
+            set(Opacity(0.25))).
+        plot(Points {
+            x: normal.iter().map(|x| x.1),
+            y: normal.iter().map(|x| x.0),
+        }, |c| c.
+            set(DARK_BLUE).
+            set(Label("\"Clean\" sample")).
+            set(PointType::FilledCircle).
+            set(POINT_SIZE)).
+        plot(Points {
+            x: mild.iter().map(|x| x.1),
+            y: mild.iter().map(|x| x.0),
+        }, |c| c.
+            set(DARK_ORANGE).
+            set(Label("Mild outliers")).
+            set(POINT_SIZE).
+            set(PointType::FilledCircle)).
+        plot(Points {
+            x: severe.iter().map(|x| x.1),
+            y: severe.iter().map(|x| x.0),
+        }, |c| c.
+            set(DARK_RED).
+            set(Label("Severe outliers")).
+            set(POINT_SIZE).
+            set(PointType::FilledCircle)).
+        plot(Lines {
+            x: &[lomt, lomt],
+            y: vertical,
+        }, |c| c.
+            set(DARK_ORANGE).
+            set(LINEWIDTH).
+            set(LineType::Dash)).
+        plot(Lines {
+            x: &[himt, himt],
+            y: vertical,
+        }, |c| c.
+            set(DARK_ORANGE).
+            set(LINEWIDTH).
+            set(LineType::Dash)).
+        plot(Lines {
+            x: &[lost, lost],
+            y: vertical,
+        }, |c| c.
+            set(DARK_RED).
+            set(LINEWIDTH).
+            set(LineType::Dash)).
+        plot(Lines {
+            x: &[hist, hist],
+            y: vertical,
+        }, |c| c.
+            set(DARK_RED).
+            set(LINEWIDTH).
+            set(LineType::Dash)).
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
@@ -186,37 +208,46 @@ pub fn regression(
     let max_iters = max_iters * x_scale;
 
     let gnuplot = Figure::new().
-        font(FONT).
-        output(path).
-        size(PLOT_SIZE).
-        title(id.to_string()).
-        key(|k| k.
-            justification(Justification::Left).
-            order(Order::SampleText).
-            position(Position::Inside(Vertical::Top, Horizontal::Left))).
-        axis(Axis::BottomX, |a| a.
-            grid(Grid::Major, |g| g.
+        set(FONT).
+        set(Output(path)).
+        set(SIZE).
+        set(Title(id.to_string())).
+        configure(Key, |k| k.
+            set(Justification::Left).
+            set(Order::SampleText).
+            set(Position::Inside(Vertical::Top, Horizontal::Left))).
+        configure(Axis::BottomX, move |:a| a.
+            configure(Grid::Major, |g| g.
                 show()).
-            // FIXME (unboxed closures) Remove cloning
-            label(x_label.to_string())).
-        axis(Axis::LeftY, |a| a.
-             grid(Grid::Major, |g| g.
+            set(Label(x_label))).
+        configure(Axis::LeftY, |a| a.
+            configure(Grid::Major, |g| g.
                  show()).
-            label(format!("Total time ({}s)", prefix))).
-        curve(Points, iters.iter(), elapsed.iter(), |c| c.
-            color(DARK_BLUE).
-            label("Sample").
-            point_type(PointType::FilledCircle).
-            point_size(0.5)).
-        curve(Lines, [0., max_iters].iter(), [0., point].iter(), |c| c.
-            color(DARK_BLUE).
-            label("Linear regression").
-            line_type(LineType::Solid).
-            linewidth(LINEWIDTH)).
-        filled_curve([0., max_iters].iter(), [0., lb].iter(), [0., ub].iter(), |c| c.
-            color(DARK_BLUE).
-            label("Confidence interval").
-            opacity(0.25)).
+            set(Label(format!("Total time ({}s)", prefix)))).
+        plot(Points {
+            x: &*iters,
+            y: &*elapsed,
+        }, |c| c.
+            set(DARK_BLUE).
+            set(Label("Sample")).
+            set(PointSize(0.5)).
+            set(PointType::FilledCircle)).
+        plot(Lines {
+            x: &[0., max_iters],
+            y: &[0., point],
+        }, |c| c.
+            set(DARK_BLUE).
+            set(LINEWIDTH).
+            set(Label("Linear regression")).
+            set(LineType::Solid)).
+        plot(FilledCurve {
+            x: &[0., max_iters],
+            y1: &[0., lb],
+            y2: &[0., ub],
+        }, |c| c.
+            set(DARK_BLUE).
+            set(Label("Confidence interval")).
+            set(Opacity(0.25))).
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
@@ -253,33 +284,43 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
         let len = end - start;
 
         Figure::new().
-            font(FONT).
-            output(Path::new(format!(".criterion/{}/new/{}.svg", id, statistic))).
-            size(PLOT_SIZE).
-            title(format!("{}: {}", id, statistic)).
-            axis(Axis::BottomX, |a| a.
-                label(format!("Average time ({}s)", prefix)).
-                range(xs[].min(), xs[].max())).
-            axis(Axis::LeftY, |a| a.
-                label("Density (a.u.)")).
-            key(|k| k.
-                justification(Justification::Left).
-                order(Order::SampleText).
-                position(Position::Outside(Vertical::Top, Horizontal::Right))).
-            curve(Lines, xs.iter(), ys.iter(), |c| c.
-                color(DARK_BLUE).
-                label("Bootstrap distribution").
-                line_type(LineType::Solid).
-                linewidth(LINEWIDTH)).
-            filled_curve(xs.iter().skip(start).take(len), ys.iter().skip(start), zero, |c| c.
-                color(DARK_BLUE).
-                label("Confidence interval").
-                opacity(0.25)).
-            curve(Lines, [p, p].iter(), [0., y_p].iter(), |c| c.
-                color(DARK_BLUE).
-                label("Point estimate").
-                line_type(LineType::Dash).
-                linewidth(LINEWIDTH)).
+            set(FONT).
+            set(Output(Path::new(format!(".criterion/{}/new/{}.svg", id, statistic)))).
+            set(SIZE).
+            set(Title(format!("{}: {}", id, statistic))).
+            configure(Axis::BottomX, |a| a.
+                set(Label(format!("Average time ({}s)", prefix))).
+                set(Range::Limits(xs.min(), xs.max()))).
+            configure(Axis::LeftY, |a| a.
+                set(Label("Density (a.u.)"))).
+            configure(Key, |k| k.
+                set(Justification::Left).
+                set(Order::SampleText).
+                set(Position::Outside(Vertical::Top, Horizontal::Right))).
+            plot(Lines {
+                x: &*xs,
+                y: &*ys,
+            }, |c| c.
+                set(DARK_BLUE).
+                set(LINEWIDTH).
+                set(Label("Bootstrap distribution")).
+                set(LineType::Solid)).
+            plot(FilledCurve {
+                x: xs.iter().skip(start).take(len),
+                y1: ys.iter().skip(start),
+                y2: zero,
+            }, |c| c.
+                set(DARK_BLUE).
+                set(Label("Confidence interval")).
+                set(Opacity(0.25))).
+            plot(Lines {
+                x: &[p, p],
+                y: &[0., y_p],
+            }, |c| c.
+                set(DARK_BLUE).
+                set(LINEWIDTH).
+                set(Label("Point estimate")).
+                set(LineType::Dash)).
             draw().unwrap()
     }).collect::<Vec<_>>();
 
@@ -300,14 +341,14 @@ pub fn rel_distributions(
     let mut figure = Figure::new();
 
     figure.
-        font(FONT).
-        size(PLOT_SIZE).
-        axis(Axis::LeftY, |a| a.
-            label("Density (a.u.)")).
-        key(|k| k.
-            justification(Justification::Left).
-            order(Order::SampleText).
-            position(Position::Outside(Vertical::Top, Horizontal::Right)));
+        set(FONT).
+        set(SIZE).
+        configure(Axis::LeftY, |a| a.
+            set(Label("Density (a.u.)"))).
+        configure(Key, |k| k.
+            set(Justification::Left).
+            set(Order::SampleText).
+            set(Position::Outside(Vertical::Top, Horizontal::Right)));
 
     let gnuplots = distributions.iter().map(|(&statistic, distribution)| {
         let path = Path::new(format!(".criterion/{}/change/{}.svg", id, statistic));
@@ -349,30 +390,44 @@ pub fn rel_distributions(
         };
 
         figure.clone().
-            output(path).
-            title(format!("{}: {}", id, statistic)).
-            axis(Axis::BottomX, |a| a.
-                label("Relative change (%)").
-                range(x_min, x_max)).
-            curve(Lines, xs.iter(), ys.iter(), |c| c.
-                color(DARK_BLUE).
-                label("Bootstrap distribution").
-                line_type(LineType::Solid).
-                linewidth(LINEWIDTH)).
-            filled_curve(xs.iter().skip(start).take(len), ys.iter().skip(start), zero, |c| c.
-                color(DARK_BLUE).
-                label("Confidence interval").
-                opacity(0.25)).
-            curve(Lines, [p, p].iter(), [0., y_p].iter(), |c| c.
-                color(DARK_BLUE).
-                label("Point estimate").
-                line_type(LineType::Dash).
-                linewidth(LINEWIDTH)).
-            filled_curve([fc_start, fc_end].iter(), one, zero, |c| c.
-                axes(Axes::BottomXRightY).
-                color(DARK_RED).
-                label("Noise threshold").
-                opacity(0.1)).
+            set(Output(path)).
+            set(Title(format!("{}: {}", id, statistic))).
+            configure(Axis::BottomX, |a| a.
+                set(Label("Relative change (%)")).
+                set(Range::Limits(x_min, x_max))).
+            plot(Lines {
+                x: xs,
+                y: ys,
+            }, |c| c.
+                set(DARK_BLUE).
+                set(LINEWIDTH).
+                set(Label("Bootstrap distribution")).
+                set(LineType::Solid)).
+            plot(FilledCurve {
+                x: xs.iter().skip(start).take(len),
+                y1: ys.iter().skip(start),
+                y2: zero,
+            }, |c| c.
+                set(DARK_BLUE).
+                set(Label("Confidence interval")).
+                set(Opacity(0.25))).
+            plot(Lines {
+                x: &[p, p],
+                y: &[0., y_p],
+            }, |c| c.
+                set(DARK_BLUE).
+                set(LINEWIDTH).
+                set(Label("Point estimate")).
+                set(LineType::Dash)).
+            plot(FilledCurve {
+                x: &[fc_start, fc_end],
+                y1: one,
+                y2: zero,
+            }, |c| c.
+                set(Axes::BottomXRightY).
+                set(DARK_RED).
+                set(Label("Noise threshold")).
+                set(Opacity(0.1))).
             draw().unwrap()
     }).collect::<Vec<_>>();
 
@@ -392,28 +447,35 @@ pub fn t_test(t: f64, distribution: &[f64], id: &str) {
     let zero = Repeat::new(0u);
 
     let gnuplot = Figure::new().
-        font(FONT).
-        output(path).
-        size(PLOT_SIZE).
-        title(format!("{}: Welch t test", id)).
-        axis(Axis::BottomX, |a| a.
-            label("t score")).
-        axis(Axis::LeftY, |a| a.
-            label("Density")).
-        key(|k| k.
-            justification(Justification::Left).
-            order(Order::SampleText).
-            position(Position::Outside(Vertical::Top, Horizontal::Right))).
-        filled_curve(xs.iter(), ys.iter(), zero, |c| c.
-            color(DARK_BLUE).
-            label("t distribution").
-            opacity(0.25)).
-        curve(Lines, [t, t].iter(), [0u, 1].iter(), |c| c.
-            axes(Axes::BottomXRightY).
-            color(DARK_BLUE).
-            label("t statistic").
-            line_type(LineType::Solid).
-            linewidth(LINEWIDTH)).
+        set(FONT).
+        set(Output(path)).
+        set(SIZE).
+        set(Title(format!("{}: Welch t test", id))).
+        configure(Axis::BottomX, |a| a.
+            set(Label("t score"))).
+        configure(Axis::LeftY, |a| a.
+            set(Label("Density"))).
+        configure(Key, |k| k.
+            set(Justification::Left).
+            set(Order::SampleText).
+            set(Position::Outside(Vertical::Top, Horizontal::Right))).
+        plot(FilledCurve {
+            x: &*xs,
+            y1: &*ys,
+            y2: zero,
+        }, |c| c.
+            set(DARK_BLUE).
+            set(Label("t distribution")).
+            set(Opacity(0.25))).
+        plot(Lines {
+            x: &[t, t],
+            y: &[0u, 1],
+        }, |c| c.
+            set(Axes::BottomXRightY).
+            set(DARK_BLUE).
+            set(LINEWIDTH).
+            set(Label("t statistic")).
+            set(LineType::Solid)).
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
@@ -542,58 +604,62 @@ pub fn summarize(id: &str) {
                     }
                 };
 
-                let points = points.iter();
                 // TODO Review axis scaling
                 Figure::new().
-                    font(FONT).
-                    output(dir.join(format!("summary/{}/{}s.svg", sample, statistic))).
-                    size(PLOT_SIZE).
-                    title(format!("{}", id)).
-                    axis(Axis::BottomX, |a| a.
-                        grid(Grid::Major, |g| g.
+                    set(FONT).
+                    set(Output(dir.join(format!("summary/{}/{}s.svg", sample, statistic)))).
+                    set(SIZE).
+                    set(Title(format!("{}", id))).
+                    configure(Axis::BottomX, |a| a.
+                        configure(Grid::Major, |g| g.
                             show()).
-                        grid(Grid::Minor, |g| match xscale {
+                        configure(Grid::Minor, |g| match xscale {
                             Scale::Linear => g.hide(),
                             Scale::Logarithmic => g.show(),
                         }).
-                        label("Input").
-                        scale(xscale)).
-                    axis(Axis::BottomX, |a| match xscale {
+                        set(Label("Input")).
+                        set(xscale)).
+                    configure(Axis::BottomX, |a| match xscale {
                         Scale::Linear => a,
                         Scale::Logarithmic => {
                             let start = inputs[0] as f64;
                             let end = *inputs.last().unwrap() as f64;
 
-                            a.range(log_floor(start), log_ceil(end))
+                            a.set(Range::Limits(log_floor(start), log_ceil(end)))
                         },
                     }).
-                    axis(Axis::LeftY, |a| a.
-                        grid(Grid::Major, |g| g.
+                    configure(Axis::LeftY, |a| a.
+                        configure(Grid::Major, |g| g.
                             show()).
-                        grid(Grid::Minor, |g| match xscale {
+                        configure(Grid::Minor, |g| match xscale {
                             Scale::Linear => g.hide(),
                             Scale::Logarithmic => g.show(),
                         }).
-                        label(format!("Average time ({}s)", prefix)).
-                        scale(yscale)).
-                    axis(Axis::LeftY, |a| match yscale {
+                        set(Label(format!("Average time ({}s)", prefix))).
+                        set(yscale)).
+                    configure(Axis::LeftY, |a| match yscale {
                         Scale::Linear => a,
                         Scale::Logarithmic => {
-                            let start = lbs[].min();
-                            let end = ubs[].max();
+                            let start = lbs.min();
+                            let end = ubs.max();
 
-                            a.range(log_floor(start), log_ceil(end))
+                            a.set(Range::Limits(log_floor(start), log_ceil(end)))
                         },
                     }).
-                    key(|k| k.
-                        justification(Justification::Left).
-                        order(Order::SampleText).
-                        position(Position::Inside(Vertical::Top, Horizontal::Left))).
-                    error_bar(YErrorBar, inputs.iter(), points, lbs.iter(), ubs.iter(), |e| e.
-                        label(format!("{}", statistic)).
-                        linewidth(LINEWIDTH).
-                        point_size(POINT_SIZE).
-                        point_type(PointType::FilledCircle)).
+                    configure(Key, |k| k.
+                        set(Justification::Left).
+                        set(Order::SampleText).
+                        set(Position::Inside(Vertical::Top, Horizontal::Left))).
+                        plot(YErrorBars {
+                            x: &*inputs,
+                            y: &*points,
+                            y_low: &*lbs,
+                            y_high: &*ubs,
+                        }, |e| e.
+                        set(LINEWIDTH).
+                        set(Label(format!("{}", statistic))).
+                        set(POINT_SIZE).
+                        set(PointType::FilledCircle)).
                     draw().unwrap()
             }).collect::<Vec<_>>()
         } else {
@@ -640,45 +706,54 @@ pub fn summarize(id: &str) {
                 let rel = points.iter().map(|&x| format!("{:.02}", x / min)).collect::<Vec<_>>();
 
                 let tics = iter::count(0.5, 1f64);
-                let points = points.iter();
-                let y = iter::count(0.5, 1f64);
                 // TODO Review axis scaling
                 Figure::new().
-                    font(FONT).
-                    output(dir.join(format!("summary/{}/{}s.svg", sample, statistic))).
-                    size(PLOT_SIZE).
-                    title(format!("{}: Estimates of the {}s", id, statistic)).
-                    axis(Axis::BottomX, |a| a.
-                        grid(Grid::Major, |g| g.
+                    set(FONT).
+                    set(Output(dir.join(format!("summary/{}/{}s.svg", sample, statistic)))).
+                    set(SIZE).
+                    set(Title(format!("{}: Estimates of the {}s", id, statistic))).
+                    configure(Axis::BottomX, |a| a.
+                        configure(Grid::Major, |g| g.
                             show()).
-                        grid(Grid::Minor, |g| match xscale {
+                        configure(Grid::Minor, |g| match xscale {
                             Scale::Linear => g.hide(),
                             Scale::Logarithmic => g.show(),
                         }).
-                        label(format!("Average time ({}s)", prefix)).
-                        scale(xscale)).
-                    axis(Axis::BottomX, |a| match xscale {
+                        set(Label(format!("Average time ({}s)", prefix))).
+                        set(xscale)).
+                    configure(Axis::BottomX, |a| match xscale {
                         Scale::Linear => a,
                         Scale::Logarithmic => {
-                            let start = lbs[].min();
-                            let end = ubs[].max();
+                            let start = lbs.min();
+                            let end = ubs.max();
 
-                            a.range(log_floor(start), log_ceil(end))
+                            a.set(Range::Limits(log_floor(start), log_ceil(end)))
                         },
                     }).
-                    axis(Axis::LeftY, |a| a.
-                        label("Input").
-                        range(0., benches.len() as f64).
-                        tics(tics, benches.iter().map(|&(label, _, _, _)| label))).
-                    axis(Axis::RightY, |a| a.
-                        label("Relative time").
-                        range(0., benches.len() as f64).
-                        tics(tics, rel.iter().map(|x| x.as_slice()))).
-                    error_bar(XErrorBar, points, y, lbs.iter(), ubs.iter(), |eb| eb.
-                        label("Confidence Interval").
-                        linewidth(LINEWIDTH).
-                        point_type(PointType::FilledCircle).
-                        point_size(POINT_SIZE)).
+                    configure(Axis::LeftY, |a| a.
+                        set(Label("Input")).
+                        set(Range::Limits(0., benches.len() as f64)).
+                        set(TicLabels {
+                            positions: tics,
+                            labels: benches.iter().map(|&(label, _, _, _)| label),
+                        })).
+                    configure(Axis::RightY, |a| a.
+                        set(Label("Relative time")).
+                        set(Range::Limits(0., benches.len() as f64)).
+                        set(TicLabels {
+                            positions: tics,
+                            labels: rel.iter().map(|x| x.as_slice()),
+                        })).
+                    plot(XErrorBars {
+                        x: &*points,
+                        y: iter::count(0.5, 1f64),
+                        x_low: &*lbs,
+                        x_high: &*ubs,
+                    }, |eb| eb.
+                        set(LINEWIDTH).
+                        set(Label("Confidence Interval")).
+                        set(POINT_SIZE).
+                        set(PointType::FilledCircle)).
                     draw().unwrap()
             }).collect::<Vec<_>>().append_({
                 let kdes = benches.iter().map(|&(_, _, _, ref sample)| {
@@ -728,34 +803,40 @@ pub fn summarize(id: &str) {
                 let tics = iter::count(0.5, 1f64);
                 let mut f = Figure::new();
                 f.
-                    font(FONT).
-                    output(dir.join(format!("summary/{}/violin_plot.svg", sample))).
-                    size(PLOT_SIZE).
-                    title(format!("{}: Violin plot", id)).
-                    axis(Axis::BottomX, |a| a.
-                        grid(Grid::Major, |g| g.
+                    set(FONT).
+                    set(Output(dir.join(format!("summary/{}/violin_plot.svg", sample)))).
+                    set(SIZE).
+                    set(Title(format!("{}: Violin plot", id))).
+                    configure(Axis::BottomX, |a| a.
+                        configure(Grid::Major, |g| g.
                             show()).
-                        grid(Grid::Minor, |g| match xscale {
+                        configure(Grid::Minor, |g| match xscale {
                             Scale::Linear => g.hide(),
                             Scale::Logarithmic => g.show(),
                         }).
-                        label(format!("Average time ({}s)", prefix)).
-                        scale(xscale)).
-                    axis(Axis::BottomX, |a| match xscale {
+                        set(Label(format!("Average time ({}s)", prefix))).
+                        set(xscale)).
+                    configure(Axis::BottomX, |a| match xscale {
                         Scale::Linear => a,
                         Scale::Logarithmic => {
-                            a.range(log_floor(min), log_ceil(max))
+                            a.set(Range::Limits(log_floor(min), log_ceil(max)))
                         },
                     }).
-                    axis(Axis::LeftY, |a| a.
-                        label("Input").
-                        range(0., benches.len() as f64).
-                        tics(tics, benches.iter().map(|&(label, _, _, _)| label))).
-                    curve(Points, medians.iter().map(|&median| median * scale), tics, |c| c.
-                        color(Color::Black).
-                        label("Median").
-                        point_type(PointType::Plus).
-                        point_size(2. * POINT_SIZE));
+                    configure(Axis::LeftY, |a| a.
+                        set(Label("Input")).
+                        set(Range::Limits(0., benches.len() as f64)).
+                        set(TicLabels {
+                            positions: tics,
+                            labels: benches.iter().map(|&(label, _, _, _)| label),
+                        })).
+                        plot(Points {
+                            x: medians.iter().map(|&median| median * scale),
+                            y: tics,
+                        }, |c| c.
+                        set(Color::Black).
+                        set(Label("Median")).
+                        set(PointType::Plus).
+                        set(PointSize(2. * POINT_SIZE.0)));
 
                 let mut is_first = true;
                 for (i, &(ref x, ref y)) in kdes.iter().enumerate() {
@@ -764,19 +845,17 @@ pub fn summarize(id: &str) {
                     let y1 = y.iter().map(|&y| i + y * 0.5);
                     let y2 = y.iter().map(|&y| i - y * 0.5);
 
-                    f.
-                        filled_curve(x, y1, y2, |c| if is_first {
-                            is_first = false;
+                    f.plot(FilledCurve {
+                        x: x,
+                        y1: y1,
+                        y2: y2,
+                    }, |c| if is_first {
+                        is_first = false;
 
-                            c.
-                                color(DARK_BLUE).
-                                label("PDF").
-                                opacity(0.25)
-                        } else {
-                            c.
-                                color(DARK_BLUE).
-                                opacity(0.25)
-                        });
+                        c.set(DARK_BLUE).set(Label("PDF")).set(Opacity(0.25))
+                    } else {
+                        c.set(DARK_BLUE).set(Opacity(0.25))
+                    });
                 }
 
                 f.draw().unwrap()

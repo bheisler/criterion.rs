@@ -1,6 +1,4 @@
-use simplot::curve::Style::{Lines};
-use simplot::key::{Horizontal, Justification, Order, Position, Vertical};
-use simplot::{Axis, Figure, Grid, LineType};
+use simplot::prelude::*;
 use stats::ConfidenceInterval;
 use std::iter::Repeat;
 use std::num::Float;
@@ -11,8 +9,7 @@ use estimate::{Estimate, Estimates};
 use estimate::Statistic::Slope;
 use kde;
 use super::scale_time;
-use super::{DARK_BLUE, DARK_RED};
-use super::{FONT, KDE_POINTS, PLOT_SIZE};
+use super::{DARK_BLUE, DARK_RED, FONT, KDE_POINTS, LINEWIDTH, SIZE};
 
 pub fn regression(
     base: &[(u64, u64)],
@@ -77,39 +74,52 @@ pub fn regression(
     let max_iters = max_iters * x_scale;
 
     let gnuplot = Figure::new().
-        font(FONT).
-        output(path).
-        size(PLOT_SIZE).
-        title(id.to_string()).
-        axis(Axis::BottomX, |a| a.
-            grid(Grid::Major, |g| g.
+        set(FONT).
+        set(Output(path)).
+        set(SIZE).
+        set(Title(id.to_string())).
+        configure(Axis::BottomX, move |:a| a.
+            configure(Grid::Major, |g| g.
                 show()).
-             // FIXME (unboxed closures) remove cloning
-            label(x_label.to_string())).
-        axis(Axis::LeftY, |a| a.
-            grid(Grid::Major, |g| g.
+            set(Label(x_label))).
+        configure(Axis::LeftY, |a| a.
+            configure(Grid::Major, |g| g.
                 show()).
-            label(format!("Total time ({}s)", prefix))).
-        key(|k| k.
-            justification(Justification::Left).
-            order(Order::SampleText).
-            position(Position::Inside(Vertical::Top, Horizontal::Left))).
-        filled_curve([0., max_iters].iter(), [0., base_lb].iter(), [0., base_ub].iter(), |c| c.
-            color(DARK_RED).
-            opacity(0.25)).
-        filled_curve([0., max_iters].iter(), [0., new_lb].iter(), [0., new_ub].iter(), |c| c.
-            color(DARK_BLUE).
-            opacity(0.25)).
-        curve(Lines, [0., max_iters].iter(), [0., base_point].iter(), |c| c.
-            color(DARK_RED).
-            label("Base sample").
-            line_type(LineType::Solid).
-            linewidth(2.)).
-        curve(Lines, [0., max_iters].iter(), [0., new_point].iter(), |c| c.
-            color(DARK_BLUE).
-            label("New sample").
-            line_type(LineType::Solid).
-            linewidth(2.)).
+            set(Label(format!("Total time ({}s)", prefix)))).
+        configure(Key, |k| k.
+            set(Justification::Left).
+            set(Order::SampleText).
+            set(Position::Inside(Vertical::Top, Horizontal::Left))).
+        plot(FilledCurve {
+            x: &[0., max_iters],
+            y1: &[0., base_lb],
+            y2: &[0., base_ub],
+        }, |c| c.
+            set(DARK_RED).
+            set(Opacity(0.25))).
+        plot(FilledCurve {
+            x: &[0., max_iters],
+            y1: &[0., new_lb],
+            y2: &[0., new_ub],
+        }, |c| c.
+            set(DARK_BLUE).
+            set(Opacity(0.25))).
+        plot(Lines {
+            x: &[0., max_iters],
+            y: &[0., base_point],
+        }, |c| c.
+            set(DARK_RED).
+            set(LINEWIDTH).
+            set(Label("Base sample")).
+            set(LineType::Solid)).
+        plot(Lines {
+            x: &[0., max_iters],
+            y: &[0., new_point],
+        }, |c| c.
+            set(DARK_BLUE).
+            set(LINEWIDTH).
+            set(Label("New sample")).
+            set(LineType::Solid)).
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
@@ -132,28 +142,36 @@ pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
     let zeros = Repeat::new(0u);
 
     let gnuplot = Figure::new().
-        font(FONT).
-        output(path).
-        size(PLOT_SIZE).
-        title(id.to_string()).
-        axis(Axis::BottomX, |a| a.
-            label(format!("Average time ({}s)", prefix))).
-        axis(Axis::LeftY, |a| a.
-            label("Density (a.u.)")).
-        axis(Axis::RightY, |a| a.
+        set(FONT).
+        set(Output(path)).
+        set(SIZE).
+        set(Title(id.to_string())).
+        configure(Axis::BottomX, |a| a.
+            set(Label(format!("Average time ({}s)", prefix)))).
+        configure(Axis::LeftY, |a| a.
+            set(Label("Density (a.u.)"))).
+        configure(Axis::RightY, |a| a.
             hide()).
-        key(|k| k.
-            justification(Justification::Left).
-            order(Order::SampleText).
-            position(Position::Outside(Vertical::Top, Horizontal::Right))).
-        filled_curve(base_xs, base_ys, zeros, |c| c.
-            color(DARK_RED).
-            label("Base PDF").
-            opacity(0.5)).
-        filled_curve(new_xs, new_ys, zeros, |c| c.
-            color(DARK_BLUE).
-            label("New PDF").
-            opacity(0.5)).
+        configure(Key, |k| k.
+            set(Justification::Left).
+            set(Order::SampleText).
+            set(Position::Outside(Vertical::Top, Horizontal::Right))).
+        plot(FilledCurve {
+            x: base_xs,
+            y1: base_ys,
+            y2: zeros,
+        }, |c| c.
+            set(DARK_RED).
+            set(Label("Base PDF")).
+            set(Opacity(0.5))).
+        plot(FilledCurve {
+            x: new_xs,
+            y1: new_ys,
+            y2: zeros,
+        }, |c| c.
+            set(DARK_BLUE).
+            set(Label("New PDF")).
+            set(Opacity(0.5))).
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
