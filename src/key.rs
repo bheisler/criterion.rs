@@ -1,6 +1,7 @@
 use std::str::MaybeOwned;
 
-use {Default, Display, Script};
+use traits::Set;
+use {Default, Display, Script, Title};
 
 #[deriving(Clone)]
 pub struct Properties {
@@ -9,7 +10,7 @@ pub struct Properties {
     justification: Option<Justification>,
     order: Option<Order>,
     position: Option<Position>,
-    stack: Option<Stack>,
+    stacked: Option<Stacked>,
     title: Option<MaybeOwned<'static>>,
 }
 
@@ -21,48 +22,16 @@ impl Default for Properties {
             justification: None,
             order: None,
             position: None,
-            stack: None,
+            stacked: None,
             title: None,
         }
     }
 }
 
 impl Properties {
-    /// Surrounds the key with a box
-    ///
-    /// **Note** The key is unboxed by default
-    pub fn boxed(&mut self) -> &mut Properties {
-        self.boxed = true;
-        self
-    }
-
     /// Hides the key
     pub fn hide(&mut self) -> &mut Properties {
         self.hidden = true;
-        self
-    }
-
-    /// Changes the justification of the text of each entry
-    ///
-    /// **Note** The text is `RightJustified` by default
-    pub fn justification(&mut self, justification: Justification) -> &mut Properties {
-        self.justification = Some(justification);
-        self
-    }
-
-    /// How to order each entry
-    ///
-    /// **Note** The default order is `TextSample`
-    pub fn order(&mut self, order: Order) -> &mut Properties {
-        self.order = Some(order);
-        self
-    }
-
-    /// Selects where to place the key
-    ///
-    /// **Note** By default, the key is placed `Inside(Top, Right)`
-    pub fn position(&mut self, position: Position) -> &mut Properties {
-        self.position = Some(position);
         self
     }
 
@@ -71,18 +40,6 @@ impl Properties {
     /// **Note** The key is shown by default
     pub fn show(&mut self) -> &mut Properties {
         self.hidden = false;
-        self
-    }
-
-    /// Changes how the entries of the key are stacked
-    pub fn stack(&mut self, stack: Stack) -> &mut Properties {
-        self.stack = Some(stack);
-        self
-    }
-
-    /// Sets the title of the key
-    pub fn title<S>(&mut self, title: S) -> &mut Properties where S: IntoMaybeOwned<'static> {
-        self.title = Some(title.into_maybe_owned());
         self
     }
 }
@@ -105,8 +62,8 @@ impl Script for Properties {
             },
         }
 
-        if let Some(stack) =  self.stack {
-            script.push_str(stack.display());
+        if let Some(stacked) =  self.stacked {
+            script.push_str(stacked.display());
             script.push(' ');
         }
 
@@ -131,6 +88,71 @@ impl Script for Properties {
         script.push('\n');
         script
     }
+}
+
+impl Set<Boxed> for Properties {
+    /// Select if the key will be surrounded with a box or not
+    ///
+    /// **Note** The key is not boxed by default
+    fn set(&mut self, boxed: Boxed) -> &mut Properties {
+        match boxed {
+            Boxed::No => self.boxed = false,
+            Boxed::Yes => self.boxed = true,
+        }
+
+        self
+    }
+}
+
+impl Set<Justification> for Properties {
+    /// Changes the justification of the text of each entry
+    ///
+    /// **Note** The text is `RightJustified` by default
+    fn set(&mut self, justification: Justification) -> &mut Properties {
+        self.justification = Some(justification);
+        self
+    }
+}
+
+impl Set<Order> for Properties {
+    /// How to order each entry
+    ///
+    /// **Note** The default order is `TextSample`
+    fn set(&mut self, order: Order) -> &mut Properties {
+        self.order = Some(order);
+        self
+    }
+}
+
+impl Set<Position> for Properties {
+    /// Selects where to place the key
+    ///
+    /// **Note** By default, the key is placed `Inside(Vertical::Top, Horizontal::Right)`
+    fn set(&mut self, position: Position) -> &mut Properties {
+        self.position = Some(position);
+        self
+    }
+}
+
+impl Set<Stacked> for Properties {
+    /// Changes how the entries of the key are stacked
+    fn set(&mut self, stacked: Stacked) -> &mut Properties {
+        self.stacked = Some(stacked);
+        self
+    }
+}
+
+impl<S> Set<Title<S>> for Properties where S: IntoMaybeOwned<'static> {
+    fn set(&mut self, title: Title<S>) -> &mut Properties {
+        self.title = Some(title.0.into_maybe_owned());
+        self
+    }
+}
+
+/// Whether the key is surrounded by a box or not
+pub enum Boxed {
+    No,
+    Yes,
 }
 
 /// Horizontal position of the key
@@ -165,9 +187,9 @@ pub enum Position {
 
 /// How the entries of the key are stacked
 #[deriving(Clone)]
-pub enum Stack {
-    Horizontal,
-    Vertical,
+pub enum Stacked {
+    Horizontally,
+    Vertically,
 }
 
 /// Vertical position of the key

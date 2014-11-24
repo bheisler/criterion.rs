@@ -1,7 +1,8 @@
 use std::str::MaybeOwned;
 
 use map;
-use {Axis, Data, Default, Display, Grid, Scale, Script, grid};
+use {Axis, Default, Display, Grid, Label, Range, Scale, Script, TicLabels, grid};
+use traits::{AsStr, Configure, Data, IntoIterator, Set};
 
 #[deriving(Clone)]
 pub struct Properties {
@@ -27,30 +28,6 @@ impl Default for Properties {
 }
 
 impl Properties {
-    /// Autoscales the range of the axis to show all the plot elements
-    ///
-    /// **Note** All axes are auto-scaled by default
-    pub fn autoscale(&mut self) -> &mut Properties {
-        self.range = None;
-        self
-    }
-
-    /// Configures the gridlines
-    pub fn grid(
-        &mut self,
-        which: Grid,
-        configure: for<'a> |&'a mut grid::Properties| -> &'a mut grid::Properties,
-    ) -> &mut Properties {
-        if self.grids.contains_key(which) {
-            configure(self.grids.get_mut(which).unwrap());
-        } else {
-            let mut properties = Default::default();
-            configure(&mut properties);
-            self.grids.insert(which, properties);
-        }
-        self
-    }
-
     /// Hides the axis
     ///
     /// **Note** The `TopX` and `RightY` axes are hidden by default
@@ -59,38 +36,83 @@ impl Properties {
         self
     }
 
-    /// Attaches a label to the axis
-    pub fn label<S>(&mut self, label: S) -> &mut Properties where S: IntoMaybeOwned<'static> {
-        self.label = Some(label.into_maybe_owned());
-        self
-    }
-
-    /// Changes the range of the axis that will be shown
-    pub fn range(&mut self, low: f64, high: f64) -> &mut Properties {
+    /// Makes the axis visible
+    ///
+    /// **Note** The `BottomX` and `LeftY` axes are visible by default
+    pub fn show(&mut self) -> &mut Properties {
         self.hidden = false;
-        self.range = Some((low, high));
         self
     }
+}
 
+impl Configure<Grid, grid::Properties> for Properties {
+    /// Configures the gridlines
+    fn configure<F>(&mut self, grid: Grid, configure: F) -> &mut Properties where
+        F: for<'a> FnOnce(&'a mut grid::Properties) -> &'a mut grid::Properties,
+    {
+        if self.grids.contains_key(grid) {
+            configure(self.grids.get_mut(grid).unwrap());
+        } else {
+            let mut properties = Default::default();
+            configure(&mut properties);
+            self.grids.insert(grid, properties);
+        }
+
+        self
+    }
+}
+
+impl<S> Set<Label<S>> for Properties where S: IntoMaybeOwned<'static> {
+    /// Attaches a label to the axis
+    fn set(&mut self, label: Label<S>) -> &mut Properties {
+        self.label = Some(label.0.into_maybe_owned());
+        self
+    }
+}
+
+impl Set<Range> for Properties {
+    /// Changes the range of the axis that will be shown
+    ///
+    /// **Note** All axes are auto-scaled by default
+    fn set(&mut self, range: Range) -> &mut Properties {
+        self.hidden = false;
+
+        match range {
+            Range::Auto => self.range = None,
+            Range::Limits(low, high) => self.range = Some((low, high)),
+        }
+
+        self
+    }
+}
+
+impl Set<Scale> for Properties {
     /// Sets the scale of the axis
     ///
     /// **Note** All axes use a linear scale by default
-    pub fn scale(&mut self, scale: Scale) -> &mut Properties {
+    fn set(&mut self, scale: Scale) -> &mut Properties {
         self.hidden = false;
+
         match scale {
             Scale::Linear => self.logarithmic = false,
             Scale::Logarithmic => self.logarithmic = true,
         }
+
         self
     }
+}
 
+impl<D, S, PI, LI, P, L> Set<TicLabels<P, L>> for Properties where
+    D: Data, S: AsStr,
+    PI: Iterator<D>, LI: Iterator<S>,
+    P: IntoIterator<D, PI>, L: IntoIterator<S, LI>,
+{
     /// Attaches labels to the tics of an axis
-    // TODO Configuration: rotation, font, etc
-    pub fn tics<A, S, P, L>(&mut self, pos: P, labels: L) -> &mut Properties where
-        A: Data, P: Iterator<A>, S: Str, L: Iterator<S>
-    {
-        let pairs = pos.zip(labels).map(|(pos, label)| {
-            format!("'{}' {}", label.as_slice(), pos.f64())
+    fn set(&mut self, tics: TicLabels<P, L>) -> &mut Properties {
+        let TicLabels { positions, labels } = tics;
+
+        let pairs = positions.into_iter().zip(labels.into_iter()).map(|(pos, label)| {
+            format!("'{}' {}", label.as_str(), pos.f64())
         }).collect::<Vec<_>>();
 
         if pairs.len() == 0 {
@@ -99,14 +121,6 @@ impl Properties {
             self.tics = Some(pairs.connect(", "));
         }
 
-        self
-    }
-
-    /// Makes the axis visible
-    ///
-    /// **Note** The `BottomX` and `LeftY` axes are visible by default
-    pub fn show(&mut self) -> &mut Properties {
-        self.hidden = false;
         self
     }
 }

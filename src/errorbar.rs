@@ -1,6 +1,12 @@
 use std::str::MaybeOwned;
 
-use {Color, Display, ErrorBarDefault, LineType, PointType, Script};
+use {
+    Color, Display, ErrorBarDefault, Figure, Label, LineType, LineWidth, PointSize, PointType,
+    Script,
+};
+use data::Matrix;
+use plot::Plot;
+use traits::{Data, IntoIterator, Set, mod};
 
 pub struct Properties {
     color: Option<Color>,
@@ -23,58 +29,6 @@ impl ErrorBarDefault for Properties {
             point_size: None,
             style: style,
         }
-    }
-}
-
-impl Properties {
-    /// Changes the color of the error bars
-    pub fn color(&mut self, color: Color) -> &mut Properties {
-        self.color = Some(color);
-        self
-    }
-
-    /// Sets the legend label
-    pub fn label<S>(&mut self, label: S) -> &mut Properties where S: IntoMaybeOwned<'static> {
-        self.label = Some(label.into_maybe_owned());
-        self
-    }
-
-    /// Change the line type
-    ///
-    /// **Note** By default `Solid` lines are used
-    pub fn line_type(&mut self, lt: LineType) -> &mut Properties {
-        self.line_type = lt;
-        self
-    }
-
-    /// Changes the linewidth
-    ///
-    /// # Failure
-    ///
-    /// Fails if `lw` is a non-positive value
-    pub fn linewidth(&mut self, lw: f64) -> &mut Properties {
-        assert!(lw > 0.);
-
-        self.linewidth = Some(lw);
-        self
-    }
-
-    /// Changes the point type
-    pub fn point_type(&mut self, pt: PointType) -> &mut Properties {
-        self.point_type = Some(pt);
-        self
-    }
-
-    /// Changes the size of the points
-    ///
-    /// # Failure
-    ///
-    /// Fails if `size` is a non-positive value
-    pub fn point_size(&mut self, size: f64) -> &mut Properties {
-        assert!(size > 0.);
-
-        self.point_size = Some(size);
-        self
     }
 }
 
@@ -112,9 +66,134 @@ impl Script for Properties {
     }
 }
 
+impl Set<Color> for Properties {
+    /// Changes the color of the error bars
+    fn set(&mut self, color: Color) -> &mut Properties {
+
+        self.color = Some(color);
+        self
+    }
+}
+
+impl<S> Set<Label<S>> for Properties where S: IntoMaybeOwned<'static> {
+    /// Sets the legend label
+    fn set(&mut self, label: Label<S>) -> &mut Properties {
+        self.label = Some(label.0.into_maybe_owned());
+        self
+    }
+}
+
+impl Set<LineType> for Properties {
+    /// Change the line type
+    ///
+    /// **Note** By default `Solid` lines are used
+    fn set(&mut self, lt: LineType) -> &mut Properties {
+        self.line_type = lt;
+        self
+    }
+}
+
+impl Set<LineWidth> for Properties {
+    /// Changes the linewidth
+    ///
+    /// # Panics
+    ///
+    /// Panics if `lw` is a non-positive value
+    fn set(&mut self, lw: LineWidth) -> &mut Properties {
+        let lw = lw.0;
+
+        assert!(lw > 0.);
+
+        self.linewidth = Some(lw);
+        self
+    }
+}
+
+impl Set<PointSize> for Properties {
+    /// Changes the size of the points
+    ///
+    /// # Panics
+    ///
+    /// Panics if `size` is a non-positive value
+    fn set(&mut self, ps: PointSize) -> &mut Properties {
+        let ps = ps.0;
+
+        assert!(ps > 0.);
+
+        self.point_size = Some(ps);
+        self
+    }
+}
+
+impl Set<PointType> for Properties {
+    /// Changes the point type
+    fn set(&mut self, pt: PointType) -> &mut Properties {
+        self.point_type = Some(pt);
+        self
+    }
+}
+
 pub enum Style {
-    XErrorBar,
+    XErrorBars,
     XErrorLines,
-    YErrorBar,
+    YErrorBars,
     YErrorLines,
 }
+
+pub enum ErrorBar<X, Y, L, H> {
+    XErrorBars { x: X, y: Y, x_low: L, x_high: H },
+    XErrorLines { x: X, y: Y, x_low: L, x_high: H },
+    YErrorBars { x: X, y: Y, y_low: L, y_high: H },
+    YErrorLines { x: X, y: Y, y_low: L, y_high: H },
+}
+
+impl<X, Y, L, H> ErrorBar<X, Y, L, H> {
+    fn style(&self) -> Style {
+        match *self {
+            ErrorBar::XErrorBars { .. } => Style::XErrorBars,
+            ErrorBar::XErrorLines { .. } => Style::XErrorLines,
+            ErrorBar::YErrorBars { .. } => Style::YErrorBars,
+            ErrorBar::YErrorLines { .. } => Style::YErrorLines,
+        }
+    }
+}
+
+impl<A, B, C, D, XI, YI, LI, HI, X, Y, L, H> traits::Plot<ErrorBar<X, Y, L, H>, Properties>
+for Figure where
+    A: Data, B: Data, C: Data, D: Data,
+    XI: Iterator<A>, YI: Iterator<B>, LI: Iterator<C>, HI: Iterator<D>,
+    X: IntoIterator<A, XI>, Y: IntoIterator<B, YI>, L: IntoIterator<C, LI>, H: IntoIterator<D, HI>,
+{
+    fn plot<F>(&mut self, e: ErrorBar<X, Y, L, H>, configure: F) -> &mut Figure where
+        F: for<'a> FnOnce(&'a mut Properties) -> &'a mut Properties,
+    {
+        let style = e.style();
+        let (x, y, l, h) = match e {
+            ErrorBar::XErrorBars { x, y, x_low, x_high } => (x, y, x_low, x_high),
+            ErrorBar::XErrorLines { x, y, x_low, x_high } => (x, y, x_low, x_high),
+            ErrorBar::YErrorBars { x, y, y_low, y_high } => (x, y, y_low, y_high),
+            ErrorBar::YErrorLines { x, y, y_low, y_high } => (x, y, y_low, y_high),
+        };
+        let data = Matrix::new(zip!(x, y, l, h));
+        self.plots.push(Plot::new(data, configure(&mut ErrorBarDefault::default(style))));
+        self
+    }
+}
+
+// TODO XY error bar
+//pub struct XyErrorBar<X, Y, XL, XH, YL, YH> {
+    //x: X,
+    //y: Y,
+    //x_low: XL,
+    //x_high: XH,
+    //y_low: YL,
+    //y_high: YH,
+//}
+
+// TODO Symmetric error bars
+//pub enum SymmetricErrorBar {
+    //XSymmetricErrorBar { x: X, y: Y, x_delta: D },
+    //XSymmetricErrorLines { x: X, y: Y, x_delta: D },
+    //YSymmetricErrorBar { x: X, y: Y, y_delta: D },
+    //YSymmetricErrorLines { x: X, y: Y, y_delta: D },
+//}

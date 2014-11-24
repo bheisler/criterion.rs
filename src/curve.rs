@@ -1,6 +1,12 @@
 use std::str::MaybeOwned;
 
-use {Axes, Color, CurveDefault, Display, LineType, PointType, Script};
+use {
+    Axes, Color, CurveDefault, Display, Figure, Label, LineType, LineWidth, PointType, PointSize,
+    Script,
+};
+use data::Matrix;
+use plot::Plot;
+use traits::{Data, IntoIterator, Set, mod};
 
 pub struct Properties {
     axes: Option<Axes>,
@@ -25,66 +31,6 @@ impl CurveDefault for Properties {
             point_type: None,
             style: style,
         }
-    }
-}
-
-impl Properties {
-    /// Select the axes to plot against
-    ///
-    /// **Note** By default, the `BottomXLeftY` axes are used
-    pub fn axes(&mut self, axes: Axes) -> &mut Properties {
-        self.axes = Some(axes);
-        self
-    }
-
-    /// Sets the line color
-    pub fn color(&mut self, color: Color) -> &mut Properties {
-        self.color = Some(color);
-        self
-    }
-
-    /// Sets the legend label
-    pub fn label<S>(&mut self, label: S) -> &mut Properties where S: IntoMaybeOwned<'static> {
-        self.label = Some(label.into_maybe_owned());
-        self
-    }
-
-    /// Changes the line type
-    ///
-    /// **Note** By default `Solid` lines are used
-    pub fn line_type(&mut self, lt: LineType) -> &mut Properties {
-        self.line_type = lt;
-        self
-    }
-
-    /// Changes the width of the line
-    ///
-    /// # Failure
-    ///
-    /// Fails if `width` is a non-positive value
-    pub fn linewidth(&mut self, width: f64) -> &mut Properties {
-        assert!(width > 0.);
-
-        self.linewidth = Some(width);
-        self
-    }
-
-    /// Changes the size of the points
-    ///
-    /// # Failure
-    ///
-    /// Fails if `size` is a non-positive value
-    pub fn point_size(&mut self, size: f64) -> &mut Properties {
-        assert!(size > 0.);
-
-        self.point_size = Some(size);
-        self
-    }
-
-    /// Changes the point type
-    pub fn point_type(&mut self, pt: PointType) -> &mut Properties {
-        self.point_type = Some(pt);
-        self
     }
 }
 
@@ -127,6 +73,104 @@ impl Script for Properties {
     }
 }
 
+impl Set<Axes> for Properties {
+    /// Select the axes to plot against
+    ///
+    /// **Note** By default, the `BottomXLeftY` axes are used
+    fn set(&mut self, axes: Axes) -> &mut Properties {
+        self.axes = Some(axes);
+        self
+    }
+}
+
+impl Set<Color> for Properties {
+    /// Sets the line color
+    fn set(&mut self, color: Color) -> &mut Properties {
+        self.color = Some(color);
+        self
+    }
+}
+
+impl<S> Set<Label<S>> for Properties where S: IntoMaybeOwned<'static> {
+    /// Sets the legend label
+    fn set(&mut self, label: Label<S>) -> &mut Properties {
+        self.label = Some(label.0.into_maybe_owned());
+        self
+    }
+}
+
+impl Set<LineType> for Properties {
+    /// Changes the line type
+    ///
+    /// **Note** By default `Solid` lines are used
+    fn set(&mut self, lt: LineType) -> &mut Properties {
+        self.line_type = lt;
+        self
+    }
+}
+
+impl Set<LineWidth> for Properties {
+    /// Changes the width of the line
+    ///
+    /// # Panics
+    ///
+    /// Panics if `width` is a non-positive value
+    fn set(&mut self, lw: LineWidth) -> &mut Properties {
+        let lw = lw.0;
+
+        assert!(lw > 0.);
+
+        self.linewidth = Some(lw);
+        self
+    }
+}
+
+impl Set<PointSize> for Properties {
+    /// Changes the size of the points
+    ///
+    /// # Panics
+    ///
+    /// Panics if `size` is a non-positive value
+    fn set(&mut self, ps: PointSize) -> &mut Properties {
+        let ps = ps.0;
+
+        assert!(ps > 0.);
+
+        self.point_size = Some(ps);
+        self
+    }
+}
+
+impl Set<PointType> for Properties {
+    /// Changes the point type
+    fn set(&mut self, pt: PointType) -> &mut Properties {
+        self.point_type = Some(pt);
+        self
+    }
+}
+
+pub enum Curve<X, Y> {
+    Dots { x: X, y: Y },
+    Impulses { x: X, y: Y },
+    Lines { x: X, y: Y },
+    LinesPoints { x: X, y: Y },
+    Points { x: X, y: Y },
+    Steps { x: X, y: Y },
+}
+
+impl<X, Y> Curve<X, Y> {
+    fn style(&self) -> Style {
+        match *self {
+            Curve::Dots { .. } => Style::Dots,
+            Curve::Impulses { .. } => Style::Impulses,
+            Curve::Lines { .. } => Style::Lines,
+            Curve::LinesPoints { .. } => Style::LinesPoints,
+            Curve::Points { .. } => Style::Points,
+            Curve::Steps { .. } => Style::Steps,
+        }
+    }
+}
+
 pub enum Style {
     Dots,
     Impulses,
@@ -134,4 +178,28 @@ pub enum Style {
     LinesPoints,
     Points,
     Steps,
+}
+
+impl<A, B, X, Y, XI, YI> traits::Plot<Curve<X, Y>, Properties> for Figure where
+    A: Data, B: Data,
+    XI: Iterator<A>, YI: Iterator<B>,
+    X: IntoIterator<A, XI>, Y: IntoIterator<B, YI>,
+{
+    fn plot<F>(&mut self, curve: Curve<X, Y>, configure: F) -> &mut Figure where
+        F: for<'a> FnOnce(&'a mut Properties) -> &'a mut Properties
+    {
+        let style = curve.style();
+        let (x, y) = match curve {
+            Curve::Dots { x, y } => (x, y),
+            Curve::Impulses { x, y } => (x, y),
+            Curve::Lines { x, y } => (x, y),
+            Curve::LinesPoints { x, y } => (x, y),
+            Curve::Points { x, y } => (x, y),
+            Curve::Steps { x, y } => (x, y),
+        };
+
+        let data = Matrix::new(zip!(x, y));
+        self.plots.push(Plot::new(data, configure(&mut CurveDefault::default(style))));
+        self
+    }
 }
