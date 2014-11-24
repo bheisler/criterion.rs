@@ -1,19 +1,377 @@
 //! Simple 2D plotting using `gnuplot`
+//!
+//! # Examples
+//!
+//! - Simple "curves" (based on [`simple.dem`](http://gnuplot.sourceforge.net/demo/simple.html))
+//!
+//! ![Plot](curve.svg)
+//!
+//! ```
+//! #![feature(globs)]
+//!
+//! extern crate simplot;
+//! extern crate space;  // https://github.com/japaric/space.rs
+//!
+//! # use std::io::{USER_RWX, fs};
+//! use simplot::prelude::*;
+//! use space::linspace;
+//! use std::num::FloatMath;
+//!
+//! # fn main() {
+//! let xs = linspace::<f64>(-10., 10., 51);
+//!
+//! # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
+//! # assert_eq!(Some(String::new()),
+//! Figure::new().
+//! #   set(Font("Helvetica")).
+//! #   set(FontSize(12.)).
+//! #   set(Output(Path::new("target/doc/simplot/curve.svg"))).
+//! #   set(Size(1280, 720)).
+//!     configure(Key, |k| k.
+//!         set(Boxed::Yes).
+//!         set(Position::Inside(Vertical::Top, Horizontal::Left))).
+//!     plot(LinesPoints {
+//!         x: xs,
+//!         y: xs.map(|x| x.sin()),
+//!     }, |lp| lp.
+//!         set(Color::DarkViolet).
+//!         set(Label("sin(x)")).
+//!         set(LineType::Dash).
+//!         set(PointSize(1.5)).
+//!         set(PointType::Circle)).
+//!     plot(Steps {
+//!         x: xs,
+//!         y: xs.map(|x| x.atan()),
+//!     }, |s| s.
+//!         set(Color::Rgb(0, 158, 115)).
+//!         set(Label("atan(x)")).
+//!         set(LineWidth(2.))).
+//!     plot(Impulses {
+//!         x: xs,
+//!         y: xs.map(|x| x.atan().cos()),
+//!     }, |i| i.
+//!         set(Color::Rgb(86, 180, 233)).
+//!         set(Label("cos(atan(x))"))).
+//!     draw().  // (rest of the chain has been omitted)
+//! #   ok().and_then(|gnuplot| {
+//! #       gnuplot.wait_with_output().ok().and_then(|p| {
+//! #           String::from_utf8(p.error).ok()
+//! #       })
+//! #   }));
+//! # }
+//! ```
+//!
+//! - error bars (based on
+//! [Julia plotting tutorial](https://plot.ly/julia/error-bars/#Colored-and-Styled-Error-Bars))
+//!
+//! ![Plot](error_bar.svg)
+//!
+//! ```
+//! #![feature(globs)]
+//!
+//! extern crate simplot;
+//! extern crate space;  // https://github.com/japaric/space.rs
+//!
+//! # use std::io::{USER_RWX, fs};
+//! use simplot::prelude::*;
+//! use space::linspace;
+//! use std::f64::consts::PI;
+//! use std::num::FloatMath;
+//! use std::rand::{Rng, XorShiftRng, mod};
+//!
+//! fn sinc(mut x: f64) -> f64 {
+//!     if x == 0. {
+//!         1.
+//!     } else {
+//!         x *= PI;
+//!         x.sin() / x
+//!     }
+//! }
+//!
+//! # fn main() {
+//! let xs_ = linspace::<f64>(-4., 4., 101);
+//!
+//! // Fake some data
+//! let ref mut rng: XorShiftRng = rand::task_rng().gen();
+//! let xs = linspace::<f64>(-4., 4., 13).skip(1).take(11);
+//! let ys = xs.map(|x| sinc(x) + 0.05 * rng.gen() - 0.025).collect::<Vec<_>>();
+//! let y_low = ys.iter().map(|&y| y - 0.025 - 0.075 * rng.gen()).collect::<Vec<_>>();
+//! let y_high = ys.iter().map(|&y| y + 0.025 + 0.075 * rng.gen()).collect::<Vec<_>>();
+//! let xs = xs.map(|x| x + 0.2 * rng.gen() - 0.1);
+//!
+//! # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
+//! # assert_eq!(Some(String::new()),
+//! Figure::new().
+//! #   set(Font("Helvetica")).
+//! #   set(FontSize(12.)).
+//! #   set(Output(Path::new("target/doc/simplot/error_bar.svg"))).
+//! #   set(Size(1280, 720)).
+//!     configure(Axis::BottomX, |a| a.
+//!         set(TicLabels {
+//!             labels: &["-π", "0", "π"],
+//!             positions: &[-PI, 0., PI],
+//!         })).
+//!     configure(Key, |k| k.
+//!         set(Position::Outside(Vertical::Top, Horizontal::Right))).
+//!     plot(Lines {
+//!         x: xs_,
+//!         y: xs_.map(|x| sinc(x)),
+//!     }, |l| l.
+//!         set(Color::Rgb(0, 158, 115)).
+//!         set(Label("sinc(x)")).
+//!         set(LineWidth(2.))).
+//!     plot(YErrorBars {
+//!         x: xs,
+//!         y: &*ys,
+//!         y_low: &*y_low,
+//!         y_high: &*y_high,
+//!     }, |eb| eb.
+//!         set(Color::DarkViolet).
+//!         set(LineWidth(2.)).
+//!         set(PointType::FilledCircle).
+//!         set(Label("measured"))).
+//!     draw().  // (rest of the chain has been omitted)
+//! #   ok().and_then(|gnuplot| {
+//! #       gnuplot.wait_with_output().ok().and_then(|p| {
+//! #           String::from_utf8(p.error).ok()
+//! #       })
+//! #   }));
+//! # }
+//! ```
+//!
+//! - Candlesticks (based on
+//! [`candlesticks.dem`](http://gnuplot.sourceforge.net/demo/candlesticks.html))
+//!
+//! ![Plot](candlesticks.svg)
+//!
+//! ```
+//! # #![feature(globs)]
+//!
+//! extern crate simplot;
+//!
+//! # use std::io::{USER_RWX, fs};
+//! use simplot::prelude::*;
+//! use std::rand::{Rng, mod};
+//!
+//! # fn main() {
+//! let xs = range(1u, 11);
+//!
+//! // Fake some data
+//! let mut rng = rand::task_rng();
+//! let bh = xs.map(|_| 5f64 + 2.5 * rng.gen()).collect::<Vec<_>>();
+//! let bm = xs.map(|_| 2.5f64 + 2.5 * rng.gen()).collect::<Vec<_>>();
+//! let wh = bh.iter().map(|&y| y + (10. - y) * rng.gen()).collect::<Vec<_>>();
+//! let wm = bm.iter().map(|&y| y * rng.gen()).collect::<Vec<_>>();
+//! let m = bm.iter().zip(bh.iter()).map(|(&l, &h)| (h - l) * rng.gen() + l).collect::<Vec<_>>();
+//! let m = &*m;
+//!
+//! # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
+//! # assert_eq!(Some(String::new()),
+//! Figure::new().
+//! #   set(Font("Helvetica")).
+//! #   set(FontSize(12.)).
+//! #   set(Output(Path::new("target/doc/simplot/candlesticks.svg"))).
+//! #   set(Size(1280, 720)).
+//!     set(BoxWidth(0.2)).
+//!     configure(Axis::BottomX, |a| a.
+//!         set(Range::Limits(0., 11.))).
+//!     plot(Candlesticks {
+//!         x: xs,
+//!         whisker_min: &*wm,
+//!         box_min: &*bm,
+//!         box_high: &*bh,
+//!         whisker_high: &*wh,
+//!     }, |cs| cs.
+//!         set(Color::Rgb(86, 180, 233)).
+//!         set(Label("Quartiles")).
+//!         set(LineWidth(2.))).
+//!     // trick to plot the median
+//!     plot(Candlesticks {
+//!         x: xs,
+//!         whisker_min: m,
+//!         box_min: m,
+//!         box_high: m,
+//!         whisker_high: m,
+//!     }, |cs| cs.
+//!         set(Color::Black).
+//!         set(LineWidth(2.))).
+//!     draw().  // (rest of the chain has been omitted)
+//! #   ok().and_then(|gnuplot| {
+//! #       gnuplot.wait_with_output().ok().and_then(|p| {
+//! #           String::from_utf8(p.error).ok()
+//! #       })
+//! #   }));
+//! # }
+//! ```
+//!
+//! - Multiaxis (based on [`multiaxis.dem`](http://gnuplot.sourceforge.net/demo/multiaxis.html))
+//!
+//! ![Plot](multiaxis.svg)
+//!
+//! ```
+//! # #![feature(globs)]
+//!
+//! extern crate complex;  // https://github.com/japaric/complex.rs
+//! extern crate simplot;
+//! extern crate space;  // https://github.com/japaric/space.rs
+//!
+//! # use std::io::{fs, USER_RWX};
+//! use complex::f64::I;
+//! use complex::{Complex, Math};
+//! use simplot::prelude::*;
+//! use space::logspace;
+//! use std::f64::consts::PI;
+//!
+//! fn tf(x: f64) -> Complex<f64> {
+//!     (I * x) / (I * x + 10.) / (I * x / 10_000. + 1.)
+//! }
+//!
+//! # fn main() {
+//! let (start, end) = (1.1, 90_000.);
+//! let xs = logspace(start, end, 101);
+//! let phase = xs.map(|x| tf(x).arg() * 180. / PI);
+//! let magnitude = xs.map(|x| tf(x).abs());
+//!
+//! # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
+//! # assert_eq!(Some(String::new()),
+//! Figure::new().
+//! #   set(Font("Helvetica")).
+//! #   set(FontSize(12.)).
+//! #   set(Output(Path::new("target/doc/simplot/multiaxis.svg"))).
+//! #   set(Size(1280, 720)).
+//!     set(Title("Frequency response")).
+//!     configure(Axis::BottomX, |a| a.
+//!         configure(Grid::Major, |g| g.
+//!             show()).
+//!         set(Label("Angular frequency (rad/s)")).
+//!         set(Range::Limits(start, end)).
+//!         set(Scale::Logarithmic)).
+//!     configure(Axis::LeftY, |a| a.
+//!         set(Label("Gain")).
+//!         set(Scale::Logarithmic)).
+//!     configure(Axis::RightY, |a| a.
+//!         configure(Grid::Major, |g| g.
+//!             show()).
+//!         set(Label("Phase shift (°)"))).
+//!     configure(Key, |k| k.
+//!         set(Position::Inside(Vertical::Top, Horizontal::Center)).
+//!         set(Title(" "))).
+//!     plot(Lines {
+//!         x: xs,
+//!         y: magnitude,
+//!     }, |l| l.
+//!         set(Color::DarkViolet).
+//!         set(Label("Magnitude")).
+//!         set(LineWidth(2.))).
+//!     plot(Lines {
+//!         x: xs,
+//!         y: phase,
+//!     }, |l| l.
+//!         set(Axes::BottomXRightY).
+//!         set(Color::Rgb(0, 158, 115)).
+//!         set(Label("Phase")).
+//!         set(LineWidth(2.))).
+//!     draw().  // (rest of the chain has been omitted)
+//! #   ok().and_then(|gnuplot| {
+//! #       gnuplot.wait_with_output().ok().and_then(|p| {
+//! #           String::from_utf8(p.error).ok()
+//! #       })
+//! #   }));
+//! # }
+//! ```
+//! - Filled curves (based on
+//! [`transparent.dem`](http://gnuplot.sourceforge.net/demo/transparent.html))
+//!
+//! ![Plot](filled_curve.svg)
+//!
+//! ```
+//! # #![feature(globs)]
+//!
+//! extern crate simplot;
+//! extern crate space;  // https://github.com/japaric/space.rs
+//!
+//! # use std::io::{USER_RWX, fs};
+//! use simplot::prelude::*;
+//! use space::linspace;
+//! use std::f64::consts::PI;
+//! use std::num::Float;
+//!
+//! # fn main() {
+//! let (start, end) = (-5., 5.);
+//! let xs = linspace(start, end, 101);
+//! let zeros = repeat(0u);
+//!
+//! fn gaussian(x: f64, mu: f64, sigma: f64) -> f64 {
+//!     (((x - mu).powi(2) / 2. / sigma.powi(2)).exp() * sigma * (2. * PI).sqrt()).recip()
+//! }
+//!
+//! # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
+//! # assert_eq!(Some(String::new()),
+//! Figure::new().
+//! #   set(Font("Helvetica")).
+//! #   set(FontSize(12.)).
+//! #   set(Output(Path::new("target/doc/simplot/filled_curve.svg"))).
+//! #   set(Size(1280, 720)).
+//!     set(Title("Transparent filled curve")).
+//!     configure(Axis::BottomX, |a| a.
+//!         set(Range::Limits(start, end))).
+//!     configure(Axis::LeftY, |a| a.
+//!         set(Range::Limits(0., 1.))).
+//!     configure(Key, |k| k.
+//!         set(Justification::Left).
+//!         set(Order::SampleText).
+//!         set(Position::Inside(Vertical::Top, Horizontal::Left)).
+//!         set(Title("Gaussian Distribution"))).
+//!     plot(FilledCurve {
+//!         x: xs,
+//!         y1: xs.map(|x| gaussian(x, 0.5, 0.5)),
+//!         y2: zeros,
+//!     }, |fc| fc.
+//!         set(Color::ForestGreen).
+//!         set(Label("μ = 0.5 σ = 0.5"))).
+//!     plot(FilledCurve {
+//!         x: xs,
+//!         y1: xs.map(|x| gaussian(x, 2.0, 1.0)),
+//!         y2: zeros,
+//!     }, |fc| fc.
+//!         set(Color::Gold).
+//!         set(Label("μ = 2.0 σ = 1.0")).
+//!         set(Opacity(0.5))).
+//!     plot(FilledCurve {
+//!         x: xs,
+//!         y1: xs.map(|x| gaussian(x, -1.0, 2.0)),
+//!         y2: zeros,
+//!     }, |fc| fc.
+//!         set(Color::Red).
+//!         set(Label("μ = -1.0 σ = 2.0")).
+//!         set(Opacity(0.5))).
+//!     draw().  // (rest of the chain has been omitted)
+//! #   ok().and_then(|gnuplot| {
+//! #       gnuplot.wait_with_output().ok().and_then(|p| {
+//! #           String::from_utf8(p.error).ok()
+//! #       })
+//! #   }));
+//! # }
+//! ```
 
 #![deny(warnings)]
-#![feature(if_let, macro_rules, slicing_syntax, tuple_indexing)]
+#![feature(if_let, macro_rules, phase, slicing_syntax, tuple_indexing, unboxed_closures)]
+
+extern crate zip;
+#[phase(plugin)]
+extern crate zip_macros;
 
 use std::io::{Command, File, IoResult, Process};
 use std::str::{MaybeOwned, mod};
 
 use data::Matrix;
 use plot::Plot;
+use traits::{Configure, Set};
 
 mod data;
 mod display;
 mod map;
 mod plot;
-mod zip;
 
 pub mod axis;
 pub mod candlestick;
@@ -22,13 +380,8 @@ pub mod errorbar;
 pub mod filledcurve;
 pub mod grid;
 pub mod key;
-
-macro_rules! zip {
-    ($a:expr, $b:expr) => { $a.zip($b) };
-    ($a:expr, $b:expr, $c:expr) => { zip::Zip3::new($a, $b, $c) };
-    ($a:expr, $b:expr, $c:expr, $d:expr) => { zip::Zip4::new($a, $b, $c, $d) };
-    ($a:expr, $b:expr, $c:expr, $d:expr, $e:expr) => { zip::Zip5::new($a, $b, $c, $d, $e) };
-}
+pub mod prelude;
+pub mod traits;
 
 /// Plot container
 #[deriving(Clone)]
@@ -71,49 +424,42 @@ impl Figure {
 
         s.push_str(format!("set output '{}'\n", self.output.display())[]);
 
-        match self.box_width {
-            Some(width) => s.push_str(format!("set boxwidth {}\n", width)[]),
-            None => {},
+        if let Some(width) = self.box_width {
+            s.push_str(&*format!("set boxwidth {}\n", width))
         }
 
-        match self.title {
-            Some(ref title) => s.push_str(format!("set title '{}'\n", title)[]),
-            None => {},
+        if let Some(ref title) = self.title {
+            s.push_str(&*format!("set title '{}'\n", title))
         }
 
         for axis in self.axes.iter() {
-            s.push_str(axis.script()[]);
+            s.push_str(&*axis.script());
         }
 
         for (_, script) in self.tics.iter() {
-            s.push_str(script[]);
+            s.push_str(&**script);
         }
 
-        match self.key {
-            Some(ref key) => s.push_str(key.script()[]),
-            None => {},
+        if let Some(ref key) = self.key {
+            s.push_str(&*key.script())
         }
 
-        match self.alpha {
-            Some(alpha) => {
-                s.push_str(format!("set style fill transparent solid {}\n", alpha)[]);
-            },
-            None => {},
+        if let Some(alpha) = self.alpha {
+            s.push_str(&*format!("set style fill transparent solid {}\n", alpha))
         }
 
-        s.push_str(format!("set terminal {} dashed", self.terminal.display())[]);
+        s.push_str(&*format!("set terminal {} dashed", self.terminal.display()));
 
-        match self.size {
-            Some((width, height)) => s.push_str(format!(" size {}, {}", width, height)[]),
-            None => {},
+        if let Some((width, height)) = self.size {
+            s.push_str(&*format!(" size {}, {}", width, height))
         }
 
-        match self.font {
-            Some(ref name) => match self.font_size {
-                Some(size) => s.push_str(format!(" font '{},{}'", name, size)[]),
-                None => s.push_str(format!(" font '{}'", name)[]),
-            },
-            None => {},
+        if let Some(ref name) = self.font {
+            if let Some(size) = self.font_size {
+                s.push_str(&*format!(" font '{},{}'", name, size))
+            } else {
+                s.push_str(&*format!(" font '{}'", name))
+            }
         }
 
         // TODO This removes the crossbars from the ends of error bars, but should be configurable
@@ -134,9 +480,9 @@ impl Figure {
                 s.push_str(", ");
             }
 
-            s.push_str(format!(
+            s.push_str(&*format!(
                     "'-' binary endian=little record={} format='%float64' using ",
-                    data.nrows())[]);
+                    data.nrows()));
 
             let mut is_first_col = true;
             for col in range(0, data.ncols()) {
@@ -165,239 +511,6 @@ impl Figure {
         buffer
     }
 
-    /// Configures an axis
-    ///
-    /// # Example
-    ///
-    /// Based on [`multiaxis.dem`](http://gnuplot.sourceforge.net/demo/multiaxis.html)
-    ///
-    /// ![Plot](multiaxis.svg)
-    ///
-    /// ```
-    /// extern crate complex;
-    /// extern crate simplot;
-    /// extern crate space;
-    ///
-    /// # use std::io::{fs, USER_RWX};
-    /// use complex::f64::I;
-    /// use complex::{Complex, Math};
-    /// use simplot::key::{Horizontal, Position, Vertical};
-    /// use simplot::{Axes, Axis, Color, Figure, Grid, Scale, curve};
-    /// use space::logspace;
-    /// use std::f64::consts::PI;
-    ///
-    /// fn tf(x: f64) -> Complex<f64> {
-    ///     (I * x) / (I * x + 10.) / (I * x / 10_000. + 1.)
-    /// }
-    ///
-    /// # fn main() {
-    /// let (start, end) = (1.1, 90_000.);
-    /// let xs = logspace(start, end, 101);
-    /// let phase = xs.map(|x| tf(x).arg() * 180. / PI);
-    /// let magnitude = xs.map(|x| tf(x).abs());
-    ///
-    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
-    /// # assert_eq!(Some(String::new()),
-    /// Figure::new().
-    /// #   font("Helvetica").
-    /// #   font_size(12.).
-    /// #   output(Path::new("target/doc/simplot/multiaxis.svg")).
-    /// #   size((1280, 720)).
-    ///     axis(Axis::BottomX, |a| a.
-    ///         grid(Grid::Major, |g| g.
-    ///             show()).
-    ///         label("Angular frequency (rad/s)").
-    ///         range(start, end).
-    ///         scale(Scale::Logarithmic)).
-    ///     axis(Axis::LeftY, |a| a.
-    ///         label("Gain").
-    ///         scale(Scale::Logarithmic)).
-    ///     axis(Axis::RightY, |a| a.
-    ///         grid(Grid::Major, |g| g.
-    ///             show()).
-    ///         label("Phase shift (°)")).
-    ///     key(|k| k.
-    ///         position(Position::Inside(Vertical::Top, Horizontal::Center)).
-    ///         title(" ")).
-    ///     title("Frequency response").
-    ///     curve(curve::Style::Lines, xs, magnitude, |c| c.
-    ///         color(Color::DarkViolet).
-    ///         label("Magnitude").
-    ///         linewidth(2.)).
-    ///     curve(curve::Style::Lines, xs, phase, |c| c.
-    ///         axes(Axes::BottomXRightY).
-    ///         color(Color::Rgb(0, 158, 115)).
-    ///         label("Phase").
-    ///         linewidth(2.)).
-    ///     draw().  // (rest of the chain has been omitted)
-    /// #   ok().and_then(|gnuplot| {
-    /// #       gnuplot.wait_with_output().ok().and_then(|p| {
-    /// #           String::from_utf8(p.error).ok()
-    /// #       })
-    /// #   }));
-    /// # }
-    /// ```
-    pub fn axis(
-        &mut self,
-        which: Axis,
-        configure: for<'a> |&'a mut axis::Properties| -> &'a mut axis::Properties,
-    ) -> &mut Figure {
-        if self.axes.contains_key(which) {
-            configure(self.axes.get_mut(which).unwrap());
-        } else {
-            let mut properties = Default::default();
-            configure(&mut properties);
-            self.axes.insert(which, properties);
-        }
-        self
-    }
-
-    /// Changes the box width of all the box related plots (bars, candlesticks, etc)
-    ///
-    /// **Note** The default value is 0
-    ///
-    /// # Failure
-    ///
-    /// Fails if `width` is a negative value
-    pub fn box_width(&mut self, width: f64) -> &mut Figure {
-        assert!(width >= 0.);
-        self.box_width = Some(width);
-        self
-    }
-
-    /// Plots candlesticks
-    ///
-    /// # Example
-    ///
-    /// Based on [`candlesticks.dem`](http://gnuplot.sourceforge.net/demo/candlesticks.html)
-    ///
-    /// ![Plot](candlesticks.svg)
-    ///
-    /// ```
-    /// # use std::io::{USER_RWX, fs};
-    /// use simplot::{Axis, Color, Figure};
-    /// use std::rand::{Rng, mod};
-    ///
-    /// let xs = range(1u, 11).collect::<Vec<_>>();
-    ///
-    /// // Fake some data
-    /// let mut rng = rand::task_rng();
-    /// let bh = xs.iter().map(|_| 5f64 + 2.5 * rng.gen()).collect::<Vec<_>>();
-    /// let bm = xs.iter().map(|_| 2.5f64 + 2.5 * rng.gen()).collect::<Vec<_>>();
-    /// let wh = bh.iter().map(|&y| y + (10. - y) * rng.gen()).collect::<Vec<_>>();
-    /// let wm = bm.iter().map(|&y| y * rng.gen()).collect::<Vec<_>>();
-    /// let m = bm.iter().zip(bh.iter()).map(|(&l, &h)| {
-    ///     (h - l) * rng.gen() + l
-    /// }).collect::<Vec<_>>();
-    ///
-    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
-    /// # assert_eq!(Some(String::new()),
-    /// Figure::new().
-    /// #   font("Helvetica").
-    /// #   font_size(12.).
-    /// #   output(Path::new("target/doc/simplot/candlesticks.svg")).
-    /// #   size((1280, 720)).
-    ///     axis(Axis::BottomX, |a| a.
-    ///         range(0., 11.)).
-    ///     box_width(0.2).
-    ///     candlesticks(xs.iter(), wm.iter(), bm.iter(), bh.iter(), wh.iter(), |c| c.
-    ///         color(Color::Rgb(86, 180, 233)).
-    ///         label("Quartiles").
-    ///         linewidth(2.)).
-    ///     // trick to plot the median
-    ///     candlesticks(xs.iter(), m.iter(), m.iter(), m.iter(), m.iter(), |c| c.
-    ///         color(Color::Black).
-    ///         linewidth(2.)).
-    ///     draw().  // (rest of the chain has been omitted)
-    /// #   ok().and_then(|gnuplot| {
-    /// #       gnuplot.wait_with_output().ok().and_then(|p| {
-    /// #           String::from_utf8(p.error).ok()
-    /// #       })
-    /// #   }));
-    /// ```
-    pub fn candlesticks<A, B, C, D, E, X, WM, BM, BH, WH>(
-        &mut self,
-        x: X,
-        whisker_min: WM,
-        box_min: BM,
-        box_high: BH,
-        whisker_high: WH,
-        configure: for<'a> |&'a mut candlestick::Properties| -> &'a mut candlestick::Properties,
-    ) -> &mut Figure where
-        A: Data, B: Data, C: Data, D: Data, E: Data,
-        X: Iterator<A>, WM: Iterator<B>, BM: Iterator<C>, BH: Iterator<D>, WH: Iterator<E>,
-    {
-        let data = Matrix::new(zip!(x, box_min, whisker_min, whisker_high, box_high));
-        self.plots.push(Plot::new(data, configure(&mut Default::default())));
-        self
-    }
-
-    /// Plots a curve
-    ///
-    /// # Example
-    ///
-    /// Based on [`simple.dem`](http://gnuplot.sourceforge.net/demo/simple.html)
-    ///
-    /// ![Plot](curve.svg)
-    ///
-    /// ```
-    /// extern crate simplot;
-    /// extern crate space;
-    //
-    /// # use std::io::{USER_RWX, fs};
-    /// use simplot::key::{Horizontal, Position, Vertical};
-    /// use simplot::{Color, Figure, LineType, PointType, curve};
-    /// use space::linspace;
-    /// use std::num::FloatMath;
-    ///
-    /// # fn main() {
-    /// let xs = linspace::<f64>(-10., 10., 51);
-    ///
-    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
-    /// # assert_eq!(Some(String::new()),
-    /// Figure::new().
-    /// #   font("Helvetica").
-    /// #   font_size(12.).
-    /// #   output(Path::new("target/doc/simplot/curve.svg")).
-    /// #   size((1280, 720)).
-    ///     key(|k| k.
-    ///         boxed().
-    ///         position(Position::Inside(Vertical::Top, Horizontal::Left))).
-    ///     curve(curve::Style::LinesPoints, xs, xs.map(|x| x.sin()), |c| c.
-    ///         color(Color::DarkViolet).
-    ///         label("sin(x)").
-    ///         line_type(LineType::Dash).
-    ///         point_type(PointType::Circle).
-    ///         point_size(1.5)).
-    ///     curve(curve::Style::Steps, xs, xs.map(|x| x.atan()), |c| c.
-    ///         color(Color::Rgb(0, 158, 115)).
-    ///         label("atan(x)").
-    ///         linewidth(2.)).
-    ///     curve(curve::Style::Impulses, xs, xs.map(|x| x.atan().cos()), |c| c.
-    ///         color(Color::Rgb(86, 180, 233)).
-    ///         label("cos(atan(x))")).
-    ///     draw().  // (rest of the chain has been omitted)
-    /// #   ok().and_then(|gnuplot| {
-    /// #       gnuplot.wait_with_output().ok().and_then(|p| {
-    /// #           String::from_utf8(p.error).ok()
-    /// #       })
-    /// #   }));
-    /// # }
-    /// ```
-    pub fn curve<A, B, X, Y>(
-        &mut self,
-        style: curve::Style,
-        x: X,
-        y: Y,
-        configure: for<'a> |&'a mut curve::Properties| -> &'a mut curve::Properties,
-    ) -> &mut Figure where
-        A: Data, B: Data, X: Iterator<A>, Y: Iterator<B>
-    {
-        let data = Matrix::new(zip!(x, y));
-        self.plots.push(Plot::new(data, configure(&mut CurveDefault::default(style))));
-        self
-    }
-
     /// Spawns a drawing child process
     pub fn draw(&mut self) -> IoResult<Process> {
         let mut gnuplot = try!(Command::new("gnuplot").spawn());
@@ -411,194 +524,34 @@ impl Figure {
         Ok(self)
     }
 
-    /// Plots error bars
-    ///
-    /// # Example
-    ///
-    /// Based on
-    /// [Julia plotting tutorial](https://plot.ly/julia/error-bars/#Colored-and-Styled-Error-Bars)
-    ///
-    /// ![Plot](error_bar.svg)
-    ///
-    /// ```
-    /// extern crate simplot;
-    /// extern crate space;
-    ///
-    /// # use std::io::{USER_RWX, fs};
-    /// use simplot::key::{Horizontal, Position, Vertical};
-    /// use simplot::{Axis, Color, Figure, PointType, curve, errorbar};
-    /// use space::linspace;
-    /// use std::f64::consts::PI;
-    /// use std::num::FloatMath;
-    /// use std::rand::{Rng, mod};
-    ///
-    /// fn sinc(mut x: f64) -> f64 {
-    ///     if x == 0. {
-    ///         1.
-    ///     } else {
-    ///         x *= PI;
-    ///         x.sin() / x
-    ///     }
-    /// }
-    ///
-    /// # fn main() {
-    /// let xs_ = linspace(-4., 4., 101);
-    ///
-    /// // Fake some data
-    /// let mut rng = rand::task_rng();
-    /// let xs = linspace(-4_f64, 4., 13).skip(1).take(11).collect::<Vec<f64>>();
-    /// let ys = xs.iter().map(|&x| sinc(x) + 0.05 * rng.gen() - 0.025).collect::<Vec<f64>>();
-    /// let lows = ys.iter().map(|&y| y - 0.025 - 0.075 * rng.gen()).collect::<Vec<f64>>();
-    /// let highs = ys.iter().map(|&y| y + 0.025 + 0.075 * rng.gen()).collect::<Vec<f64>>();
-    /// let xs = xs.iter().map(|&x| x + 0.2 * rng.gen() - 0.1);
-    ///
-    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
-    /// # assert_eq!(Some(String::new()),
-    /// Figure::new().
-    /// #   font("Helvetica").
-    /// #   font_size(12.).
-    /// #   output(Path::new("target/doc/simplot/error_bar.svg")).
-    /// #   size((1280, 720)).
-    ///     axis(Axis::BottomX, |a| a.
-    ///         tics([-PI, 0., PI].iter(), ["-π", "0", "π"].iter().map(|&x| x))).
-    ///     key(|k| k.
-    ///         position(Position::Outside(Vertical::Top, Horizontal::Right))).
-    ///     curve(curve::Style::Lines, xs_, xs_.map(|x| sinc(x)), |c| c.
-    ///         color(Color::Rgb(0, 158, 115)).
-    ///         label("sinc(x)").
-    ///         linewidth(2.)).
-    ///     error_bar(errorbar::Style::YErrorBar, xs, ys.iter(), lows.iter(), highs.iter(), |e| e.
-    ///         color(Color::DarkViolet).
-    ///         linewidth(2.).
-    ///         point_type(PointType::FilledCircle).
-    ///         label("measured")).
-    ///     draw().  // (rest of the chain has been omitted)
-    /// #   ok().and_then(|gnuplot| {
-    /// #       gnuplot.wait_with_output().ok().and_then(|p| {
-    /// #           String::from_utf8(p.error).ok()
-    /// #       })
-    /// #   }));
-    /// # }
-    /// ```
-    pub fn error_bar<A, B, C, D, X, Y, L, H>(
-        &mut self,
-        style: errorbar::Style,
-        x: X,
-        y: Y,
-        low: L,
-        high: H,
-        configure: for<'a> |&'a mut errorbar::Properties| -> &'a mut errorbar::Properties,
-    ) -> &mut Figure where
-        A: Data, B: Data, C: Data, D: Data,
-        X: Iterator<A>, Y: Iterator<B>, L: Iterator<C>, H: Iterator<D>,
+    /// Saves the script required to produce the figure to `path`
+    pub fn save(&mut self, path: &Path) -> IoResult<&mut Figure> {
+        try!((try!(File::create(path))).write(self.script()[]))
+        Ok(self)
+    }
+}
+
+impl Configure<Axis, axis::Properties> for Figure {
+    /// Configures an axis
+    fn configure<F>(&mut self, axis: Axis, configure: F) -> &mut Figure where
+        F: for<'a> FnOnce(&'a mut axis::Properties) -> &'a mut axis::Properties,
     {
-        let data = Matrix::new(zip!(x, y, low, high));
-        self.plots.push(Plot::new(data, configure(&mut ErrorBarDefault::default(style))));
+        if self.axes.contains_key(axis) {
+            configure(self.axes.get_mut(axis).unwrap());
+        } else {
+            let mut properties = Default::default();
+            configure(&mut properties);
+            self.axes.insert(axis, properties);
+        }
         self
     }
+}
 
-    /// Plots a filled curve
-    ///
-    /// # Example
-    ///
-    /// Based on [`transparent.dem`](http://gnuplot.sourceforge.net/demo/transparent.html)
-    ///
-    /// ![Plot](filled_curve.svg)
-    ///
-    /// ```
-    /// extern crate simplot;
-    /// extern crate space;
-    ///
-    /// # use std::io::{USER_RWX, fs};
-    /// use simplot::key::{Horizontal, Justification, Order, Position, Vertical};
-    /// use simplot::{Axis, Color, Figure};
-    /// use space::linspace;
-    /// use std::f64::consts::PI;
-    /// use std::iter;
-    /// use std::num::Float;
-    ///
-    /// # fn main() {
-    /// let (start, end) = (-5., 5.);
-    /// let xs = linspace(start, end, 101);
-    /// let zeros = iter::count(0, 1u).take(1).cycle();
-    ///
-    /// fn gaussian(x: f64, mu: f64, sigma: f64) -> f64 {
-    ///     (((x - mu).powi(2) / 2. / sigma.powi(2)).exp() * sigma * (2. * PI).sqrt()).recip()
-    /// }
-    ///
-    /// # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
-    /// # assert_eq!(Some(String::new()),
-    /// Figure::new().
-    /// #   font("Helvetica").
-    /// #   font_size(12.).
-    /// #   output(Path::new("target/doc/simplot/filled_curve.svg")).
-    /// #   size((1280, 720)).
-    ///     axis(Axis::BottomX, |a| a.
-    ///         range(start, end)).
-    ///     axis(Axis::LeftY, |a| a.
-    ///         range(0., 1.)).
-    ///     key(|k| k.
-    ///         justification(Justification::Left).
-    ///         order(Order::SampleText).
-    ///         position(Position::Inside(Vertical::Top, Horizontal::Left)).
-    ///         title("Gaussian Distribution")).
-    ///     title("Transparent filled curve").
-    ///     filled_curve(xs, xs.map(|x| gaussian(x, 0.5, 0.5)), zeros, |fc| fc.
-    ///         label("μ = 0.5 σ = 0.5").
-    ///         color(Color::ForestGreen)).
-    ///     filled_curve(xs, xs.map(|x| gaussian(x, 2.0, 1.0)), zeros, |fc| fc.
-    ///         color(Color::Gold).
-    ///         label("μ = 2.0 σ = 1.0").
-    ///         opacity(0.5)).
-    ///     filled_curve(xs, xs.map(|x| gaussian(x, -1.0, 2.0)), zeros, |fc| fc.
-    ///         color(Color::Red).
-    ///         label("μ = -1.0 σ = 2.0").
-    ///         opacity(0.5)).
-    ///     draw().  // (rest of the chain has been omitted)
-    /// #   ok().and_then(|gnuplot| {
-    /// #       gnuplot.wait_with_output().ok().and_then(|p| {
-    /// #           String::from_utf8(p.error).ok()
-    /// #       })
-    /// #   }));
-    /// # }
-    /// ```
-    pub fn filled_curve<A, B, C, X, Y1, Y2>(
-        &mut self,
-        x: X,
-        y1: Y1,
-        y2: Y2,
-        configure: for<'a> |&'a mut filledcurve::Properties| -> &'a mut filledcurve::Properties,
-    ) -> &mut Figure where
-        A: Data, B: Data, C: Data, X: Iterator<A>, Y1: Iterator<B>, Y2: Iterator<C>
-    {
-        let data = Matrix::new(zip!(x, y1, y2));
-        self.plots.push(Plot::new(data, configure(&mut Default::default())));
-        self
-    }
-
-    /// Changes the font
-    pub fn font<S>(&mut self, name: S) -> &mut Figure where S: IntoMaybeOwned<'static> {
-        self.font = Some(name.into_maybe_owned());
-        self
-    }
-
-    /// Changes the size of the font
-    ///
-    /// # Failure
-    ///
-    /// Fails if `size` is a non-positive value
-    pub fn font_size(&mut self, size: f64) -> &mut Figure {
-        assert!(size >= 0.);
-
-        self.font_size = Some(size);
-        self
-    }
-
+impl Configure<Key, key::Properties> for Figure {
     /// Configures the key (legend)
-    pub fn key(
-        &mut self,
-        configure: for<'a> |&'a mut key::Properties| -> &'a mut key::Properties,
-    ) -> &mut Figure {
+    fn configure<F>(&mut self, _: Key, configure: F) -> &mut Figure where
+        F: for<'a> FnOnce(&'a mut key::Properties) -> &'a mut key::Properties,
+    {
         if self.key.is_some() {
             configure(self.key.as_mut().unwrap());
         } else {
@@ -608,40 +561,140 @@ impl Figure {
         }
         self
     }
+}
 
+impl Set<BoxWidth> for Figure {
+    /// Changes the box width of all the box related plots (bars, candlesticks, etc)
+    ///
+    /// **Note** The default value is 0
+    ///
+    /// # Panics
+    ///
+    /// Panics if `width` is a negative value
+    fn set(&mut self, width: BoxWidth) -> &mut Figure {
+        let width = width.0;
+
+        assert!(width >= 0.);
+
+        self.box_width = Some(width);
+        self
+    }
+}
+
+impl<S> Set<Font<S>> for Figure where S: IntoMaybeOwned<'static> {
+    /// Changes the font
+    fn set(&mut self, font: Font<S>) -> &mut Figure {
+        self.font = Some(font.0.into_maybe_owned());
+        self
+    }
+}
+
+impl Set<FontSize> for Figure {
+    /// Changes the size of the font
+    ///
+    /// # Panics
+    ///
+    /// Panics if `size` is a non-positive value
+    fn set(&mut self, size: FontSize) -> &mut Figure {
+        let size = size.0;
+
+        assert!(size >= 0.);
+
+        self.font_size = Some(size);
+        self
+    }
+}
+
+impl Set<Output> for Figure {
     /// Changes the output file
     ///
     /// **Note** The default output file is `output.plot`
-    pub fn output(&mut self, path: Path) -> &mut Figure {
-        self.output = path;
+    fn set(&mut self, output: Output) -> &mut Figure {
+        self.output = output.0;
         self
     }
 
-    /// Saves the script required to produce the figure to `path`
-    pub fn save(&mut self, path: &Path) -> IoResult<&mut Figure> {
-        try!((try!(File::create(path))).write(self.script()[]))
-        Ok(self)
-    }
+}
 
+impl Set<Size> for Figure {
     /// Changes the figure size
-    pub fn size(&mut self, (width, height): (uint, uint)) -> &mut Figure {
-        self.size = Some((width, height));
+    fn set(&mut self, size: Size) -> &mut Figure {
+        self.size = Some((size.0, size.1));
         self
     }
+}
 
+impl Set<Terminal> for Figure {
     /// Changes the output terminal
     ///
     /// **Note** By default, the terminal is set to `Svg`
-    pub fn terminal(&mut self, terminal: Terminal) -> &mut Figure {
+    fn set(&mut self, terminal: Terminal) -> &mut Figure {
         self.terminal = terminal;
         self
     }
+}
 
+impl<S> Set<Title<S>> for Figure where S: IntoMaybeOwned<'static> {
     /// Sets the title
-    pub fn title<S>(&mut self, title: S) -> &mut Figure where S: IntoMaybeOwned<'static> {
-        self.title = Some(title.into_maybe_owned());
+    fn set(&mut self, title: Title<S>) -> &mut Figure {
+        self.title = Some(title.0.into_maybe_owned());
         self
     }
+}
+
+/// Box width for box-related plots: bars, candlesticks, etc
+pub struct BoxWidth(pub f64);
+
+/// A font name
+pub struct Font<S: IntoMaybeOwned<'static>>(pub S);
+
+/// The size of a font
+pub struct FontSize(pub f64);
+
+/// The key or legend
+pub struct Key;
+
+/// Plot label
+pub struct Label<S: IntoMaybeOwned<'static>>(pub S);
+
+/// Width of the lines
+pub struct LineWidth(pub f64);
+
+/// Fill color opacity
+pub struct Opacity(pub f64);
+
+/// Output file path
+pub struct Output(pub Path);
+
+/// Size of the points
+pub struct PointSize(pub f64);
+
+/// Axis range
+pub enum Range {
+    /// Autoscale the axis
+    Auto,
+    /// Set the limits of the axis
+    Limits(f64, f64),
+}
+
+/// Figure size
+pub struct Size(pub uint, pub uint);
+
+/// Labels attached to the tics of an axis
+pub struct TicLabels<P, L> {
+    pub labels: L,
+    pub positions: P,
+}
+
+/// Figure title
+pub struct Title<S: IntoMaybeOwned<'static>>(pub S);
+
+/// A pair of axes that define a coordinate system
+pub enum Axes {
+    BottomXLeftY,
+    BottomXRightY,
+    TopXLeftY,
+    TopXRightY,
 }
 
 /// A coordinate axis
@@ -651,14 +704,6 @@ pub enum Axis {
     LeftY,
     RightY,
     TopX,
-}
-
-/// A pair of axes that define a coordinate system
-pub enum Axes {
-    BottomXLeftY,
-    BottomXRightY,
-    TopXLeftY,
-    TopXRightY,
 }
 
 /// Colour
@@ -676,6 +721,13 @@ pub enum Color {
     Rgb(u8, u8, u8),
     White,
     Yellow,
+}
+
+/// Grid line
+#[deriving(FromPrimitive)]
+pub enum Grid {
+    Major,
+    Minor,
 }
 
 /// Line type
@@ -701,13 +753,6 @@ pub enum PointType {
     X,
 }
 
-/// Grid line
-#[deriving(FromPrimitive)]
-pub enum Grid {
-    Major,
-    Minor,
-}
-
 /// Axis scale
 pub enum Scale {
     Linear,
@@ -718,11 +763,6 @@ pub enum Scale {
 #[deriving(Clone)]
 pub enum Terminal {
     Svg,
-}
-
-/// Types that can be plotted
-pub trait Data {
-    fn f64(self) -> f64;
 }
 
 // NB Not public version of std::default::Default, used to not leak default constructors into the
@@ -743,6 +783,10 @@ trait CurveDefault {
 // NB Error bar variant of Default
 trait ErrorBarDefault {
     fn default(errorbar::Style) -> Self;
+}
+
+trait IntoMatrix {
+    fn into_matrix(self) -> Matrix;
 }
 
 trait Script {

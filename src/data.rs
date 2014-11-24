@@ -1,7 +1,7 @@
 use std::io::MemWriter;
 use std::mem;
 
-use Data;
+use traits::Data;
 
 macro_rules! impl_data {
     ($($ty:ty),+) => {$(

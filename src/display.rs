@@ -1,6 +1,6 @@
 use std::str::MaybeOwned::{Owned, Slice, mod};
 
-use key::{Horizontal, Justification, Order, Stack, Vertical};
+use key::{Horizontal, Justification, Order, Stacked, Vertical};
 use {Axis, Axes, Color, Display, Grid, LineType, PointType, Terminal};
 use {curve, errorbar};
 
@@ -112,11 +112,11 @@ impl Display<&'static str> for PointType {
     }
 }
 
-impl Display<&'static str> for Stack {
+impl Display<&'static str> for Stacked {
     fn display(&self) -> &'static str {
         match *self {
-            Stack::Horizontal => "horizontal",
-            Stack::Vertical => "vertical",
+            Stacked::Horizontally => "horizontal",
+            Stacked::Vertically => "vertical",
         }
     }
 }
@@ -155,9 +155,9 @@ impl Display<&'static str> for curve::Style {
 impl Display<&'static str> for errorbar::Style {
     fn display(&self) -> &'static str {
         match *self {
-            errorbar::Style::XErrorBar => "xerrorbars",
+            errorbar::Style::XErrorBars => "xerrorbars",
             errorbar::Style::XErrorLines => "xerrorlines",
-            errorbar::Style::YErrorBar => "yerrorbars",
+            errorbar::Style::YErrorBars => "yerrorbars",
             errorbar::Style::YErrorLines => "yerrorlines",
         }
     }
