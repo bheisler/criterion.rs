@@ -1,9 +1,12 @@
+//! Coordinate axis
+
 use std::str::MaybeOwned;
 
 use map;
 use {Axis, Default, Display, Grid, Label, Range, Scale, Script, TicLabels, grid};
 use traits::{AsStr, Configure, Data, IntoIterator, Set};
 
+/// Properties of the coordinate axes
 #[deriving(Clone)]
 pub struct Properties {
     grids: map::grid::Map<grid::Properties>,

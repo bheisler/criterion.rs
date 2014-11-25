@@ -354,7 +354,7 @@
 //! # }
 //! ```
 
-#![deny(warnings)]
+#![deny(missing_docs, warnings)]
 #![feature(if_let, macro_rules, phase, slicing_syntax, tuple_indexing, unboxed_closures)]
 
 extern crate zip;
@@ -364,7 +364,6 @@ extern crate zip_macros;
 use std::io::{Command, File, IoResult, Process};
 use std::str::{MaybeOwned, mod};
 
-use data::Matrix;
 use plot::Plot;
 use traits::{Configure, Set};
 
@@ -682,7 +681,9 @@ pub struct Size(pub uint, pub uint);
 
 /// Labels attached to the tics of an axis
 pub struct TicLabels<P, L> {
+    /// Labels to attach to the tics
     pub labels: L,
+    /// Position of the tics on the axis
     pub positions: P,
 }
 
@@ -690,6 +691,7 @@ pub struct TicLabels<P, L> {
 pub struct Title<S: IntoMaybeOwned<'static>>(pub S);
 
 /// A pair of axes that define a coordinate system
+#[allow(missing_docs)]
 pub enum Axes {
     BottomXLeftY,
     BottomXRightY,
@@ -700,13 +702,18 @@ pub enum Axes {
 /// A coordinate axis
 #[deriving(FromPrimitive)]
 pub enum Axis {
+    /// X axis on the bottom side of the figure
     BottomX,
+    /// Y axis on the left side of the figure
     LeftY,
+    /// Y axis on the right side of the figure
     RightY,
+    /// X axis on the top side of the figure
     TopX,
 }
 
-/// Colour
+/// Color
+#[allow(missing_docs)]
 pub enum Color {
     Black,
     Blue,
@@ -718,6 +725,7 @@ pub enum Color {
     Green,
     Magenta,
     Red,
+    /// Custom RGB color
     Rgb(u8, u8, u8),
     White,
     Yellow,
@@ -726,21 +734,26 @@ pub enum Color {
 /// Grid line
 #[deriving(FromPrimitive)]
 pub enum Grid {
+    /// Major gridlines
     Major,
+    /// Minor gridlines
     Minor,
 }
 
 /// Line type
+#[allow(missing_docs)]
 pub enum LineType {
     Dash,
     Dot,
     DotDash,
     DotDotDash,
+    /// Line made of minimally sized dots
     SmallDot,
     Solid,
 }
 
 /// Point type
+#[allow(missing_docs)]
 pub enum PointType {
     Circle,
     FilledCircle,
@@ -754,42 +767,47 @@ pub enum PointType {
 }
 
 /// Axis scale
+#[allow(missing_docs)]
 pub enum Scale {
     Linear,
     Logarithmic,
 }
 
 /// Output terminal
+#[allow(missing_docs)]
 #[deriving(Clone)]
 pub enum Terminal {
     Svg,
 }
 
-// NB Not public version of std::default::Default, used to not leak default constructors into the
-// public API
+/// Not public version of std::default::Default, used to not leak default constructors into the
+/// public API
 trait Default {
+    /// Creates `Properties` with default configuration
     fn default() -> Self;
 }
 
+/// Enums that can produce gnuplot code
 trait Display<S> {
+    /// Translates the enum in gnuplot code
     fn display(&self) -> S;
 }
 
-// NB Curve variant of Default
-trait CurveDefault {
-    fn default(curve::Style) -> Self;
+/// Curve variant of Default
+trait CurveDefault<S> {
+    /// Creates `curve::Properties` with default configuration
+    fn default(S) -> Self;
 }
 
-// NB Error bar variant of Default
-trait ErrorBarDefault {
-    fn default(errorbar::Style) -> Self;
+/// Error bar variant of Default
+trait ErrorBarDefault<S> {
+    /// Creates `errorbar::Properties` with default configuration
+    fn default(S) -> Self;
 }
 
-trait IntoMatrix {
-    fn into_matrix(self) -> Matrix;
-}
-
+/// Structs that can produce gnuplot code
 trait Script {
+    /// Translates some configuration struct into gnuplot code
     fn script(&self) -> String;
 }
 

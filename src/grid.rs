@@ -1,5 +1,8 @@
+//! Gridline
+
 use {Axis, Default, Display, Grid, Script};
 
+/// Gridline properties
 #[deriving(Clone)]
 pub struct Properties {
     hidden: bool

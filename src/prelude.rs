@@ -1,3 +1,5 @@
+//! A collection of the most used traits, structs and enums
+
 pub use {
     Axes, Axis, BoxWidth, Color, Figure, Font, FontSize, Grid, Key, Label, LineType, LineWidth,
     Opacity, Output, PointSize, PointType, Range, Scale, Size, Terminal, TicLabels, Title,

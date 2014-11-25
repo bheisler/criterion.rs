@@ -1,8 +1,11 @@
+//! Key (or legend)
+
 use std::str::MaybeOwned;
 
 use traits::Set;
 use {Default, Display, Script, Title};
 
+/// Properties of the key
 #[deriving(Clone)]
 pub struct Properties {
     boxed: bool,
@@ -150,6 +153,7 @@ impl<S> Set<Title<S>> for Properties where S: IntoMaybeOwned<'static> {
 }
 
 /// Whether the key is surrounded by a box or not
+#[allow(missing_docs)]
 pub enum Boxed {
     No,
     Yes,
@@ -158,12 +162,16 @@ pub enum Boxed {
 /// Horizontal position of the key
 #[deriving(Clone)]
 pub enum Horizontal {
+    /// Center of the figure
     Center,
+    /// Left border of the figure
     Left,
+    /// Right border of the figure
     Right,
 }
 
 /// Text justification of the key
+#[allow(missing_docs)]
 #[deriving(Clone)]
 pub enum Justification {
     Left,
@@ -173,7 +181,9 @@ pub enum Justification {
 /// Order of the elements of the key
 #[deriving(Clone)]
 pub enum Order {
+    /// Sample first, then text
     SampleText,
+    /// Text first, then sample
     TextSample,
 }
 
@@ -181,11 +191,14 @@ pub enum Order {
 // TODO XY position
 #[deriving(Clone)]
 pub enum Position {
+    /// Inside the area surrounded by the four (BottomX, TopX, LeftY and RightY) axes
     Inside(Vertical, Horizontal),
+    /// Outside of that area
     Outside(Vertical, Horizontal),
 }
 
 /// How the entries of the key are stacked
+#[allow(missing_docs)]
 #[deriving(Clone)]
 pub enum Stacked {
     Horizontally,
@@ -195,7 +208,10 @@ pub enum Stacked {
 /// Vertical position of the key
 #[deriving(Clone)]
 pub enum Vertical{
+    /// Bottom border of the figure
     Bottom,
+    /// Center of the figure
     Center,
+    /// Top border of the figure
     Top,
 }

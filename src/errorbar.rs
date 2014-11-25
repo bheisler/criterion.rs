@@ -1,3 +1,5 @@
+//! Error bar plots
+
 use std::str::MaybeOwned;
 
 use {
@@ -8,6 +10,7 @@ use data::Matrix;
 use plot::Plot;
 use traits::{Data, IntoIterator, Set, mod};
 
+/// Properties common to error bar plots
 pub struct Properties {
     color: Option<Color>,
     label: Option<MaybeOwned<'static>>,
@@ -18,7 +21,7 @@ pub struct Properties {
     style: Style,
 }
 
-impl ErrorBarDefault for Properties {
+impl ErrorBarDefault<Style> for Properties {
     fn default(style: Style) -> Properties {
         Properties {
             color: None,
@@ -133,18 +136,70 @@ impl Set<PointType> for Properties {
     }
 }
 
-pub enum Style {
+enum Style {
     XErrorBars,
     XErrorLines,
     YErrorBars,
     YErrorLines,
 }
 
+impl Display<&'static str> for Style {
+    fn display(&self) -> &'static str {
+        match *self {
+            Style::XErrorBars => "xerrorbars",
+            Style::XErrorLines => "xerrorlines",
+            Style::YErrorBars => "yerrorbars",
+            Style::YErrorLines => "yerrorlines",
+        }
+    }
+}
+
+/// Asymmetric error bar plots
 pub enum ErrorBar<X, Y, L, H> {
-    XErrorBars { x: X, y: Y, x_low: L, x_high: H },
-    XErrorLines { x: X, y: Y, x_low: L, x_high: H },
-    YErrorBars { x: X, y: Y, y_low: L, y_high: H },
-    YErrorLines { x: X, y: Y, y_low: L, y_high: H },
+    /// Horizontal error bars
+    XErrorBars {
+        /// X coordinate of the data points
+        x: X,
+        /// Y coordinate of the data points
+        y: Y,
+        /// X coordinate of the left end of the error bar
+        x_low: L,
+        /// Y coordinate of the right end of the error bar
+        x_high: H,
+    },
+    /// Horizontal error bars, where each point is joined by a line
+    XErrorLines {
+        /// X coordinate of the data points
+        x: X,
+        /// Y coordinate of the data points
+        y: Y,
+        /// X coordinate of the left end of the error bar
+        x_low: L,
+        /// Y coordinate of the right end of the error bar
+        x_high: H,
+    },
+    /// Vertical error bars
+    YErrorBars {
+        /// X coordinate of the data points
+        x: X,
+        /// Y coordinate of the data points
+        y: Y,
+        /// Y coordinate of the bottom of the error bar
+        y_low: L,
+        /// Y coordinate of the top of the error bar
+        y_high: H,
+    },
+    /// Vertical error bars, where each point is joined by a line
+    YErrorLines {
+        /// X coordinate of the data points
+        x: X,
+        /// Y coordinate of the data points
+        y: Y,
+        /// Y coordinate of the bottom of the error bar
+        y_low: L,
+        /// Y coordinate of the top of the error bar
+        y_high: H,
+    },
 }
 
 impl<X, Y, L, H> ErrorBar<X, Y, L, H> {

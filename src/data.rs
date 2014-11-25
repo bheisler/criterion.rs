@@ -60,8 +60,11 @@ impl Matrix {
     }
 }
 
+/// Data that can serve as a row of the data matrix
 trait Row {
+    /// Append this row to a buffer
     fn append_to(self, buffer: &mut MemWriter);
+    /// Number of columns of the row
     fn ncols(Option<Self>) -> uint;
 }
 
