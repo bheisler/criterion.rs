@@ -41,7 +41,7 @@ pub struct Bencher {
 
 impl Bencher {
     /// Callback to benchmark a routine
-    pub fn iter<T>(&mut self, routine: || -> T) {
+    pub fn iter<T, F: FnMut() -> T>(&mut self, mut routine: F) {
         self.ns_start = time::precise_time_ns();
         for _ in range(0, self.iters) {
             test::black_box(routine());
