@@ -33,17 +33,14 @@ mod report;
 mod routine;
 
 /// Helper struct to build functions that follow the setup - bench - teardown pattern
-#[experimental]
 pub struct Bencher {
     iters: u64,
     ns_end: u64,
     ns_start: u64,
 }
 
-#[experimental]
 impl Bencher {
     /// Callback to benchmark a routine
-    #[experimental]
     pub fn iter<T>(&mut self, routine: || -> T) {
         self.ns_start = time::precise_time_ns();
         for _ in range(0, self.iters) {
@@ -68,7 +65,6 @@ impl Bencher {
 /// - **Comparison**: The current sample is compared with the sample obtained in the previous
 /// benchmark. If a significant regression in performance is spotted, `Criterion` will trigger a
 /// task panic
-#[experimental]
 pub struct Criterion {
     confidence_level: f64,
     measurement_time_ns: u64,
@@ -95,7 +91,6 @@ impl Plotting {
     }
 }
 
-#[experimental]
 impl Criterion {
     /// Creates a benchmark manager with the following default settings:
     ///
@@ -108,7 +103,6 @@ impl Criterion {
     /// - Significance level: 0.05
     /// - Plotting: enabled (if gnuplot is available)
     // TODO (UFCS) remove this method and implement the `Default` trait
-    #[experimental]
     pub fn default() -> Criterion {
         let plotting = if simplot::version().is_ok() {
             Plotting::Enabled
@@ -138,7 +132,6 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if set to zero
-    #[experimental]
     pub fn sample_size(&mut self, n: uint) -> &mut Criterion {
         assert!(n > 0);
 
@@ -151,7 +144,6 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the warm up time is set to a non-positive value
-    #[experimental]
     pub fn warm_up_time(&mut self, dur: Duration) -> &mut Criterion {
         let ns = dur.num_nanoseconds().expect("duration overflow");
 
@@ -171,7 +163,6 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the measurement time is set to a non-positive value
-    #[experimental]
     pub fn measurement_time(&mut self, dur: Duration) -> &mut Criterion {
         let ns = dur.num_nanoseconds().expect("duration overflow");
 
@@ -192,7 +183,6 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the number of resamples is set to zero
-    #[experimental]
     pub fn nresamples(&mut self, n: uint) -> &mut Criterion {
         assert!(n > 0);
 
@@ -210,7 +200,6 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics is the threshold is set to a negative value
-    #[experimental]
     pub fn noise_threshold(&mut self, threshold: f64) -> &mut Criterion {
         assert!(threshold >= 0.0);
 
@@ -227,7 +216,6 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the confidence level is set to a value outside the `(0, 1)` range
-    #[experimental]
     pub fn confidence_level(&mut self, cl: f64) -> &mut Criterion {
         assert!(cl > 0.0 && cl < 1.0);
 
@@ -243,7 +231,6 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the significance level is set to a value outside the `(0, 1)` range
-    #[experimental]
     pub fn significance_level(&mut self, sl: f64) -> &mut Criterion {
         assert!(sl > 0.0 && sl < 1.0);
 
@@ -252,7 +239,6 @@ impl Criterion {
     }
 
     /// Enables plotting
-    #[experimental]
     pub fn with_plots(&mut self) -> &mut Criterion {
         match self.plotting {
             Plotting::NotAvailable => {},
@@ -263,7 +249,6 @@ impl Criterion {
     }
 
     /// Disabled plotting
-    #[experimental]
     pub fn without_plots(&mut self) -> &mut Criterion {
         match self.plotting {
             Plotting::NotAvailable => {},
@@ -300,7 +285,6 @@ impl Criterion {
     ///
     /// Criterion::default().bench("routine", routine);
     /// ```
-    #[experimental]
     pub fn bench(&mut self, id: &str, f: |&mut Bencher|:'static) -> &mut Criterion {
         analysis::function(id, f, self);
 
@@ -319,7 +303,6 @@ impl Criterion {
     ///     b.iter(|| Vec::from_elem(size, 0u8));
     /// }, [1024, 2048, 4096]);
     /// ```
-    #[experimental]
     pub fn bench_with_inputs<I: Show>(
         &mut self,
         id: &str,
@@ -363,7 +346,6 @@ impl Criterion {
     ///     }
     /// }
     /// ```
-    #[experimental]
     pub fn bench_program(&mut self, id: &str, program: &Command) -> &mut Criterion {
         analysis::program(id, program, self);
 
@@ -374,7 +356,6 @@ impl Criterion {
     ///
     /// This is a convenience method to execute several related benchmarks. Each benchmark will
     /// receive the id: `${id}/${input}`.
-    #[experimental]
     pub fn bench_program_with_inputs<I: Show>(
         &mut self,
         id: &str,
@@ -390,7 +371,6 @@ impl Criterion {
     ///
     /// *Note:* The `bench_with_inputs` and `bench_program_with_inputs` functions internally call
     /// the `summarize` method
-    #[experimental]
     pub fn summarize(&mut self, id: &str) -> &mut Criterion {
         analysis::summarize(id, self);
 
