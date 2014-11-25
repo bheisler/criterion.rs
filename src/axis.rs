@@ -4,7 +4,7 @@ use std::str::MaybeOwned;
 
 use map;
 use {Axis, Default, Display, Grid, Label, Range, Scale, Script, TicLabels, grid};
-use traits::{AsStr, Configure, Data, IntoIterator, Set};
+use traits::{Configure, Data, IntoIterator, Set};
 
 /// Properties of the coordinate axes
 #[deriving(Clone)]
@@ -106,7 +106,7 @@ impl Set<Scale> for Properties {
 }
 
 impl<D, S, PI, LI, P, L> Set<TicLabels<P, L>> for Properties where
-    D: Data, S: AsStr,
+    D: Data, S: Str,
     PI: Iterator<D>, LI: Iterator<S>,
     P: IntoIterator<D, PI>, L: IntoIterator<S, LI>,
 {
@@ -115,7 +115,7 @@ impl<D, S, PI, LI, P, L> Set<TicLabels<P, L>> for Properties where
         let TicLabels { positions, labels } = tics;
 
         let pairs = positions.into_iter().zip(labels.into_iter()).map(|(pos, label)| {
-            format!("'{}' {}", label.as_str(), pos.f64())
+            format!("'{}' {}", label.as_slice(), pos.f64())
         }).collect::<Vec<_>>();
 
         if pairs.len() == 0 {

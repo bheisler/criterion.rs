@@ -2,24 +2,6 @@
 
 use std::slice;
 
-/// Temporary trait until rust-lang/rust#19248 lands
-pub trait AsStr for Sized? {
-    /// Returns a `&str` view into `Self`
-    fn as_str(&self) -> &str;
-}
-
-impl AsStr for str {
-    fn as_str(&self) -> &str { self }
-}
-
-impl AsStr for String {
-    fn as_str(&self) -> &str { self.as_slice() }
-}
-
-impl<'a, Sized? S> AsStr for &'a S where S: AsStr {
-    fn as_str(&self) -> &str { AsStr::as_str(*self) }
-}
-
 // FIXME (AI) `P` should be an associated output type
 /// Overloaded `configure` method
 pub trait Configure<T, P> {
