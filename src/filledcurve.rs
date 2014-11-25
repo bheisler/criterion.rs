@@ -1,3 +1,5 @@
+//! Filled curve plots
+
 use std::str::MaybeOwned;
 
 use data::Matrix;
@@ -5,6 +7,7 @@ use plot::Plot;
 use traits::{Data, IntoIterator, Set, mod};
 use {Axes, Color, Default, Display, Figure, Label, Opacity, Script};
 
+/// Properties common to filled curve plots
 pub struct Properties {
     axes: Option<Axes>,
     color: Option<Color>,
@@ -100,9 +103,13 @@ impl Set<Opacity> for Properties {
     }
 }
 
+/// Fills the area between two curves
 pub struct FilledCurve<X, Y1, Y2> {
+    /// X coordinate of the data points of both curves
     pub x: X,
+    /// Y coordinate of the data points of the first curve
     pub y1: Y1,
+    /// Y coordinate of the data points of the second curve
     pub y2: Y2,
 }
 

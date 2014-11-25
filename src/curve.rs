@@ -1,3 +1,5 @@
+//! Simple "curve" like plots
+
 use std::str::MaybeOwned;
 
 use {
@@ -8,6 +10,7 @@ use data::Matrix;
 use plot::Plot;
 use traits::{Data, IntoIterator, Set, mod};
 
+/// Properties common to simple "curve" like plots
 pub struct Properties {
     axes: Option<Axes>,
     color: Option<Color>,
@@ -19,7 +22,7 @@ pub struct Properties {
     style: Style,
 }
 
-impl CurveDefault for Properties {
+impl CurveDefault<Style> for Properties {
     fn default(style: Style) -> Properties {
         Properties {
             axes: None,
@@ -149,13 +152,50 @@ impl Set<PointType> for Properties {
     }
 }
 
+/// Types of "curve" plots
 pub enum Curve<X, Y> {
-    Dots { x: X, y: Y },
-    Impulses { x: X, y: Y },
-    Lines { x: X, y: Y },
-    LinesPoints { x: X, y: Y },
-    Points { x: X, y: Y },
-    Steps { x: X, y: Y },
+    /// A minimally sized dot on each data point
+    Dots {
+        /// X coordinate of the data points
+        x: X,
+        /// Y coordinate of the data points
+        y: Y,
+    },
+    /// A vertical "impulse" on each data point
+    Impulses {
+        /// X coordinate of the data points
+        x: X,
+        /// Y coordinate of the data points
+        y: Y,
+    },
+    /// Line that joins the data points
+    Lines {
+        /// X coordinate of the data points
+        x: X,
+        /// Y coordinate of the data points
+        y: Y,
+    },
+    /// Line with a point on each data point
+    LinesPoints {
+        /// X coordinate of the data points
+        x: X,
+        /// Y coordinate of the data points
+        y: Y,
+    },
+    /// A point on each data point
+    Points {
+        /// X coordinate of the data points
+        x: X,
+        /// Y coordinate of the data points
+        y: Y,
+    },
+    /// An step `_|` between each data point
+    Steps {
+        /// X coordinate of the data points
+        x: X,
+        /// Y coordinate of the data points
+        y: Y,
+    },
 }
 
 impl<X, Y> Curve<X, Y> {
@@ -171,13 +211,26 @@ impl<X, Y> Curve<X, Y> {
     }
 }
 
-pub enum Style {
+enum Style {
     Dots,
     Impulses,
     Lines,
     LinesPoints,
     Points,
     Steps,
+}
+
+impl Display<&'static str> for Style {
+    fn display(&self) -> &'static str {
+        match *self {
+            Style::Dots => "dots",
+            Style::Impulses => "impulses",
+            Style::Lines => "lines",
+            Style::LinesPoints => "linespoints",
+            Style::Points => "points",
+            Style::Steps => "steps",
+        }
+    }
 }
 
 impl<A, B, X, Y, XI, YI> traits::Plot<Curve<X, Y>, Properties> for Figure where

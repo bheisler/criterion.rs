@@ -1,3 +1,5 @@
+//! "Candlestick" plots
+
 use std::str::MaybeOwned;
 
 use data::Matrix;
@@ -5,6 +7,7 @@ use plot::Plot;
 use traits::{Data, IntoIterator, Set, mod};
 use {Color, Default, Display, Figure, Label, LineType, LineWidth, Script};
 
+/// Properties common to candlestick plots
 pub struct Properties {
     color: Option<Color>,
     label: Option<MaybeOwned<'static>>,
@@ -91,11 +94,17 @@ impl Set<LineWidth> for Properties {
     }
 }
 
+/// A candlestick consists of a box and two whiskers that extend beyond the box
 pub struct Candlesticks<X, WM, BM, BH, WH> {
+    /// X coordinate of the candlestick
     pub x: X,
+    /// Y coordinate of the end point of the bottom whisker
     pub whisker_min: WM,
+    /// Y coordinate of the bottom of the box
     pub box_min: BM,
+    /// Y coordinate of the top of the box
     pub box_high: BH,
+    /// Y coordinate of the end point of the top whisker
     pub whisker_high: WH,
 }
 
