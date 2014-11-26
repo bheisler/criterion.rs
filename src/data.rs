@@ -41,7 +41,7 @@ impl Matrix {
         }
 
         Matrix {
-            bytes: buffer.unwrap(),
+            bytes: buffer.into_inner(),
             ncols: ncols,
             nrows: nrows,
         }
