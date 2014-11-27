@@ -1,6 +1,6 @@
 //! Error bar plots
 
-use std::str::MaybeOwned;
+use std::str::SendStr;
 
 use {
     Color, Display, ErrorBarDefault, Figure, Label, LineType, LineWidth, PointSize, PointType,
@@ -13,7 +13,7 @@ use traits::{Data, IntoIterator, Set, mod};
 /// Properties common to error bar plots
 pub struct Properties {
     color: Option<Color>,
-    label: Option<MaybeOwned<'static>>,
+    label: Option<SendStr>,
     line_type: LineType,
     linewidth: Option<f64>,
     point_size: Option<f64>,
@@ -78,10 +78,10 @@ impl Set<Color> for Properties {
     }
 }
 
-impl<S> Set<Label<S>> for Properties where S: IntoMaybeOwned<'static> {
+impl<S> Set<Label<S>> for Properties where S: IntoCow<'static, String, str> {
     /// Sets the legend label
     fn set(&mut self, label: Label<S>) -> &mut Properties {
-        self.label = Some(label.0.into_maybe_owned());
+        self.label = Some(label.0.into_cow());
         self
     }
 }

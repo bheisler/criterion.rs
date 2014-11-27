@@ -1,6 +1,6 @@
 //! "Candlestick" plots
 
-use std::str::MaybeOwned;
+use std::str::SendStr;
 
 use data::Matrix;
 use plot::Plot;
@@ -10,7 +10,7 @@ use {Color, Default, Display, Figure, Label, LineType, LineWidth, Script};
 /// Properties common to candlestick plots
 pub struct Properties {
     color: Option<Color>,
-    label: Option<MaybeOwned<'static>>,
+    label: Option<SendStr>,
     line_type: LineType,
     linewidth: Option<f64>,
 }
@@ -60,10 +60,10 @@ impl Set<Color> for Properties {
     }
 }
 
-impl<S> Set<Label<S>> for Properties where S: IntoMaybeOwned<'static> {
+impl<S> Set<Label<S>> for Properties where S: IntoCow<'static, String, str> {
     /// Sets the legend label
     fn set(&mut self, label: Label<S>) -> &mut Properties {
-        self.label = Some(label.0.into_maybe_owned());
+        self.label = Some(label.0.into_cow());
         self
     }
 }

@@ -294,12 +294,13 @@
 //! use simplot::prelude::*;
 //! use space::linspace;
 //! use std::f64::consts::PI;
+//! use std::iter;
 //! use std::num::Float;
 //!
 //! # fn main() {
 //! let (start, end) = (-5., 5.);
 //! let xs = linspace(start, end, 101);
-//! let zeros = repeat(0u);
+//! let zeros = iter::repeat(0u);
 //!
 //! fn gaussian(x: f64, mu: f64, sigma: f64) -> f64 {
 //!     (((x - mu).powi(2) / 2. / sigma.powi(2)).exp() * sigma * (2. * PI).sqrt()).recip()
@@ -361,8 +362,9 @@ extern crate zip;
 #[phase(plugin)]
 extern crate zip_macros;
 
+use std::borrow::Cow::{Borrowed, Owned};
 use std::io::{Command, File, IoResult, Process};
-use std::str::{MaybeOwned, mod};
+use std::str::{SendStr, mod};
 
 use plot::Plot;
 use traits::{Configure, Set};
@@ -383,12 +385,11 @@ pub mod prelude;
 pub mod traits;
 
 /// Plot container
-#[deriving(Clone)]
 pub struct Figure {
     alpha: Option<f64>,
     axes: map::axis::Map<axis::Properties>,
     box_width: Option<f64>,
-    font: Option<MaybeOwned<'static>>,
+    font: Option<SendStr>,
     font_size: Option<f64>,
     key: Option<key::Properties>,
     output: Path,
@@ -396,7 +397,39 @@ pub struct Figure {
     size: Option<(uint, uint)>,
     terminal: Terminal,
     tics: map::axis::Map<String>,
-    title: Option<MaybeOwned<'static>>,
+    title: Option<SendStr>,
+}
+
+// FIXME (rust-lang/rust#19359) Automatically derive this trait
+impl Clone for Figure {
+    fn clone(&self) -> Figure {
+        Figure {
+            alpha: self.alpha,
+            axes: self.axes.clone(),
+            box_width: self.box_width,
+            font: match self.font {
+                Some(ref font) => Some(match *font {
+                    Borrowed(b) => Borrowed(b),
+                    Owned(ref o) => Owned(o.clone()),
+                }),
+                None => None,
+            },
+            font_size: self.font_size,
+            key: self.key.clone(),
+            output: self.output.clone(),
+            plots: self.plots.clone(),
+            size: self.size,
+            terminal: self.terminal,
+            tics: self.tics.clone(),
+            title: match self.title {
+                Some(ref title) => Some(match *title {
+                    Borrowed(b) => Borrowed(b),
+                    Owned(ref o) => Owned(o.clone()),
+                }),
+                None => None,
+            }
+        }
+    }
 }
 
 impl Figure {
@@ -580,10 +613,10 @@ impl Set<BoxWidth> for Figure {
     }
 }
 
-impl<S> Set<Font<S>> for Figure where S: IntoMaybeOwned<'static> {
+impl<S> Set<Font<S>> for Figure where S: IntoCow<'static, String, str> {
     /// Changes the font
     fn set(&mut self, font: Font<S>) -> &mut Figure {
-        self.font = Some(font.0.into_maybe_owned());
+        self.font = Some(font.0.into_cow());
         self
     }
 }
@@ -633,10 +666,10 @@ impl Set<Terminal> for Figure {
     }
 }
 
-impl<S> Set<Title<S>> for Figure where S: IntoMaybeOwned<'static> {
+impl<S> Set<Title<S>> for Figure where S: IntoCow<'static, String, str> {
     /// Sets the title
     fn set(&mut self, title: Title<S>) -> &mut Figure {
-        self.title = Some(title.0.into_maybe_owned());
+        self.title = Some(title.0.into_cow());
         self
     }
 }
@@ -645,7 +678,7 @@ impl<S> Set<Title<S>> for Figure where S: IntoMaybeOwned<'static> {
 pub struct BoxWidth(pub f64);
 
 /// A font name
-pub struct Font<S: IntoMaybeOwned<'static>>(pub S);
+pub struct Font<S: IntoCow<'static, String, str>>(pub S);
 
 /// The size of a font
 pub struct FontSize(pub f64);
@@ -654,7 +687,7 @@ pub struct FontSize(pub f64);
 pub struct Key;
 
 /// Plot label
-pub struct Label<S: IntoMaybeOwned<'static>>(pub S);
+pub struct Label<S: IntoCow<'static, String, str>>(pub S);
 
 /// Width of the lines
 pub struct LineWidth(pub f64);
@@ -688,7 +721,7 @@ pub struct TicLabels<P, L> {
 }
 
 /// Figure title
-pub struct Title<S: IntoMaybeOwned<'static>>(pub S);
+pub struct Title<S: IntoCow<'static, String, str>>(pub S);
 
 /// A pair of axes that define a coordinate system
 #[allow(missing_docs)]
