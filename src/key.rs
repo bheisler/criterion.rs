@@ -1,12 +1,12 @@
 //! Key (or legend)
 
-use std::str::MaybeOwned;
+use std::borrow::Cow::{Borrowed, Owned};
+use std::str::SendStr;
 
 use traits::Set;
 use {Default, Display, Script, Title};
 
 /// Properties of the key
-#[deriving(Clone)]
 pub struct Properties {
     boxed: bool,
     hidden: bool,
@@ -14,7 +14,28 @@ pub struct Properties {
     order: Option<Order>,
     position: Option<Position>,
     stacked: Option<Stacked>,
-    title: Option<MaybeOwned<'static>>,
+    title: Option<SendStr>,
+}
+
+// FIXME (rust-lang/rust#19359) Automatically derive this trait
+impl Clone for Properties {
+    fn clone(&self) -> Properties {
+        Properties {
+            boxed: self.boxed,
+            hidden: self.hidden,
+            justification: self.justification,
+            order: self.order,
+            position: self.position,
+            stacked: self.stacked,
+            title: match self.title {
+                Some(ref title) => Some(match *title {
+                    Borrowed(b) => Borrowed(b),
+                    Owned(ref o) => Owned(o.clone()),
+                }),
+                None => None,
+            },
+        }
+    }
 }
 
 impl Default for Properties {
@@ -145,9 +166,9 @@ impl Set<Stacked> for Properties {
     }
 }
 
-impl<S> Set<Title<S>> for Properties where S: IntoMaybeOwned<'static> {
+impl<S> Set<Title<S>> for Properties where S: IntoCow<'static, String, str> {
     fn set(&mut self, title: Title<S>) -> &mut Properties {
-        self.title = Some(title.0.into_maybe_owned());
+        self.title = Some(title.0.into_cow());
         self
     }
 }

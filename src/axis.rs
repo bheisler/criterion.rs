@@ -1,20 +1,40 @@
 //! Coordinate axis
 
-use std::str::MaybeOwned;
+use std::str::SendStr;
+use std::borrow::Cow::{Borrowed, Owned};
 
 use map;
 use {Axis, Default, Display, Grid, Label, Range, Scale, Script, TicLabels, grid};
 use traits::{Configure, Data, IntoIterator, Set};
 
 /// Properties of the coordinate axes
-#[deriving(Clone)]
 pub struct Properties {
     grids: map::grid::Map<grid::Properties>,
     hidden: bool,
-    label: Option<MaybeOwned<'static>>,
+    label: Option<SendStr>,
     logarithmic: bool,
     range: Option<(f64, f64)>,
     tics: Option<String>,
+}
+
+// FIXME (rust-lang/rust#19359) Automatically derive this trait
+impl Clone for Properties {
+    fn clone(&self) -> Properties {
+        Properties {
+            grids: self.grids.clone(),
+            hidden: self.hidden,
+            label: match self.label {
+                Some(ref label) => Some(match *label {
+                    Borrowed(b) => Borrowed(b),
+                    Owned(ref o) => Owned(o.clone()),
+                }),
+                None => None,
+            },
+            logarithmic: self.logarithmic,
+            range: self.range,
+            tics: self.tics.clone(),
+        }
+    }
 }
 
 impl Default for Properties {
@@ -65,10 +85,10 @@ impl Configure<Grid, grid::Properties> for Properties {
     }
 }
 
-impl<S> Set<Label<S>> for Properties where S: IntoMaybeOwned<'static> {
+impl<S> Set<Label<S>> for Properties where S: IntoCow<'static, String, str> {
     /// Attaches a label to the axis
     fn set(&mut self, label: Label<S>) -> &mut Properties {
-        self.label = Some(label.0.into_maybe_owned());
+        self.label = Some(label.0.into_cow());
         self
     }
 }
