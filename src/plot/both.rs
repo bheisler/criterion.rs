@@ -1,6 +1,6 @@
 use simplot::prelude::*;
 use stats::ConfidenceInterval;
-use std::iter::Repeat;
+use std::iter;
 use std::num::Float;
 use std::str;
 use test::stats::Stats;
@@ -139,7 +139,7 @@ pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
     let base_ys = base_ys.iter().map(|&x| x * rscale);
     let new_xs = new_xs.iter().map(|&x| x * scale);
     let new_ys = new_ys.iter().map(|&x| x * rscale);
-    let zeros = Repeat::new(0u);
+    let zeros = iter::repeat(0u);
 
     let gnuplot = Figure::new().
         set(FONT).

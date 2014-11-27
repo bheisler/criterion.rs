@@ -1,9 +1,10 @@
 use simplot::prelude::*;
 use stats::Stats;
-use stats::outliers::{Outliers, LowMild, LowSevere, HighMild, HighSevere};
+use stats::outliers::Outliers;
+use stats::outliers::Label::{HighMild, HighSevere, LowMild, LowSevere};
 use stats::regression::Slope;
 use std::io::fs::PathExtensions;
-use std::iter::{Repeat, mod};
+use std::iter;
 use std::num::Float;
 use std::str;
 
@@ -81,7 +82,7 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
     }
 
     let vertical = &[0., max_iters * y_scale];
-    let zeros = Repeat::new(0u);
+    let zeros = iter::repeat(0u);
 
     let gnuplot = Figure::new().
         set(FONT).
@@ -92,7 +93,6 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
             set(Label(format!("Average time ({}s)", prefix))).
             set(Range::Limits(xs.min(), xs.max()))).
         configure(Axis::LeftY, move |:a| a.
-            // FIXME (unboxed closures) Remove cloning
             set(Label(y_label)).
             set(Range::Limits(0., max_iters * y_scale))).
         configure(Axis::RightY, |a| a.
@@ -277,7 +277,7 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
         let y_p =
             ys[n_p - 1] + (ys[n_p] - ys[n_p - 1]) / (xs[n_p] - xs[n_p - 1]) * (p - xs[n_p - 1]);
 
-        let zero = Repeat::new(0u);
+        let zero = iter::repeat(0u);
 
         let start = xs.iter().enumerate().filter(|&(_, &x)| x >= lb).next().unwrap().0;
         let end = xs.iter().enumerate().rev().filter(|&(_, &x)| x <= ub).next().unwrap().0;
@@ -371,8 +371,8 @@ pub fn rel_distributions(
         let y_p =
             ys[n_p - 1] + (ys[n_p] - ys[n_p - 1]) / (xs[n_p] - xs[n_p - 1]) * (p - xs[n_p - 1]);
 
-        let one = Repeat::new(1u);
-        let zero = Repeat::new(0u);
+        let one = iter::repeat(1u);
+        let zero = iter::repeat(0u);
 
         let start = xs.iter().enumerate().filter(|&(_, &x)| x >= lb).next().unwrap().0;
         let end = xs.iter().enumerate().rev().filter(|&(_, &x)| x <= ub).next().unwrap().0;
@@ -444,7 +444,7 @@ pub fn t_test(t: f64, distribution: &[f64], id: &str) {
 
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, None);
     let ys = ys[];
-    let zero = Repeat::new(0u);
+    let zero = iter::repeat(0u);
 
     let gnuplot = Figure::new().
         set(FONT).
