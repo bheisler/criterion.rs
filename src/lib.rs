@@ -293,7 +293,7 @@ trait Sum<T> {
 }
 
 impl<T: Float, I: Iterator<T>> Sum<T> for I {
-    fn sum(mut self) -> T {
+    fn sum(self) -> T {
         self.fold(Float::zero(), |s, x| x + s)
     }
 }
