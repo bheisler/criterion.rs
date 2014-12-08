@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(globs, if_let, macro_rules, phase, slicing_syntax, tuple_indexing, unboxed_closures)]
+#![feature(globs, macro_rules, phase, slicing_syntax, unboxed_closures)]
 
 //! A statistics-driven micro-benchmarking library written in Rust.
 //!
