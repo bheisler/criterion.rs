@@ -356,7 +356,7 @@
 //! ```
 
 #![deny(missing_docs, warnings)]
-#![feature(if_let, macro_rules, phase, slicing_syntax, tuple_indexing, unboxed_closures)]
+#![feature(macro_rules, phase, slicing_syntax, unboxed_closures)]
 
 extern crate zip;
 #[phase(plugin)]
