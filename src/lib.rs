@@ -362,7 +362,6 @@ extern crate zip;
 #[phase(plugin)]
 extern crate zip_macros;
 
-use std::borrow::Cow::{Borrowed, Owned};
 use std::io::{Command, File, IoResult, Process};
 use std::str::{SendStr, mod};
 
@@ -385,6 +384,7 @@ pub mod prelude;
 pub mod traits;
 
 /// Plot container
+#[deriving(Clone)]
 pub struct Figure {
     alpha: Option<f64>,
     axes: map::axis::Map<axis::Properties>,
@@ -398,38 +398,6 @@ pub struct Figure {
     terminal: Terminal,
     tics: map::axis::Map<String>,
     title: Option<SendStr>,
-}
-
-// FIXME (rust-lang/rust#19359) Automatically derive this trait
-impl Clone for Figure {
-    fn clone(&self) -> Figure {
-        Figure {
-            alpha: self.alpha,
-            axes: self.axes.clone(),
-            box_width: self.box_width,
-            font: match self.font {
-                Some(ref font) => Some(match *font {
-                    Borrowed(b) => Borrowed(b),
-                    Owned(ref o) => Owned(o.clone()),
-                }),
-                None => None,
-            },
-            font_size: self.font_size,
-            key: self.key.clone(),
-            output: self.output.clone(),
-            plots: self.plots.clone(),
-            size: self.size,
-            terminal: self.terminal,
-            tics: self.tics.clone(),
-            title: match self.title {
-                Some(ref title) => Some(match *title {
-                    Borrowed(b) => Borrowed(b),
-                    Owned(ref o) => Owned(o.clone()),
-                }),
-                None => None,
-            }
-        }
-    }
 }
 
 impl Figure {

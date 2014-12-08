@@ -1,12 +1,12 @@
 //! Key (or legend)
 
-use std::borrow::Cow::{Borrowed, Owned};
 use std::str::SendStr;
 
 use traits::Set;
 use {Default, Display, Script, Title};
 
 /// Properties of the key
+#[deriving(Clone)]
 pub struct Properties {
     boxed: bool,
     hidden: bool,
@@ -15,27 +15,6 @@ pub struct Properties {
     position: Option<Position>,
     stacked: Option<Stacked>,
     title: Option<SendStr>,
-}
-
-// FIXME (rust-lang/rust#19359) Automatically derive this trait
-impl Clone for Properties {
-    fn clone(&self) -> Properties {
-        Properties {
-            boxed: self.boxed,
-            hidden: self.hidden,
-            justification: self.justification,
-            order: self.order,
-            position: self.position,
-            stacked: self.stacked,
-            title: match self.title {
-                Some(ref title) => Some(match *title {
-                    Borrowed(b) => Borrowed(b),
-                    Owned(ref o) => Owned(o.clone()),
-                }),
-                None => None,
-            },
-        }
-    }
 }
 
 impl Default for Properties {
