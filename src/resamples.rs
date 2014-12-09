@@ -1,14 +1,14 @@
 use std::rand::{Rng, XorShiftRng, mod};
 use std::rand::distributions::{IndependentSample, Range};
 
-pub struct Resamples<'a, A: 'a> {
+pub struct Resamples<'a, A> where A: 'a {
     range: Range<uint>,
     rng: XorShiftRng,
     sample: &'a [A],
     stage: Option<Vec<A>>,
 }
 
-impl <'a, A: Clone> Resamples<'a, A> {
+impl <'a, A> Resamples<'a, A> where A: Clone {
     pub fn new(sample: &'a [A]) -> Resamples<'a, A> {
         let mut rng = rand::task_rng();
 

@@ -91,7 +91,7 @@ impl<A, B, C, D> Distribution<(A, B, C, D)> {
     }
 }
 
-impl<A: Simd> Distribution<A> {
+impl<A> Distribution<A> where A: Simd {
     /// Computes the confidence interval of the population parameter using percentiles
     // TODO Add more methods to find the confidence interval (e.g. with bias correction)
     pub fn confidence_interval(&self, confidence_level: A) -> ConfidenceInterval<A> {
@@ -119,7 +119,7 @@ impl<A: Simd> Distribution<A> {
 
 /// SIMD accelerated statistics
 // XXX T should be an associated type (?)
-pub trait Stats<T: Simd> for Sized? {
+pub trait Stats<T> for Sized? where T: Simd {
     /// Returns the biggest element in the sample
     ///
     /// - Time: `O(length)`
@@ -241,7 +241,7 @@ pub trait Simd: FloatMath + FromPrimitive {
 /// A "view" into the percentiles of a sample
 pub struct Percentiles<T>(Vec<T>);
 
-impl<T: Float + FromPrimitive> Percentiles<T> {
+impl<T> Percentiles<T> where T: Float + FromPrimitive {
     /// Returns the percentile at `p`%
     pub fn at(&self, p: T) -> T {
         let zero = FromPrimitive::from_uint(0).unwrap();
@@ -294,7 +294,7 @@ trait Sum<T> {
     fn sum(self) -> T;
 }
 
-impl<T: Float, I: Iterator<T>> Sum<T> for I {
+impl<T, I> Sum<T> for I where T: Float, I: Iterator<T> {
     fn sum(self) -> T {
         self.fold(Float::zero(), |s, x| x + s)
     }

@@ -10,9 +10,7 @@ use Sum;
 #[experimental]
 pub struct Slope<A: Float>(pub A);
 
-impl<A> Slope<A>
-where A: Float
-{
+impl<A> Slope<A> where A: Float {
     pub fn fit(sample: &[(A, A)]) -> Slope<A> {
         let n = num::cast(sample.len()).unwrap();
         let xy_bar = sample.iter().map(|&(x, y)| x * y).sum() / n;
@@ -24,9 +22,7 @@ where A: Float
     }
 }
 
-impl<A> Slope<A>
-where A: Float
-{
+impl<A> Slope<A> where A: Float {
     pub fn r_squared(&self, sample: &[(A, A)]) -> A {
         let alpha = self.0;
 

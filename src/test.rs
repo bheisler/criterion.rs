@@ -3,7 +3,7 @@ use std::rand::{Rand, Rng, XorShiftRng, mod};
 
 pub const BENCH_SIZE: uint = 1_000_000;
 
-pub fn vec<T: Rand>(size: uint) -> Option<Vec<T>> {
+pub fn vec<T>(size: uint) -> Option<Vec<T>> where T: Rand {
     if size > 1 {
         let mut rng: XorShiftRng = rand::task_rng().gen();
 

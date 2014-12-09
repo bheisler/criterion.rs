@@ -50,7 +50,7 @@ impl<T> Stats<T> for [T] where T: Simd {
 
     fn percentiles(&self) -> Percentiles<T> {
         // NB This function assumes that there are no NaNs in the sample
-        fn cmp<T: PartialOrd>(a: &T, b: &T) -> Ordering {
+        fn cmp<T>(a: &T, b: &T) -> Ordering where T: PartialOrd {
             if a < b {
                 Less
             } else if a == b {

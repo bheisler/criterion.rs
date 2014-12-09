@@ -63,7 +63,7 @@ impl Label {
     }
 }
 
-impl<A: Simd> Outliers<A> {
+impl<A> Outliers<A> where A: Simd {
     /// Returns the filtered sample, and the classified outliers
     pub fn classify(sample: &[A]) -> Outliers<A> {
         let (q1, _, q3) = sample.percentiles().quartiles();

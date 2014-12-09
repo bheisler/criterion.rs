@@ -10,7 +10,7 @@ use {Simd, Stats};
 /// A bootstrapped t distribution
 pub struct TDistribution<A>(Vec<A>);
 
-impl<A: Simd + Send + Sync> TDistribution<A> {
+impl<A> TDistribution<A> where A: Simd + Send + Sync {
     /// Computes a t distribution by bootstrapping the t-statistic between two samples
     ///
     /// * Bootstrap method: Case resampling
@@ -73,7 +73,7 @@ impl<A> TDistribution<A> {
     }
 }
 
-impl<A: Float> TDistribution<A> {
+impl<A> TDistribution<A> where A: Float {
     /// Computes the p-value of the t-statistic against the t-distribution
     pub fn p_value(&self, t_statistic: A, tails: Tails) -> A {
         let t = t_statistic.abs();
