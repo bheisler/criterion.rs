@@ -172,8 +172,8 @@ mod bench {
     use regression::{Slope, StraightLine};
     use test;
 
-    static NRESAMPLES: uint = 100_000;
-    static SAMPLE_SIZE: uint = 100;
+    const NRESAMPLES: uint = 100_000;
+    const SAMPLE_SIZE: uint = 100;
 
     #[bench]
     fn bootstrap_mean(b: &mut Bencher) {

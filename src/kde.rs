@@ -104,8 +104,8 @@ impl<'a, F> Fn<(f64,), f64> for Kde<'a, F> where F: Fn(f64) -> f64  + Sync {
 /// Estimates the bandwidth using Silverman's rule of thumb
 #[experimental]
 fn silverman(x: &[f64]) -> f64 {
-    static FACTOR: f64 = 4. / 3.;
-    static EXPONENT: f64 = 1. / 5.;
+    const FACTOR: f64 = 4. / 3.;
+    const EXPONENT: f64 = 1. / 5.;
 
     let n = x.len() as f64;
     let sigma = x.std_dev(None);
@@ -144,7 +144,7 @@ mod test {
         // Any [a b] integral should be in the range [0 1]
         #[quickcheck]
         fn integral(a: f64, b: f64) -> TestResult {
-            static DX: f64 = 1e-3;
+            const DX: f64 = 1e-3;
 
             if a > b {
                 TestResult::discard()
@@ -171,7 +171,7 @@ mod test {
     // The [-inf inf] integral of the estimated PDF should be one
     #[quickcheck]
     fn integral(size: uint) -> TestResult {
-        static DX: f64 = 1e-3;
+        const DX: f64 = 1e-3;
 
         if let Some(data) = test::vec::<f64>(size) {
             let data = data[];
@@ -209,8 +209,8 @@ mod bench {
     use kde::Kde;
     use test;
 
-    static KDE_POINTS: uint = 500;
-    static SAMPLE_SIZE: uint = 100_000;
+    const KDE_POINTS: uint = 500;
+    const SAMPLE_SIZE: uint = 100_000;
 
     #[bench]
     fn sweep(b: &mut Bencher) {

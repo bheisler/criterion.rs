@@ -21,7 +21,7 @@ macro_rules! approx {
     ($($ty:ty),+) => {$(
         impl ApproxEq for $ty {
             fn approx_eq(self, other: $ty) -> bool {
-                static EPS: $ty = 1e-5;
+                const EPS: $ty = 1e-5;
 
                 if other == 0. {
                     self.abs() < EPS

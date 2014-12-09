@@ -105,8 +105,8 @@ mod bench {
     use super::TDistribution;
     use test;
 
-    static SAMPLE_SIZE: uint = 100;
-    static NRESAMPLES: uint = 100_000;
+    const SAMPLE_SIZE: uint = 100;
+    const NRESAMPLES: uint = 100_000;
 
     #[bench]
     fn new(b: &mut Bencher) {
