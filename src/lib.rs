@@ -34,7 +34,9 @@ pub trait Bootstrap for Sized? {
     /// Returns the bootstrap distribution of the parameter estimated by the 1-sample statistic
     ///
     /// * Bootstrap method: Case resampling
-    fn bootstrap<A: Send>(&self, statistic: fn(&Self) -> A, nresamples: uint) -> Distribution<A>;
+    fn bootstrap<A, S>(&self, statistic: S, nresamples: uint) -> Distribution<A> where
+        A: Send,
+        S: Fn(&Self) -> A + Sync;
 }
 
 /// The bootstrap distribution of a population parameter

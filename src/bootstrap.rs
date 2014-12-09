@@ -5,8 +5,13 @@ use std::{os, ptr};
 use {Bootstrap, Distribution};
 use resamples::Resamples;
 
-impl<T: Clone + Sync> Bootstrap for [T] {
-    fn bootstrap<A: Send>(&self, statistic: fn(&[T]) -> A, nresamples: uint) -> Distribution<A> {
+impl<T> Bootstrap for [T] where
+    T: Clone + Sync,
+{
+    fn bootstrap<A, S>(&self, statistic: S, nresamples: uint) -> Distribution<A> where
+        A: Send,
+        S: Fn(&[T]) -> A + Sync,
+    {
         // FIXME `RUST_THREADS` should be favored over `num_cpus`
         let ncpus = os::num_cpus();
 
@@ -39,12 +44,17 @@ impl<T: Clone + Sync> Bootstrap for [T] {
 ///
 /// * Bootstrap method: Case resampling
 #[experimental]
-pub fn bootstrap<A: Clone + Sync, B: Clone + Sync, C: Send>(
+pub fn bootstrap<A, B, C, S>(
     first: &[A],
     second: &[B],
-    statistic: fn(&[A], &[B]) -> C,
+    statistic: S,
     nresamples: uint
-) -> Distribution<C> {
+) -> Distribution<C> where
+    A: Clone + Sync,
+    B: Clone + Sync,
+    C: Send,
+    S: Fn(&[A], &[B]) -> C + Sync,
+{
     assert!(nresamples > 0);
 
     // FIXME `RUST_THREADS` should be favored over `num_cpus`
