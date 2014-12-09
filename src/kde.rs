@@ -10,13 +10,13 @@ use Stats;
 
 /// Univariate Kernel Density Estimator
 #[experimental]
-pub struct Kde<'a> {
+pub struct Kde<'a, F> where F: Fn(f64) -> f64 + Sync {
     bandwidth: f64,
-    kernel: fn(f64) -> f64,
+    kernel: F,
     sample: &'a [f64],
 }
 
-impl<'a> Kde<'a> {
+impl<'a> Kde<'a, fn(f64) -> f64> {
     /// Creates a new univariate kernel density estimator
     ///
     /// * Bandwidth: Estimated using Silverman's rule of thumb
@@ -24,14 +24,16 @@ impl<'a> Kde<'a> {
     // TODO bandwidth estimator should be configurable
     // TODO kernel should be configurable
     #[experimental]
-    pub fn new(sample: &[f64]) -> Kde {
+    pub fn new(sample: &[f64]) -> Kde<fn(f64) -> f64> {
         Kde {
             bandwidth: silverman(sample),
             kernel: gaussian,
             sample: sample,
         }
     }
+}
 
+impl<'a, F> Kde<'a, F> where F: Fn(f64) -> f64 + Sync {
     /// Returns the bandwidth used by the estimator
     #[experimental]
     pub fn bandwidth(&self) -> f64 {
@@ -84,17 +86,17 @@ impl<'a> Kde<'a> {
     }
 }
 
-impl<'a> Fn<(f64,), f64> for Kde<'a> {
+impl<'a, F> Fn<(f64,), f64> for Kde<'a, F> where F: Fn(f64) -> f64  + Sync {
     /// Estimates the probability *density* that the random variable takes the value `x`
     // XXX Can this be SIMD accelerated?
     #[experimental]
     extern "rust-call" fn call(&self, (x,): (f64,)) -> f64 {
         let frac_1_h = self.bandwidth.recip();
         let n = self.sample.len() as f64;
-        let k = self.kernel;
+        let k = &self.kernel;
 
         self.sample.iter().map(|&x_i| {
-            k((x - x_i) * frac_1_h)
+            (*k)((x - x_i) * frac_1_h)
         }).sum() * frac_1_h / n
     }
 }
