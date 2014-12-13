@@ -17,7 +17,7 @@ pub struct Outliers<A> {
 }
 
 /// Labels used to classify outliers
-#[deriving(Encodable, PartialEq)]
+#[deriving(Copy, Encodable, PartialEq)]
 pub enum Label {
     HighMild,
     HighSevere,

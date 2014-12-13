@@ -93,6 +93,7 @@ impl<A> TDistribution<A> where A: Float {
 }
 
 /// Number of tails to consider for the t-test
+#[deriving(Copy)]
 pub enum Tails {
     One,
     Two,
