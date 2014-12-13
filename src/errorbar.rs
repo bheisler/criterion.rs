@@ -136,6 +136,7 @@ impl Set<PointType> for Properties {
     }
 }
 
+#[deriving(Copy)]
 enum Style {
     XErrorBars,
     XErrorLines,

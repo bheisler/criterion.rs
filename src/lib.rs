@@ -643,33 +643,40 @@ impl<S> Set<Title<S>> for Figure where S: IntoCow<'static, String, str> {
 }
 
 /// Box width for box-related plots: bars, candlesticks, etc
+#[deriving(Copy)]
 pub struct BoxWidth(pub f64);
 
 /// A font name
 pub struct Font<S: IntoCow<'static, String, str>>(pub S);
 
 /// The size of a font
+#[deriving(Copy)]
 pub struct FontSize(pub f64);
 
 /// The key or legend
+#[deriving(Copy)]
 pub struct Key;
 
 /// Plot label
 pub struct Label<S: IntoCow<'static, String, str>>(pub S);
 
 /// Width of the lines
+#[deriving(Copy)]
 pub struct LineWidth(pub f64);
 
 /// Fill color opacity
+#[deriving(Copy)]
 pub struct Opacity(pub f64);
 
 /// Output file path
 pub struct Output(pub Path);
 
 /// Size of the points
+#[deriving(Copy)]
 pub struct PointSize(pub f64);
 
 /// Axis range
+#[deriving(Copy)]
 pub enum Range {
     /// Autoscale the axis
     Auto,
@@ -678,6 +685,7 @@ pub enum Range {
 }
 
 /// Figure size
+#[deriving(Copy)]
 pub struct Size(pub uint, pub uint);
 
 /// Labels attached to the tics of an axis
@@ -693,6 +701,7 @@ pub struct Title<S: IntoCow<'static, String, str>>(pub S);
 
 /// A pair of axes that define a coordinate system
 #[allow(missing_docs)]
+#[deriving(Copy)]
 pub enum Axes {
     BottomXLeftY,
     BottomXRightY,
@@ -702,6 +711,7 @@ pub enum Axes {
 
 /// A coordinate axis
 #[deriving(FromPrimitive)]
+#[deriving(Copy)]
 pub enum Axis {
     /// X axis on the bottom side of the figure
     BottomX,
@@ -715,6 +725,7 @@ pub enum Axis {
 
 /// Color
 #[allow(missing_docs)]
+#[deriving(Copy)]
 pub enum Color {
     Black,
     Blue,
@@ -733,7 +744,7 @@ pub enum Color {
 }
 
 /// Grid line
-#[deriving(FromPrimitive)]
+#[deriving(Copy, FromPrimitive)]
 pub enum Grid {
     /// Major gridlines
     Major,
@@ -743,6 +754,7 @@ pub enum Grid {
 
 /// Line type
 #[allow(missing_docs)]
+#[deriving(Copy)]
 pub enum LineType {
     Dash,
     Dot,
@@ -755,6 +767,7 @@ pub enum LineType {
 
 /// Point type
 #[allow(missing_docs)]
+#[deriving(Copy)]
 pub enum PointType {
     Circle,
     FilledCircle,
@@ -769,6 +782,7 @@ pub enum PointType {
 
 /// Axis scale
 #[allow(missing_docs)]
+#[deriving(Copy)]
 pub enum Scale {
     Linear,
     Logarithmic,
@@ -776,7 +790,7 @@ pub enum Scale {
 
 /// Output terminal
 #[allow(missing_docs)]
-#[deriving(Clone)]
+#[deriving(Clone, Copy)]
 pub enum Terminal {
     Svg,
 }
