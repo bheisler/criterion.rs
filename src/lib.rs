@@ -648,6 +648,7 @@ impl<S> Set<Title<S>> for Figure where S: IntoCow<'static, String, str> {
 pub struct BoxWidth(pub f64);
 
 /// A font name
+#[deriving(Copy)]
 pub struct Font<S: IntoCow<'static, String, str>>(pub S);
 
 /// The size of a font
