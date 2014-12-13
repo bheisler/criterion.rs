@@ -406,7 +406,7 @@ pub fn rel_distributions(
             plot(FilledCurve {
                 x: xs.iter().skip(start).take(len),
                 y1: ys.iter().skip(start),
-                y2: zero,
+                y2: zero.clone(),
             }, |c| c.
                 set(DARK_BLUE).
                 set(Label("Confidence interval")).

@@ -33,6 +33,7 @@ mod report;
 mod routine;
 
 /// Helper struct to build functions that follow the setup - bench - teardown pattern
+#[deriving(Copy)]
 pub struct Bencher {
     iters: u64,
     ns_end: u64,

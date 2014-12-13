@@ -159,7 +159,7 @@ pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
         plot(FilledCurve {
             x: base_xs,
             y1: base_ys,
-            y2: zeros,
+            y2: zeros.clone(),
         }, |c| c.
             set(DARK_RED).
             set(Label("Base PDF")).

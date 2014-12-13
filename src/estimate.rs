@@ -4,7 +4,7 @@ use std::collections::TreeMap;
 use std::io::File;
 use std::fmt::{Formatter, Show, mod};
 
-#[deriving(Decodable, Encodable, PartialEq)]
+#[deriving(Copy, Decodable, Encodable, PartialEq)]
 pub struct Estimate {
     pub confidence_interval: ConfidenceInterval<f64>,
     pub point_estimate: f64,
@@ -33,7 +33,7 @@ impl Estimate {
     }
 }
 
-#[deriving(Decodable, Eq, Encodable, Ord, PartialEq, PartialOrd)]
+#[deriving(Copy, Decodable, Eq, Encodable, Ord, PartialEq, PartialOrd)]
 pub enum Statistic {
     Mean,
     Median,
