@@ -97,6 +97,7 @@
 //! let ys = xs.map(|x| sinc(x) + 0.05 * rng.gen() - 0.025).collect::<Vec<_>>();
 //! let y_low = ys.iter().map(|&y| y - 0.025 - 0.075 * rng.gen()).collect::<Vec<_>>();
 //! let y_high = ys.iter().map(|&y| y + 0.025 + 0.075 * rng.gen()).collect::<Vec<_>>();
+//! let xs = linspace::<f64>(-4., 4., 13).skip(1).take(11);
 //! let xs = xs.map(|x| x + 0.2 * rng.gen() - 0.1);
 //!
 //! # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
@@ -326,14 +327,14 @@
 //!     plot(FilledCurve {
 //!         x: xs,
 //!         y1: xs.map(|x| gaussian(x, 0.5, 0.5)),
-//!         y2: zeros,
+//!         y2: zeros.clone(),
 //!     }, |fc| fc.
 //!         set(Color::ForestGreen).
 //!         set(Label("μ = 0.5 σ = 0.5"))).
 //!     plot(FilledCurve {
 //!         x: xs,
 //!         y1: xs.map(|x| gaussian(x, 2.0, 1.0)),
-//!         y2: zeros,
+//!         y2: zeros.clone(),
 //!     }, |fc| fc.
 //!         set(Color::Gold).
 //!         set(Label("μ = 2.0 σ = 1.0")).
