@@ -6,7 +6,7 @@ use std::num::{Float, mod};
 use Sum;
 
 /// A straight line that passes through the origin `y = m * x`
-#[deriving(Clone)]
+#[deriving(Clone, Copy)]
 #[experimental]
 pub struct Slope<A: Float>(pub A);
 
@@ -48,7 +48,7 @@ impl<A> Slope<A> where A: Float {
 }
 
 /// An straight line `y = m * x + b`
-#[deriving(Clone)]
+#[deriving(Clone, Copy)]
 #[experimental]
 pub struct StraightLine<A: Float> {
     /// The y-intercept of the line
