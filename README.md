@@ -26,4 +26,4 @@ stats.rs is dual licensed under the Apache 2.0 license and the MIT license.
 See LICENSE-APACHE and LICENSE-MIT for more details.
 
 [criterion]: https://github.com/japaric/criterion.rs
-[docs]: http://japaric.github.io/zip.rs/zip/
+[docs]: http://japaric.github.io/stats.rs/stats/
