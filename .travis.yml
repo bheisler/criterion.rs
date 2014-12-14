@@ -8,6 +8,7 @@ script:
   - cargo build --verbose
   - cargo test --verbose
   - cargo doc --verbose && mv target/doc doc
+  - ./check-line-length.sh
 
 after_success:
   - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh'
