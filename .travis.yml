@@ -2,7 +2,7 @@ language: rust
 
 env:
   global:
-    - secure: pQJkfFtkEXSTb/rx0rRbP9zuAbCI2NzEFNylWJlhGR3TN/bKo/RwDdl1Lc0L4JYFOxdk8hjNLSWJKA148+y4hU4rrkPX9NyfnUdbLz5vm6900PkT/aG8dceVWudkueC9fT0n4S67256DjkkTzhTwsdp8CBbrzgj/W7SAO8jZwv4=
+    - secure: d7cJ0SnqKtJ1hO+23z5zdqHcvZpgooayhiCViGEWnu5KXkxVM2B+JTyvVcui8xskjG/q4FnrTHsn2qHX1416RW4JVX+z9xARWWISZGB3bTVMIrrk2NchafZBMwFqL6N/PwqYhU16zKllRUkEXOjcf9SpxKK/7Vl6i1uIU/+2o8o=
   matrix:
     - WITH_GNUPLOT=true
     - WITH_GNUPLOT=false
@@ -22,11 +22,11 @@ install:
 script:
   - cargo build --verbose
   - cargo bench --verbose -- --test --nocapture
-  - cargo doc --verbose && mv target/doc doc
+  - cargo doc --verbose
   - ./check-line-length.sh
 
 after_success:
-  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh'
+  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && bash upload-docs.sh'
 
 branches:
   only: master
