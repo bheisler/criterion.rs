@@ -2,7 +2,7 @@ language: rust
 
 env:
   global:
-    - secure: NV6sXHnOZ2E8WV6j+a850mcwhTpg48AO93vC9oPeePJ7u2x+Q4Kmhvs/UGGcS5+GJ+1S5PLMnivG7v90e1DAxqheubVWaFPoDFMhLM9d5lvFbn9BaxM48xzBkZLTqlUM64bc7WUj+HqgTWYGAbcvlLu+tAVxu77AI6ccDqBoWi0=
+    - secure: pVHbWqVW0YttQunmjhnfPcD/qLOPNKljCPHExitixqMEIqpfyhSxRrHw5XjnVpl6nExsMpeDKy/6DRXM65q6jk0LQ+Qg5V0fujrQUSk50zaQgH+wo6W9WSKHV5WV+zdFz+h2TATtn4LcxhIaprB66AizZNjBrZn1uq0IT8Aums4=
 
 before_install:
   # This PPA has a newer version of gnuplot
@@ -15,11 +15,11 @@ install:
 script:
   - cargo build --verbose
   - cargo test --verbose
-  - cargo doc --verbose && mv target/doc doc
+  - cargo doc --verbose
   - ./check-line-length.sh
 
 after_success:
-  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh'
+  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && bash upload-docs.sh'
 
 branches:
   only: master
