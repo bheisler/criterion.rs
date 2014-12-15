@@ -286,7 +286,9 @@ impl Criterion {
     ///
     /// Criterion::default().bench("routine", routine);
     /// ```
-    pub fn bench(&mut self, id: &str, f: |&mut Bencher|:'static) -> &mut Criterion {
+    pub fn bench<F>(&mut self, id: &str, f: F) -> &mut Criterion where
+        F: FnMut(&mut Bencher),
+    {
         analysis::function(id, f, self);
 
         self
@@ -304,12 +306,15 @@ impl Criterion {
     ///     b.iter(|| Vec::from_elem(size, 0u8));
     /// }, [1024, 2048, 4096]);
     /// ```
-    pub fn bench_with_inputs<I: Show>(
+    pub fn bench_with_inputs<I, F>(
         &mut self,
         id: &str,
-        f: |&mut Bencher, &I|:'static,
+        f: F,
         inputs: &[I],
-    ) -> &mut Criterion {
+    ) -> &mut Criterion where
+        I: Show,
+        F: FnMut(&mut Bencher, &I),
+    {
         analysis::function_with_inputs(id, f, inputs, self);
 
         self
