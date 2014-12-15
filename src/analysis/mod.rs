@@ -44,18 +44,21 @@ pub fn summarize(id: &str, criterion: &Criterion) {
     }
 }
 
-pub fn function(id: &str, f: |&mut Bencher|:'static, criterion: &Criterion) {
+pub fn function<F>(id: &str, f: F, criterion: &Criterion) where F: FnMut(&mut Bencher) {
     common(id, &mut Function(f), criterion);
 
     println!("");
 }
 
-pub fn function_with_inputs<I: Show>(
+pub fn function_with_inputs<I, F>(
     id: &str,
-    f: |&mut Bencher, &I|:'static,
+    mut f: F,
     inputs: &[I],
     criterion: &Criterion,
-) {
+) where
+    F: FnMut(&mut Bencher, &I),
+    I: Show,
+{
     for input in inputs.iter() {
         let id = format!("{}/{}", id, input);
 
