@@ -119,7 +119,7 @@ fn silverman(x: &[f64]) -> f64 {
 /// mean 0 and variance 1
 #[experimental]
 fn gaussian(x: f64) -> f64 {
-    x.powi(2).exp().mul(&::std::f64::consts::PI_2).sqrt().recip()
+    x.powi(2).exp().mul(::std::f64::consts::PI_2).sqrt().recip()
 }
 
 #[cfg(test)]
