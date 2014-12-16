@@ -30,7 +30,7 @@ impl Simd for f32 {
         assert!(len > 1);
 
         let mean = mean.unwrap_or_else(|| sample.mean());
-        let squared_deviation = |&x: &f32| {
+        let squared_deviation = |&: &x: &f32| {
             let diff = x - mean;
             diff * diff
         };
@@ -82,7 +82,7 @@ impl Simd for f64 {
         assert!(len > 1);
 
         let mean = mean.unwrap_or_else(|| sample.mean());
-        let squared_deviation = |&x: &f64| {
+        let squared_deviation = |&: &x: &f64| {
             let diff = x - mean;
             diff * diff
         };
