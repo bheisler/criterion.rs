@@ -32,7 +32,7 @@ impl Matrix {
     pub fn new<A, I>(mut rows: I) -> Matrix where A: Row, I: Iterator<A> {
         let ncols = Row::ncols(None::<A>);
         let bytes_per_row = ncols * mem::size_of::<f64>();
-        let mut buffer = MemWriter::with_capacity(rows.size_hint().val0() * bytes_per_row);
+        let mut buffer = MemWriter::with_capacity(rows.size_hint().0 * bytes_per_row);
 
         let mut nrows = 0;
         for row in rows {
