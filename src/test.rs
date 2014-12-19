@@ -39,4 +39,4 @@ macro_rules! approx {
     }
 }
 
-approx!(f32, f64)
+approx!(f32, f64);

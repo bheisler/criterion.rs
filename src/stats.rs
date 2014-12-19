@@ -183,8 +183,8 @@ mod test {
                 use test::ApproxEq;
 
                 stat!($ty <- iqr, max, mean, median, median_abs_dev_pct, min, quartiles,
-                        std_dev_pct, sum)
-                stat_none!($ty <- median_abs_dev, std_dev, var)
+                        std_dev_pct, sum);
+                stat_none!($ty <- median_abs_dev, std_dev, var);
 
                 mod fast {
                     extern crate test;
@@ -193,13 +193,13 @@ mod test {
 
                     use test::ApproxEq;
 
-                    fast_stat!($ty <- (median_abs_dev, median), (std_dev, mean), (var, mean))
+                    fast_stat!($ty <- (median_abs_dev, median), (std_dev, mean), (var, mean));
                 }
             }
       )+}
     }
 
-    test!(f32, f64)
+    test!(f32, f64);
 }
 
 #[cfg(test)]
@@ -250,8 +250,8 @@ mod bench {
                 use Stats;
 
                 stat!($ty <- iqr, max, mean, median, median_abs_dev_pct, min, quartiles,
-                        std_dev_pct, sum)
-                stat_none!($ty <- median_abs_dev, std_dev, var)
+                        std_dev_pct, sum);
+                stat_none!($ty <- median_abs_dev, std_dev, var);
 
                 mod fast {
                     use std_test::Bencher;
@@ -259,7 +259,7 @@ mod bench {
                     use test::BENCH_SIZE;
                     use Stats;
 
-                    fast_stat!($ty <- (median_abs_dev, median), (std_dev, mean), (var, mean))
+                    fast_stat!($ty <- (median_abs_dev, median), (std_dev, mean), (var, mean));
                 }
 
                 mod std {
@@ -269,11 +269,11 @@ mod bench {
                     use std_test::stats::Stats;
 
                     stat!($ty <- iqr, max, mean, median, median_abs_dev, median_abs_dev_pct, min,
-                            quartiles, std_dev, std_dev_pct, sum, var)
+                            quartiles, std_dev, std_dev_pct, sum, var);
                 }
             }
        )+}
     }
 
-    bench!(f32, f64)
+    bench!(f32, f64);
 }
