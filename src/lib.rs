@@ -527,7 +527,7 @@ impl Figure {
 
     /// Saves the script required to produce the figure to `path`
     pub fn save(&mut self, path: &Path) -> IoResult<&mut Figure> {
-        try!((try!(File::create(path))).write(self.script()[]))
+        try!((try!(File::create(path))).write(self.script()[]));
         Ok(self)
     }
 }

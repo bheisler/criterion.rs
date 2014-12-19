@@ -19,7 +19,7 @@ macro_rules! impl_data {
     )+}
 }
 
-impl_data!(f32, f64, i16, i32, i64, i8, int, u16, u32, u64, u8, uint)
+impl_data!(f32, f64, i16, i32, i64, i8, int, u16, u32, u64, u8, uint);
 
 #[deriving(Clone)]
 pub struct Matrix {
