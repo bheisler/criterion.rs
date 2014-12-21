@@ -8,7 +8,7 @@ pub struct Resamples<'a, A> where A: 'a {
     stage: Option<Vec<A>>,
 }
 
-impl <'a, A> Resamples<'a, A> where A: Clone {
+impl <'a, A> Resamples<'a, A> where A: 'a + Clone {
     pub fn new(sample: &'a [A]) -> Resamples<'a, A> {
         let mut rng = rand::task_rng();
 
