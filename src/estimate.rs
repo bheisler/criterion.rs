@@ -1,6 +1,6 @@
 use serialize::json;
 use stats::{ConfidenceInterval, Distribution};
-use std::collections::TreeMap;
+use std::collections::BTreeMap;
 use std::io::File;
 use std::fmt::{Formatter, Show, mod};
 
@@ -54,6 +54,6 @@ impl Show for Statistic {
     }
 }
 
-pub type Estimates = TreeMap<Statistic, Estimate>;
+pub type Estimates = BTreeMap<Statistic, Estimate>;
 
-pub type Distributions = TreeMap<Statistic, Distribution<f64>>;
+pub type Distributions = BTreeMap<Statistic, Distribution<f64>>;
