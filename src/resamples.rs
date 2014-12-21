@@ -48,7 +48,7 @@ impl <'a, A> Resamples<'a, A> where A: 'a + Clone {
 #[cfg(test)]
 mod test {
     use quickcheck::TestResult;
-    use std::collections::TreeSet;
+    use std::collections::HashSet;
 
     use super::Resamples;
     use test;
@@ -58,10 +58,10 @@ mod test {
     fn subset(size: uint, nresamples: uint) -> TestResult {
         if let Some(sample) = test::vec::<int>(size) {
             let mut resamples = Resamples::new(sample[]);
-            let sample = sample.iter().map(|&x| x).collect::<TreeSet<_>>();
+            let sample = sample.iter().map(|&x| x).collect::<HashSet<_>>();
 
             TestResult::from_bool(range(0, nresamples).all(|_| {
-                let resample = resamples.next().iter().map(|&x| x).collect::<TreeSet<_>>();
+                let resample = resamples.next().iter().map(|&x| x).collect::<HashSet<_>>();
 
                 resample.is_subset(&sample)
             }))
