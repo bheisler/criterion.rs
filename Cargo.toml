@@ -15,3 +15,9 @@ git = "https://github.com/japaric/simplot.rs"
 
 [dependencies.stats]
 git = "https://github.com/japaric/stats.rs"
+
+[profile.dev]
+debug = false
+
+[profile.test]
+debug = false
