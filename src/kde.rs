@@ -27,7 +27,7 @@ impl<'a> Kde<'a, fn(f64) -> f64> {
     pub fn new(sample: &[f64]) -> Kde<fn(f64) -> f64> {
         Kde {
             bandwidth: silverman(sample),
-            kernel: gaussian,
+            kernel: gaussian as fn(f64) -> f64,
             sample: sample,
         }
     }
