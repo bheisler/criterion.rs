@@ -15,9 +15,3 @@ git = "https://github.com/japaric/complex.rs"
 
 [dev-dependencies.space]
 git = "https://github.com/japaric/space.rs"
-
-[profile.dev]
-debug = false
-
-[profile.test]
-debug = false
