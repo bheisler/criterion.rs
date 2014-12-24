@@ -28,16 +28,16 @@ impl<T, I> IntoIterator<T, I> for I where I: Iterator<T> {
     }
 }
 
-impl<'a, T> IntoIterator<&'a T, slice::Items<'a, T>> for &'a [T] {
-    fn into_iter(self) -> slice::Items<'a, T> {
+impl<'a, T> IntoIterator<&'a T, slice::Iter<'a, T>> for &'a [T] {
+    fn into_iter(self) -> slice::Iter<'a, T> {
         self.iter()
     }
 }
 
 macro_rules! tuple {
     ($($N:expr),+,) => {$(
-        impl<'a, T> IntoIterator<&'a T, slice::Items<'a, T>> for &'a [T, ..$N] {
-            fn into_iter(self) -> slice::Items<'a, T> {
+        impl<'a, T> IntoIterator<&'a T, slice::Iter<'a, T>> for &'a [T, ..$N] {
+            fn into_iter(self) -> slice::Iter<'a, T> {
                 self.iter()
             }
         })+
