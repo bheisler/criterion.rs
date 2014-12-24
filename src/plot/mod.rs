@@ -526,7 +526,7 @@ pub fn summarize(id: &str) {
                         time as f64 / iters as f64
                     }).collect::<Vec<_>>();
 
-                    Some((label, from_str::<uint>(label), estimates, sample))
+                    Some((label, label.parse::<uint>(), estimates, sample))
                 } else {
                     None
                 }

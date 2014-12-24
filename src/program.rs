@@ -59,7 +59,7 @@ impl Routine for Program {
             let msg = self.recv();
             let msg = msg.as_slice().trim();
 
-            from_str(msg).expect("Couldn't parse program output")
+            msg.parse().expect("Couldn't parse program output")
         }).collect()
     }
 
@@ -69,7 +69,7 @@ impl Routine for Program {
 
         loop {
             let elapsed =
-                from_str(self.send(iters).recv().as_slice().trim()).
+                self.send(iters).recv().as_slice().trim().parse().
                     expect("Couldn't parse the program output");
 
             if time::precise_time_ns() - ns_start > how_long_ns {
