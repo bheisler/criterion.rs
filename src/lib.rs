@@ -834,9 +834,9 @@ pub fn version() -> IoResult<(uint, uint, uint)> {
     let stdout = try!(Command::new("gnuplot").arg("--version").output()).output;
     let mut words = str::from_utf8(stdout[]).unwrap().words().skip(1);
     let mut version = words.next().unwrap().split('.');
-    let major = from_str(version.next().unwrap()).unwrap();
-    let minor = from_str(version.next().unwrap()).unwrap();
-    let patchlevel = from_str(words.skip(1).next().unwrap()).unwrap();
+    let major = version.next().unwrap().parse().unwrap();
+    let minor = version.next().unwrap().parse().unwrap();
+    let patchlevel = words.skip(1).next().unwrap().parse().unwrap();
 
     Ok((major, minor, patchlevel))
 }
