@@ -6,7 +6,7 @@
 //!
 //! ![Plot](curve.svg)
 //!
-//! ```
+//! ``` rust
 //! #![feature(globs)]
 //!
 //! extern crate simplot;
@@ -66,7 +66,7 @@
 //!
 //! ![Plot](error_bar.svg)
 //!
-//! ```
+//! ``` rust
 //! #![feature(globs)]
 //!
 //! extern crate simplot;
@@ -145,7 +145,7 @@
 //!
 //! ![Plot](candlesticks.svg)
 //!
-//! ```
+//! ``` rust
 //! # #![feature(globs)]
 //!
 //! extern crate simplot;
@@ -209,7 +209,7 @@
 //!
 //! ![Plot](multiaxis.svg)
 //!
-//! ```
+//! ``` rust
 //! # #![feature(globs)]
 //!
 //! extern crate complex;  // https://github.com/japaric/complex.rs
@@ -285,7 +285,7 @@
 //!
 //! ![Plot](filled_curve.svg)
 //!
-//! ```
+//! ``` rust
 //! # #![feature(globs)]
 //!
 //! extern crate simplot;
