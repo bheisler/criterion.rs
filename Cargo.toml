@@ -8,10 +8,10 @@ authors = ["Jorge Aparicio <japaric@linux.com>"]
 git = "https://github.com/japaric/parallel.rs"
 
 [dev-dependencies.quickcheck]
-git = "https://github.com/BurntSushi/quickcheck"
+git = "https://github.com/japaric/quickcheck"
 
 [dev-dependencies.quickcheck_macros]
-git = "https://github.com/BurntSushi/quickcheck"
+git = "https://github.com/japaric/quickcheck"
 
 [profile.dev]
 debug = false
