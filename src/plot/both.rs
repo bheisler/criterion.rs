@@ -123,7 +123,7 @@ pub fn regression(
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(po.error[])
+        str::from_utf8(po.error[]).ok()
     }))
 }
 
@@ -175,6 +175,6 @@ pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(po.error[])
+        str::from_utf8(po.error[]).ok()
     }))
 }

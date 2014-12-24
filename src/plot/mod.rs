@@ -165,7 +165,7 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(po.error[])
+        str::from_utf8(po.error[]).ok()
     }))
 }
 
@@ -251,7 +251,7 @@ pub fn regression(
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(po.error[])
+        str::from_utf8(po.error[]).ok()
     }))
 }
 
@@ -326,7 +326,7 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
 
     for gnuplot in gnuplots.into_iter() {
         assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-            str::from_utf8(po.error[])
+            str::from_utf8(po.error[]).ok()
         }))
     }
 }
@@ -434,7 +434,7 @@ pub fn rel_distributions(
     // FIXME This sometimes fails!
     for gnuplot in gnuplots.into_iter() {
         assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-            str::from_utf8(po.error[])
+            str::from_utf8(po.error[]).ok()
         }))
     }
 }
@@ -479,7 +479,7 @@ pub fn t_test(t: f64, distribution: &[f64], id: &str) {
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(po.error[])
+        str::from_utf8(po.error[]).ok()
     }))
 }
 
@@ -864,7 +864,7 @@ pub fn summarize(id: &str) {
 
         for gnuplot in gnuplots.into_iter() {
             assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-                str::from_utf8(po.error[])
+                str::from_utf8(po.error[]).ok()
             }))
         }
     }
