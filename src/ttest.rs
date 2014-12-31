@@ -31,7 +31,7 @@ impl<A> TDistribution<A> where A: Simd + Send + Sync {
             let mut distribution = Vec::with_capacity(nresamples);
             unsafe { distribution.set_len(nresamples) }
 
-            parallel::divide(distribution[mut], granularity, |data, _| {
+            parallel::divide(&mut *distribution, granularity, |data, _| {
                 let mut resamples = Resamples::new(joint_sample);
 
                 for ptr in data.iter_mut() {

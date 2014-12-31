@@ -63,7 +63,7 @@ impl<T> Stats<T> for [T] where T: Simd {
         assert!(self.len() > 0 && !self.iter().any(|x| x.is_nan()));
 
         let mut v = self.to_vec();
-        v[mut].sort_by(|a, b| cmp(a, b));
+        v.sort_by(|a, b| cmp(a, b));
         Percentiles(v)
     }
 

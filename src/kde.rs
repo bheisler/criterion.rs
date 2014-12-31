@@ -61,7 +61,7 @@ impl<'a, F> Kde<'a, F> where F: Fn(f64) -> f64 + Sync {
             let mut pdf = Vec::with_capacity(n);
             unsafe { pdf.set_len(n) }
 
-            parallel::divide(pdf[mut], granularity, |data, offset| {
+            parallel::divide(&mut *pdf, granularity, |data, offset| {
                 let mut x = a + offset as f64 * dx;
 
                 for ptr in data.iter_mut() {
