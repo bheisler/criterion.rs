@@ -1,12 +1,11 @@
 //! Regression analysis
 
-use std::iter::AdditiveIterator;
-use std::num::{Float, mod};
+use std::num::{Float, self};
 
 use Sum;
 
 /// A straight line that passes through the origin `y = m * x`
-#[deriving(Clone, Copy)]
+#[derive(Clone, Copy)]
 #[experimental]
 pub struct Slope<A: Float>(pub A);
 
@@ -48,7 +47,7 @@ impl<A> Slope<A> where A: Float {
 }
 
 /// An straight line `y = m * x + b`
-#[deriving(Clone, Copy)]
+#[derive(Clone, Copy)]
 #[experimental]
 pub struct StraightLine<A: Float> {
     /// The y-intercept of the line
@@ -117,7 +116,7 @@ mod test {
 
     use Stats;
     use regression::StraightLine;
-    use test::{ApproxEq, mod};
+    use test::{ApproxEq, self};
 
     #[quickcheck]
     fn normalized(size: uint, scale: f64) -> TestResult {

@@ -1,13 +1,13 @@
 use std::num::Float;
-use std::rand::{Rand, Rng, XorShiftRng, mod};
+use std::rand::{Rand, Rng, XorShiftRng, self};
 
 pub const BENCH_SIZE: uint = 1_000_000;
 
 pub fn vec<T>(size: uint) -> Option<Vec<T>> where T: Rand {
     if size > 1 {
-        let mut rng: XorShiftRng = rand::task_rng().gen();
+        let mut rng: XorShiftRng = rand::thread_rng().gen();
 
-        Some(Vec::from_fn(size, |_| rng.gen()))
+        Some(range(0, size).map(|_| rng.gen()).collect())
     } else {
         None
     }

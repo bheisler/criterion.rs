@@ -7,6 +7,9 @@ authors = ["Jorge Aparicio <japaric@linux.com>"]
 [dependencies.parallel]
 git = "https://github.com/japaric/parallel.rs"
 
+[dependencies.rustc-serialize]
+git = "https://github.com/rust-lang/rustc-serialize"
+
 [dev-dependencies.quickcheck]
 git = "https://github.com/burntsushi/quickcheck"
 

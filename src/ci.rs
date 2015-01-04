@@ -1,5 +1,5 @@
 /// Estimate interval of a population parameter
-#[deriving(Copy, Decodable, Encodable, PartialEq)]
+#[derive(Copy, PartialEq, RustcDecodable, RustcEncodable)]
 #[experimental]
 pub struct ConfidenceInterval<A> {
     /// The confidence level used to find the confidence interval

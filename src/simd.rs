@@ -1,5 +1,5 @@
 use std::iter::AdditiveIterator;
-use std::raw::{Repr, mod};
+use std::raw::{Repr, self};
 use std::simd::{f32x4, f64x2};
 
 use {Simd, Stats};

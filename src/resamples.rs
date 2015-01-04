@@ -1,4 +1,4 @@
-use std::rand::{Rng, XorShiftRng, mod};
+use std::rand::{Rng, XorShiftRng, self};
 use std::rand::distributions::{IndependentSample, Range};
 
 pub struct Resamples<'a, A> where A: 'a {
@@ -10,7 +10,7 @@ pub struct Resamples<'a, A> where A: 'a {
 
 impl <'a, A> Resamples<'a, A> where A: 'a + Clone {
     pub fn new(sample: &'a [A]) -> Resamples<'a, A> {
-        let mut rng = rand::task_rng();
+        let mut rng = rand::thread_rng();
 
         Resamples {
             range: Range::new(0, sample.len()),

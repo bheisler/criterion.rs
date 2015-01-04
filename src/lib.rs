@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(macro_rules, phase, slicing_syntax, unboxed_closures)]
+#![feature(macro_rules, old_orphan_check, phase, slicing_syntax, unboxed_closures)]
 
 extern crate parallel;
 #[cfg(test)]
@@ -7,11 +7,11 @@ extern crate quickcheck;
 #[cfg(test)]
 #[phase(plugin)]
 extern crate quickcheck_macros;
-extern crate serialize;
+extern crate "rustc-serialize" as rustc_serialize;
 #[cfg(test)]
 extern crate "test" as std_test;
 
-use std::num::{Float, FloatMath};
+use std::num::{Float, FloatMath, FromPrimitive};
 
 pub use bootstrap::bootstrap;
 pub use ci::ConfidenceInterval;
@@ -294,7 +294,7 @@ trait Sum<T> {
     fn sum(self) -> T;
 }
 
-impl<T, I> Sum<T> for I where T: Float, I: Iterator<T> {
+impl<T, I> Sum<T> for I where T: Float, I: Iterator<Item=T> {
     fn sum(self) -> T {
         self.fold(Float::zero(), |s, x| x + s)
     }

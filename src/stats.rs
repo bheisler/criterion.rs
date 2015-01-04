@@ -1,4 +1,6 @@
 use std::iter::AdditiveIterator;
+use std::num::FromPrimitive;
+use std::cmp::Ordering::{self, Equal, Greater, Less};
 
 use {Percentiles, Simd, Stats};
 

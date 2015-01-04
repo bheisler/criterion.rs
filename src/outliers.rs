@@ -8,7 +8,7 @@ use {Simd, Stats};
 // TODO Add more outlier classification methods
 
 /// Classification of outliers using Tukey's fences
-#[deriving(Encodable)]
+#[derive(RustcEncodable)]
 #[experimental]
 pub struct Outliers<A> {
     pub count: (uint, uint, uint, uint, uint),
@@ -17,7 +17,7 @@ pub struct Outliers<A> {
 }
 
 /// Labels used to classify outliers
-#[deriving(Copy, Encodable, PartialEq)]
+#[derive(Copy, RustcEncodable, PartialEq)]
 pub enum Label {
     HighMild,
     HighSevere,
@@ -75,7 +75,7 @@ impl<A> Outliers<A> where A: Simd {
         let (lost, lomt, himt, hist) =
             (q1 - k_h * iqr, q1 - k_m * iqr, q3 + k_m * iqr, q3 + k_h * iqr);
 
-        let (mut los, mut lom, mut nao, mut him, mut his) = (0, 0, 0, 0, 0);
+        let (mut los, mut lom, mut nao, mut him, mut his) = (0u, 0u, 0u, 0u, 0u);
         let labels = sample.iter().map(|&x| {
             if x < lost {
                 los += 1;

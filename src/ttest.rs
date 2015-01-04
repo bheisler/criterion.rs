@@ -1,7 +1,7 @@
 //! t-test
 
 use parallel;
-use std::num::{Float, mod};
+use std::num::{Float, self};
 use std::{os, ptr};
 
 use resamples::Resamples;
@@ -93,7 +93,7 @@ impl<A> TDistribution<A> where A: Float {
 }
 
 /// Number of tails to consider for the t-test
-#[deriving(Copy)]
+#[derive(Copy)]
 pub enum Tails {
     One,
     Two,
