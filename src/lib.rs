@@ -92,7 +92,7 @@
 //! let xs_ = linspace::<f64>(-4., 4., 101);
 //!
 //! // Fake some data
-//! let ref mut rng: XorShiftRng = rand::task_rng().gen();
+//! let ref mut rng: XorShiftRng = rand::thread_rng().gen();
 //! let xs = linspace::<f64>(-4., 4., 13).skip(1).take(11);
 //! let ys = xs.map(|x| sinc(x) + 0.05 * rng.gen() - 0.025).collect::<Vec<_>>();
 //! let y_low = ys.iter().map(|&y| y - 0.025 - 0.075 * rng.gen()).collect::<Vec<_>>();
@@ -158,7 +158,7 @@
 //! let xs = range(1u, 11);
 //!
 //! // Fake some data
-//! let mut rng = rand::task_rng();
+//! let mut rng = rand::thread_rng();
 //! let bh = xs.map(|_| 5f64 + 2.5 * rng.gen()).collect::<Vec<_>>();
 //! let bm = xs.map(|_| 2.5f64 + 2.5 * rng.gen()).collect::<Vec<_>>();
 //! let wh = bh.iter().map(|&y| y + (10. - y) * rng.gen()).collect::<Vec<_>>();
@@ -357,14 +357,15 @@
 //! ```
 
 #![deny(missing_docs, warnings)]
-#![feature(macro_rules, phase, slicing_syntax, unboxed_closures)]
+#![feature(associated_types, macro_rules, phase, slicing_syntax, unboxed_closures)]
 
 extern crate zip;
 #[phase(plugin)]
 extern crate zip_macros;
 
+use std::borrow::IntoCow;
 use std::io::{Command, File, IoResult, Process};
-use std::str::{SendStr, mod};
+use std::str::{SendStr, self};
 
 use plot::Plot;
 use traits::{Configure, Set};
@@ -385,7 +386,7 @@ pub mod prelude;
 pub mod traits;
 
 /// Plot container
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct Figure {
     alpha: Option<f64>,
     axes: map::axis::Map<axis::Properties>,
@@ -644,41 +645,41 @@ impl<S> Set<Title<S>> for Figure where S: IntoCow<'static, String, str> {
 }
 
 /// Box width for box-related plots: bars, candlesticks, etc
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct BoxWidth(pub f64);
 
 /// A font name
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Font<S: IntoCow<'static, String, str>>(pub S);
 
 /// The size of a font
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct FontSize(pub f64);
 
 /// The key or legend
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Key;
 
 /// Plot label
 pub struct Label<S: IntoCow<'static, String, str>>(pub S);
 
 /// Width of the lines
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct LineWidth(pub f64);
 
 /// Fill color opacity
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Opacity(pub f64);
 
 /// Output file path
 pub struct Output(pub Path);
 
 /// Size of the points
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct PointSize(pub f64);
 
 /// Axis range
-#[deriving(Copy)]
+#[derive(Copy)]
 pub enum Range {
     /// Autoscale the axis
     Auto,
@@ -687,7 +688,7 @@ pub enum Range {
 }
 
 /// Figure size
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Size(pub uint, pub uint);
 
 /// Labels attached to the tics of an axis
@@ -703,7 +704,7 @@ pub struct Title<S: IntoCow<'static, String, str>>(pub S);
 
 /// A pair of axes that define a coordinate system
 #[allow(missing_docs)]
-#[deriving(Copy)]
+#[derive(Copy)]
 pub enum Axes {
     BottomXLeftY,
     BottomXRightY,
@@ -712,8 +713,7 @@ pub enum Axes {
 }
 
 /// A coordinate axis
-#[deriving(FromPrimitive)]
-#[deriving(Copy)]
+#[derive(Copy, FromPrimitive)]
 pub enum Axis {
     /// X axis on the bottom side of the figure
     BottomX,
@@ -727,7 +727,7 @@ pub enum Axis {
 
 /// Color
 #[allow(missing_docs)]
-#[deriving(Copy)]
+#[derive(Copy)]
 pub enum Color {
     Black,
     Blue,
@@ -746,7 +746,7 @@ pub enum Color {
 }
 
 /// Grid line
-#[deriving(Copy, FromPrimitive)]
+#[derive(Copy, FromPrimitive)]
 pub enum Grid {
     /// Major gridlines
     Major,
@@ -756,7 +756,7 @@ pub enum Grid {
 
 /// Line type
 #[allow(missing_docs)]
-#[deriving(Copy)]
+#[derive(Copy)]
 pub enum LineType {
     Dash,
     Dot,
@@ -769,7 +769,7 @@ pub enum LineType {
 
 /// Point type
 #[allow(missing_docs)]
-#[deriving(Copy)]
+#[derive(Copy)]
 pub enum PointType {
     Circle,
     FilledCircle,
@@ -784,7 +784,7 @@ pub enum PointType {
 
 /// Axis scale
 #[allow(missing_docs)]
-#[deriving(Copy)]
+#[derive(Copy)]
 pub enum Scale {
     Linear,
     Logarithmic,
@@ -792,7 +792,7 @@ pub enum Scale {
 
 /// Output terminal
 #[allow(missing_docs)]
-#[deriving(Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum Terminal {
     Svg,
 }

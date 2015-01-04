@@ -1,6 +1,8 @@
 //! Enum Maps
 
 pub mod axis {
+    use std::num::FromPrimitive;
+
     use Axis;
 
     const LENGTH: uint = 4;
@@ -10,7 +12,9 @@ pub mod axis {
         state: uint,
     }
 
-    impl<'a, T> Iterator<(Axis, &'a T)> for Items<'a, T> {
+    impl<'a, T> Iterator for Items<'a, T> {
+        type Item = (Axis, &'a T);
+
         fn next(&mut self) -> Option<(Axis, &'a T)> {
             while self.state < LENGTH {
                 let key = FromPrimitive::from_uint(self.state).unwrap();
@@ -25,7 +29,7 @@ pub mod axis {
         }
     }
 
-    pub struct Map<T>([Option<T>, ..LENGTH]);
+    pub struct Map<T>([Option<T>; LENGTH]);
 
     impl<T> Map<T> {
         pub fn new() -> Map<T> {
@@ -69,6 +73,8 @@ pub mod axis {
 }
 
 pub mod grid {
+    use std::num::FromPrimitive;
+
     use Grid;
 
     const LENGTH: uint = 2;
@@ -78,7 +84,9 @@ pub mod grid {
         state: uint,
     }
 
-    impl<'a, T> Iterator<(Grid, &'a T)> for Items<'a, T> {
+    impl<'a, T> Iterator for Items<'a, T> {
+        type Item = (Grid, &'a T);
+
         fn next(&mut self) -> Option<(Grid, &'a T)> {
             while self.state < LENGTH {
                 let key = FromPrimitive::from_uint(self.state).unwrap();
@@ -93,7 +101,7 @@ pub mod grid {
         }
     }
 
-    pub struct Map<T>([Option<T>, ..LENGTH]);
+    pub struct Map<T>([Option<T>; LENGTH]);
 
     impl<T> Map<T> {
         pub fn new() -> Map<T> {

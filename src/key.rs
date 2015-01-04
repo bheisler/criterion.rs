@@ -1,12 +1,13 @@
 //! Key (or legend)
 
+use std::borrow::IntoCow;
 use std::str::SendStr;
 
 use traits::Set;
 use {Default, Display, Script, Title};
 
 /// Properties of the key
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct Properties {
     boxed: bool,
     hidden: bool,
@@ -154,14 +155,14 @@ impl<S> Set<Title<S>> for Properties where S: IntoCow<'static, String, str> {
 
 /// Whether the key is surrounded by a box or not
 #[allow(missing_docs)]
-#[deriving(Copy)]
+#[derive(Copy)]
 pub enum Boxed {
     No,
     Yes,
 }
 
 /// Horizontal position of the key
-#[deriving(Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum Horizontal {
     /// Center of the figure
     Center,
@@ -173,14 +174,14 @@ pub enum Horizontal {
 
 /// Text justification of the key
 #[allow(missing_docs)]
-#[deriving(Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum Justification {
     Left,
     Right,
 }
 
 /// Order of the elements of the key
-#[deriving(Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum Order {
     /// Sample first, then text
     SampleText,
@@ -190,7 +191,7 @@ pub enum Order {
 
 /// Position of the key
 // TODO XY position
-#[deriving(Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum Position {
     /// Inside the area surrounded by the four (BottomX, TopX, LeftY and RightY) axes
     Inside(Vertical, Horizontal),
@@ -200,14 +201,14 @@ pub enum Position {
 
 /// How the entries of the key are stacked
 #[allow(missing_docs)]
-#[deriving(Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum Stacked {
     Horizontally,
     Vertically,
 }
 
 /// Vertical position of the key
-#[deriving(Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum Vertical{
     /// Bottom border of the figure
     Bottom,

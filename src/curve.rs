@@ -1,5 +1,6 @@
 //! Simple "curve" like plots
 
+use std::borrow::IntoCow;
 use std::str::SendStr;
 
 use {
@@ -8,7 +9,7 @@ use {
 };
 use data::Matrix;
 use plot::Plot;
-use traits::{Data, IntoIterator, Set, mod};
+use traits::{Data, IntoIterator, Set, self};
 
 /// Properties common to simple "curve" like plots
 pub struct Properties {
@@ -211,7 +212,7 @@ impl<X, Y> Curve<X, Y> {
     }
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 enum Style {
     Dots,
     Impulses,
@@ -236,7 +237,7 @@ impl Display<&'static str> for Style {
 
 impl<A, B, X, Y, XI, YI> traits::Plot<Curve<X, Y>, Properties> for Figure where
     A: Data, B: Data,
-    XI: Iterator<A>, YI: Iterator<B>,
+    XI: Iterator<Item=A>, YI: Iterator<Item=B>,
     X: IntoIterator<A, XI>, Y: IntoIterator<B, YI>,
 {
     fn plot<F>(&mut self, curve: Curve<X, Y>, configure: F) -> &mut Figure where

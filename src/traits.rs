@@ -17,12 +17,12 @@ pub trait Data {
 
 /// Temporary trait until `IntoIterator` lands in stdlib
 // FIXME (AI) `T` and `I` should be an associated output types
-pub trait IntoIterator<T, I> where I: Iterator<T> {
+pub trait IntoIterator<T, I> where I: Iterator<Item=T> {
     /// Converts `Self` into an iterator
     fn into_iter(self) -> I;
 }
 
-impl<T, I> IntoIterator<T, I> for I where I: Iterator<T> {
+impl<T, I> IntoIterator<T, I> for I where I: Iterator<Item=T> {
     fn into_iter(self) -> I {
         self
     }
@@ -36,7 +36,7 @@ impl<'a, T> IntoIterator<&'a T, slice::Iter<'a, T>> for &'a [T] {
 
 macro_rules! tuple {
     ($($N:expr),+,) => {$(
-        impl<'a, T> IntoIterator<&'a T, slice::Iter<'a, T>> for &'a [T, ..$N] {
+        impl<'a, T> IntoIterator<&'a T, slice::Iter<'a, T>> for &'a [T; $N] {
             fn into_iter(self) -> slice::Iter<'a, T> {
                 self.iter()
             }

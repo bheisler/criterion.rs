@@ -1,5 +1,6 @@
 //! Coordinate axis
 
+use std::borrow::IntoCow;
 use std::str::SendStr;
 
 use map;
@@ -7,7 +8,7 @@ use {Axis, Default, Display, Grid, Label, Range, Scale, Script, TicLabels, grid}
 use traits::{Configure, Data, IntoIterator, Set};
 
 /// Properties of the coordinate axes
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct Properties {
     grids: map::grid::Map<grid::Properties>,
     hidden: bool,
@@ -107,7 +108,7 @@ impl Set<Scale> for Properties {
 
 impl<D, S, PI, LI, P, L> Set<TicLabels<P, L>> for Properties where
     D: Data, S: Str,
-    PI: Iterator<D>, LI: Iterator<S>,
+    PI: Iterator<Item=D>, LI: Iterator<Item=S>,
     P: IntoIterator<D, PI>, L: IntoIterator<S, LI>,
 {
     /// Attaches labels to the tics of an axis

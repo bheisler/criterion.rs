@@ -1,3 +1,4 @@
+use std::borrow::IntoCow;
 use std::str::SendStr;
 
 use key::{Horizontal, Justification, Order, Stacked, Vertical};

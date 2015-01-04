@@ -3,7 +3,7 @@
 use {Axis, Default, Display, Grid, Script};
 
 /// Gridline properties
-#[deriving(Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Properties {
     hidden: bool
 }

@@ -1,7 +1,7 @@
 use data::Matrix;
 use Script;
 
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct Plot {
     data: Matrix,
     script: String,

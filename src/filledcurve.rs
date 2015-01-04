@@ -1,10 +1,11 @@
 //! Filled curve plots
 
+use std::borrow::IntoCow;
 use std::str::SendStr;
 
 use data::Matrix;
 use plot::Plot;
-use traits::{Data, IntoIterator, Set, mod};
+use traits::{Data, IntoIterator, Set, self};
 use {Axes, Color, Default, Display, Figure, Label, Opacity, Script};
 
 /// Properties common to filled curve plots
@@ -116,7 +117,7 @@ pub struct FilledCurve<X, Y1, Y2> {
 impl<A, B, C, XI, Y1I, Y2I, X, Y1, Y2> traits::Plot<FilledCurve<X, Y1, Y2>, Properties>
 for Figure where
     A: Data, B: Data, C: Data,
-    XI: Iterator<A>, Y1I: Iterator<B>, Y2I: Iterator<C>,
+    XI: Iterator<Item=A>, Y1I: Iterator<Item=B>, Y2I: Iterator<Item=C>,
     X: IntoIterator<A, XI>, Y1: IntoIterator<B, Y1I>, Y2: IntoIterator<C, Y2I>,
 {
     fn plot<F>(&mut self, fc: FilledCurve<X, Y1, Y2>, configure: F) -> &mut Figure where

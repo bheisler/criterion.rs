@@ -1,10 +1,11 @@
 //! "Candlestick" plots
 
+use std::borrow::IntoCow;
 use std::str::SendStr;
 
 use data::Matrix;
 use plot::Plot;
-use traits::{Data, IntoIterator, Set, mod};
+use traits::{Data, IntoIterator, Set, self};
 use {Color, Default, Display, Figure, Label, LineType, LineWidth, Script};
 
 /// Properties common to candlestick plots
@@ -111,7 +112,11 @@ pub struct Candlesticks<X, WM, BM, BH, WH> {
 impl<A, B, C, D, E, X, WM, BM, BH, WH, XI, WMI, BMI, BHI, WHI>
 traits::Plot<Candlesticks<X, WM, BM, BH, WH>, Properties> for Figure where
     A: Data, B: Data, C: Data, D: Data, E: Data,
-    XI: Iterator<A>, WMI: Iterator<B>, BMI: Iterator<C>, BHI: Iterator<D>, WHI: Iterator<E>,
+    XI: Iterator<Item=A>,
+    WMI: Iterator<Item=B>,
+    BMI: Iterator<Item=C>,
+    BHI: Iterator<Item=D>,
+    WHI: Iterator<Item=E>,
     X: IntoIterator<A, XI>, WM: IntoIterator<B, WMI>, BM: IntoIterator<C, BMI>,
     BH: IntoIterator<D, BHI>, WH: IntoIterator<E, WHI>,
 {

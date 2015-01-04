@@ -1,5 +1,6 @@
 //! Error bar plots
 
+use std::borrow::IntoCow;
 use std::str::SendStr;
 
 use {
@@ -8,7 +9,7 @@ use {
 };
 use data::Matrix;
 use plot::Plot;
-use traits::{Data, IntoIterator, Set, mod};
+use traits::{Data, IntoIterator, Set, self};
 
 /// Properties common to error bar plots
 pub struct Properties {
@@ -136,7 +137,7 @@ impl Set<PointType> for Properties {
     }
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 enum Style {
     XErrorBars,
     XErrorLines,
@@ -217,7 +218,7 @@ impl<X, Y, L, H> ErrorBar<X, Y, L, H> {
 impl<A, B, C, D, XI, YI, LI, HI, X, Y, L, H> traits::Plot<ErrorBar<X, Y, L, H>, Properties>
 for Figure where
     A: Data, B: Data, C: Data, D: Data,
-    XI: Iterator<A>, YI: Iterator<B>, LI: Iterator<C>, HI: Iterator<D>,
+    XI: Iterator<Item=A>, YI: Iterator<Item=B>, LI: Iterator<Item=C>, HI: Iterator<Item=D>,
     X: IntoIterator<A, XI>, Y: IntoIterator<B, YI>, L: IntoIterator<C, LI>, H: IntoIterator<D, HI>,
 {
     fn plot<F>(&mut self, e: ErrorBar<X, Y, L, H>, configure: F) -> &mut Figure where
