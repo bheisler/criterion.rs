@@ -1,4 +1,4 @@
-use std::iter::{AdditiveIterator, mod};
+use std::iter::{AdditiveIterator, self};
 use std::num::Float;
 use time;
 
@@ -6,7 +6,7 @@ use format;
 use {Bencher, Criterion};
 
 pub trait Routine {
-    fn bench<I: Iterator<u64>>(&mut self, iters: I) -> Vec<u64>;
+    fn bench<I: Iterator<Item=u64>>(&mut self, iters: I) -> Vec<u64>;
     fn warm_up(&mut self, how_long_ns: u64) -> (u64, u64);
 
     fn sample(&mut self, criterion: &Criterion) -> Vec<(u64, u64)> {
@@ -37,7 +37,7 @@ pub trait Routine {
 pub struct Function<F> where F: FnMut(&mut Bencher)(pub F) ;
 
 impl<F> Routine for Function<F> where F: FnMut(&mut Bencher) {
-    fn bench<I: Iterator<u64>>(&mut self, iters: I) -> Vec<u64> {
+    fn bench<I: Iterator<Item=u64>>(&mut self, iters: I) -> Vec<u64> {
         let Function(ref mut f) = *self;
 
         let mut b = Bencher { iters: 0, ns_start: 0, ns_end: 0 };

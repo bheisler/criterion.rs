@@ -1,10 +1,10 @@
-use serialize::json;
+use rustc_serialize::json;
 use stats::{ConfidenceInterval, Distribution};
 use std::collections::BTreeMap;
 use std::io::File;
-use std::fmt::{Formatter, Show, mod};
+use std::fmt::{Formatter, Show, self};
 
-#[deriving(Copy, Decodable, Encodable, PartialEq)]
+#[derive(Copy, RustcDecodable, RustcEncodable, PartialEq)]
 pub struct Estimate {
     pub confidence_interval: ConfidenceInterval<f64>,
     pub point_estimate: f64,
@@ -33,7 +33,7 @@ impl Estimate {
     }
 }
 
-#[deriving(Copy, Decodable, Eq, Encodable, Ord, PartialEq, PartialOrd)]
+#[derive(Copy, RustcDecodable, Eq, RustcEncodable, Ord, PartialEq, PartialOrd)]
 pub enum Statistic {
     Mean,
     Median,

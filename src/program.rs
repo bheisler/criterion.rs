@@ -48,7 +48,7 @@ impl Program {
 }
 
 impl Routine for Program {
-    fn bench<I: Iterator<u64>>(&mut self, mut iters: I) -> Vec<u64> {
+    fn bench<I: Iterator<Item=u64>>(&mut self, mut iters: I) -> Vec<u64> {
         let mut n = 0u;
         for iters in iters {
             self.send(iters);

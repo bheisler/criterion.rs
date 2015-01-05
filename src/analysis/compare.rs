@@ -1,5 +1,5 @@
 use stats::ttest::{TDistribution, Tails};
-use stats::{Stats, mod};
+use stats::{Stats, self};
 use time;
 
 use Criterion;

@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(globs, macro_rules, phase, slicing_syntax, unboxed_closures)]
+#![feature(globs, macro_rules, old_orphan_check, phase, slicing_syntax, unboxed_closures)]
 
 //! A statistics-driven micro-benchmarking library written in Rust.
 //!
@@ -12,7 +12,7 @@
 
 #[phase(plugin, link)]
 extern crate log;
-extern crate serialize;
+extern crate "rustc-serialize" as rustc_serialize;
 extern crate simplot;
 extern crate stats;
 extern crate test;
@@ -33,7 +33,7 @@ mod report;
 mod routine;
 
 /// Helper struct to build functions that follow the setup - bench - teardown pattern
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Bencher {
     iters: u64,
     ns_end: u64,

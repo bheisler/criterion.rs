@@ -10,6 +10,9 @@ time = "*"
 [dependencies.criterion_macros]
 path = "macros"
 
+[dependencies.rustc-serialize]
+git = "https://github.com/rust-lang/rustc-serialize"
+
 [dependencies.simplot]
 git = "https://github.com/japaric/simplot.rs"
 
