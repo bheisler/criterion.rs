@@ -49,10 +49,12 @@ impl Properties {
     }
 }
 
-impl Configure<Grid, grid::Properties> for Properties {
+impl Configure<Grid> for Properties {
+    type Properties = grid::Properties;
+
     /// Configures the gridlines
     fn configure<F>(&mut self, grid: Grid, configure: F) -> &mut Properties where
-        F: for<'a> FnOnce(&'a mut grid::Properties) -> &'a mut grid::Properties,
+        F: FnOnce(&mut grid::Properties) -> &mut grid::Properties,
     {
         if self.grids.contains_key(grid) {
             configure(self.grids.get_mut(grid).unwrap());
@@ -107,9 +109,11 @@ impl Set<Scale> for Properties {
 }
 
 impl<D, S, PI, LI, P, L> Set<TicLabels<P, L>> for Properties where
-    D: Data, S: Str,
+    D: Data,
+    S: Str,
     PI: Iterator<Item=D>, LI: Iterator<Item=S>,
-    P: IntoIterator<D, PI>, L: IntoIterator<S, LI>,
+    P: IntoIterator<Iter=PI>,
+    L: IntoIterator<Iter=LI>,
 {
     /// Attaches labels to the tics of an axis
     fn set(&mut self, tics: TicLabels<P, L>) -> &mut Properties {

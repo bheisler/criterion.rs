@@ -235,13 +235,18 @@ impl Display<&'static str> for Style {
     }
 }
 
-impl<A, B, X, Y, XI, YI> traits::Plot<Curve<X, Y>, Properties> for Figure where
-    A: Data, B: Data,
-    XI: Iterator<Item=A>, YI: Iterator<Item=B>,
-    X: IntoIterator<A, XI>, Y: IntoIterator<B, YI>,
+impl<A, B, X, Y, XI, YI> traits::Plot<Curve<X, Y>> for Figure where
+    A: Data,
+    B: Data,
+    XI: Iterator<Item=A>,
+    YI: Iterator<Item=B>,
+    X: IntoIterator<Iter=XI>,
+    Y: IntoIterator<Iter=YI>,
 {
+    type Properties = Properties;
+
     fn plot<F>(&mut self, curve: Curve<X, Y>, configure: F) -> &mut Figure where
-        F: for<'a> FnOnce(&'a mut Properties) -> &'a mut Properties
+        F: FnOnce(&mut Properties) -> &mut Properties
     {
         let style = curve.style();
         let (x, y) = match curve {

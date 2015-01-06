@@ -110,22 +110,31 @@ pub struct Candlesticks<X, WM, BM, BH, WH> {
 }
 
 impl<A, B, C, D, E, X, WM, BM, BH, WH, XI, WMI, BMI, BHI, WHI>
-traits::Plot<Candlesticks<X, WM, BM, BH, WH>, Properties> for Figure where
-    A: Data, B: Data, C: Data, D: Data, E: Data,
+traits::Plot<Candlesticks<X, WM, BM, BH, WH>> for Figure where
+    A: Data,
+    B: Data,
+    C: Data,
+    D: Data,
+    E: Data,
     XI: Iterator<Item=A>,
     WMI: Iterator<Item=B>,
     BMI: Iterator<Item=C>,
     BHI: Iterator<Item=D>,
     WHI: Iterator<Item=E>,
-    X: IntoIterator<A, XI>, WM: IntoIterator<B, WMI>, BM: IntoIterator<C, BMI>,
-    BH: IntoIterator<D, BHI>, WH: IntoIterator<E, WHI>,
+    X: IntoIterator<Iter=XI>,
+    WM: IntoIterator<Iter=WMI>,
+    BM: IntoIterator<Iter=BMI>,
+    BH: IntoIterator<Iter=BHI>,
+    WH: IntoIterator<Iter=WHI>,
 {
+    type Properties = Properties;
+
     fn plot<F>(
         &mut self,
         candlesticks: Candlesticks<X, WM, BM, BH, WH>,
         configure: F,
     ) -> &mut Figure where
-        F: for<'a> FnOnce(&'a mut Properties) -> &'a mut Properties
+        F: FnOnce(&mut Properties) -> &mut Properties
     {
         let Candlesticks { x, whisker_min, box_min, box_high, whisker_high } = candlesticks;
 
