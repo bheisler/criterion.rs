@@ -114,14 +114,21 @@ pub struct FilledCurve<X, Y1, Y2> {
     pub y2: Y2,
 }
 
-impl<A, B, C, XI, Y1I, Y2I, X, Y1, Y2> traits::Plot<FilledCurve<X, Y1, Y2>, Properties>
-for Figure where
-    A: Data, B: Data, C: Data,
-    XI: Iterator<Item=A>, Y1I: Iterator<Item=B>, Y2I: Iterator<Item=C>,
-    X: IntoIterator<A, XI>, Y1: IntoIterator<B, Y1I>, Y2: IntoIterator<C, Y2I>,
+impl<A, B, C, XI, Y1I, Y2I, X, Y1, Y2> traits::Plot<FilledCurve<X, Y1, Y2>> for Figure where
+    A: Data,
+    B: Data,
+    C: Data,
+    XI: Iterator<Item=A>,
+    Y1I: Iterator<Item=B>,
+    Y2I: Iterator<Item=C>,
+    X: IntoIterator<Iter=XI>,
+    Y1: IntoIterator<Iter=Y1I>,
+    Y2: IntoIterator<Iter=Y2I>,
 {
+    type Properties = Properties;
+
     fn plot<F>(&mut self, fc: FilledCurve<X, Y1, Y2>, configure: F) -> &mut Figure where
-        F: for<'a> FnOnce(&'a mut Properties) -> &'a mut Properties,
+        F: FnOnce(&mut Properties) -> &mut Properties,
     {
         let FilledCurve { x, y1, y2 } = fc;
         let data = Matrix::new(zip!(x, y1, y2));

@@ -2,11 +2,13 @@
 
 use std::slice;
 
-// FIXME (AI) `P` should be an associated output type
 /// Overloaded `configure` method
-pub trait Configure<T, P> {
+pub trait Configure<This> {
+    type Properties;
+
     /// Configure some set of properties
-    fn configure<F: for<'a> FnOnce(&'a mut P) -> &'a mut P>(&mut self, T, F) -> &mut Self;
+    fn configure<F>(&mut self, This, F) -> &mut Self where
+        F: FnOnce(&mut Self::Properties) -> &mut Self::Properties;
 }
 
 /// Types that can be plotted
@@ -16,19 +18,24 @@ pub trait Data {
 }
 
 /// Temporary trait until `IntoIterator` lands in stdlib
-// FIXME (AI) `T` and `I` should be an associated output types
-pub trait IntoIterator<T, I> where I: Iterator<Item=T> {
+pub trait IntoIterator {
+    type Iter: Iterator;
+
     /// Converts `Self` into an iterator
-    fn into_iter(self) -> I;
+    fn into_iter(self) -> Self::Iter;
 }
 
-impl<T, I> IntoIterator<T, I> for I where I: Iterator<Item=T> {
+impl<I> IntoIterator for I where I: Iterator {
+    type Iter = I;
+
     fn into_iter(self) -> I {
         self
     }
 }
 
-impl<'a, T> IntoIterator<&'a T, slice::Iter<'a, T>> for &'a [T] {
+impl<'a, T> IntoIterator for &'a [T] {
+    type Iter = slice::Iter<'a, T>;
+
     fn into_iter(self) -> slice::Iter<'a, T> {
         self.iter()
     }
@@ -36,7 +43,9 @@ impl<'a, T> IntoIterator<&'a T, slice::Iter<'a, T>> for &'a [T] {
 
 macro_rules! tuple {
     ($($N:expr),+,) => {$(
-        impl<'a, T> IntoIterator<&'a T, slice::Iter<'a, T>> for &'a [T; $N] {
+        impl<'a, T> IntoIterator for &'a [T; $N] {
+            type Iter = slice::Iter<'a, T>;
+
             fn into_iter(self) -> slice::Iter<'a, T> {
                 self.iter()
             }
@@ -49,12 +58,13 @@ tuple!{
     27, 28, 29, 30, 31, 32,
 }
 
-// FIXME (AI) `P` should be an associated output type
 /// Overloaded `plot` method
-pub trait Plot<D, P> {
+pub trait Plot<This> {
+    type Properties;
+
     /// Plots some `data` with some `configuration`
-    fn plot<F>(&mut self, data: D, configure: F) -> &mut Self where
-        F: for<'a> FnOnce(&'a mut P) -> &'a mut P;
+    fn plot<F>(&mut self, This, F) -> &mut Self where
+        F: FnOnce(&mut Self::Properties) -> &mut Self::Properties;
 }
 
 /// Overloaded `set` method

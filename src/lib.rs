@@ -534,10 +534,12 @@ impl Figure {
     }
 }
 
-impl Configure<Axis, axis::Properties> for Figure {
+impl Configure<Axis> for Figure {
+    type Properties = axis::Properties;
+
     /// Configures an axis
     fn configure<F>(&mut self, axis: Axis, configure: F) -> &mut Figure where
-        F: for<'a> FnOnce(&'a mut axis::Properties) -> &'a mut axis::Properties,
+        F: FnOnce(&mut axis::Properties) -> &mut axis::Properties,
     {
         if self.axes.contains_key(axis) {
             configure(self.axes.get_mut(axis).unwrap());
@@ -550,10 +552,12 @@ impl Configure<Axis, axis::Properties> for Figure {
     }
 }
 
-impl Configure<Key, key::Properties> for Figure {
+impl Configure<Key> for Figure {
+    type Properties = key::Properties;
+
     /// Configures the key (legend)
     fn configure<F>(&mut self, _: Key, configure: F) -> &mut Figure where
-        F: for<'a> FnOnce(&'a mut key::Properties) -> &'a mut key::Properties,
+        F: FnOnce(&mut key::Properties) -> &mut key::Properties,
     {
         if self.key.is_some() {
             configure(self.key.as_mut().unwrap());

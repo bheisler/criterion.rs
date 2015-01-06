@@ -215,14 +215,25 @@ impl<X, Y, L, H> ErrorBar<X, Y, L, H> {
     }
 }
 
-impl<A, B, C, D, XI, YI, LI, HI, X, Y, L, H> traits::Plot<ErrorBar<X, Y, L, H>, Properties>
+impl<A, B, C, D, XI, YI, LI, HI, X, Y, L, H> traits::Plot<ErrorBar<X, Y, L, H>>
 for Figure where
-    A: Data, B: Data, C: Data, D: Data,
-    XI: Iterator<Item=A>, YI: Iterator<Item=B>, LI: Iterator<Item=C>, HI: Iterator<Item=D>,
-    X: IntoIterator<A, XI>, Y: IntoIterator<B, YI>, L: IntoIterator<C, LI>, H: IntoIterator<D, HI>,
+    A: Data,
+    B: Data,
+    C: Data,
+    D: Data,
+    XI: Iterator<Item=A>,
+    YI: Iterator<Item=B>,
+    LI: Iterator<Item=C>,
+    HI: Iterator<Item=D>,
+    X: IntoIterator<Iter=XI>,
+    Y: IntoIterator<Iter=YI>,
+    L: IntoIterator<Iter=LI>,
+    H: IntoIterator<Iter=HI>,
 {
+    type Properties = Properties;
+
     fn plot<F>(&mut self, e: ErrorBar<X, Y, L, H>, configure: F) -> &mut Figure where
-        F: for<'a> FnOnce(&'a mut Properties) -> &'a mut Properties,
+        F: FnOnce(&mut Properties) -> &mut Properties,
     {
         let style = e.style();
         let (x, y, l, h) = match e {
