@@ -1,7 +1,7 @@
 //! Key (or legend)
 
 use std::borrow::IntoCow;
-use std::str::SendStr;
+use std::string::CowString;
 
 use traits::Set;
 use {Default, Display, Script, Title};
@@ -15,7 +15,7 @@ pub struct Properties {
     order: Option<Order>,
     position: Option<Position>,
     stacked: Option<Stacked>,
-    title: Option<SendStr>,
+    title: Option<CowString<'static>>,
 }
 
 impl Default for Properties {

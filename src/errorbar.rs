@@ -1,7 +1,7 @@
 //! Error bar plots
 
 use std::borrow::IntoCow;
-use std::str::SendStr;
+use std::string::CowString;
 
 use {
     Color, Display, ErrorBarDefault, Figure, Label, LineType, LineWidth, PointSize, PointType,
@@ -14,7 +14,7 @@ use traits::{Data, IntoIterator, Set, self};
 /// Properties common to error bar plots
 pub struct Properties {
     color: Option<Color>,
-    label: Option<SendStr>,
+    label: Option<CowString<'static>>,
     line_type: LineType,
     linewidth: Option<f64>,
     point_size: Option<f64>,

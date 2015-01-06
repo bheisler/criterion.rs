@@ -1,5 +1,5 @@
 use std::borrow::IntoCow;
-use std::str::SendStr;
+use std::string::CowString;
 
 use key::{Horizontal, Justification, Order, Stacked, Vertical};
 use {Axis, Axes, Color, Display, Grid, LineType, PointType, Terminal};
@@ -26,8 +26,8 @@ impl Display<&'static str> for Axes {
     }
 }
 
-impl Display<SendStr> for Color {
-    fn display(&self) -> SendStr {
+impl Display<CowString<'static>> for Color {
+    fn display(&self) -> CowString<'static> {
         match *self {
             Color::Black => "black".into_cow(),
             Color::Blue => "blue".into_cow(),

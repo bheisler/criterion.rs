@@ -1,7 +1,7 @@
 //! "Candlestick" plots
 
 use std::borrow::IntoCow;
-use std::str::SendStr;
+use std::string::CowString;
 
 use data::Matrix;
 use plot::Plot;
@@ -11,7 +11,7 @@ use {Color, Default, Display, Figure, Label, LineType, LineWidth, Script};
 /// Properties common to candlestick plots
 pub struct Properties {
     color: Option<Color>,
-    label: Option<SendStr>,
+    label: Option<CowString<'static>>,
     line_type: LineType,
     linewidth: Option<f64>,
 }

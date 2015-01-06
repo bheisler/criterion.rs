@@ -365,7 +365,8 @@ extern crate zip_macros;
 
 use std::borrow::IntoCow;
 use std::io::{Command, File, IoResult, Process};
-use std::str::{SendStr, self};
+use std::str;
+use std::string::CowString;
 
 use plot::Plot;
 use traits::{Configure, Set};
@@ -391,7 +392,7 @@ pub struct Figure {
     alpha: Option<f64>,
     axes: map::axis::Map<axis::Properties>,
     box_width: Option<f64>,
-    font: Option<SendStr>,
+    font: Option<CowString<'static>>,
     font_size: Option<f64>,
     key: Option<key::Properties>,
     output: Path,
@@ -399,7 +400,7 @@ pub struct Figure {
     size: Option<(uint, uint)>,
     terminal: Terminal,
     tics: map::axis::Map<String>,
-    title: Option<SendStr>,
+    title: Option<CowString<'static>>,
 }
 
 impl Figure {

@@ -1,7 +1,7 @@
 //! Coordinate axis
 
 use std::borrow::IntoCow;
-use std::str::SendStr;
+use std::string::CowString;
 
 use map;
 use {Axis, Default, Display, Grid, Label, Range, Scale, Script, TicLabels, grid};
@@ -12,7 +12,7 @@ use traits::{Configure, Data, IntoIterator, Set};
 pub struct Properties {
     grids: map::grid::Map<grid::Properties>,
     hidden: bool,
-    label: Option<SendStr>,
+    label: Option<CowString<'static>>,
     logarithmic: bool,
     range: Option<(f64, f64)>,
     tics: Option<String>,
