@@ -1,10 +1,9 @@
 use rustc_serialize::json::PrettyEncoder;
 use rustc_serialize::{Decodable, Encodable, json};
 use std::io::{File, USER_RWX, fs};
-use std::{fmt, mem};
 
 // TODO Proper error handling
-pub fn load<A: Decodable<json::Decoder, json::DecoderError>>(path: &Path) -> A {
+pub fn load<A: Decodable>(path: &Path) -> A {
     match File::open(path) {
         Err(e) => panic!("{}", e),
         Ok(mut f) => match f.read_to_string() {
@@ -43,12 +42,12 @@ pub fn rmrf(path: &Path) {
 }
 
 // TODO Proper error handling
-pub fn save<'a, D: Encodable<json::PrettyEncoder<'a>, fmt::Error>>(data: &D, path: &Path) {
+pub fn save<D: Encodable>(data: &D, path: &Path) {
     let mut buf = Vec::new();
     {
         let ref mut encoder = PrettyEncoder::new(&mut buf);
         // FIXME (rust-lang/rust#14302) Remove transmute
-        data.encode(unsafe { mem::transmute(encoder) }).unwrap();
+        data.encode(encoder).unwrap();
     }
     File::create(path).write(&*buf).ok().expect("Couldn't save data")
 }
