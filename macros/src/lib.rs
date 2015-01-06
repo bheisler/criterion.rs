@@ -4,8 +4,8 @@ extern crate rustc;
 extern crate syntax;
 
 use rustc::plugin::Registry;
-use syntax::ast::{DUMMY_NODE_ID, DeclItem, Item, ItemFn, MetaItem, StmtDecl, mod};
-use syntax::codemap::{Span, mod};
+use syntax::ast::{DUMMY_NODE_ID, DeclItem, Item, ItemFn, MetaItem, StmtDecl, self};
+use syntax::codemap::{Span, self};
 use syntax::ext::base::{ExtCtxt, Modifier};
 use syntax::ext::build::AstBuilder;
 use syntax::parse::token;
