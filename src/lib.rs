@@ -7,15 +7,13 @@
 //! ![Plot](curve.svg)
 //!
 //! ```
-//! #![feature(globs)]
-//!
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
 //! # use std::io::{USER_RWX, fs};
 //! use simplot::prelude::*;
 //! use space::linspace;
-//! use std::num::FloatMath;
+//! use std::num::Float;
 //!
 //! # fn main() {
 //! let xs = linspace::<f64>(-10., 10., 51);
@@ -67,8 +65,6 @@
 //! ![Plot](error_bar.svg)
 //!
 //! ```
-//! #![feature(globs)]
-//!
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
@@ -76,7 +72,7 @@
 //! use simplot::prelude::*;
 //! use space::linspace;
 //! use std::f64::consts::PI;
-//! use std::num::FloatMath;
+//! use std::num::Float;
 //! use std::rand::{Rng, XorShiftRng, mod};
 //!
 //! fn sinc(mut x: f64) -> f64 {
@@ -146,8 +142,6 @@
 //! ![Plot](candlesticks.svg)
 //!
 //! ```
-//! # #![feature(globs)]
-//!
 //! extern crate simplot;
 //!
 //! # use std::io::{USER_RWX, fs};
@@ -209,9 +203,7 @@
 //!
 //! ![Plot](multiaxis.svg)
 //!
-//! ```
-//! # #![feature(globs)]
-//!
+//! ``` ignore
 //! extern crate complex;  // https://github.com/japaric/complex.rs
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
@@ -286,8 +278,6 @@
 //! ![Plot](filled_curve.svg)
 //!
 //! ```
-//! # #![feature(globs)]
-//!
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
@@ -357,11 +347,10 @@
 //! ```
 
 #![deny(missing_docs, warnings)]
-#![feature(associated_types, macro_rules, phase, slicing_syntax, unboxed_closures)]
+#![feature(slicing_syntax)]
 
+#[macro_use]
 extern crate zip;
-#[phase(plugin)]
-extern crate zip_macros;
 
 use std::borrow::IntoCow;
 use std::io::{Command, File, IoResult, Process};
