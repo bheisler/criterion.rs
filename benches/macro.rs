@@ -1,7 +1,7 @@
-#![feature(phase)]
+#![feature(plugin)]
 
 extern crate criterion;
-#[phase(plugin)]
+#[plugin]
 extern crate criterion_macros;
 
 use criterion::Bencher;

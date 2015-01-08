@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(globs, macro_rules, phase, slicing_syntax)]
+#![feature(plugin, slicing_syntax)]
 
 //! A statistics-driven micro-benchmarking library written in Rust.
 //!
@@ -10,7 +10,7 @@
 //! - Easy migration from `std::test::Bencher` to `criterion::Bencher`
 //! - Plots!
 
-#[phase(plugin, link)]
+#[macro_use]
 extern crate log;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate simplot;

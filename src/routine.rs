@@ -34,7 +34,7 @@ pub trait Routine {
     }
 }
 
-pub struct Function<F> where F: FnMut(&mut Bencher)(pub F) ;
+pub struct Function<F>(pub F) where F: FnMut(&mut Bencher);
 
 impl<F> Routine for Function<F> where F: FnMut(&mut Bencher) {
     fn bench<I: Iterator<Item=u64>>(&mut self, iters: I) -> Vec<u64> {
