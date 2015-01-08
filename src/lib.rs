@@ -1,17 +1,17 @@
 #![deny(warnings)]
-#![feature(macro_rules, old_orphan_check, phase, slicing_syntax, unboxed_closures)]
+#![feature(plugin, slicing_syntax, unboxed_closures)]
 
 extern crate parallel;
 #[cfg(test)]
 extern crate quickcheck;
 #[cfg(test)]
-#[phase(plugin)]
+#[plugin]
 extern crate quickcheck_macros;
 extern crate "rustc-serialize" as rustc_serialize;
 #[cfg(test)]
 extern crate "test" as std_test;
 
-use std::num::{Float, FloatMath, FromPrimitive};
+use std::num::{Float, FromPrimitive};
 
 pub use bootstrap::bootstrap;
 pub use ci::ConfidenceInterval;
@@ -30,7 +30,7 @@ mod stats;
 mod test;
 
 /// [T] extension trait that provides the `bootstrap` method
-pub trait Bootstrap for Sized? {
+pub trait Bootstrap {
     /// Returns the bootstrap distribution of the parameter estimated by the 1-sample statistic
     ///
     /// * Bootstrap method: Case resampling
@@ -119,7 +119,7 @@ impl<A> Distribution<A> where A: Simd {
 
 /// SIMD accelerated statistics
 // XXX T should be an associated type (?)
-pub trait Stats<T> for Sized? where T: Simd {
+pub trait Stats<T> where T: Simd {
     /// Returns the biggest element in the sample
     ///
     /// - Time: `O(length)`
@@ -233,7 +233,7 @@ pub trait Stats<T> for Sized? where T: Simd {
 /// Types than can be SIMD accelerated
 ///
 /// *Note* You shouldn't use these methods, instead use the methods under the `Stats` trait
-pub trait Simd: FloatMath + FromPrimitive {
+pub trait Simd: Float + FromPrimitive {
     fn sum(sample: &[Self]) -> Self;
     fn var(sample: &[Self], mean: Option<Self>) -> Self;
 }

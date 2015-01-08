@@ -86,7 +86,7 @@ impl<'a, F> Kde<'a, F> where F: Fn(f64) -> f64 + Sync {
     }
 }
 
-impl<'a, F> Fn<(f64,), f64> for Kde<'a, F> where F: Fn(f64) -> f64  + Sync {
+impl<'a, F> Fn(f64) -> f64 for Kde<'a, F> where F: Fn(f64) -> f64  + Sync {
     /// Estimates the probability *density* that the random variable takes the value `x`
     // XXX Can this be SIMD accelerated?
     #[experimental]
