@@ -14,7 +14,7 @@ impl<A> TDistribution<A> where A: Simd + Send + Sync {
     /// Computes a t distribution by bootstrapping the t-statistic between two samples
     ///
     /// * Bootstrap method: Case resampling
-    pub fn new(a: &[A], b: &[A], nresamples: uint) -> TDistribution<A> {
+    pub fn new(a: &[A], b: &[A], nresamples: usize) -> TDistribution<A> {
         assert!(nresamples > 0);
 
         // FIXME `RUST_THREADS` should be favored over `num_cpus`
@@ -23,7 +23,7 @@ impl<A> TDistribution<A> where A: Simd + Send + Sync {
         let mut joint_sample = Vec::with_capacity(n + b.len());
         joint_sample.push_all(a);
         joint_sample.push_all(b);
-        let joint_sample = joint_sample[];
+        let joint_sample = &*joint_sample;
 
         // TODO Under what conditions should multi thread by favored?
         if ncpus > 1 && nresamples > a.len() + b.len() {
@@ -37,8 +37,8 @@ impl<A> TDistribution<A> where A: Simd + Send + Sync {
                 for ptr in data.iter_mut() {
                     let joint_resample = resamples.next();
 
-                    let resample = joint_resample[..n];
-                    let other_resample = joint_resample[n..];
+                    let resample = &joint_resample[..n];
+                    let other_resample = &joint_resample[n..];
 
                     unsafe { ptr::write(ptr, resample.t(other_resample)) }
                 }
@@ -63,7 +63,7 @@ impl<A> TDistribution<A> where A: Simd + Send + Sync {
 impl<A> TDistribution<A> {
     /// Returns an slice to the data points of the distribution
     pub fn as_slice(&self) -> &[A] {
-        self.0[]
+        &*self.0
     }
 
 
@@ -106,8 +106,8 @@ mod bench {
     use super::TDistribution;
     use test;
 
-    const SAMPLE_SIZE: uint = 100;
-    const NRESAMPLES: uint = 100_000;
+    const SAMPLE_SIZE: usize = 100;
+    const NRESAMPLES: usize = 100_000;
 
     #[bench]
     fn new(b: &mut Bencher) {
@@ -115,7 +115,7 @@ mod bench {
         let c = test::vec::<f64>(SAMPLE_SIZE).unwrap();
 
         b.iter(|| {
-            TDistribution::new(a[], c[], NRESAMPLES)
+            TDistribution::new(&*a, &*c, NRESAMPLES)
         })
     }
 

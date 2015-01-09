@@ -119,7 +119,7 @@ mod test {
     use test::{ApproxEq, self};
 
     #[quickcheck]
-    fn normalized(size: uint, scale: f64) -> TestResult {
+    fn normalized(size: usize, scale: f64) -> TestResult {
         if scale == 0. {
             return TestResult::discard();
         }
@@ -130,7 +130,7 @@ mod test {
                 x.1 *= scale;
             }
 
-            let data = data[];
+            let data = &*data;
 
             let (mut x, mut y) = (vec!(), vec!());
 
@@ -139,7 +139,7 @@ mod test {
                 y.push(b);
             }
 
-            let (x, y) = (x[], y[]);
+            let (x, y) = (&*x, &*y);
 
             let (x_bar, y_bar) = (x.mean(), y.mean());
             let (sigma_x, sigma_y) = (x.std_dev(Some(x_bar)), y.std_dev(Some(y_bar)));
@@ -147,7 +147,7 @@ mod test {
             let normalized_data: Vec<(f64, f64)> = data.iter().map(|&(x, y)| {
                 ((x - x_bar) / sigma_x, (y - y_bar) / sigma_y)
             }).collect();
-            let normalized_data = normalized_data[];
+            let normalized_data = &*normalized_data;
 
             let sl = StraightLine::fit(data);
             let nsl = StraightLine::fit(normalized_data);
@@ -162,9 +162,9 @@ mod test {
     }
 
     #[quickcheck]
-    fn r_squared(size: uint) -> TestResult {
+    fn r_squared(size: usize) -> TestResult {
         if let Some(data) = test::vec::<(f64, f64)>(size) {
-            let data = data[];
+            let data = &*data;
             let sl = StraightLine::fit(data);
 
             let r_squared = sl.r_squared(data);

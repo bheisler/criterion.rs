@@ -14,8 +14,8 @@ impl Simd for f32 {
             let data = data as *const f32x4;
 
             let mut sum = unsafe { *data };
-            for i in range(1, (len / 4) as int) {
-                sum += unsafe { *data.offset(i) };
+            for i in 1..len/4 {
+                sum += unsafe { *data.offset(i as isize) };
             }
 
             let tail = sample.iter().rev().take(len % 4).map(|&x| x).sum();
@@ -42,8 +42,8 @@ impl Simd for f32 {
 
             let mean4 = f32x4(mean, mean, mean, mean);
             let mut sum = f32x4(0., 0., 0., 0.);
-            for i in range(0, (len / 4) as int) {
-                let diff = unsafe { *data.offset(i) } - mean4;
+            for i in 0..(len / 4) {
+                let diff = unsafe { *data.offset(i as isize) } - mean4;
                 sum += diff * diff;
             }
 
@@ -66,8 +66,8 @@ impl Simd for f64 {
             let data = data as *const f64x2;
 
             let mut sum = unsafe { *data };
-            for i in range(1, (len / 2) as int) {
-                sum += unsafe { *data.offset(i) };
+            for i in 1..len/2 {
+                sum += unsafe { *data.offset(i as isize) };
             }
 
             let tail = sample.iter().rev().take(len % 2).map(|&x| x).sum();
@@ -94,8 +94,8 @@ impl Simd for f64 {
 
             let mean2 = f64x2(mean, mean);
             let mut sum = f64x2(0., 0.);
-            for i in range(0, (len / 2) as int) {
-                let diff = unsafe { *data.offset(i) } - mean2;
+            for i in 0..len/2 {
+                let diff = unsafe { *data.offset(i as isize) } - mean2;
                 sum += diff * diff;
             }
 

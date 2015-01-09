@@ -1,5 +1,6 @@
+#![allow(unstable)]
 #![deny(warnings)]
-#![feature(plugin, slicing_syntax, unboxed_closures)]
+#![feature(plugin, unboxed_closures)]
 
 extern crate parallel;
 #[cfg(test)]
@@ -34,7 +35,7 @@ pub trait Bootstrap {
     /// Returns the bootstrap distribution of the parameter estimated by the 1-sample statistic
     ///
     /// * Bootstrap method: Case resampling
-    fn bootstrap<A, S>(&self, statistic: S, nresamples: uint) -> Distribution<A> where
+    fn bootstrap<A, S>(&self, statistic: S, nresamples: usize) -> Distribution<A> where
         A: Send,
         S: Fn(&Self) -> A + Sync;
 }
@@ -46,7 +47,7 @@ pub struct Distribution<A>(Vec<A>);
 impl<A> Distribution<A> {
     /// Returns an slice to the data points of the distribution
     pub fn as_slice(&self) -> &[A] {
-        self.0[]
+        &*self.0
     }
 
     /// Returns a vector that contains the data points of the distribution

@@ -11,7 +11,9 @@ git = "https://github.com/japaric/parallel.rs"
 git = "https://github.com/rust-lang/rustc-serialize"
 
 [dev-dependencies.quickcheck]
-git = "https://github.com/burntsushi/quickcheck"
+git = "https://github.com/japaric/quickcheck"
+branch = "rustup"
 
 [dev-dependencies.quickcheck_macros]
-git = "https://github.com/burntsushi/quickcheck"
+git = "https://github.com/japaric/quickcheck"
+branch = "rustup"

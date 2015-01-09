@@ -106,7 +106,7 @@ mod test {
     macro_rules! stat {
         ($ty:ident <- $($stat:ident),+) => {$(
             #[quickcheck]
-            fn $stat(size: uint) -> TestResult {
+            fn $stat(size: usize) -> TestResult {
                 if let Some(v) = ::test::vec::<$ty>(size) {
                     let lhs = {
                         use Stats;
@@ -130,7 +130,7 @@ mod test {
     macro_rules! stat_none {
         ($ty:ident <- $($stat:ident),+) => {$(
             #[quickcheck]
-            fn $stat(size: uint) -> TestResult {
+            fn $stat(size: usize) -> TestResult {
                 if let Some(v) = ::test::vec::<$ty>(size) {
                     let lhs = {
                         use Stats;
@@ -154,7 +154,7 @@ mod test {
     macro_rules! fast_stat {
         ($ty:ident <- $(($stat:ident, $aux_stat:ident)),+) => {$(
             #[quickcheck]
-            fn $stat(size: uint) -> TestResult {
+            fn $stat(size: usize) -> TestResult {
                 if let Some(v) = ::test::vec::<$ty>(size) {
                     let lhs = {
                         use Stats;
@@ -211,7 +211,7 @@ mod bench {
             #[bench]
             fn $stat(b: &mut Bencher) {
                 let v = ::test::vec::<$ty>(BENCH_SIZE).unwrap();
-                let s = v[];
+                let s = &*v;
 
                 b.iter(|| s.$stat());
             })+
@@ -223,7 +223,7 @@ mod bench {
             #[bench]
             fn $stat(b: &mut Bencher) {
                 let v = ::test::vec::<$ty>(BENCH_SIZE).unwrap();
-                let s = v[];
+                let s = &*v;
 
                 b.iter(|| s.$stat(None));
             })+
@@ -235,7 +235,7 @@ mod bench {
             #[bench]
             fn $stat(b: &mut Bencher) {
                 let v = ::test::vec::<$ty>(BENCH_SIZE).unwrap();
-                let s = v[];
+                let s = &*v;
                 let aux = Some(s.$aux_stat());
 
                 b.iter(|| s.$stat(aux));

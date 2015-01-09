@@ -8,7 +8,7 @@ use resamples::Resamples;
 impl<T> Bootstrap for [T] where
     T: Clone + Sync,
 {
-    fn bootstrap<A, S>(&self, statistic: S, nresamples: uint) -> Distribution<A> where
+    fn bootstrap<A, S>(&self, statistic: S, nresamples: usize) -> Distribution<A> where
         A: Send,
         S: Fn(&[T]) -> A + Sync,
     {
@@ -48,7 +48,7 @@ pub fn bootstrap<A, B, C, S>(
     first: &[A],
     second: &[B],
     statistic: S,
-    nresamples: uint
+    nresamples: usize
 ) -> Distribution<C> where
     A: Clone + Sync,
     B: Clone + Sync,
@@ -59,7 +59,7 @@ pub fn bootstrap<A, B, C, S>(
 
     // FIXME `RUST_THREADS` should be favored over `num_cpus`
     let ncpus = os::num_cpus();
-    let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as uint;
+    let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as usize;
     let nresamples = nresamples_sqrt * nresamples_sqrt;
 
     // TODO Under what conditions should multi thread by favored?
@@ -112,14 +112,14 @@ mod test {
     use test;
 
     #[quickcheck]
-    fn bootstrap(size: uint, nresamples: uint) -> TestResult {
+    fn bootstrap(size: usize, nresamples: usize) -> TestResult {
         fn mean(sample: &[f64]) -> f64 {
             sample.mean()
         }
 
         if let Some(sample) = test::vec::<f64>(size) {
             let distribution = if nresamples > 0 {
-                sample[].bootstrap(mean, nresamples).unwrap()
+                sample.bootstrap(mean, nresamples).unwrap()
             } else {
                 return TestResult::discard();
             };
@@ -138,17 +138,17 @@ mod test {
     }
 
     #[quickcheck]
-    fn bootstrap2((size, another_size): (uint, uint), nresamples: uint) -> TestResult {
+    fn bootstrap2((size, another_size): (usize, usize), nresamples: usize) -> TestResult {
         if let (Some(first), Some(second)) =
             (test::vec::<f64>(size), test::vec::<f64>(another_size))
         {
             let distribution = if nresamples > 0 {
-                super::bootstrap(first[], second[], ::Stats::t, nresamples).unwrap()
+                super::bootstrap(&*first, &*second, ::Stats::t, nresamples).unwrap()
             } else {
                 return TestResult::discard();
             };
 
-            let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as uint;
+            let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as usize;
             let nresamples = nresamples_sqrt * nresamples_sqrt;
 
             TestResult::from_bool(
@@ -172,8 +172,8 @@ mod bench {
     use regression::{Slope, StraightLine};
     use test;
 
-    const NRESAMPLES: uint = 100_000;
-    const SAMPLE_SIZE: uint = 100;
+    const NRESAMPLES: usize = 100_000;
+    const SAMPLE_SIZE: usize = 100;
 
     #[bench]
     fn bootstrap_mean(b: &mut Bencher) {
@@ -184,7 +184,7 @@ mod bench {
         let sample = test::vec::<f64>(SAMPLE_SIZE).unwrap();
 
         b.iter(|| {
-            sample[].bootstrap(mean, NRESAMPLES)
+            sample.bootstrap(mean, NRESAMPLES)
         });
     }
 
@@ -197,7 +197,7 @@ mod bench {
         let sample = test::vec::<(f64, f64)>(SAMPLE_SIZE).unwrap();
 
         b.iter(|| {
-            sample[].bootstrap(slr, NRESAMPLES)
+            sample.bootstrap(slr, NRESAMPLES)
         })
     }
 
@@ -210,7 +210,7 @@ mod bench {
         let sample = test::vec::<(f64, f64)>(SAMPLE_SIZE).unwrap();
 
         b.iter(|| {
-            sample[].bootstrap(slr, NRESAMPLES)
+            sample.bootstrap(slr, NRESAMPLES)
         })
     }
 }

@@ -48,7 +48,7 @@ impl<'a, F> Kde<'a, F> where F: Fn(f64) -> f64 + Sync {
 
     /// Sweeps the `[a, b]` range collecting `n` points of the estimated PDF
     #[experimental]
-    pub fn sweep(&self, (a, b): (f64, f64), n: uint) -> Vec<(f64, f64)> {
+    pub fn sweep(&self, (a, b): (f64, f64), n: usize) -> Vec<(f64, f64)> {
         assert!(a < b);
         assert!(n > 1);
 
@@ -170,11 +170,11 @@ mod test {
 
     // The [-inf inf] integral of the estimated PDF should be one
     #[quickcheck]
-    fn integral(size: uint) -> TestResult {
+    fn integral(size: usize) -> TestResult {
         const DX: f64 = 1e-3;
 
         if let Some(data) = test::vec::<f64>(size) {
-            let data = data[];
+            let data = &*data;
 
             let kde = Kde::new(data);
             let h = kde.bandwidth();
@@ -209,13 +209,13 @@ mod bench {
     use kde::Kde;
     use test;
 
-    const KDE_POINTS: uint = 500;
-    const SAMPLE_SIZE: uint = 100_000;
+    const KDE_POINTS: usize = 500;
+    const SAMPLE_SIZE: usize = 100_000;
 
     #[bench]
     fn sweep(b: &mut Bencher) {
         let data = test::vec(SAMPLE_SIZE).unwrap();
-        let kde = Kde::new(data[]);
+        let kde = Kde::new(&*data);
 
         b.iter(|| {
             kde.sweep((0., 1.), KDE_POINTS)

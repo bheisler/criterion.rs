@@ -1,9 +1,9 @@
 use std::num::Float;
 use std::rand::{Rand, Rng, XorShiftRng, self};
 
-pub const BENCH_SIZE: uint = 1_000_000;
+pub const BENCH_SIZE: usize = 1_000_000;
 
-pub fn vec<T>(size: uint) -> Option<Vec<T>> where T: Rand {
+pub fn vec<T>(size: usize) -> Option<Vec<T>> where T: Rand {
     if size > 1 {
         let mut rng: XorShiftRng = rand::thread_rng().gen();
 

@@ -2,7 +2,7 @@ use std::rand::{Rng, XorShiftRng, self};
 use std::rand::distributions::{IndependentSample, Range};
 
 pub struct Resamples<'a, A> where A: 'a {
-    range: Range<uint>,
+    range: Range<usize>,
     rng: XorShiftRng,
     sample: &'a [A],
     stage: Option<Vec<A>>,
@@ -41,7 +41,7 @@ impl <'a, A> Resamples<'a, A> where A: 'a + Clone {
             },
         }
 
-        self.stage.as_ref().unwrap()[]
+        &**self.stage.as_ref().unwrap()
     }
 }
 
@@ -55,9 +55,9 @@ mod test {
 
     // Check that the resample is a subset of the sample
     #[quickcheck]
-    fn subset(size: uint, nresamples: uint) -> TestResult {
-        if let Some(sample) = test::vec::<int>(size) {
-            let mut resamples = Resamples::new(sample[]);
+    fn subset(size: usize, nresamples: usize) -> TestResult {
+        if let Some(sample) = test::vec::<i32>(size) {
+            let mut resamples = Resamples::new(&*sample);
             let sample = sample.iter().map(|&x| x).collect::<HashSet<_>>();
 
             TestResult::from_bool(range(0, nresamples).all(|_| {
