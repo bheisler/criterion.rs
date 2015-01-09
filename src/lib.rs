@@ -7,6 +7,7 @@
 //! ![Plot](curve.svg)
 //!
 //! ```
+//! # #![allow(unstable)]
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
@@ -65,6 +66,7 @@
 //! ![Plot](error_bar.svg)
 //!
 //! ```
+//! # #![allow(unstable)]
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
@@ -142,6 +144,7 @@
 //! ![Plot](candlesticks.svg)
 //!
 //! ```
+//! # #![allow(unstable)]
 //! extern crate simplot;
 //!
 //! # use std::io::{USER_RWX, fs};
@@ -149,7 +152,7 @@
 //! use std::rand::{Rng, mod};
 //!
 //! # fn main() {
-//! let xs = range(1u, 11);
+//! let xs = 1..11;
 //!
 //! // Fake some data
 //! let mut rng = rand::thread_rng();
@@ -203,7 +206,8 @@
 //!
 //! ![Plot](multiaxis.svg)
 //!
-//! ``` ignore
+//! ```
+//! # #![allow(unstable)]
 //! extern crate complex;  // https://github.com/japaric/complex.rs
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
@@ -278,6 +282,7 @@
 //! ![Plot](filled_curve.svg)
 //!
 //! ```
+//! # #![allow(unstable)]
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
@@ -346,8 +351,8 @@
 //! # }
 //! ```
 
+#![allow(unstable)]
 #![deny(missing_docs, warnings)]
-#![feature(slicing_syntax)]
 
 #[macro_use]
 extern crate zip;
@@ -386,7 +391,7 @@ pub struct Figure {
     key: Option<key::Properties>,
     output: Path,
     plots: Vec<Plot>,
-    size: Option<(uint, uint)>,
+    size: Option<(usize, usize)>,
     terminal: Terminal,
     tics: map::axis::Map<String>,
     title: Option<CowString<'static>>,
@@ -414,7 +419,7 @@ impl Figure {
     fn script(&self) -> Vec<u8> {
         let mut s = String::new();
 
-        s.push_str(format!("set output '{}'\n", self.output.display())[]);
+        s.push_str(&*format!("set output '{}'\n", self.output.display()));
 
         if let Some(width) = self.box_width {
             s.push_str(&*format!("set boxwidth {}\n", width))
@@ -477,17 +482,17 @@ impl Figure {
                     data.nrows()));
 
             let mut is_first_col = true;
-            for col in range(0, data.ncols()) {
+            for col in 0..data.ncols() {
                 if is_first_col {
                     is_first_col = false;
                 } else {
                     s.push(':');
                 }
-                s.push_str((col + 1).to_string()[]);
+                s.push_str(&*(col + 1).to_string());
             }
             s.push(' ');
 
-            s.push_str(plot.script()[]);
+            s.push_str(&*plot.script());
         }
 
         let mut buffer = s.into_bytes();
@@ -512,13 +517,13 @@ impl Figure {
 
     /// Dumps the script required to produce the figure into `sink`
     pub fn dump<W>(&mut self, sink: &mut W) -> IoResult<&mut Figure> where W: Writer {
-        try!(sink.write(self.script()[]));
+        try!(sink.write(&*self.script()));
         Ok(self)
     }
 
     /// Saves the script required to produce the figure to `path`
     pub fn save(&mut self, path: &Path) -> IoResult<&mut Figure> {
-        try!((try!(File::create(path))).write(self.script()[]));
+        try!((try!(File::create(path))).write(&*self.script()));
         Ok(self)
     }
 }
@@ -683,7 +688,7 @@ pub enum Range {
 
 /// Figure size
 #[derive(Copy)]
-pub struct Size(pub uint, pub uint);
+pub struct Size(pub usize, pub usize);
 
 /// Labels attached to the tics of an axis
 pub struct TicLabels<P, L> {
@@ -824,9 +829,9 @@ trait Script {
 
 /// Returns `gnuplot` version
 // FIXME Parsing may fail
-pub fn version() -> IoResult<(uint, uint, uint)> {
+pub fn version() -> IoResult<(usize, usize, usize)> {
     let stdout = try!(Command::new("gnuplot").arg("--version").output()).output;
-    let mut words = str::from_utf8(stdout[]).unwrap().words().skip(1);
+    let mut words = str::from_utf8(&*stdout).unwrap().words().skip(1);
     let mut version = words.next().unwrap().split('.');
     let major = version.next().unwrap().parse().unwrap();
     let minor = version.next().unwrap().parse().unwrap();

@@ -145,25 +145,25 @@ impl<'a> Script for (Axis, &'a Properties) {
         };
 
         if let Some(ref tics) = properties.tics {
-            script.push_str(format!("({})", tics)[])
+            script.push_str(&*format!("({})", tics))
         }
 
         script.push('\n');
 
         if let Some(ref label) = properties.label {
-            script.push_str(format!("set {}label '{}'\n", axis_, label)[])
+            script.push_str(&*format!("set {}label '{}'\n", axis_, label))
         }
 
         if let Some((low, high)) = properties.range {
-            script.push_str(format!("set {}range [{}:{}]\n", axis_, low, high)[])
+            script.push_str(&*format!("set {}range [{}:{}]\n", axis_, low, high))
         }
 
         if properties.logarithmic {
-            script.push_str(format!("set logscale {}\n", axis_)[]);
+            script.push_str(&*format!("set logscale {}\n", axis_));
         }
 
         for (grid, properties) in properties.grids.iter() {
-            script.push_str((axis, grid, properties).script()[]);
+            script.push_str(&*(axis, grid, properties).script());
         }
 
         script

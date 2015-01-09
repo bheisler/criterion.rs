@@ -5,11 +5,11 @@ pub mod axis {
 
     use Axis;
 
-    const LENGTH: uint = 4;
+    const LENGTH: usize = 4;
 
     pub struct Items<'a, T: 'a> {
         map: &'a Map<T>,
-        state: uint,
+        state: usize,
     }
 
     impl<'a, T> Iterator for Items<'a, T> {
@@ -37,19 +37,19 @@ pub mod axis {
         }
 
         pub fn contains_key(&self, key: Axis) -> bool {
-            self.0[key as uint].is_some()
+            self.0[key as usize].is_some()
         }
 
         pub fn get(&self, key: Axis) -> Option<&T> {
-            self.0[key as uint].as_ref()
+            self.0[key as usize].as_ref()
         }
 
         pub fn get_mut(&mut self, key: Axis) -> Option<&mut T> {
-            self.0[key as uint].as_mut()
+            self.0[key as usize].as_mut()
         }
 
         pub fn insert(&mut self, key: Axis, value: T) -> Option<T> {
-            let key = key as uint;
+            let key = key as usize;
             let old = self.0[key].take();
 
             self.0[key] = Some(value);
@@ -77,11 +77,11 @@ pub mod grid {
 
     use Grid;
 
-    const LENGTH: uint = 2;
+    const LENGTH: usize = 2;
 
     struct Items<'a, T: 'a> {
         map: &'a Map<T>,
-        state: uint,
+        state: usize,
     }
 
     impl<'a, T> Iterator for Items<'a, T> {
@@ -109,19 +109,19 @@ pub mod grid {
         }
 
         pub fn contains_key(&self, key: Grid) -> bool {
-            self.0[key as uint].is_some()
+            self.0[key as usize].is_some()
         }
 
         pub fn get(&self, key: Grid) -> Option<&T> {
-            self.0[key as uint].as_ref()
+            self.0[key as usize].as_ref()
         }
 
         pub fn get_mut(&mut self, key: Grid) -> Option<&mut T> {
-            self.0[key as uint].as_mut()
+            self.0[key as usize].as_mut()
         }
 
         pub fn insert(&mut self, key: Grid, value: T) -> Option<T> {
-            let key = key as uint;
+            let key = key as usize;
             let old = self.0[key].take();
 
             self.0[key] = Some(value);
