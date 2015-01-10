@@ -6,7 +6,7 @@ use std::iter;
 
 #[test]
 fn from_elem() {
-    static KB: uint = 1024;
+    static KB: usize = 1024;
 
     let can_plot = Criterion::default().bench_with_inputs("from_elem", |b, &size| {
         b.iter(|| iter::repeat(0u8).take(size).collect::<Vec<_>>());

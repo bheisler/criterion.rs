@@ -30,13 +30,13 @@ pub fn common(
     let base_times: Vec<f64> = base_pairs.iter().map(|&(iters, elapsed)| {
         elapsed as f64 / iters as f64
     }).collect();
-    let base_times = base_times[];
+    let base_times = &*base_times;
 
     fs::mkdirp(&Path::new(format!(".criterion/{}/both", id)));
     elapsed!(
         "Plotting both linear regressions",
         plot::both::regression(
-            base_pairs[],
+            &*base_pairs,
             &base_estimates,
             pairs,
             estimates_,
@@ -112,7 +112,7 @@ fn estimates(id: &str, times: &[f64], base_times: &[f64], criterion: &Criterion)
     };
     let distributions: Distributions =
         [Mean, Median].iter().map(|&x| x).zip(distributions.into_iter()).collect();
-    let estimates = Estimate::new(&distributions, points[], cl);
+    let estimates = Estimate::new(&distributions, &points, cl);
 
     report::rel(&estimates);
 

@@ -16,7 +16,7 @@ use syntax::ptr::P;
 pub fn plugin_registrar(reg: &mut Registry) {
     reg.register_syntax_extension(
         token::intern("criterion"),
-        Modifier(box expand_meta_criterion));
+        Modifier(Box::new(expand_meta_criterion)));
 }
 
 /// Expands the `#[criterion]` attribute

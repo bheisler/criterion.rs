@@ -2,7 +2,7 @@ use stats::kde::Kde;
 
 use test::stats::Stats;
 
-pub fn sweep(sample: &[f64], npoints: uint, range: Option<(f64, f64)>) -> (Vec<f64>, Vec<f64>) {
+pub fn sweep(sample: &[f64], npoints: usize, range: Option<(f64, f64)>) -> (Vec<f64>, Vec<f64>) {
     let x_min = sample.min();
     let x_max = sample.max();
 

@@ -31,7 +31,7 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
 
 // TODO These should be configurable
 static FONT: Font<&'static str> = Font("Helvetica");
-static KDE_POINTS: uint = 500;
+static KDE_POINTS: usize = 500;
 static SIZE: Size = Size(1280, 720);
 
 const LINEWIDTH: LineWidth = LineWidth(2.);
@@ -46,7 +46,7 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
 
     let (scale, prefix) = scale_time(sample.max());
     let sample = sample.iter().map(|&t| t * scale).collect::<Vec<_>>();
-    let sample = sample[];
+    let sample = &*sample;
 
     let max_iters = pairs.iter().map(|&(iters, _)| iters).max_by(|&iters| iters as u64).unwrap();
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
@@ -82,7 +82,7 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
     }
 
     let vertical = &[0., max_iters * y_scale];
-    let zeros = iter::repeat(0u);
+    let zeros = iter::repeat(0);
 
     let gnuplot = Figure::new().
         set(FONT).
@@ -165,7 +165,7 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(po.error[]).ok()
+        str::from_utf8(&*po.error).ok()
     }))
 }
 
@@ -251,7 +251,7 @@ pub fn regression(
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(po.error[]).ok()
+        str::from_utf8(&*po.error).ok()
     }))
 }
 
@@ -266,7 +266,7 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
         let end = ub + (ub - lb) / 9.;
         let (xs, ys) = kde::sweep(distribution.as_slice(), KDE_POINTS, Some((start, end)));
 
-        let (scale, prefix) = scale_time(xs[].max());
+        let (scale, prefix) = scale_time(xs.max());
         let rscale = scale.recip();
         let xs = xs.into_iter().map(|x| x * scale).collect::<Vec<_>>();
         let ys = ys.into_iter().map(|y| y * rscale).collect::<Vec<_>>();
@@ -277,7 +277,7 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
         let y_p =
             ys[n_p - 1] + (ys[n_p] - ys[n_p - 1]) / (xs[n_p] - xs[n_p - 1]) * (p - xs[n_p - 1]);
 
-        let zero = iter::repeat(0u);
+        let zero = iter::repeat(0);
 
         let start = xs.iter().enumerate().filter(|&(_, &x)| x >= lb).next().unwrap().0;
         let end = xs.iter().enumerate().rev().filter(|&(_, &x)| x <= ub).next().unwrap().0;
@@ -326,7 +326,7 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
 
     for gnuplot in gnuplots.into_iter() {
         assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-            str::from_utf8(po.error[]).ok()
+            str::from_utf8(&*po.error).ok()
         }))
     }
 }
@@ -361,8 +361,8 @@ pub fn rel_distributions(
         let end = ub + (ub - lb) / 9.;
         let (xs, ys) = kde::sweep(distribution.as_slice(), KDE_POINTS, Some((start, end)));
         let xs = xs.into_iter().map(|x| x * 100.).collect::<Vec<_>>();
-        let xs = xs[];
-        let ys = ys[];
+        let xs = &*xs;
+        let ys = &*ys;
 
         let nt = nt * 100.;
         let (lb, ub) = (lb * 100., ub * 100.);
@@ -371,8 +371,8 @@ pub fn rel_distributions(
         let y_p =
             ys[n_p - 1] + (ys[n_p] - ys[n_p - 1]) / (xs[n_p] - xs[n_p - 1]) * (p - xs[n_p - 1]);
 
-        let one = iter::repeat(1u);
-        let zero = iter::repeat(0u);
+        let one = iter::repeat(1);
+        let zero = iter::repeat(0);
 
         let start = xs.iter().enumerate().filter(|&(_, &x)| x >= lb).next().unwrap().0;
         let end = xs.iter().enumerate().rev().filter(|&(_, &x)| x <= ub).next().unwrap().0;
@@ -434,7 +434,7 @@ pub fn rel_distributions(
     // FIXME This sometimes fails!
     for gnuplot in gnuplots.into_iter() {
         assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-            str::from_utf8(po.error[]).ok()
+            str::from_utf8(&*po.error).ok()
         }))
     }
 }
@@ -443,8 +443,8 @@ pub fn t_test(t: f64, distribution: &[f64], id: &str) {
     let path = Path::new(format!(".criterion/{}/change/t-test.svg", id));
 
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, None);
-    let ys = ys[];
-    let zero = iter::repeat(0u);
+    let ys = &*ys;
+    let zero = iter::repeat(0);
 
     let gnuplot = Figure::new().
         set(FONT).
@@ -469,7 +469,7 @@ pub fn t_test(t: f64, distribution: &[f64], id: &str) {
             set(Opacity(0.25))).
         plot(Lines {
             x: &[t, t],
-            y: &[0u, 1],
+            y: &[0, 1],
         }, |c| c.
             set(Axes::BottomXRightY).
             set(DARK_BLUE).
@@ -479,7 +479,7 @@ pub fn t_test(t: f64, distribution: &[f64], id: &str) {
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(po.error[]).ok()
+        str::from_utf8(&*po.error).ok()
     }))
 }
 
@@ -526,7 +526,7 @@ pub fn summarize(id: &str) {
                         time as f64 / iters as f64
                     }).collect::<Vec<_>>();
 
-                    Some((label, label.parse::<uint>(), estimates, sample))
+                    Some((label, label.parse::<usize>(), estimates, sample))
                 } else {
                     None
                 }
@@ -565,7 +565,7 @@ pub fn summarize(id: &str) {
                 // XXX scale inputs?
                 let inputs = benches.iter().map(|&(_, input, _, _)| input).collect::<Vec<_>>();
 
-                let (scale, prefix) = scale_time(ubs[].max());
+                let (scale, prefix) = scale_time(ubs.max());
                 let points = points.iter().map(|&x| x * scale).collect::<Vec<_>>();
                 let lbs = lbs.iter().map(|&x| x * scale).collect::<Vec<_>>();
                 let ubs = ubs.iter().map(|&x| x * scale).collect::<Vec<_>>();
@@ -575,10 +575,10 @@ pub fn summarize(id: &str) {
                     Scale::Linear
                 } else {
                     let inputs = inputs.iter().map(|&x| x as f64).collect::<Vec<_>>();
-                    let linear = diff(inputs[])[].std_dev(None);
+                    let linear = diff(&*inputs).std_dev(None);
                     let log = {
                         let v = inputs.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        diff(v[])[].std_dev(None)
+                        diff(&*v).std_dev(None)
                     };
 
                     if linear < log {
@@ -591,10 +591,10 @@ pub fn summarize(id: &str) {
                 let yscale = if points.len() < 3 {
                     Scale::Linear
                 } else {
-                    let linear = diff(points[])[].std_dev(None);
+                    let linear = diff(&*points).std_dev(None);
                     let log = {
                         let v = points.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        diff(v[])[].std_dev(None)
+                        diff(&*v).std_dev(None)
                     };
 
                     if linear < log {
@@ -681,7 +681,7 @@ pub fn summarize(id: &str) {
                     estimates[statistic].confidence_interval.upper_bound
                 }).collect::<Vec<_>>();
 
-                let (scale, prefix) = scale_time(ubs[].max());
+                let (scale, prefix) = scale_time(ubs.max());
                 let points = points.iter().map(|&x| x * scale).collect::<Vec<_>>();
                 let lbs = lbs.iter().map(|&x| x * scale).collect::<Vec<_>>();
                 let ubs = ubs.iter().map(|&x| x * scale).collect::<Vec<_>>();
@@ -689,10 +689,10 @@ pub fn summarize(id: &str) {
                 let xscale = if points.len() < 3 {
                     Scale::Linear
                 } else {
-                    let linear = diff(points[])[].std_dev(None);
+                    let linear = diff(&*points).std_dev(None);
                     let log = {
                         let v = points.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        diff(v[])[].std_dev(None)
+                        diff(&*v).std_dev(None)
                     };
 
                     if linear < log {
@@ -757,8 +757,8 @@ pub fn summarize(id: &str) {
                     draw().unwrap()
             }).collect::<Vec<_>>().append_({
                 let kdes = benches.iter().map(|&(_, _, _, ref sample)| {
-                    let (x, mut y) = kde::sweep(sample[], KDE_POINTS, None);
-                    let y_max = y[].max();
+                    let (x, mut y) = kde::sweep(&**sample, KDE_POINTS, None);
+                    let y_max = y.max();
                     for y in y.iter_mut() {
                         *y /= y_max;
                     }
@@ -766,7 +766,7 @@ pub fn summarize(id: &str) {
                     (x, y)
                 }).collect::<Vec<_>>();
                 let medians = benches.iter().map(|&(_, _, _, ref sample)| {
-                    sample[].percentiles().median()
+                    sample.percentiles().median()
                 }).collect::<Vec<_>>();
                 let mut xs = kdes.iter().flat_map(|&(ref x, _)| x.iter());
                 let (mut min, mut max) = {
@@ -787,10 +787,10 @@ pub fn summarize(id: &str) {
                 let xscale = if medians.len() < 3 {
                     Scale::Linear
                 } else {
-                    let linear = diff(medians[])[].std_dev(None);
+                    let linear = diff(&*medians).std_dev(None);
                     let log = {
                         let v = medians.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        diff(v[])[].std_dev(None)
+                        diff(&*v).std_dev(None)
                     };
 
                     if linear < log {
@@ -864,7 +864,7 @@ pub fn summarize(id: &str) {
 
         for gnuplot in gnuplots.into_iter() {
             assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-                str::from_utf8(po.error[]).ok()
+                str::from_utf8(&*po.error).ok()
             }))
         }
     }

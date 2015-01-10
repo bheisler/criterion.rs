@@ -123,7 +123,7 @@ pub fn regression(
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(po.error[]).ok()
+        str::from_utf8(&*po.error).ok()
     }))
 }
 
@@ -133,13 +133,13 @@ pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
     let (base_xs, base_ys) = kde::sweep(base, KDE_POINTS, None);
     let (new_xs, new_ys) = kde::sweep(new, KDE_POINTS, None);
 
-    let (scale, prefix) = scale_time([base_xs[].max(), new_xs[].max()][].max());
+    let (scale, prefix) = scale_time([base_xs.max(), new_xs.max()].max());
     let rscale = scale.recip();
     let base_xs = base_xs.iter().map(|&x| x * scale);
     let base_ys = base_ys.iter().map(|&x| x * rscale);
     let new_xs = new_xs.iter().map(|&x| x * scale);
     let new_ys = new_ys.iter().map(|&x| x * rscale);
-    let zeros = iter::repeat(0u);
+    let zeros = iter::repeat(0);
 
     let gnuplot = Figure::new().
         set(FONT).
@@ -175,6 +175,6 @@ pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
         draw().unwrap();
 
     assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(po.error[]).ok()
+        str::from_utf8(&*po.error).ok()
     }))
 }

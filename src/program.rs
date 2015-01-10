@@ -1,4 +1,4 @@
-use std::fmt::Show;
+use std::fmt;
 use std::io::{BufferedReader, Command, PipeStream, Process};
 use time;
 
@@ -28,7 +28,7 @@ impl Program {
         }
     }
 
-    pub fn send<T: Show>(&mut self, line: T) -> &mut Program {
+    pub fn send<T: fmt::String>(&mut self, line: T) -> &mut Program {
         match writeln!(&mut self.stdin, "{}", line) {
             Err(e) => panic!("`write into child stdin`: {}", e),
             Ok(_) => self,
@@ -48,14 +48,14 @@ impl Program {
 }
 
 impl Routine for Program {
-    fn bench<I: Iterator<Item=u64>>(&mut self, mut iters: I) -> Vec<u64> {
-        let mut n = 0u;
+    fn bench<I>(&mut self, mut iters: I) -> Vec<u64> where I: Iterator<Item=u64> {
+        let mut n = 0us;
         for iters in iters {
             self.send(iters);
             n += 1;
         }
 
-        range(0, n).map(|_| {
+        (0..n).map(|_| {
             let msg = self.recv();
             let msg = msg.as_slice().trim();
 

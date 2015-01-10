@@ -8,8 +8,8 @@ pub fn load<A: Decodable>(path: &Path) -> A {
         Err(e) => panic!("{}", e),
         Ok(mut f) => match f.read_to_string() {
             Err(e) => panic!("{}", e),
-            Ok(s) => match json::decode(s[]) {
-                Err(e) => panic!("Couldn't decode {} ({})", s, e),
+            Ok(s) => match json::decode(&*s) {
+                Err(e) => panic!("Couldn't decode {} ({:?})", s, e),
                 Ok(thing) => thing,
             }
         }

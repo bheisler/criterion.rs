@@ -2,7 +2,7 @@ use rustc_serialize::json;
 use stats::{ConfidenceInterval, Distribution};
 use std::collections::BTreeMap;
 use std::io::File;
-use std::fmt::{Formatter, Show, self};
+use std::fmt;
 
 #[derive(Copy, RustcDecodable, RustcEncodable, PartialEq)]
 pub struct Estimate {
@@ -42,8 +42,8 @@ pub enum Statistic {
     StdDev,
 }
 
-impl Show for Statistic {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl fmt::String for Statistic {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Statistic::Mean => f.pad("mean"),
             Statistic::Median => f.pad("median"),

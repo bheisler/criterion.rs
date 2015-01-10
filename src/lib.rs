@@ -1,5 +1,6 @@
+#![allow(unstable)]
 #![deny(warnings)]
-#![feature(plugin, slicing_syntax)]
+#![feature(plugin)]
 
 //! A statistics-driven micro-benchmarking library written in Rust.
 //!
@@ -18,7 +19,7 @@ extern crate stats;
 extern crate test;
 extern crate time;
 
-use std::fmt::Show;
+use std::fmt;
 use std::io::Command;
 use std::time::Duration;
 
@@ -70,9 +71,9 @@ pub struct Criterion {
     confidence_level: f64,
     measurement_time_ns: u64,
     noise_threshold: f64,
-    nresamples: uint,
+    nresamples: usize,
     plotting: Plotting,
-    sample_size: uint,
+    sample_size: usize,
     significance_level: f64,
     warm_up_time_ns: u64,
 }
@@ -133,7 +134,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if set to zero
-    pub fn sample_size(&mut self, n: uint) -> &mut Criterion {
+    pub fn sample_size(&mut self, n: usize) -> &mut Criterion {
         assert!(n > 0);
 
         self.sample_size = n;
@@ -184,7 +185,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the number of resamples is set to zero
-    pub fn nresamples(&mut self, n: uint) -> &mut Criterion {
+    pub fn nresamples(&mut self, n: usize) -> &mut Criterion {
         assert!(n > 0);
 
         self.nresamples = n;
@@ -302,7 +303,7 @@ impl Criterion {
     /// ``` ignore-test
     /// use criterion::{Bencher, Criterion};
     ///
-    /// Criterion::default().bench_with_inputs("from_elem", |b: &mut Bencher, &size: &uint| {
+    /// Criterion::default().bench_with_inputs("from_elem", |b: &mut Bencher, &size: &usize| {
     ///     b.iter(|| Vec::from_elem(size, 0u8));
     /// }, [1024, 2048, 4096]);
     /// ```
@@ -312,7 +313,7 @@ impl Criterion {
         f: F,
         inputs: &[I],
     ) -> &mut Criterion where
-        I: Show,
+        I: fmt::String,
         F: FnMut(&mut Bencher, &I),
     {
         analysis::function_with_inputs(id, f, inputs, self);
@@ -362,12 +363,14 @@ impl Criterion {
     ///
     /// This is a convenience method to execute several related benchmarks. Each benchmark will
     /// receive the id: `${id}/${input}`.
-    pub fn bench_program_with_inputs<I: Show>(
+    pub fn bench_program_with_inputs<I>(
         &mut self,
         id: &str,
         program: &Command,
         inputs: &[I],
-    ) -> &mut Criterion {
+    ) -> &mut Criterion where
+        I: fmt::String,
+    {
         analysis::program_with_inputs(id, program, inputs, self);
 
         self

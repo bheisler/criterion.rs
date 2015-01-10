@@ -1,7 +1,7 @@
 use stats::{Bootstrap, ConfidenceInterval, Distribution};
 use stats::outliers::Outliers;
 use stats::regression::Slope;
-use std::fmt::Show;
+use std::fmt;
 use std::io::Command;
 use std::io::fs::PathExtensions;
 use time;
@@ -57,7 +57,7 @@ pub fn function_with_inputs<I, F>(
     criterion: &Criterion,
 ) where
     F: FnMut(&mut Bencher, &I),
-    I: Show,
+    I: fmt::String,
 {
     for input in inputs.iter() {
         let id = format!("{}/{}", id, input);
@@ -74,12 +74,14 @@ pub fn program(id: &str, prog: &Command, criterion: &Criterion) {
     println!("");
 }
 
-pub fn program_with_inputs<I: Show>(
+pub fn program_with_inputs<I>(
     id: &str,
     prog: &Command,
     inputs: &[I],
     criterion: &Criterion,
-) {
+) where
+    I: fmt::String,
+{
     for input in inputs.iter() {
         let id = format!("{}/{}", id, input);
 
@@ -100,12 +102,12 @@ fn common<R: Routine>(id: &str, routine: &mut R, criterion: &Criterion) {
     let pairs_f64 = pairs.iter().map(|&(iters, elapsed)| {
         (iters as f64, elapsed as f64)
     }).collect::<Vec<(f64, f64)>>();
-    let pairs_f64 = pairs_f64[];
+    let pairs_f64 = &*pairs_f64;
 
     let times = pairs.iter().map(|&(iters, elapsed)| {
         elapsed as f64 / iters as f64
     }).collect::<Vec<f64>>();
-    let times = times[];
+    let times = &*times;
 
     fs::mkdirp(&Path::new(format!(".criterion/{}/new", id)));
 
@@ -243,7 +245,7 @@ fn estimates(
     let distributions: Distributions = statistics.iter().map(|&x| {
         x
     }).zip(distributions.into_iter()).collect();
-    let estimates = Estimate::new(&distributions, points[], cl);
+    let estimates = Estimate::new(&distributions, &points, cl);
 
     report::abs(&estimates);
 
