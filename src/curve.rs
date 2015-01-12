@@ -1,6 +1,5 @@
 //! Simple "curve" like plots
 
-use std::borrow::IntoCow;
 use std::string::CowString;
 
 use {
@@ -95,10 +94,10 @@ impl Set<Color> for Properties {
     }
 }
 
-impl<S> Set<Label<S>> for Properties where S: IntoCow<'static, String, str> {
+impl Set<Label> for Properties {
     /// Sets the legend label
-    fn set(&mut self, label: Label<S>) -> &mut Properties {
-        self.label = Some(label.0.into_cow());
+    fn set(&mut self, label: Label) -> &mut Properties {
+        self.label = Some(label.0);
         self
     }
 }

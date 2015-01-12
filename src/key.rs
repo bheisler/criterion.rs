@@ -1,6 +1,5 @@
 //! Key (or legend)
 
-use std::borrow::IntoCow;
 use std::string::CowString;
 
 use traits::Set;
@@ -146,9 +145,9 @@ impl Set<Stacked> for Properties {
     }
 }
 
-impl<S> Set<Title<S>> for Properties where S: IntoCow<'static, String, str> {
-    fn set(&mut self, title: Title<S>) -> &mut Properties {
-        self.title = Some(title.0.into_cow());
+impl Set<Title> for Properties {
+    fn set(&mut self, title: Title) -> &mut Properties {
+        self.title = Some(title.0);
         self
     }
 }
