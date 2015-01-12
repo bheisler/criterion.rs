@@ -357,7 +357,6 @@
 #[macro_use]
 extern crate zip;
 
-use std::borrow::IntoCow;
 use std::io::{Command, File, IoResult, Process};
 use std::str;
 use std::string::CowString;
@@ -378,6 +377,7 @@ pub mod filledcurve;
 pub mod grid;
 pub mod key;
 pub mod prelude;
+pub mod proxy;
 pub mod traits;
 
 /// Plot container
@@ -582,10 +582,10 @@ impl Set<BoxWidth> for Figure {
     }
 }
 
-impl<S> Set<Font<S>> for Figure where S: IntoCow<'static, String, str> {
+impl Set<Font> for Figure {
     /// Changes the font
-    fn set(&mut self, font: Font<S>) -> &mut Figure {
-        self.font = Some(font.0.into_cow());
+    fn set(&mut self, font: Font) -> &mut Figure {
+        self.font = Some(font.0);
         self
     }
 }
@@ -635,10 +635,10 @@ impl Set<Terminal> for Figure {
     }
 }
 
-impl<S> Set<Title<S>> for Figure where S: IntoCow<'static, String, str> {
+impl Set<Title> for Figure {
     /// Sets the title
-    fn set(&mut self, title: Title<S>) -> &mut Figure {
-        self.title = Some(title.0.into_cow());
+    fn set(&mut self, title: Title) -> &mut Figure {
+        self.title = Some(title.0);
         self
     }
 }
@@ -648,8 +648,7 @@ impl<S> Set<Title<S>> for Figure where S: IntoCow<'static, String, str> {
 pub struct BoxWidth(pub f64);
 
 /// A font name
-#[derive(Copy)]
-pub struct Font<S: IntoCow<'static, String, str>>(pub S);
+pub struct Font(CowString<'static>);
 
 /// The size of a font
 #[derive(Copy)]
@@ -660,7 +659,7 @@ pub struct FontSize(pub f64);
 pub struct Key;
 
 /// Plot label
-pub struct Label<S: IntoCow<'static, String, str>>(pub S);
+pub struct Label(CowString<'static>);
 
 /// Width of the lines
 #[derive(Copy)]
@@ -699,7 +698,7 @@ pub struct TicLabels<P, L> {
 }
 
 /// Figure title
-pub struct Title<S: IntoCow<'static, String, str>>(pub S);
+pub struct Title(CowString<'static>);
 
 /// A pair of axes that define a coordinate system
 #[allow(missing_docs)]

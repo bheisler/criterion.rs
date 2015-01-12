@@ -1,6 +1,5 @@
 //! Coordinate axis
 
-use std::borrow::IntoCow;
 use std::string::CowString;
 
 use map;
@@ -68,10 +67,10 @@ impl Configure<Grid> for Properties {
     }
 }
 
-impl<S> Set<Label<S>> for Properties where S: IntoCow<'static, String, str> {
+impl Set<Label> for Properties {
     /// Attaches a label to the axis
-    fn set(&mut self, label: Label<S>) -> &mut Properties {
-        self.label = Some(label.0.into_cow());
+    fn set(&mut self, label: Label) -> &mut Properties {
+        self.label = Some(label.0);
         self
     }
 }
