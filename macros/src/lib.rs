@@ -1,3 +1,5 @@
+#![allow(unstable)]
+#![deny(warnings)]
 #![feature(plugin_registrar)]
 
 extern crate rustc;
