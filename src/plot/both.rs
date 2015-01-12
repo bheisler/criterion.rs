@@ -9,7 +9,7 @@ use estimate::{Estimate, Estimates};
 use estimate::Statistic::Slope;
 use kde;
 use super::scale_time;
-use super::{DARK_BLUE, DARK_RED, FONT, KDE_POINTS, LINEWIDTH, SIZE};
+use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
 
 pub fn regression(
     base: &[(u64, u64)],
@@ -74,7 +74,7 @@ pub fn regression(
     let max_iters = max_iters * x_scale;
 
     let gnuplot = Figure::new().
-        set(FONT).
+        set(Font(DEFAULT_FONT)).
         set(Output(path)).
         set(SIZE).
         set(Title(id.to_string())).
@@ -142,7 +142,7 @@ pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
     let zeros = iter::repeat(0);
 
     let gnuplot = Figure::new().
-        set(FONT).
+        set(Font(DEFAULT_FONT)).
         set(Output(path)).
         set(SIZE).
         set(Title(id.to_string())).

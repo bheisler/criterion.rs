@@ -30,7 +30,7 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
 }
 
 // TODO These should be configurable
-static FONT: Font<&'static str> = Font("Helvetica");
+static DEFAULT_FONT: &'static str = "Helvetica";
 static KDE_POINTS: usize = 500;
 static SIZE: Size = Size(1280, 720);
 
@@ -85,7 +85,7 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
     let zeros = iter::repeat(0);
 
     let gnuplot = Figure::new().
-        set(FONT).
+        set(Font(DEFAULT_FONT)).
         set(Output(path)).
         set(SIZE).
         set(Title(id.to_string())).
@@ -208,7 +208,7 @@ pub fn regression(
     let max_iters = max_iters * x_scale;
 
     let gnuplot = Figure::new().
-        set(FONT).
+        set(Font(DEFAULT_FONT)).
         set(Output(path)).
         set(SIZE).
         set(Title(id.to_string())).
@@ -284,7 +284,7 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
         let len = end - start;
 
         Figure::new().
-            set(FONT).
+            set(Font(DEFAULT_FONT)).
             set(Output(Path::new(format!(".criterion/{}/new/{}.svg", id, statistic)))).
             set(SIZE).
             set(Title(format!("{}: {}", id, statistic))).
@@ -341,7 +341,7 @@ pub fn rel_distributions(
     let mut figure = Figure::new();
 
     figure.
-        set(FONT).
+        set(Font(DEFAULT_FONT)).
         set(SIZE).
         configure(Axis::LeftY, |a| a.
             set(Label("Density (a.u.)"))).
@@ -447,7 +447,7 @@ pub fn t_test(t: f64, distribution: &[f64], id: &str) {
     let zero = iter::repeat(0);
 
     let gnuplot = Figure::new().
-        set(FONT).
+        set(Font(DEFAULT_FONT)).
         set(Output(path)).
         set(SIZE).
         set(Title(format!("{}: Welch t test", id))).
@@ -606,7 +606,7 @@ pub fn summarize(id: &str) {
 
                 // TODO Review axis scaling
                 Figure::new().
-                    set(FONT).
+                    set(Font(DEFAULT_FONT)).
                     set(Output(dir.join(format!("summary/{}/{}s.svg", sample, statistic)))).
                     set(SIZE).
                     set(Title(format!("{}", id))).
@@ -708,7 +708,7 @@ pub fn summarize(id: &str) {
                 let tics = iter::count(0.5, 1f64);
                 // TODO Review axis scaling
                 Figure::new().
-                    set(FONT).
+                    set(Font(DEFAULT_FONT)).
                     set(Output(dir.join(format!("summary/{}/{}s.svg", sample, statistic)))).
                     set(SIZE).
                     set(Title(format!("{}: Estimates of the {}s", id, statistic))).
@@ -803,7 +803,7 @@ pub fn summarize(id: &str) {
                 let tics = iter::count(0.5, 1f64);
                 let mut f = Figure::new();
                 f.
-                    set(FONT).
+                    set(Font(DEFAULT_FONT)).
                     set(Output(dir.join(format!("summary/{}/violin_plot.svg", sample)))).
                     set(SIZE).
                     set(Title(format!("{}: Violin plot", id))).
