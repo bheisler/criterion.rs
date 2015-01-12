@@ -108,12 +108,10 @@ impl Set<Scale> for Properties {
     }
 }
 
-impl<D, S, PI, LI, P, L> Set<TicLabels<P, L>> for Properties where
-    D: Data,
-    S: Str,
-    PI: Iterator<Item=D>, LI: Iterator<Item=S>,
-    P: IntoIterator<Iter=PI>,
-    L: IntoIterator<Iter=LI>,
+// FIXME(rust-lang/rust#20300) move bounds to where clauses
+impl<P: IntoIterator, L: IntoIterator> Set<TicLabels<P, L>> for Properties where
+    <P::Iter as Iterator>::Item: Data,
+    <L::Iter as Iterator>::Item: Str,
 {
     /// Attaches labels to the tics of an axis
     fn set(&mut self, tics: TicLabels<P, L>) -> &mut Properties {

@@ -215,20 +215,14 @@ impl<X, Y, L, H> ErrorBar<X, Y, L, H> {
     }
 }
 
-impl<A, B, C, D, XI, YI, LI, HI, X, Y, L, H> traits::Plot<ErrorBar<X, Y, L, H>>
+// FIXME(rust-lang/rust#20300) move bounds to where clauses
+impl<X: IntoIterator, Y: IntoIterator, L: IntoIterator, H: IntoIterator>
+traits::Plot<ErrorBar<X, Y, L, H>>
 for Figure where
-    A: Data,
-    B: Data,
-    C: Data,
-    D: Data,
-    XI: Iterator<Item=A>,
-    YI: Iterator<Item=B>,
-    LI: Iterator<Item=C>,
-    HI: Iterator<Item=D>,
-    X: IntoIterator<Iter=XI>,
-    Y: IntoIterator<Iter=YI>,
-    L: IntoIterator<Iter=LI>,
-    H: IntoIterator<Iter=HI>,
+    <X::Iter as Iterator>::Item: Data,
+    <Y::Iter as Iterator>::Item: Data,
+    <L::Iter as Iterator>::Item: Data,
+    <H::Iter as Iterator>::Item: Data,
 {
     type Properties = Properties;
 

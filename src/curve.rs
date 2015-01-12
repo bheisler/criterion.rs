@@ -235,13 +235,10 @@ impl Display<&'static str> for Style {
     }
 }
 
-impl<A, B, X, Y, XI, YI> traits::Plot<Curve<X, Y>> for Figure where
-    A: Data,
-    B: Data,
-    XI: Iterator<Item=A>,
-    YI: Iterator<Item=B>,
-    X: IntoIterator<Iter=XI>,
-    Y: IntoIterator<Iter=YI>,
+// FIXME(rust-lang/rust#20300) move bounds to where clauses
+impl<X: IntoIterator, Y: IntoIterator> traits::Plot<Curve<X, Y>> for Figure where
+    <X::Iter as Iterator>::Item: Data,
+    <Y::Iter as Iterator>::Item: Data,
 {
     type Properties = Properties;
 
