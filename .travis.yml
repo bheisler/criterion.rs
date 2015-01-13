@@ -2,7 +2,7 @@ language: rust
 
 env:
   global:
-    - secure: pVHbWqVW0YttQunmjhnfPcD/qLOPNKljCPHExitixqMEIqpfyhSxRrHw5XjnVpl6nExsMpeDKy/6DRXM65q6jk0LQ+Qg5V0fujrQUSk50zaQgH+wo6W9WSKHV5WV+zdFz+h2TATtn4LcxhIaprB66AizZNjBrZn1uq0IT8Aums4=
+    - secure: C2Oij4OPM2pdkbpEV6bsCJ8PpqDk2NtjFhFiO+4ZlYrRCQnbv+TAOuWNj5aX1EOWPlMQdP/95VrEOizUcK1twsCuc6d8PnAoCu8WnLRsOSO8GftVynC+CEJSnaDpAVO3N23f5jrCsKQhZx9R/hADpY5ni2ik0rKNWGllaYzuUCc=
 
 before_install:
   # This PPA has a newer version of gnuplot
