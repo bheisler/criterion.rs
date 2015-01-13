@@ -2,7 +2,7 @@ language: rust
 
 env:
   global:
-    - secure: d7cJ0SnqKtJ1hO+23z5zdqHcvZpgooayhiCViGEWnu5KXkxVM2B+JTyvVcui8xskjG/q4FnrTHsn2qHX1416RW4JVX+z9xARWWISZGB3bTVMIrrk2NchafZBMwFqL6N/PwqYhU16zKllRUkEXOjcf9SpxKK/7Vl6i1uIU/+2o8o=
+    - secure: gPGjVs0jJTU1ZbYG0LapuP6bwaQ79ao9wYMrqwLYwgkiLfDAcsJXHecp0PUUGCJnEZvAzv9hhjsmGpgACMc6h718gHnXcXdZFyXPeW0SLHl8ZBOAX84GqAbENXv33O6BmiYgti3ao5a3pLXBTUZIC6sTZiAuFTksdizLAUa/i/4=
   matrix:
     - WITH_GNUPLOT=true
     - WITH_GNUPLOT=false
