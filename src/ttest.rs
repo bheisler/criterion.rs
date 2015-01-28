@@ -51,8 +51,8 @@ impl<A> TDistribution<A> where A: Simd + Send + Sync {
             TDistribution(range(0, nresamples).map(|_| {
                 let joint_resample = resamples.next();
 
-                let resample = joint_resample.slice_to(n);
-                let other_resample = joint_resample.slice_from(n);
+                let resample = &joint_resample[..n];
+                let other_resample = &joint_resample[n..];
 
                 resample.t(other_resample)
             }).collect())
