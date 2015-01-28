@@ -16,7 +16,7 @@ pub struct Program {
 impl Program {
     pub fn spawn(cmd: &Command) -> Program {
         let mut process = match cmd.spawn() {
-            Err(e) => panic!("`{}`: {}", cmd, e),
+            Err(e) => panic!("`{:?}`: {}", cmd, e),
             Ok(process) => process,
         };
 
@@ -28,7 +28,7 @@ impl Program {
         }
     }
 
-    pub fn send<T: fmt::String>(&mut self, line: T) -> &mut Program {
+    pub fn send<T: fmt::Display>(&mut self, line: T) -> &mut Program {
         match writeln!(&mut self.stdin, "{}", line) {
             Err(e) => panic!("`write into child stdin`: {}", e),
             Ok(_) => self,

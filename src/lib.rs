@@ -313,7 +313,7 @@ impl Criterion {
         f: F,
         inputs: &[I],
     ) -> &mut Criterion where
-        I: fmt::String,
+        I: fmt::Display,
         F: FnMut(&mut Bencher, &I),
     {
         analysis::function_with_inputs(id, f, inputs, self);
@@ -369,7 +369,7 @@ impl Criterion {
         program: &Command,
         inputs: &[I],
     ) -> &mut Criterion where
-        I: fmt::String,
+        I: fmt::Display,
     {
         analysis::program_with_inputs(id, program, inputs, self);
 

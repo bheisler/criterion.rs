@@ -57,7 +57,7 @@ pub fn function_with_inputs<I, F>(
     criterion: &Criterion,
 ) where
     F: FnMut(&mut Bencher, &I),
-    I: fmt::String,
+    I: fmt::Display,
 {
     for input in inputs.iter() {
         let id = format!("{}/{}", id, input);
@@ -80,7 +80,7 @@ pub fn program_with_inputs<I>(
     inputs: &[I],
     criterion: &Criterion,
 ) where
-    I: fmt::String,
+    I: fmt::Display,
 {
     for input in inputs.iter() {
         let id = format!("{}/{}", id, input);

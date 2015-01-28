@@ -1,4 +1,4 @@
-use rustc_serialize::json::PrettyEncoder;
+use rustc_serialize::json::Encoder;
 use rustc_serialize::{Decodable, Encodable, json};
 use std::io::{File, USER_RWX, fs};
 
@@ -45,7 +45,7 @@ pub fn rmrf(path: &Path) {
 pub fn save<D: Encodable>(data: &D, path: &Path) {
     let mut buf = Vec::new();
     {
-        let ref mut encoder = PrettyEncoder::new(&mut buf);
+        let ref mut encoder = Encoder::new_pretty(&mut buf);
         // FIXME (rust-lang/rust#14302) Remove transmute
         data.encode(encoder).unwrap();
     }

@@ -42,7 +42,7 @@ pub enum Statistic {
     StdDev,
 }
 
-impl fmt::String for Statistic {
+impl fmt::Display for Statistic {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Statistic::Mean => f.pad("mean"),
