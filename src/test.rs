@@ -7,7 +7,7 @@ pub fn vec<T>(size: usize) -> Option<Vec<T>> where T: Rand {
     if size > 1 {
         let mut rng: XorShiftRng = rand::thread_rng().gen();
 
-        Some(range(0, size).map(|_| rng.gen()).collect())
+        Some((0..size).map(|_| rng.gen()).collect())
     } else {
         None
     }

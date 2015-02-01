@@ -48,7 +48,7 @@ impl<A> TDistribution<A> where A: Simd + Send + Sync {
         } else {
             let mut resamples = Resamples::new(joint_sample);
 
-            TDistribution(range(0, nresamples).map(|_| {
+            TDistribution((0..nresamples).map(|_| {
                 let joint_resample = resamples.next();
 
                 let resample = &joint_resample[..n];

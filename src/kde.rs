@@ -70,7 +70,7 @@ impl<'a, F> Kde<'a, F> where F: Fn(f64) -> f64 + Sync {
             let mut pdf = Vec::with_capacity(n);
 
             let mut x = a;
-            for _ in range(0, n) {
+            for _ in 0..n {
                 pdf.push((x, self.call((x,))));
 
                 x += dx;

@@ -28,7 +28,7 @@ impl <'a, A> Resamples<'a, A> where A: 'a + Clone {
             None => {
                 let mut stage = Vec::with_capacity(n);
 
-                for _ in range(0, n) {
+                for _ in 0..n {
                     stage.push(self.sample[self.range.ind_sample(rng)].clone())
                 }
 
@@ -60,7 +60,7 @@ mod test {
             let mut resamples = Resamples::new(&*sample);
             let sample = sample.iter().map(|&x| x).collect::<HashSet<_>>();
 
-            TestResult::from_bool(range(0, nresamples).all(|_| {
+            TestResult::from_bool((0..nresamples).all(|_| {
                 let resample = resamples.next().iter().map(|&x| x).collect::<HashSet<_>>();
 
                 resample.is_subset(&sample)

@@ -33,7 +33,7 @@ impl<T> Bootstrap for [T] where
         } else {
             let mut resamples = Resamples::new(self);
 
-            Distribution(range(0, nresamples).map(|_| {
+            Distribution((0..nresamples).map(|_| {
                 statistic(resamples.next())
             }).collect())
         }
@@ -88,10 +88,10 @@ pub fn bootstrap<A, B, C, S>(
         let mut other_resamples = Resamples::new(second);
         let mut distribution = Vec::with_capacity(nresamples);
 
-        for _ in range(0, nresamples_sqrt) {
+        for _ in 0..nresamples_sqrt {
             let resample = resamples.next();
 
-            for _ in range(0, nresamples_sqrt) {
+            for _ in 0..nresamples_sqrt {
                 let other_resample = other_resamples.next();
 
                 distribution.push(statistic(resample, other_resample));
