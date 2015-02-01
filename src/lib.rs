@@ -51,7 +51,7 @@ impl Bencher {
     /// Callback to benchmark a routine
     pub fn iter<T, F: FnMut() -> T>(&mut self, mut routine: F) {
         self.ns_start = time::precise_time_ns();
-        for _ in range(0, self.iters) {
+        for _ in 0..self.iters {
             test::black_box(routine());
         }
         self.ns_end = time::precise_time_ns();
@@ -347,7 +347,7 @@ impl Criterion {
     ///         // Benchmark
     ///         let ns_start = time::precise_time_ns();
     ///         // Execute the routine "iters" times
-    ///         for _ in range(0, iters) {
+    ///         for _ in 0..iters {
     ///             // Code to benchmark goes here
     ///         }
     ///         let ns_end = time::precise_time_ns();
