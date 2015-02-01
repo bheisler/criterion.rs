@@ -1,6 +1,13 @@
-#![allow(unstable)]
+#![allow(unused_features)]
 #![deny(warnings)]
-#![feature(plugin, unboxed_closures)]
+#![feature(collections)]
+#![feature(core)]
+#![feature(os)]
+#![feature(plugin)]
+#![feature(rand)]
+#![feature(std_misc)]
+#![feature(test)]
+#![feature(unboxed_closures)]
 
 extern crate parallel;
 #[cfg(test)]
@@ -41,7 +48,6 @@ pub trait Bootstrap {
 }
 
 /// The bootstrap distribution of a population parameter
-#[experimental]
 pub struct Distribution<A>(Vec<A>);
 
 impl<A> Distribution<A> {

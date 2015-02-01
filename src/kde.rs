@@ -9,7 +9,6 @@ use std::{os, ptr};
 use Stats;
 
 /// Univariate Kernel Density Estimator
-#[experimental]
 pub struct Kde<'a, F> where F: Fn(f64) -> f64 + Sync {
     bandwidth: f64,
     kernel: F,
@@ -23,7 +22,6 @@ impl<'a> Kde<'a, fn(f64) -> f64> {
     /// * Kernel: Gaussian
     // TODO bandwidth estimator should be configurable
     // TODO kernel should be configurable
-    #[experimental]
     pub fn new(sample: &[f64]) -> Kde<fn(f64) -> f64> {
         Kde {
             bandwidth: silverman(sample),
@@ -35,19 +33,16 @@ impl<'a> Kde<'a, fn(f64) -> f64> {
 
 impl<'a, F> Kde<'a, F> where F: Fn(f64) -> f64 + Sync {
     /// Returns the bandwidth used by the estimator
-    #[experimental]
     pub fn bandwidth(&self) -> f64 {
         self.bandwidth
     }
 
     /// Returns the sample used by the estimator
-    #[experimental]
     pub fn sample(&self) -> &[f64] {
         self.sample
     }
 
     /// Sweeps the `[a, b]` range collecting `n` points of the estimated PDF
-    #[experimental]
     pub fn sweep(&self, (a, b): (f64, f64), n: usize) -> Vec<(f64, f64)> {
         assert!(a < b);
         assert!(n > 1);
@@ -86,10 +81,11 @@ impl<'a, F> Kde<'a, F> where F: Fn(f64) -> f64 + Sync {
     }
 }
 
-impl<'a, F> Fn(f64) -> f64 for Kde<'a, F> where F: Fn(f64) -> f64  + Sync {
+impl<'a, F> Fn<(f64,)> for Kde<'a, F> where F: Fn(f64) -> f64  + Sync {
+    type Output = f64;
+
     /// Estimates the probability *density* that the random variable takes the value `x`
     // XXX Can this be SIMD accelerated?
-    #[experimental]
     extern "rust-call" fn call(&self, (x,): (f64,)) -> f64 {
         let frac_1_h = self.bandwidth.recip();
         let n = self.sample.len() as f64;
@@ -102,7 +98,6 @@ impl<'a, F> Fn(f64) -> f64 for Kde<'a, F> where F: Fn(f64) -> f64  + Sync {
 }
 
 /// Estimates the bandwidth using Silverman's rule of thumb
-#[experimental]
 fn silverman(x: &[f64]) -> f64 {
     const FACTOR: f64 = 4. / 3.;
     const EXPONENT: f64 = 1. / 5.;
@@ -117,7 +112,6 @@ fn silverman(x: &[f64]) -> f64 {
 ///
 /// Equivalent to the Probability Density Function of a normally distributed random variable with
 /// mean 0 and variance 1
-#[experimental]
 fn gaussian(x: f64) -> f64 {
     (x.powi(2).exp() * ::std::f64::consts::PI_2).sqrt().recip()
 }

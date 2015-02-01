@@ -43,7 +43,6 @@ impl<T> Bootstrap for [T] where
 /// Returns the bootstrap distribution of the parameter estimated by the 2-sample statistic
 ///
 /// * Bootstrap method: Case resampling
-#[experimental]
 pub fn bootstrap<A, B, C, S>(
     first: &[A],
     second: &[B],

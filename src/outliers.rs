@@ -9,7 +9,6 @@ use {Simd, Stats};
 
 /// Classification of outliers using Tukey's fences
 #[derive(RustcEncodable)]
-#[experimental]
 pub struct Outliers<A> {
     pub count: (usize, usize, usize, usize, usize),
     pub fences: (A, A, A, A),

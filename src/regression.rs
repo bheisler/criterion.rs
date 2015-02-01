@@ -6,7 +6,6 @@ use Sum;
 
 /// A straight line that passes through the origin `y = m * x`
 #[derive(Clone, Copy)]
-#[experimental]
 pub struct Slope<A: Float>(pub A);
 
 impl<A> Slope<A> where A: Float {
@@ -48,7 +47,6 @@ impl<A> Slope<A> where A: Float {
 
 /// An straight line `y = m * x + b`
 #[derive(Clone, Copy)]
-#[experimental]
 pub struct StraightLine<A: Float> {
     /// The y-intercept of the line
     pub intercept: A,
