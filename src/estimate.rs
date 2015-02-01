@@ -1,7 +1,7 @@
 use rustc_serialize::json;
 use stats::{ConfidenceInterval, Distribution};
 use std::collections::BTreeMap;
-use std::io::File;
+use std::old_io::File;
 use std::fmt;
 
 #[derive(Copy, RustcDecodable, RustcEncodable, PartialEq)]

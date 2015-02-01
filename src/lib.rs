@@ -1,6 +1,12 @@
-#![allow(unstable)]
+#![allow(unused_features)]
 #![deny(warnings)]
+#![feature(collections)]
+#![feature(core)]
+#![feature(io)]
+#![feature(path)]
 #![feature(plugin)]
+#![feature(std_misc)]
+#![feature(test)]
 
 //! A statistics-driven micro-benchmarking library written in Rust.
 //!
@@ -20,7 +26,7 @@ extern crate test;
 extern crate time;
 
 use std::fmt;
-use std::io::Command;
+use std::old_io::Command;
 use std::time::Duration;
 
 mod analysis;

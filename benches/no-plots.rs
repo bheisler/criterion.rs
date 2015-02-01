@@ -1,6 +1,6 @@
 extern crate criterion;
 
-use std::io::fs;
+use std::old_io::fs;
 use criterion::Criterion;
 
 #[test]

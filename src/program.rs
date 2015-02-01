@@ -1,5 +1,5 @@
 use std::fmt;
-use std::io::{BufferedReader, Command, PipeStream, Process};
+use std::old_io::{BufferedReader, Command, PipeStream, Process};
 use time;
 
 use routine::Routine;

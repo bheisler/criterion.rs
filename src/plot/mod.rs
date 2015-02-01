@@ -3,7 +3,7 @@ use stats::Stats;
 use stats::outliers::Outliers;
 use stats::outliers::Label::{HighMild, HighSevere, LowMild, LowSevere};
 use stats::regression::Slope;
-use std::io::fs::PathExtensions;
+use std::old_io::fs::PathExtensions;
 use std::iter;
 use std::num::Float;
 use std::str;

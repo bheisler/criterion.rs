@@ -2,8 +2,8 @@ use stats::{Bootstrap, ConfidenceInterval, Distribution};
 use stats::outliers::Outliers;
 use stats::regression::Slope;
 use std::fmt;
-use std::io::Command;
-use std::io::fs::PathExtensions;
+use std::old_io::Command;
+use std::old_io::fs::PathExtensions;
 use time;
 
 use estimate::{

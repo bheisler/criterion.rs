@@ -1,7 +1,7 @@
 extern crate criterion;
 
 use criterion::Criterion;
-use std::io::fs::PathExtensions;
+use std::old_io::fs::PathExtensions;
 use std::iter;
 
 #[test]

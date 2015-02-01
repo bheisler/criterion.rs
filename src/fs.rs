@@ -1,6 +1,6 @@
 use rustc_serialize::json::Encoder;
 use rustc_serialize::{Decodable, Encodable, json};
-use std::io::{File, USER_RWX, fs};
+use std::old_io::{File, USER_RWX, fs};
 
 // TODO Proper error handling
 pub fn load<A: Decodable>(path: &Path) -> A {
@@ -49,5 +49,5 @@ pub fn save<D: Encodable>(data: &D, path: &Path) {
         // FIXME (rust-lang/rust#14302) Remove transmute
         data.encode(encoder).unwrap();
     }
-    File::create(path).write(&*buf).ok().expect("Couldn't save data")
+    File::create(path).write_all(&*buf).ok().expect("Couldn't save data")
 }
