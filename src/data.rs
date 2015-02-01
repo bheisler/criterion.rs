@@ -1,4 +1,4 @@
-use std::io::MemWriter;
+use std::old_io::MemWriter;
 use std::mem;
 use std::num::ToPrimitive;
 

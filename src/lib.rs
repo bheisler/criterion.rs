@@ -11,7 +11,7 @@
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
-//! # use std::io::{USER_RWX, fs};
+//! # use std::old_io::{USER_RWX, fs};
 //! use simplot::prelude::*;
 //! use space::linspace;
 //! use std::num::Float;
@@ -70,7 +70,7 @@
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
-//! # use std::io::{USER_RWX, fs};
+//! # use std::old_io::{USER_RWX, fs};
 //! use simplot::prelude::*;
 //! use space::linspace;
 //! use std::f64::consts::PI;
@@ -147,7 +147,7 @@
 //! # #![allow(unstable)]
 //! extern crate simplot;
 //!
-//! # use std::io::{USER_RWX, fs};
+//! # use std::old_io::{USER_RWX, fs};
 //! use simplot::prelude::*;
 //! use std::rand::{Rng, mod};
 //!
@@ -212,7 +212,7 @@
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
-//! # use std::io::{fs, USER_RWX};
+//! # use std::old_io::{fs, USER_RWX};
 //! use complex::f64::I;
 //! use complex::{Complex, Math};
 //! use simplot::prelude::*;
@@ -286,7 +286,7 @@
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
-//! # use std::io::{USER_RWX, fs};
+//! # use std::old_io::{USER_RWX, fs};
 //! use simplot::prelude::*;
 //! use space::linspace;
 //! use std::f64::consts::PI;
@@ -351,13 +351,16 @@
 //! # }
 //! ```
 
-#![allow(unstable)]
 #![deny(missing_docs, warnings)]
+#![feature(collections)]
+#![feature(core)]
+#![feature(io)]
+#![feature(path)]
 
 #[macro_use]
 extern crate zip;
 
-use std::io::{Command, File, IoResult, Process};
+use std::old_io::{Command, File, IoResult, Process};
 use std::str;
 use std::string::CowString;
 
@@ -517,13 +520,13 @@ impl Figure {
 
     /// Dumps the script required to produce the figure into `sink`
     pub fn dump<W>(&mut self, sink: &mut W) -> IoResult<&mut Figure> where W: Writer {
-        try!(sink.write(&*self.script()));
+        try!(sink.write_all(&*self.script()));
         Ok(self)
     }
 
     /// Saves the script required to produce the figure to `path`
     pub fn save(&mut self, path: &Path) -> IoResult<&mut Figure> {
-        try!((try!(File::create(path))).write(&*self.script()));
+        try!((try!(File::create(path))).write_all(&*self.script()));
         Ok(self)
     }
 }
