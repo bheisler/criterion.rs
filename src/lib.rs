@@ -75,7 +75,7 @@
 //! use space::linspace;
 //! use std::f64::consts::PI;
 //! use std::num::Float;
-//! use std::rand::{Rng, XorShiftRng, mod};
+//! use std::rand::{Rng, XorShiftRng, self};
 //!
 //! fn sinc(mut x: f64) -> f64 {
 //!     if x == 0. {
@@ -149,15 +149,15 @@
 //!
 //! # use std::old_io::{USER_RWX, fs};
 //! use simplot::prelude::*;
-//! use std::rand::{Rng, mod};
+//! use std::rand::{Rng, self};
 //!
 //! # fn main() {
 //! let xs = 1..11;
 //!
 //! // Fake some data
 //! let mut rng = rand::thread_rng();
-//! let bh = xs.map(|_| 5f64 + 2.5 * rng.gen()).collect::<Vec<_>>();
-//! let bm = xs.map(|_| 2.5f64 + 2.5 * rng.gen()).collect::<Vec<_>>();
+//! let bh = xs.clone().map(|_| 5f64 + 2.5 * rng.gen()).collect::<Vec<_>>();
+//! let bm = xs.clone().map(|_| 2.5f64 + 2.5 * rng.gen()).collect::<Vec<_>>();
 //! let wh = bh.iter().map(|&y| y + (10. - y) * rng.gen()).collect::<Vec<_>>();
 //! let wm = bm.iter().map(|&y| y * rng.gen()).collect::<Vec<_>>();
 //! let m = bm.iter().zip(bh.iter()).map(|(&l, &h)| (h - l) * rng.gen() + l).collect::<Vec<_>>();
@@ -174,7 +174,7 @@
 //!     configure(Axis::BottomX, |a| a.
 //!         set(Range::Limits(0., 11.))).
 //!     plot(Candlesticks {
-//!         x: xs,
+//!         x: xs.clone(),
 //!         whisker_min: &*wm,
 //!         box_min: &*bm,
 //!         box_high: &*bh,

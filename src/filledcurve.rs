@@ -1,10 +1,11 @@
 //! Filled curve plots
 
+use std::iter::IntoIterator;
 use std::string::CowString;
 
 use data::Matrix;
 use plot::Plot;
-use traits::{Data, IntoIterator, Set, self};
+use traits::{Data, Set, self};
 use {Axes, Color, Default, Display, Figure, Label, Opacity, Script};
 
 /// Properties common to filled curve plots

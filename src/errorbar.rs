@@ -1,5 +1,6 @@
 //! Error bar plots
 
+use std::iter::IntoIterator;
 use std::string::CowString;
 
 use {
@@ -8,7 +9,7 @@ use {
 };
 use data::Matrix;
 use plot::Plot;
-use traits::{Data, IntoIterator, Set, self};
+use traits::{Data, Set, self};
 
 /// Properties common to error bar plots
 pub struct Properties {

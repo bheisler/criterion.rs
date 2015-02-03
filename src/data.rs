@@ -30,7 +30,7 @@ pub struct Matrix {
 }
 
 impl Matrix {
-    pub fn new<A, I>(mut rows: I) -> Matrix where A: Row, I: Iterator<Item=A> {
+    pub fn new<A, I>(rows: I) -> Matrix where A: Row, I: Iterator<Item=A> {
         let ncols = Row::ncols(None::<A>);
         let bytes_per_row = ncols * mem::size_of::<f64>();
         let mut buffer = MemWriter::with_capacity(rows.size_hint().0 * bytes_per_row);

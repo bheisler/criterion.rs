@@ -1,10 +1,11 @@
 //! Coordinate axis
 
+use std::iter::IntoIterator;
 use std::string::CowString;
 
 use map;
 use {Axis, Default, Display, Grid, Label, Range, Scale, Script, TicLabels, grid};
-use traits::{Configure, Data, IntoIterator, Set};
+use traits::{Configure, Data, Set};
 
 /// Properties of the coordinate axes
 #[derive(Clone)]
