@@ -78,7 +78,7 @@ pub fn regression(
         set(Output(path)).
         set(SIZE).
         set(Title(id.to_string())).
-        configure(Axis::BottomX, move |:a| a.
+        configure(Axis::BottomX, |a| a.
             configure(Grid::Major, |g| g.
                 show()).
             set(Label(x_label))).

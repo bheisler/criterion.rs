@@ -92,7 +92,7 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
         configure(Axis::BottomX, |a| a.
             set(Label(format!("Average time ({}s)", prefix))).
             set(Range::Limits(xs.min(), xs.max()))).
-        configure(Axis::LeftY, move |:a| a.
+        configure(Axis::LeftY, |a| a.
             set(Label(y_label)).
             set(Range::Limits(0., max_iters * y_scale))).
         configure(Axis::RightY, |a| a.
@@ -216,7 +216,7 @@ pub fn regression(
             set(Justification::Left).
             set(Order::SampleText).
             set(Position::Inside(Vertical::Top, Horizontal::Left))).
-        configure(Axis::BottomX, move |:a| a.
+        configure(Axis::BottomX, |a| a.
             configure(Grid::Major, |g| g.
                 show()).
             set(Label(x_label))).
@@ -541,7 +541,7 @@ pub fn summarize(id: &str) {
 
         fs::mkdirp(&dir.join(format!("summary/{}", sample)));
 
-        let gnuplots = if benches.iter().all(|&(_, input, _, _)| input.is_some()) {
+        let gnuplots = if benches.iter().all(|&(_, ref input, _, _)| input.is_ok()) {
             // TODO trendline
             let mut benches = benches.into_iter().map(|(label, input, estimates, sample)| {
                 (label, input.unwrap(), estimates, sample)
@@ -734,7 +734,7 @@ pub fn summarize(id: &str) {
                         set(Label("Input")).
                         set(Range::Limits(0., benches.len() as f64)).
                         set(TicLabels {
-                            positions: tics,
+                            positions: tics.clone(),
                             labels: benches.iter().map(|&(label, _, _, _)| label),
                         })).
                     configure(Axis::RightY, |a| a.
@@ -826,7 +826,7 @@ pub fn summarize(id: &str) {
                         set(Label("Input")).
                         set(Range::Limits(0., benches.len() as f64)).
                         set(TicLabels {
-                            positions: tics,
+                            positions: tics.clone(),
                             labels: benches.iter().map(|&(label, _, _, _)| label),
                         })).
                         plot(Points {

@@ -48,7 +48,7 @@ impl Program {
 }
 
 impl Routine for Program {
-    fn bench<I>(&mut self, mut iters: I) -> Vec<u64> where I: Iterator<Item=u64> {
+    fn bench<I>(&mut self, iters: I) -> Vec<u64> where I: Iterator<Item=u64> {
         let mut n = 0us;
         for iters in iters {
             self.send(iters);
@@ -59,7 +59,7 @@ impl Routine for Program {
             let msg = self.recv();
             let msg = msg.as_slice().trim();
 
-            msg.parse().expect("Couldn't parse program output")
+            msg.parse().ok().expect("Couldn't parse program output")
         }).collect()
     }
 
@@ -69,7 +69,7 @@ impl Routine for Program {
 
         loop {
             let elapsed =
-                self.send(iters).recv().as_slice().trim().parse().
+                self.send(iters).recv().as_slice().trim().parse().ok().
                     expect("Couldn't parse the program output");
 
             if time::precise_time_ns() - ns_start > how_long_ns {

@@ -43,11 +43,10 @@ pub fn rmrf(path: &Path) {
 
 // TODO Proper error handling
 pub fn save<D: Encodable>(data: &D, path: &Path) {
-    let mut buf = Vec::new();
+    let mut buf = String::new();
     {
         let ref mut encoder = Encoder::new_pretty(&mut buf);
-        // FIXME (rust-lang/rust#14302) Remove transmute
         data.encode(encoder).unwrap();
     }
-    File::create(path).write_all(&*buf).ok().expect("Couldn't save data")
+    File::create(path).write_all(buf.as_bytes()).ok().expect("Couldn't save data")
 }
