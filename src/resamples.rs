@@ -1,5 +1,5 @@
-use std::rand::{Rng, XorShiftRng, self};
-use std::rand::distributions::{IndependentSample, Range};
+use rand::distributions::{IndependentSample, Range};
+use rand::{Rng, XorShiftRng, self};
 
 pub struct Resamples<'a, A> where A: 'a {
     range: Range<usize>,

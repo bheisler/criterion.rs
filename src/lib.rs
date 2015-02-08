@@ -15,6 +15,7 @@ extern crate quickcheck;
 #[cfg(test)]
 #[plugin]
 extern crate quickcheck_macros;
+extern crate rand;
 extern crate "rustc-serialize" as rustc_serialize;
 #[cfg(test)]
 extern crate "test" as std_test;

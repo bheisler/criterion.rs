@@ -1,5 +1,5 @@
+use rand::{Rand, Rng, XorShiftRng, self};
 use std::num::Float;
-use std::rand::{Rand, Rng, XorShiftRng, self};
 
 pub const BENCH_SIZE: usize = 1_000_000;
 

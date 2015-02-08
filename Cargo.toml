@@ -4,6 +4,9 @@ name = "stats"
 version = "0.0.0"
 authors = ["Jorge Aparicio <japaric@linux.com>"]
 
+[dependencies]
+rand = "*"
+
 [dependencies.parallel]
 git = "https://github.com/japaric/parallel.rs"
 
