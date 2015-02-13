@@ -37,19 +37,19 @@ impl Script for Properties {
         } else {
             String::new()
         };
-        script.push_str(&*format!("with filledcurves "));
+        script.push_str(&format!("with filledcurves "));
 
         script.push_str("fillstyle ");
 
         if let Some(opacity) = self.opacity {
-            script.push_str(&*format!("solid {} ", opacity))
+            script.push_str(&format!("solid {} ", opacity))
         }
 
         // TODO border shoulde be configurable
         script.push_str("noborder ");
 
         if let Some(color) =  self.color {
-            script.push_str(&*format!("lc rgb '{}' ", color.display()));
+            script.push_str(&format!("lc rgb '{}' ", color.display()));
         }
 
         if let Some(ref label) = self.label {
@@ -117,9 +117,9 @@ pub struct FilledCurve<X, Y1, Y2> {
 // FIXME(rust-lang/rust#20300) move bounds to where clauses
 impl<X: IntoIterator, Y1: IntoIterator, Y2: IntoIterator>
 traits::Plot<FilledCurve<X, Y1, Y2>> for Figure where
-    <X::Iter as Iterator>::Item: Data,
-    <Y1::Iter as Iterator>::Item: Data,
-    <Y2::Iter as Iterator>::Item: Data,
+    <X::IntoIter as Iterator>::Item: Data,
+    <Y1::IntoIter as Iterator>::Item: Data,
+    <Y2::IntoIter as Iterator>::Item: Data,
 {
     type Properties = Properties;
 

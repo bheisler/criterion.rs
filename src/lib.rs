@@ -30,8 +30,8 @@
 //!         set(Boxed::Yes).
 //!         set(Position::Inside(Vertical::Top, Horizontal::Left))).
 //!     plot(LinesPoints {
-//!         x: xs,
-//!         y: xs.map(|x| x.sin()),
+//!         x: xs.clone(),
+//!         y: xs.clone().map(|x| x.sin()),
 //!     }, |lp| lp.
 //!         set(Color::DarkViolet).
 //!         set(Label("sin(x)")).
@@ -39,14 +39,14 @@
 //!         set(PointSize(1.5)).
 //!         set(PointType::Circle)).
 //!     plot(Steps {
-//!         x: xs,
-//!         y: xs.map(|x| x.atan()),
+//!         x: xs.clone(),
+//!         y: xs.clone().map(|x| x.atan()),
 //!     }, |s| s.
 //!         set(Color::Rgb(0, 158, 115)).
 //!         set(Label("atan(x)")).
 //!         set(LineWidth(2.))).
 //!     plot(Impulses {
-//!         x: xs,
+//!         x: xs.clone(),
 //!         y: xs.map(|x| x.atan().cos()),
 //!     }, |i| i.
 //!         set(Color::Rgb(86, 180, 233)).
@@ -96,7 +96,7 @@
 //! let y_low = ys.iter().map(|&y| y - 0.025 - 0.075 * rng.gen()).collect::<Vec<_>>();
 //! let y_high = ys.iter().map(|&y| y + 0.025 + 0.075 * rng.gen()).collect::<Vec<_>>();
 //! let xs = linspace::<f64>(-4., 4., 13).skip(1).take(11);
-//! let xs = xs.map(|x| x + 0.2 * rng.gen() - 0.1);
+//! let xs = xs.clone().map(|x| x + 0.2 * rng.gen() - 0.1);
 //!
 //! # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
 //! # assert_eq!(Some(String::new()),
@@ -113,17 +113,17 @@
 //!     configure(Key, |k| k.
 //!         set(Position::Outside(Vertical::Top, Horizontal::Right))).
 //!     plot(Lines {
-//!         x: xs_,
-//!         y: xs_.map(|x| sinc(x)),
+//!         x: xs_.clone(),
+//!         y: xs_.map(sinc),
 //!     }, |l| l.
 //!         set(Color::Rgb(0, 158, 115)).
 //!         set(Label("sinc(x)")).
 //!         set(LineWidth(2.))).
 //!     plot(YErrorBars {
 //!         x: xs,
-//!         y: &*ys,
-//!         y_low: &*y_low,
-//!         y_high: &*y_high,
+//!         y: &ys,
+//!         y_low: &y_low,
+//!         y_high: &y_high,
 //!     }, |eb| eb.
 //!         set(Color::DarkViolet).
 //!         set(LineWidth(2.)).
@@ -161,7 +161,6 @@
 //! let wh = bh.iter().map(|&y| y + (10. - y) * rng.gen()).collect::<Vec<_>>();
 //! let wm = bm.iter().map(|&y| y * rng.gen()).collect::<Vec<_>>();
 //! let m = bm.iter().zip(bh.iter()).map(|(&l, &h)| (h - l) * rng.gen() + l).collect::<Vec<_>>();
-//! let m = &*m;
 //!
 //! # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
 //! # assert_eq!(Some(String::new()),
@@ -175,10 +174,10 @@
 //!         set(Range::Limits(0., 11.))).
 //!     plot(Candlesticks {
 //!         x: xs.clone(),
-//!         whisker_min: &*wm,
-//!         box_min: &*bm,
-//!         box_high: &*bh,
-//!         whisker_high: &*wh,
+//!         whisker_min: &wm,
+//!         box_min: &bm,
+//!         box_high: &bh,
+//!         whisker_high: &wh,
 //!     }, |cs| cs.
 //!         set(Color::Rgb(86, 180, 233)).
 //!         set(Label("Quartiles")).
@@ -186,10 +185,10 @@
 //!     // trick to plot the median
 //!     plot(Candlesticks {
 //!         x: xs,
-//!         whisker_min: m,
-//!         box_min: m,
-//!         box_high: m,
-//!         whisker_high: m,
+//!         whisker_min: &m,
+//!         box_min: &m,
+//!         box_high: &m,
+//!         whisker_high: &m,
 //!     }, |cs| cs.
 //!         set(Color::Black).
 //!         set(LineWidth(2.))).
@@ -226,8 +225,8 @@
 //! # fn main() {
 //! let (start, end) = (1.1, 90_000.);
 //! let xs = logspace(start, end, 101);
-//! let phase = xs.map(|x| tf(x).arg() * 180. / PI);
-//! let magnitude = xs.map(|x| tf(x).abs());
+//! let phase = xs.clone().map(|x| tf(x).arg() * 180. / PI);
+//! let magnitude = xs.clone().map(|x| tf(x).abs());
 //!
 //! # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
 //! # assert_eq!(Some(String::new()),
@@ -254,7 +253,7 @@
 //!         set(Position::Inside(Vertical::Top, Horizontal::Center)).
 //!         set(Title(" "))).
 //!     plot(Lines {
-//!         x: xs,
+//!         x: xs.clone(),
 //!         y: magnitude,
 //!     }, |l| l.
 //!         set(Color::DarkViolet).
@@ -320,22 +319,22 @@
 //!         set(Position::Inside(Vertical::Top, Horizontal::Left)).
 //!         set(Title("Gaussian Distribution"))).
 //!     plot(FilledCurve {
-//!         x: xs,
-//!         y1: xs.map(|x| gaussian(x, 0.5, 0.5)),
+//!         x: xs.clone(),
+//!         y1: xs.clone().map(|x| gaussian(x, 0.5, 0.5)),
 //!         y2: zeros.clone(),
 //!     }, |fc| fc.
 //!         set(Color::ForestGreen).
 //!         set(Label("μ = 0.5 σ = 0.5"))).
 //!     plot(FilledCurve {
-//!         x: xs,
-//!         y1: xs.map(|x| gaussian(x, 2.0, 1.0)),
+//!         x: xs.clone(),
+//!         y1: xs.clone().map(|x| gaussian(x, 2.0, 1.0)),
 //!         y2: zeros.clone(),
 //!     }, |fc| fc.
 //!         set(Color::Gold).
 //!         set(Label("μ = 2.0 σ = 1.0")).
 //!         set(Opacity(0.5))).
 //!     plot(FilledCurve {
-//!         x: xs,
+//!         x: xs.clone(),
 //!         y1: xs.map(|x| gaussian(x, -1.0, 2.0)),
 //!         y2: zeros,
 //!     }, |fc| fc.
@@ -422,43 +421,43 @@ impl Figure {
     fn script(&self) -> Vec<u8> {
         let mut s = String::new();
 
-        s.push_str(&*format!("set output '{}'\n", self.output.display()));
+        s.push_str(&format!("set output '{}'\n", self.output.display()));
 
         if let Some(width) = self.box_width {
-            s.push_str(&*format!("set boxwidth {}\n", width))
+            s.push_str(&format!("set boxwidth {}\n", width))
         }
 
         if let Some(ref title) = self.title {
-            s.push_str(&*format!("set title '{}'\n", title))
+            s.push_str(&format!("set title '{}'\n", title))
         }
 
         for axis in self.axes.iter() {
-            s.push_str(&*axis.script());
+            s.push_str(&axis.script());
         }
 
         for (_, script) in self.tics.iter() {
-            s.push_str(&**script);
+            s.push_str(script);
         }
 
         if let Some(ref key) = self.key {
-            s.push_str(&*key.script())
+            s.push_str(&key.script())
         }
 
         if let Some(alpha) = self.alpha {
-            s.push_str(&*format!("set style fill transparent solid {}\n", alpha))
+            s.push_str(&format!("set style fill transparent solid {}\n", alpha))
         }
 
-        s.push_str(&*format!("set terminal {} dashed", self.terminal.display()));
+        s.push_str(&format!("set terminal {} dashed", self.terminal.display()));
 
         if let Some((width, height)) = self.size {
-            s.push_str(&*format!(" size {}, {}", width, height))
+            s.push_str(&format!(" size {}, {}", width, height))
         }
 
         if let Some(ref name) = self.font {
             if let Some(size) = self.font_size {
-                s.push_str(&*format!(" font '{},{}'", name, size))
+                s.push_str(&format!(" font '{},{}'", name, size))
             } else {
-                s.push_str(&*format!(" font '{}'", name))
+                s.push_str(&format!(" font '{}'", name))
             }
         }
 
@@ -480,7 +479,7 @@ impl Figure {
                 s.push_str(", ");
             }
 
-            s.push_str(&*format!(
+            s.push_str(&format!(
                     "'-' binary endian=little record={} format='%float64' using ",
                     data.nrows()));
 
@@ -491,11 +490,11 @@ impl Figure {
                 } else {
                     s.push(':');
                 }
-                s.push_str(&*(col + 1).to_string());
+                s.push_str(&(col + 1).to_string());
             }
             s.push(' ');
 
-            s.push_str(&*plot.script());
+            s.push_str(&plot.script());
         }
 
         let mut buffer = s.into_bytes();
@@ -520,13 +519,13 @@ impl Figure {
 
     /// Dumps the script required to produce the figure into `sink`
     pub fn dump<W>(&mut self, sink: &mut W) -> IoResult<&mut Figure> where W: Writer {
-        try!(sink.write_all(&*self.script()));
+        try!(sink.write_all(&self.script()));
         Ok(self)
     }
 
     /// Saves the script required to produce the figure to `path`
     pub fn save(&mut self, path: &Path) -> IoResult<&mut Figure> {
-        try!((try!(File::create(path))).write_all(&*self.script()));
+        try!((try!(File::create(path))).write_all(&self.script()));
         Ok(self)
     }
 }
@@ -833,7 +832,7 @@ trait Script {
 // FIXME Parsing may fail
 pub fn version() -> IoResult<(usize, usize, usize)> {
     let stdout = try!(Command::new("gnuplot").arg("--version").output()).output;
-    let mut words = str::from_utf8(&*stdout).unwrap().words().skip(1);
+    let mut words = str::from_utf8(&stdout).unwrap().words().skip(1);
     let mut version = words.next().unwrap().split('.');
     let major = version.next().unwrap().parse().unwrap();
     let minor = version.next().unwrap().parse().unwrap();

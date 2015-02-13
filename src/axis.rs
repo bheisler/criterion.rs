@@ -110,8 +110,8 @@ impl Set<Scale> for Properties {
 
 // FIXME(rust-lang/rust#20300) move bounds to where clauses
 impl<P: IntoIterator, L: IntoIterator> Set<TicLabels<P, L>> for Properties where
-    <P::Iter as Iterator>::Item: Data,
-    <L::Iter as Iterator>::Item: Str,
+    <P::IntoIter as Iterator>::Item: Data,
+    <L::IntoIter as Iterator>::Item: Str,
 {
     /// Attaches labels to the tics of an axis
     fn set(&mut self, tics: TicLabels<P, L>) -> &mut Properties {
@@ -143,25 +143,25 @@ impl<'a> Script for (Axis, &'a Properties) {
         };
 
         if let Some(ref tics) = properties.tics {
-            script.push_str(&*format!("({})", tics))
+            script.push_str(&format!("({})", tics))
         }
 
         script.push('\n');
 
         if let Some(ref label) = properties.label {
-            script.push_str(&*format!("set {}label '{}'\n", axis_, label))
+            script.push_str(&format!("set {}label '{}'\n", axis_, label))
         }
 
         if let Some((low, high)) = properties.range {
-            script.push_str(&*format!("set {}range [{}:{}]\n", axis_, low, high))
+            script.push_str(&format!("set {}range [{}:{}]\n", axis_, low, high))
         }
 
         if properties.logarithmic {
-            script.push_str(&*format!("set logscale {}\n", axis_));
+            script.push_str(&format!("set logscale {}\n", axis_));
         }
 
         for (grid, properties) in properties.grids.iter() {
-            script.push_str(&*(axis, grid, properties).script());
+            script.push_str(&(axis, grid, properties).script());
         }
 
         script

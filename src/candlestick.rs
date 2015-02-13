@@ -31,14 +31,14 @@ impl Script for Properties {
     fn script(&self) -> String {
         let mut script = "with candlesticks ".to_string();
 
-        script.push_str(&*format!("lt {} ", self.line_type.display()));
+        script.push_str(&format!("lt {} ", self.line_type.display()));
 
         if let Some(lw) = self.linewidth {
-            script.push_str(&*format!("lw {} ", lw))
+            script.push_str(&format!("lw {} ", lw))
         }
 
         if let Some(color) = self.color {
-            script.push_str(&*format!("lc rgb '{}' ", color.display()));
+            script.push_str(&format!("lc rgb '{}' ", color.display()));
         }
 
         if let Some(ref label) = self.label {
@@ -112,11 +112,11 @@ pub struct Candlesticks<X, WM, BM, BH, WH> {
 // FIXME(rust-lang/rust#20300) move bounds to where clauses
 impl<X: IntoIterator, WM: IntoIterator, BM: IntoIterator, BH: IntoIterator, WH: IntoIterator>
 traits::Plot<Candlesticks<X, WM, BM, BH, WH>> for Figure where
-    <X::Iter as Iterator>::Item: Data,
-    <WM::Iter as Iterator>::Item: Data,
-    <BM::Iter as Iterator>::Item: Data,
-    <BH::Iter as Iterator>::Item: Data,
-    <WH::Iter as Iterator>::Item: Data,
+    <X::IntoIter as Iterator>::Item: Data,
+    <WM::IntoIter as Iterator>::Item: Data,
+    <BM::IntoIter as Iterator>::Item: Data,
+    <BH::IntoIter as Iterator>::Item: Data,
+    <WH::IntoIter as Iterator>::Item: Data,
 {
     type Properties = Properties;
 

@@ -19,6 +19,6 @@ impl Plot {
     }
 
     pub fn script(&self) -> &str {
-        &*self.script
+        &self.script
     }
 }

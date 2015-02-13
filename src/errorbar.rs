@@ -40,22 +40,22 @@ impl Script for Properties {
     fn script(&self) -> String {
         let mut script = format!("with {} ", self.style.display());
 
-        script.push_str(&*format!("lt {} ", self.line_type.display()));
+        script.push_str(&format!("lt {} ", self.line_type.display()));
 
         if let Some(lw) = self.linewidth {
-            script.push_str(&*format!("lw {} ", lw))
+            script.push_str(&format!("lw {} ", lw))
         }
 
         if let Some(color) = self.color {
-            script.push_str(&*format!("lc rgb '{}' ", color.display()))
+            script.push_str(&format!("lc rgb '{}' ", color.display()))
         }
 
         if let Some(pt) = self.point_type {
-            script.push_str(&*format!("pt {} ", pt.display()))
+            script.push_str(&format!("pt {} ", pt.display()))
         }
 
         if let Some(ps) = self.point_size {
-            script.push_str(&*format!("ps {} ", ps))
+            script.push_str(&format!("ps {} ", ps))
         }
 
         if let Some(ref label) =  self.label {
@@ -219,10 +219,10 @@ impl<X, Y, L, H> ErrorBar<X, Y, L, H> {
 impl<X: IntoIterator, Y: IntoIterator, L: IntoIterator, H: IntoIterator>
 traits::Plot<ErrorBar<X, Y, L, H>>
 for Figure where
-    <X::Iter as Iterator>::Item: Data,
-    <Y::Iter as Iterator>::Item: Data,
-    <L::Iter as Iterator>::Item: Data,
-    <H::Iter as Iterator>::Item: Data,
+    <X::IntoIter as Iterator>::Item: Data,
+    <Y::IntoIter as Iterator>::Item: Data,
+    <L::IntoIter as Iterator>::Item: Data,
+    <H::IntoIter as Iterator>::Item: Data,
 {
     type Properties = Properties;
 

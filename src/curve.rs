@@ -46,23 +46,23 @@ impl Script for Properties {
             String::new()
         };
 
-        script.push_str(&*format!("with {} ", self.style.display()));
-        script.push_str(&*format!("lt {} ", self.line_type.display()));
+        script.push_str(&format!("with {} ", self.style.display()));
+        script.push_str(&format!("lt {} ", self.line_type.display()));
 
         if let Some(lw) = self.linewidth {
-            script.push_str(&*format!("lw {} ", lw))
+            script.push_str(&format!("lw {} ", lw))
         }
 
         if let Some(color) = self.color {
-            script.push_str(&*format!("lc rgb '{}' ", color.display()))
+            script.push_str(&format!("lc rgb '{}' ", color.display()))
         }
 
         if let Some(pt) = self.point_type {
-            script.push_str(&*format!("pt {} ", pt.display()))
+            script.push_str(&format!("pt {} ", pt.display()))
         }
 
         if let Some(ps) = self.point_size {
-            script.push_str(&*format!("ps {} ", ps))
+            script.push_str(&format!("ps {} ", ps))
         }
 
         if let Some(ref label) = self.label {
@@ -237,8 +237,8 @@ impl Display<&'static str> for Style {
 
 // FIXME(rust-lang/rust#20300) move bounds to where clauses
 impl<X: IntoIterator, Y: IntoIterator> traits::Plot<Curve<X, Y>> for Figure where
-    <X::Iter as Iterator>::Item: Data,
-    <Y::Iter as Iterator>::Item: Data,
+    <X::IntoIter as Iterator>::Item: Data,
+    <Y::IntoIter as Iterator>::Item: Data,
 {
     type Properties = Properties;
 
