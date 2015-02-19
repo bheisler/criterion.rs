@@ -112,11 +112,11 @@ pub struct Candlesticks<X, WM, BM, BH, WH> {
 // FIXME(rust-lang/rust#20300) move bounds to where clauses
 impl<X: IntoIterator, WM: IntoIterator, BM: IntoIterator, BH: IntoIterator, WH: IntoIterator>
 traits::Plot<Candlesticks<X, WM, BM, BH, WH>> for Figure where
-    <X::IntoIter as Iterator>::Item: Data,
-    <WM::IntoIter as Iterator>::Item: Data,
-    <BM::IntoIter as Iterator>::Item: Data,
-    <BH::IntoIter as Iterator>::Item: Data,
-    <WH::IntoIter as Iterator>::Item: Data,
+    X::Item: Data,
+    WM::Item: Data,
+    BM::Item: Data,
+    BH::Item: Data,
+    WH::Item: Data,
 {
     type Properties = Properties;
 

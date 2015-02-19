@@ -219,10 +219,10 @@ impl<X, Y, L, H> ErrorBar<X, Y, L, H> {
 impl<X: IntoIterator, Y: IntoIterator, L: IntoIterator, H: IntoIterator>
 traits::Plot<ErrorBar<X, Y, L, H>>
 for Figure where
-    <X::IntoIter as Iterator>::Item: Data,
-    <Y::IntoIter as Iterator>::Item: Data,
-    <L::IntoIter as Iterator>::Item: Data,
-    <H::IntoIter as Iterator>::Item: Data,
+    X::Item: Data,
+    Y::Item: Data,
+    L::Item: Data,
+    H::Item: Data,
 {
     type Properties = Properties;
 
