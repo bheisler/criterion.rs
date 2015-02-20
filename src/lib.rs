@@ -350,18 +350,20 @@
 //! # }
 //! ```
 
-#![deny(missing_docs, warnings)]
+#![deny(missing_docs)]
+#![deny(warnings)]
 #![feature(collections)]
 #![feature(core)]
-#![feature(io)]
-#![feature(path)]
+#![feature(old_io)]
+#![feature(old_path)]
+#![feature(str_words)]
 
 #[macro_use]
 extern crate zip;
 
+use std::borrow::Cow;
 use std::old_io::{Command, File, IoResult, Process};
 use std::str;
-use std::string::CowString;
 
 use plot::Plot;
 use traits::{Configure, Set};
@@ -388,7 +390,7 @@ pub struct Figure {
     alpha: Option<f64>,
     axes: map::axis::Map<axis::Properties>,
     box_width: Option<f64>,
-    font: Option<CowString<'static>>,
+    font: Option<Cow<'static, str>>,
     font_size: Option<f64>,
     key: Option<key::Properties>,
     output: Path,
@@ -396,7 +398,7 @@ pub struct Figure {
     size: Option<(usize, usize)>,
     terminal: Terminal,
     tics: map::axis::Map<String>,
-    title: Option<CowString<'static>>,
+    title: Option<Cow<'static, str>>,
 }
 
 impl Figure {
@@ -650,7 +652,7 @@ impl Set<Title> for Figure {
 pub struct BoxWidth(pub f64);
 
 /// A font name
-pub struct Font(CowString<'static>);
+pub struct Font(Cow<'static, str>);
 
 /// The size of a font
 #[derive(Copy)]
@@ -661,7 +663,7 @@ pub struct FontSize(pub f64);
 pub struct Key;
 
 /// Plot label
-pub struct Label(CowString<'static>);
+pub struct Label(Cow<'static, str>);
 
 /// Width of the lines
 #[derive(Copy)]
@@ -700,7 +702,7 @@ pub struct TicLabels<P, L> {
 }
 
 /// Figure title
-pub struct Title(CowString<'static>);
+pub struct Title(Cow<'static, str>);
 
 /// A pair of axes that define a coordinate system
 #[allow(missing_docs)]

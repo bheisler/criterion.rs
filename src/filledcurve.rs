@@ -1,7 +1,7 @@
 //! Filled curve plots
 
+use std::borrow::Cow;
 use std::iter::IntoIterator;
-use std::string::CowString;
 
 use data::Matrix;
 use plot::Plot;
@@ -12,7 +12,7 @@ use {Axes, Color, Default, Display, Figure, Label, Opacity, Script};
 pub struct Properties {
     axes: Option<Axes>,
     color: Option<Color>,
-    label: Option<CowString<'static>>,
+    label: Option<Cow<'static, str>>,
     opacity: Option<f64>,
 }
 

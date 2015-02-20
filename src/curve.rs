@@ -1,7 +1,7 @@
 //! Simple "curve" like plots
 
+use std::borrow::Cow;
 use std::iter::IntoIterator;
-use std::string::CowString;
 
 use {
     Axes, Color, CurveDefault, Display, Figure, Label, LineType, LineWidth, PointType, PointSize,
@@ -15,7 +15,7 @@ use traits::{Data, Set, self};
 pub struct Properties {
     axes: Option<Axes>,
     color: Option<Color>,
-    label: Option<CowString<'static>>,
+    label: Option<Cow<'static, str>>,
     line_type: LineType,
     linewidth: Option<f64>,
     point_type: Option<PointType>,
