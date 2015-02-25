@@ -1,28 +1,32 @@
-use rand::distributions::{IndependentSample, Range};
-use rand::{Rng, XorShiftRng, self};
+use std::mem;
 
-pub struct Resamples<'a, A> where A: 'a {
+use rand::distributions::{IndependentSample, Range};
+use rand::{Rng, XorShiftRng};
+
+use univariate::Sample;
+
+pub struct Resamples<'a, A> where A: 'a + ::Float {
     range: Range<usize>,
     rng: XorShiftRng,
     sample: &'a [A],
     stage: Option<Vec<A>>,
 }
 
-impl <'a, A> Resamples<'a, A> where A: 'a + Clone {
-    pub fn new(sample: &'a [A]) -> Resamples<'a, A> {
-        let mut rng = rand::thread_rng();
+impl <'a, A> Resamples<'a, A> where A: 'a + ::Float {
+    pub fn new(sample: &'a Sample<A>) -> Resamples<'a, A> {
+        let slice = sample.as_slice();
 
         Resamples {
-            range: Range::new(0, sample.len()),
-            rng: rng.gen(),
-            sample: sample,
+            range: Range::new(0, slice.len()),
+            rng: ::rand::thread_rng().gen(),
+            sample: slice,
             stage: None,
         }
     }
 
-    pub fn next(&mut self) -> &[A] {
+    pub fn next(&mut self) -> &Sample<A> {
         let n = self.sample.len();
-        let rng = &mut self.rng;
+        let ref mut rng = self.rng;
 
         match self.stage {
             None => {
@@ -41,7 +45,13 @@ impl <'a, A> Resamples<'a, A> where A: 'a + Clone {
             },
         }
 
-        &**self.stage.as_ref().unwrap()
+        if let Some(ref v) = self.stage {
+            unsafe {
+                mem::transmute(v.as_slice())
+            }
+        } else {
+            unreachable!();
+        }
     }
 }
 
@@ -50,18 +60,22 @@ mod test {
     use quickcheck::TestResult;
     use std::collections::HashSet;
 
-    use super::Resamples;
-    use test;
+    use univariate::Sample;
+    use univariate::resamples::Resamples;
 
+    // FIXME
     // Check that the resample is a subset of the sample
     #[quickcheck]
     fn subset(size: usize, nresamples: usize) -> TestResult {
-        if let Some(sample) = test::vec::<i32>(size) {
-            let mut resamples = Resamples::new(&*sample);
-            let sample = sample.iter().map(|&x| x).collect::<HashSet<_>>();
+        if size > 1 {
+            let v: Vec<_> = (0..size).map(|i| i as f32).collect();
+            let sample = Sample::new(&v);
+            let mut resamples = Resamples::new(sample);
+            let sample = v.iter().map(|&x| x as i64).collect::<HashSet<_>>();
 
             TestResult::from_bool((0..nresamples).all(|_| {
-                let resample = resamples.next().iter().map(|&x| x).collect::<HashSet<_>>();
+                let resample =
+                    resamples.next().as_slice().iter().map(|&x| x as i64).collect::<HashSet<_>>();
 
                 resample.is_subset(&sample)
             }))
