@@ -30,7 +30,7 @@ pub struct Matrix {
 
 impl Matrix {
     pub fn new<A, I>(rows: I) -> Matrix where A: Row, I: Iterator<Item=A> {
-        let ncols = Row::ncols(None::<A>);
+        let ncols = <A as Row>::ncols();
         let bytes_per_row = ncols * mem::size_of::<f64>();
         let mut buffer = Vec::with_capacity(rows.size_hint().0 * bytes_per_row);
 
@@ -65,7 +65,7 @@ trait Row {
     /// Append this row to a buffer
     fn append_to(self, buffer: &mut Vec<u8>);
     /// Number of columns of the row
-    fn ncols(Option<Self>) -> usize;
+    fn ncols() -> usize;
 }
 
 impl<A, B> Row for (A, B) where A: Data, B: Data {
@@ -76,7 +76,7 @@ impl<A, B> Row for (A, B) where A: Data, B: Data {
         buffer.write_le_f64(b.f64()).unwrap();
     }
 
-    fn ncols(_: Option<(A, B)>) -> usize {
+    fn ncols() -> usize {
         2
     }
 }
@@ -90,7 +90,7 @@ impl<A, B, C> Row for (A, B, C) where A: Data, B: Data, C: Data {
         buffer.write_le_f64(c.f64()).unwrap();
     }
 
-    fn ncols(_: Option<(A, B, C)>) -> usize {
+    fn ncols() -> usize {
         3
     }
 }
@@ -105,7 +105,7 @@ impl<A, B, C, D> Row for (A, B, C, D) where A: Data, B: Data, C: Data, D: Data {
         buffer.write_le_f64(d.f64()).unwrap();
     }
 
-    fn ncols(_: Option<(A, B, C, D)>) -> usize {
+    fn ncols() -> usize {
         4
     }
 }
@@ -121,7 +121,7 @@ impl<A, B, C, D, E> Row for (A, B, C, D, E) where A: Data, B: Data, C: Data, D: 
         buffer.write_le_f64(e.f64()).unwrap();
     }
 
-    fn ncols(_: Option<(A, B, C, D, E)>) -> usize {
+    fn ncols() -> usize {
         5
     }
 }
