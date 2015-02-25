@@ -7,6 +7,9 @@ authors = ["Jorge Aparicio <japaric@linux.com>"]
 [dependencies.zip]
 git = "https://github.com/japaric/zip.rs"
 
+[dev-dependencies]
+rand = "*"
+
 [dev-dependencies.complex]
 git = "https://github.com/japaric/complex.rs"
 

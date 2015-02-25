@@ -1,5 +1,8 @@
 //! Traits
 
+use std::borrow::Cow;
+use std::path::{Path, PathBuf};
+
 /// Overloaded `configure` method
 pub trait Configure<This> {
     type Properties;
@@ -13,6 +16,24 @@ pub trait Configure<This> {
 pub trait Data {
     /// Convert the type into a double precision float
     fn f64(self) -> f64;
+}
+
+/// Work-around until rust-lang/rust#22810 lands
+pub trait IntoCowPath<'a> {
+    /// Wrap `self` in a `Cow` pointer
+    fn into_cow(self) -> Cow<'a, Path>;
+}
+
+impl<'a> IntoCowPath<'a> for &'a Path {
+    fn into_cow(self) -> Cow<'a, Path> {
+        Cow::Borrowed(self)
+    }
+}
+
+impl IntoCowPath<'static> for PathBuf {
+    fn into_cow(self) -> Cow<'static, Path> {
+        Cow::Owned(self)
+    }
 }
 
 /// Overloaded `plot` method

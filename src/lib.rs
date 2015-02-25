@@ -7,11 +7,11 @@
 //! ![Plot](curve.svg)
 //!
 //! ```
-//! # #![allow(unstable)]
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
-//! # use std::old_io::{USER_RWX, fs};
+//! # use std::fs;
+//! # use std::path::Path;
 //! use simplot::prelude::*;
 //! use space::linspace;
 //! use std::num::Float;
@@ -19,7 +19,7 @@
 //! # fn main() {
 //! let xs = linspace::<f64>(-10., 10., 51);
 //!
-//! # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
+//! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
 //! Figure::new().
 //! #   set(Font("Helvetica")).
@@ -54,7 +54,7 @@
 //!     draw().  // (rest of the chain has been omitted)
 //! #   ok().and_then(|gnuplot| {
 //! #       gnuplot.wait_with_output().ok().and_then(|p| {
-//! #           String::from_utf8(p.error).ok()
+//! #           String::from_utf8(p.stderr).ok()
 //! #       })
 //! #   }));
 //! # }
@@ -66,16 +66,18 @@
 //! ![Plot](error_bar.svg)
 //!
 //! ```
-//! # #![allow(unstable)]
+//! extern crate rand;
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
-//! # use std::old_io::{USER_RWX, fs};
-//! use simplot::prelude::*;
-//! use space::linspace;
+//! # use std::fs;
+//! # use std::path::Path;
 //! use std::f64::consts::PI;
 //! use std::num::Float;
-//! use std::rand::{Rng, XorShiftRng, self};
+//!
+//! use rand::{Rng, XorShiftRng};
+//! use simplot::prelude::*;
+//! use space::linspace;
 //!
 //! fn sinc(mut x: f64) -> f64 {
 //!     if x == 0. {
@@ -98,7 +100,7 @@
 //! let xs = linspace::<f64>(-4., 4., 13).skip(1).take(11);
 //! let xs = xs.clone().map(|x| x + 0.2 * rng.gen() - 0.1);
 //!
-//! # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
+//! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
 //! Figure::new().
 //! #   set(Font("Helvetica")).
@@ -132,7 +134,7 @@
 //!     draw().  // (rest of the chain has been omitted)
 //! #   ok().and_then(|gnuplot| {
 //! #       gnuplot.wait_with_output().ok().and_then(|p| {
-//! #           String::from_utf8(p.error).ok()
+//! #           String::from_utf8(p.stderr).ok()
 //! #       })
 //! #   }));
 //! # }
@@ -144,12 +146,13 @@
 //! ![Plot](candlesticks.svg)
 //!
 //! ```
-//! # #![allow(unstable)]
+//! extern crate rand;
 //! extern crate simplot;
 //!
-//! # use std::old_io::{USER_RWX, fs};
+//! # use std::fs;
+//! # use std::path::Path;
 //! use simplot::prelude::*;
-//! use std::rand::{Rng, self};
+//! use rand::Rng;
 //!
 //! # fn main() {
 //! let xs = 1..11;
@@ -162,7 +165,7 @@
 //! let wm = bm.iter().map(|&y| y * rng.gen()).collect::<Vec<_>>();
 //! let m = bm.iter().zip(bh.iter()).map(|(&l, &h)| (h - l) * rng.gen() + l).collect::<Vec<_>>();
 //!
-//! # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
+//! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
 //! Figure::new().
 //! #   set(Font("Helvetica")).
@@ -195,7 +198,7 @@
 //!     draw().  // (rest of the chain has been omitted)
 //! #   ok().and_then(|gnuplot| {
 //! #       gnuplot.wait_with_output().ok().and_then(|p| {
-//! #           String::from_utf8(p.error).ok()
+//! #           String::from_utf8(p.stderr).ok()
 //! #       })
 //! #   }));
 //! # }
@@ -206,12 +209,12 @@
 //! ![Plot](multiaxis.svg)
 //!
 //! ```
-//! # #![allow(unstable)]
 //! extern crate complex;  // https://github.com/japaric/complex.rs
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
-//! # use std::old_io::{fs, USER_RWX};
+//! # use std::fs;
+//! # use std::path::Path;
 //! use complex::f64::I;
 //! use complex::{Complex, Math};
 //! use simplot::prelude::*;
@@ -228,7 +231,7 @@
 //! let phase = xs.clone().map(|x| tf(x).arg() * 180. / PI);
 //! let magnitude = xs.clone().map(|x| tf(x).abs());
 //!
-//! # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
+//! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
 //! Figure::new().
 //! #   set(Font("Helvetica")).
@@ -270,7 +273,7 @@
 //!     draw().  // (rest of the chain has been omitted)
 //! #   ok().and_then(|gnuplot| {
 //! #       gnuplot.wait_with_output().ok().and_then(|p| {
-//! #           String::from_utf8(p.error).ok()
+//! #           String::from_utf8(p.stderr).ok()
 //! #       })
 //! #   }));
 //! # }
@@ -281,11 +284,11 @@
 //! ![Plot](filled_curve.svg)
 //!
 //! ```
-//! # #![allow(unstable)]
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
-//! # use std::old_io::{USER_RWX, fs};
+//! # use std::fs;
+//! # use std::path::Path;
 //! use simplot::prelude::*;
 //! use space::linspace;
 //! use std::f64::consts::PI;
@@ -295,13 +298,13 @@
 //! # fn main() {
 //! let (start, end) = (-5., 5.);
 //! let xs = linspace(start, end, 101);
-//! let zeros = iter::repeat(0u);
+//! let zeros = iter::repeat(0);
 //!
 //! fn gaussian(x: f64, mu: f64, sigma: f64) -> f64 {
 //!     (((x - mu).powi(2) / 2. / sigma.powi(2)).exp() * sigma * (2. * PI).sqrt()).recip()
 //! }
 //!
-//! # fs::mkdir_recursive(&Path::new("target/doc/simplot"), USER_RWX).unwrap();
+//! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
 //! Figure::new().
 //! #   set(Font("Helvetica")).
@@ -344,7 +347,7 @@
 //!     draw().  // (rest of the chain has been omitted)
 //! #   ok().and_then(|gnuplot| {
 //! #       gnuplot.wait_with_output().ok().and_then(|p| {
-//! #           String::from_utf8(p.error).ok()
+//! #           String::from_utf8(p.stderr).ok()
 //! #       })
 //! #   }));
 //! # }
@@ -354,19 +357,25 @@
 #![deny(warnings)]
 #![feature(collections)]
 #![feature(core)]
+#![feature(fs)]
+#![feature(io)]
 #![feature(old_io)]
-#![feature(old_path)]
+#![feature(path)]
+#![feature(process)]
 #![feature(str_words)]
 
 #[macro_use]
 extern crate zip;
 
-use std::borrow::Cow;
-use std::old_io::{Command, File, IoResult, Process};
+use std::borrow::{Cow, IntoCow};
+use std::fs::File;
+use std::io;
+use std::path::Path;
+use std::process::{Child, Command};
 use std::str;
 
 use plot::Plot;
-use traits::{Configure, Set};
+use traits::{Configure, IntoCowPath, Set};
 
 mod data;
 mod display;
@@ -393,7 +402,7 @@ pub struct Figure {
     font: Option<Cow<'static, str>>,
     font_size: Option<f64>,
     key: Option<key::Properties>,
-    output: Path,
+    output: Cow<'static, Path>,
     plots: Vec<Plot>,
     size: Option<(usize, usize)>,
     terminal: Terminal,
@@ -411,7 +420,7 @@ impl Figure {
             font: None,
             font_size: None,
             key: None,
-            output: Path::new("output.plot"),
+            output: Path::new("output.plot").into_cow(),
             plots: Vec::new(),
             size: None,
             terminal: Terminal::Svg,
@@ -513,20 +522,32 @@ impl Figure {
     }
 
     /// Spawns a drawing child process
-    pub fn draw(&mut self) -> IoResult<Process> {
-        let mut gnuplot = try!(Command::new("gnuplot").spawn());
+    ///
+    /// NOTE: stderr, stdin, and stdout are captured
+    pub fn draw(&mut self) -> io::Result<Child> {
+        use std::process::Stdio;
+
+        let mut gnuplot = try!{
+            Command::new("gnuplot").
+                stderr(Stdio::capture()).
+                stdin(Stdio::capture()).
+                stdout(Stdio::capture()).
+                spawn()
+        };
         try!(self.dump(gnuplot.stdin.as_mut().unwrap()));
         Ok(gnuplot)
     }
 
     /// Dumps the script required to produce the figure into `sink`
-    pub fn dump<W>(&mut self, sink: &mut W) -> IoResult<&mut Figure> where W: Writer {
+    pub fn dump<W>(&mut self, sink: &mut W) -> io::Result<&mut Figure> where W: io::Write {
         try!(sink.write_all(&self.script()));
         Ok(self)
     }
 
     /// Saves the script required to produce the figure to `path`
-    pub fn save(&mut self, path: &Path) -> IoResult<&mut Figure> {
+    pub fn save(&mut self, path: &Path) -> io::Result<&mut Figure> {
+        use std::io::Write;
+
         try!((try!(File::create(path))).write_all(&self.script()));
         Ok(self)
     }
@@ -674,7 +695,7 @@ pub struct LineWidth(pub f64);
 pub struct Opacity(pub f64);
 
 /// Output file path
-pub struct Output(pub Path);
+pub struct Output(Cow<'static, Path>);
 
 /// Size of the points
 #[derive(Copy)]
@@ -832,8 +853,8 @@ trait Script {
 
 /// Returns `gnuplot` version
 // FIXME Parsing may fail
-pub fn version() -> IoResult<(usize, usize, usize)> {
-    let stdout = try!(Command::new("gnuplot").arg("--version").output()).output;
+pub fn version() -> io::Result<(usize, usize, usize)> {
+    let stdout = try!(Command::new("gnuplot").arg("--version").output()).stdout;
     let mut words = str::from_utf8(&stdout).unwrap().words().skip(1);
     let mut version = words.next().unwrap().split('.');
     let major = version.next().unwrap().parse().unwrap();
