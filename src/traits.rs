@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 
 /// Overloaded `configure` method
 pub trait Configure<This> {
+    /// The properties of what's being configured
     type Properties;
 
     /// Configure some set of properties
@@ -38,6 +39,7 @@ impl IntoCowPath<'static> for PathBuf {
 
 /// Overloaded `plot` method
 pub trait Plot<This> {
+    /// The properties associated to the plot
     type Properties;
 
     /// Plots some `data` with some `configuration`
