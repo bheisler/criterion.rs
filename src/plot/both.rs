@@ -1,46 +1,29 @@
-use simplot::prelude::*;
-use stats::ConfidenceInterval;
-use std::iter;
 use std::num::Float;
-use std::str;
-use test::stats::Stats;
+use std::path::PathBuf;
+use std::{iter, str};
 
-use estimate::{Estimate, Estimates};
+use simplot::prelude::*;
+use stats::bivariate::Data;
+use stats::univariate::Sample;
+
+use ConfidenceInterval;
 use estimate::Statistic::Slope;
+use estimate::{Estimate, Estimates};
 use kde;
 use super::scale_time;
 use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
 
 pub fn regression(
-    base: &[(u64, u64)],
+    base_data: Data<f64, f64>,
     base_estimates: &Estimates,
-    new: &[(f64, f64)],
-    new_estimates: &Estimates,
+    data: Data<f64, f64>,
+    estimates: &Estimates,
     id: &str,
 ) {
-    let path = Path::new(format!(".criterion/{}/both/regression.svg", id));
+    let path = PathBuf::new(&format!(".criterion/{}/both/regression.svg", id));
 
-    let (mut max_iters, mut max_elapsed) = (0., 0.);
-
-    for &(iters, elapsed) in base.iter() {
-        if max_iters < iters as f64 {
-            max_iters = iters as f64;
-        }
-
-        if max_elapsed < elapsed as f64 {
-            max_elapsed = elapsed as f64;
-        }
-    }
-
-    for &(iters, elapsed) in new.iter() {
-        if max_iters < iters {
-            max_iters = iters;
-        }
-
-        if max_elapsed < elapsed {
-            max_elapsed = elapsed;
-        }
-    }
+    let max_iters = base_data.x().max().max(data.x().max());
+    let max_elapsed = base_data.y().max().max(data.y().max());
 
     let (y_scale, prefix) = scale_time(max_elapsed);
 
@@ -54,24 +37,16 @@ pub fn regression(
     };
 
     let Estimate {
-        confidence_interval: ConfidenceInterval { lower_bound: lb, upper_bound: ub, .. },
-        point_estimate: point,
+        confidence_interval: ConfidenceInterval { lower_bound: base_lb, upper_bound: base_ub, .. },
+        point_estimate: base_point,
         ..
     } = base_estimates[Slope];
-    let base_lb = lb * max_iters * y_scale;
-    let base_point = point * max_iters * y_scale;
-    let base_ub = ub * max_iters * y_scale;
 
     let Estimate {
         confidence_interval: ConfidenceInterval { lower_bound: lb, upper_bound: ub, .. },
         point_estimate: point,
         ..
-    } = new_estimates[Slope];
-    let new_lb = lb * max_iters * y_scale;
-    let new_point = point * max_iters * y_scale;
-    let new_ub = ub * max_iters * y_scale;
-
-    let max_iters = max_iters * x_scale;
+    } = estimates[Slope];
 
     let gnuplot = Figure::new().
         set(Font(DEFAULT_FONT)).
@@ -81,11 +56,13 @@ pub fn regression(
         configure(Axis::BottomX, |a| a.
             configure(Grid::Major, |g| g.
                 show()).
-            set(Label(x_label))).
+            set(Label(x_label)).
+            set(ScaleFactor(x_scale))).
         configure(Axis::LeftY, |a| a.
             configure(Grid::Major, |g| g.
                 show()).
-            set(Label(format!("Total time ({}s)", prefix)))).
+            set(Label(format!("Total time ({}s)", prefix))).
+            set(ScaleFactor(y_scale))).
         configure(Key, |k| k.
             set(Justification::Left).
             set(Order::SampleText).
@@ -99,8 +76,8 @@ pub fn regression(
             set(Opacity(0.25))).
         plot(FilledCurve {
             x: &[0., max_iters],
-            y1: &[0., new_lb],
-            y2: &[0., new_ub],
+            y1: &[0., lb],
+            y2: &[0., ub],
         }, |c| c.
             set(DARK_BLUE).
             set(Opacity(0.25))).
@@ -114,7 +91,7 @@ pub fn regression(
             set(LineType::Solid)).
         plot(Lines {
             x: &[0., max_iters],
-            y: &[0., new_point],
+            y: &[0., point],
         }, |c| c.
             set(DARK_BLUE).
             set(LINEWIDTH).
@@ -122,23 +99,21 @@ pub fn regression(
             set(LineType::Solid)).
         draw().unwrap();
 
-    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(&*po.error).ok()
+    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
+        str::from_utf8(&output.stderr).ok()
     }))
 }
 
-pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
-    let path = Path::new(format!(".criterion/{}/both/pdf.svg", id));
+pub fn pdfs(base_avg_times: &Sample<f64>, avg_times: &Sample<f64>, id: &str) {
+    let path = PathBuf::new(&format!(".criterion/{}/both/pdf.svg", id));
 
-    let (base_xs, base_ys) = kde::sweep(base, KDE_POINTS, None);
-    let (new_xs, new_ys) = kde::sweep(new, KDE_POINTS, None);
+    let (base_xs, base_ys) = kde::sweep(base_avg_times, KDE_POINTS, None);
+    let (xs, ys) = kde::sweep(avg_times, KDE_POINTS, None);
+    let base_xs_ = Sample::new(&base_xs);
+    let xs_ = Sample::new(&xs);
 
-    let (scale, prefix) = scale_time([base_xs.max(), new_xs.max()].max());
-    let rscale = scale.recip();
-    let base_xs = base_xs.iter().map(|&x| x * scale);
-    let base_ys = base_ys.iter().map(|&x| x * rscale);
-    let new_xs = new_xs.iter().map(|&x| x * scale);
-    let new_ys = new_ys.iter().map(|&x| x * rscale);
+    let (x_scale, prefix) = scale_time(base_xs_.max().max(xs_.max()));
+    let y_scale = x_scale.recip();
     let zeros = iter::repeat(0);
 
     let gnuplot = Figure::new().
@@ -147,9 +122,11 @@ pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
         set(SIZE).
         set(Title(id.to_string())).
         configure(Axis::BottomX, |a| a.
-            set(Label(format!("Average time ({}s)", prefix)))).
+            set(Label(format!("Average time ({}s)", prefix))).
+            set(ScaleFactor(x_scale))).
         configure(Axis::LeftY, |a| a.
-            set(Label("Density (a.u.)"))).
+            set(Label("Density (a.u.)")).
+            set(ScaleFactor(y_scale))).
         configure(Axis::RightY, |a| a.
             hide()).
         configure(Key, |k| k.
@@ -157,16 +134,16 @@ pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
             set(Order::SampleText).
             set(Position::Outside(Vertical::Top, Horizontal::Right))).
         plot(FilledCurve {
-            x: base_xs,
-            y1: base_ys,
+            x: &*base_xs,
+            y1: &*base_ys,
             y2: zeros.clone(),
         }, |c| c.
             set(DARK_RED).
             set(Label("Base PDF")).
             set(Opacity(0.5))).
         plot(FilledCurve {
-            x: new_xs,
-            y1: new_ys,
+            x: &*xs,
+            y1: &*ys,
             y2: zeros,
         }, |c| c.
             set(DARK_BLUE).
@@ -174,7 +151,7 @@ pub fn pdfs(base: &[f64], new: &[f64], id: &str) {
             set(Opacity(0.5))).
         draw().unwrap();
 
-    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(&*po.error).ok()
+    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
+        str::from_utf8(&output.stderr).ok()
     }))
 }

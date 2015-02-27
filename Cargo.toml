@@ -1,7 +1,8 @@
 [package]
+
+authors = ["Jorge Aparicio <japaricious@gmail.com>"]
 name = "criterion"
 version = "0.0.0"
-authors = ["Jorge Aparicio <japaric@linux.com>"]
 
 [dependencies.criterion_macros]
 path = "macros"
@@ -14,6 +15,9 @@ git = "https://github.com/rust-lang/rustc-serialize"
 
 [dependencies.simplot]
 git = "https://github.com/japaric/simplot.rs"
+
+[dependencies.space]
+git = "https://github.com/japaric/space.rs"
 
 [dependencies.stats]
 git = "https://github.com/japaric/stats.rs"

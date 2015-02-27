@@ -1,8 +1,9 @@
-use stats::outliers::Outliers;
-use stats::regression::Slope;
+use stats::bivariate::Data;
+use stats::bivariate::regression::Slope;
+use stats::univariate::outliers::tukey::LabeledSample;
 
-use estimate::Estimates;
 use format;
+use estimate::Estimates;
 
 pub fn abs(estimates: &Estimates) {
     for (&statistic, estimate) in estimates.iter() {
@@ -24,10 +25,10 @@ pub fn rel(estimates: &Estimates) {
     }
 }
 
-pub fn outliers(outliers: &Outliers<f64>) {
-    let (los, lom, _, him, his) = outliers.count;
+pub fn outliers(sample: LabeledSample<f64>) {
+    let (los, lom, _, him, his) = sample.count();
     let noutliers = los + lom + him + his;
-    let sample_size = outliers.labels.len();
+    let sample_size = sample.as_slice().len();
 
     if noutliers == 0 {
         return;
@@ -52,7 +53,7 @@ pub fn outliers(outliers: &Outliers<f64>) {
     print(his, "high severe");
 }
 
-pub fn regression(pairs: &[(f64, f64)], (lb, ub): (&Slope<f64>, &Slope<f64>)) {
+pub fn regression(data: Data<f64, f64>, (lb, ub): (Slope<f64>, Slope<f64>)) {
     println!(
         "  > {:>6} [{} {}]",
         "slope",
@@ -63,6 +64,6 @@ pub fn regression(pairs: &[(f64, f64)], (lb, ub): (&Slope<f64>, &Slope<f64>)) {
     println!(
          "  > {:>6}  {:0.7} {:0.7}",
          "R^2",
-         lb.r_squared(pairs),
-         ub.r_squared(pairs));
+         lb.r_squared(data),
+         ub.r_squared(data));
 }

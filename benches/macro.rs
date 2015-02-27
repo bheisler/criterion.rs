@@ -1,8 +1,7 @@
 #![feature(plugin)]
+#![plugin(criterion_macros)]
 
 extern crate criterion;
-#[plugin]
-extern crate criterion_macros;
 
 use criterion::Bencher;
 

@@ -1,24 +1,21 @@
-use stats::{Bootstrap, ConfidenceInterval, Distribution};
-use stats::outliers::Outliers;
-use stats::regression::Slope;
 use std::fmt;
-use std::old_io::Command;
-use std::old_io::fs::PathExtensions;
+use std::fs::PathExt;
+use std::iter::IntoIterator;
+use std::path::Path;
+use std::process::Command;
+
+use stats::Distribution;
+use stats::bivariate::Data;
+use stats::bivariate::regression::Slope;
+use stats::univariate::Sample;
+use stats::univariate::outliers::tukey::{LabeledSample, self};
 use time;
 
-use estimate::{
-    Distributions,
-    Estimate,
-    Estimates,
-};
-use estimate::Statistic;
-use format;
-use fs;
-use plot;
+use estimate::{Distributions, Estimate, Estimates, Statistic};
 use program::Program;
-use report;
 use routine::{Function, Routine};
-use {Bencher, Criterion};
+use {Bencher, ConfidenceInterval, Criterion};
+use {format, fs, plot, report};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => ({
@@ -53,39 +50,43 @@ pub fn function<F>(id: &str, f: F, criterion: &Criterion) where F: FnMut(&mut Be
 pub fn function_with_inputs<I, F>(
     id: &str,
     mut f: F,
-    inputs: &[I],
+    inputs: I,
     criterion: &Criterion,
 ) where
-    F: FnMut(&mut Bencher, &I),
-    I: fmt::Display,
+    F: FnMut(&mut Bencher, &I::Item),
+    I: IntoIterator,
+    I::Item: fmt::Display,
 {
-    for input in inputs.iter() {
+    for input in inputs {
         let id = format!("{}/{}", id, input);
 
-        common(id.as_slice(), &mut Function(|b| f(b, input)), criterion);
+        common(&id, &mut Function(|b| f(b, &input)), criterion);
     }
 
     summarize(id, criterion);
 }
 
-pub fn program(id: &str, prog: &Command, criterion: &Criterion) {
+pub fn program(id: &str, prog: &mut Command, criterion: &Criterion) {
     common(id, &mut Program::spawn(prog), criterion);
 
     println!("");
 }
 
-pub fn program_with_inputs<I>(
+pub fn program_with_inputs<I, F>(
     id: &str,
-    prog: &Command,
-    inputs: &[I],
+    mut prog: F,
+    inputs: I,
     criterion: &Criterion,
 ) where
-    I: fmt::Display,
+    F: FnMut() -> Command,
+    I: IntoIterator,
+    I::Item: fmt::Display,
 {
-    for input in inputs.iter() {
+    for input in inputs {
         let id = format!("{}/{}", id, input);
 
-        program(id.as_slice(), prog.clone().arg(format!("{}", input)), criterion);
+        // FIXME uncomment
+        program(id.as_slice(), prog().arg(&format!("{}", input)), criterion);
     }
 
     summarize(id, criterion);
@@ -95,30 +96,26 @@ pub fn program_with_inputs<I>(
 fn common<R: Routine>(id: &str, routine: &mut R, criterion: &Criterion) {
     println!("Benchmarking {}", id);
 
-    let pairs = routine.sample(criterion);
+    let (iters, times) = routine.sample(criterion);
 
     rename_new_dir_to_base(id);
 
-    let pairs_f64 = pairs.iter().map(|&(iters, elapsed)| {
-        (iters as f64, elapsed as f64)
-    }).collect::<Vec<(f64, f64)>>();
-    let pairs_f64 = &*pairs_f64;
-
-    let times = pairs.iter().map(|&(iters, elapsed)| {
-        elapsed as f64 / iters as f64
+    let avg_times = iters.iter().zip(times.iter()).map(|(&iters, &elapsed)| {
+        elapsed / iters
     }).collect::<Vec<f64>>();
-    let times = &*times;
+    let avg_times = Sample::new(&avg_times);
 
-    fs::mkdirp(&Path::new(format!(".criterion/{}/new", id)));
+    fs::mkdirp(&format!(".criterion/{}/new", id));
 
-    let outliers = outliers(id, times);
+    let data = Data::new(&iters, &times);
+    let labeled_sample = outliers(id, avg_times);
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting the estimated sample PDF",
-            plot::pdf(pairs_f64, times, &outliers, id));
+            plot::pdf(data, labeled_sample, id));
     }
-    let (distribution, slope) = regression(id, pairs_f64, criterion);
-    let (mut distributions, mut estimates) = estimates(times, criterion);
+    let (distribution, slope) = regression(id, data, criterion);
+    let (mut distributions, mut estimates) = estimates(avg_times, criterion);
 
     estimates.insert(Statistic::Slope, slope);
     distributions.insert(Statistic::Slope, distribution);
@@ -132,52 +129,49 @@ fn common<R: Routine>(id: &str, routine: &mut R, criterion: &Criterion) {
                 id));
     }
 
-    fs::save(&pairs, &Path::new(format!(".criterion/{}/new/sample.json", id)));
-    fs::save(&outliers, &Path::new(format!(".criterion/{}/new/outliers.json", id)));
-    fs::save(&estimates, &Path::new(format!(".criterion/{}/new/estimates.json", id)));
+    fs::save(
+        &(data.x().as_slice(), data.y().as_slice()),
+        &format!(".criterion/{}/new/sample.json", id));
+    fs::save(&estimates, &format!(".criterion/{}/new/estimates.json", id));
 
     if base_dir_exists(id) {
-        compare::common(id, pairs_f64, times, &estimates, criterion);
+        compare::common(id, data, avg_times, &estimates, criterion);
     }
 }
 
 fn base_dir_exists(id: &str) -> bool {
-    Path::new(format!(".criterion/{}/base", id)).exists()
+    Path::new(&format!(".criterion/{}/base", id)).exists()
 }
+
 // Performs a simple linear regression on the sample
 fn regression(
     id: &str,
-    pairs: &[(f64, f64)],
+    data: Data<f64, f64>,
     criterion: &Criterion,
 ) -> (Distribution<f64>, Estimate) {
-    fn slr(sample: &[(f64, f64)]) -> f64 {
-        Slope::fit(sample).0
-    }
-
     let cl = criterion.confidence_level;
 
     println!("> Performing linear regression");
 
     let distribution = elapsed!(
         "Bootstrapped linear regression",
-        pairs.bootstrap(slr, criterion.nresamples));
+        data.bootstrap(criterion.nresamples, |d| (Slope::fit(d).0,))).0;
 
-    let point = Slope::fit(pairs);
-    let ConfidenceInterval { lower_bound: lb, upper_bound: ub, .. } =
-        distribution.confidence_interval(criterion.confidence_level);
-    let se = distribution.standard_error();
+    let point = Slope::fit(data);
+    let (lb, ub) =  distribution.confidence_interval(criterion.confidence_level);
+    let se = distribution.std_dev(None);
 
     let (lb_, ub_) = (Slope(lb), Slope(ub));
 
-    report::regression(pairs, (&lb_, &ub_));
+    report::regression(data, (lb_, ub_));
 
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting linear regression",
             plot::regression(
-                pairs,
+                data,
                 &point,
-                (&lb_, &ub_),
+                (lb_, ub_),
                 id));
     }
 
@@ -193,24 +187,21 @@ fn regression(
 }
 
 // Classifies the outliers in the sample
-fn outliers(id: &str, times: &[f64]) -> Outliers<f64> {
-    let outliers = Outliers::classify(times);
+fn outliers<'a>(id: &str, avg_times: &'a Sample<f64>) -> LabeledSample<'a, f64> {
+    let sample = tukey::classify(avg_times);
 
-    report::outliers(&outliers);
-    // FIXME Remove labels before saving
-    fs::save(&outliers, &Path::new(format!(".criterion/{}/new/outliers.json", id)));
+    report::outliers(sample);
+    fs::save(&sample.fences(), &format!(".criterion/{}/new/tukey.json", id));
 
-    outliers
+    sample
 }
 
 // Estimates the statistics of the population from the sample
 fn estimates(
-    times: &[f64],
+    avg_times: &Sample<f64>,
     criterion: &Criterion,
 ) -> (Distributions, Estimates) {
-    fn stats(sample: &[f64]) -> (f64, f64, f64, f64) {
-        use stats::Stats;
-
+    fn stats(sample: &Sample<f64>) -> (f64, f64, f64, f64) {
         let mean = sample.mean();
         let std_dev = sample.std_dev(Some(mean));
         let median = sample.percentiles().median();
@@ -223,7 +214,7 @@ fn estimates(
     let nresamples = criterion.nresamples;
 
     let points = {
-        let (a, b, c, d) = stats(times);
+        let (a, b, c, d) = stats(avg_times);
 
         [a, b, c, d]
     };
@@ -232,7 +223,7 @@ fn estimates(
     let distributions = {
         let (a, b, c, d) = elapsed!(
         "Bootstrapping the absolute statistics",
-        times.bootstrap(stats, nresamples)).split4();
+        avg_times.bootstrap(nresamples, stats));
 
         vec![a, b, c, d]
     };

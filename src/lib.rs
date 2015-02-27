@@ -1,13 +1,3 @@
-#![allow(unused_features)]
-#![deny(warnings)]
-#![feature(collections)]
-#![feature(core)]
-#![feature(io)]
-#![feature(path)]
-#![feature(plugin)]
-#![feature(std_misc)]
-#![feature(test)]
-
 //! A statistics-driven micro-benchmarking library written in Rust.
 //!
 //! # Features
@@ -17,17 +7,26 @@
 //! - Easy migration from `std::test::Bencher` to `criterion::Bencher`
 //! - Plots!
 
+#![deny(missing_docs)]
+#![deny(warnings)]
+#![feature(collections)]
+#![feature(core)]
+#![feature(fs)]
+#![feature(io)]
+#![feature(os)]
+#![feature(path)]
+#![feature(process)]
+#![feature(std_misc)]
+#![feature(test)]
+
 #[macro_use]
 extern crate log;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate simplot;
+extern crate space;
 extern crate stats;
 extern crate test;
 extern crate time;
-
-use std::fmt;
-use std::old_io::Command;
-use std::time::Duration;
 
 mod analysis;
 mod estimate;
@@ -38,6 +37,11 @@ mod plot;
 mod program;
 mod report;
 mod routine;
+
+use std::fmt;
+use std::iter::IntoIterator;
+use std::process::Command;
+use std::time::Duration;
 
 /// Helper struct to build functions that follow the setup - bench - teardown pattern
 #[derive(Copy)]
@@ -82,21 +86,6 @@ pub struct Criterion {
     sample_size: usize,
     significance_level: f64,
     warm_up_time_ns: u64,
-}
-
-enum Plotting {
-    Disabled,
-    Enabled,
-    NotAvailable,
-}
-
-impl Plotting {
-    fn is_enabled(&self) -> bool {
-        match *self {
-            Plotting::Enabled => true,
-            _ => false,
-        }
-    }
 }
 
 impl Criterion {
@@ -313,14 +302,14 @@ impl Criterion {
     ///     b.iter(|| Vec::from_elem(size, 0u8));
     /// }, [1024, 2048, 4096]);
     /// ```
-    pub fn bench_with_inputs<I, F>(
+    pub fn bench_with_inputs<I: IntoIterator, F>(
         &mut self,
         id: &str,
         f: F,
-        inputs: &[I],
+        inputs: I,
     ) -> &mut Criterion where
-        I: fmt::Display,
-        F: FnMut(&mut Bencher, &I),
+        I::Item: fmt::Display,
+        F: FnMut(&mut Bencher, &I::Item),
     {
         analysis::function_with_inputs(id, f, inputs, self);
 
@@ -359,8 +348,8 @@ impl Criterion {
     ///     }
     /// }
     /// ```
-    pub fn bench_program(&mut self, id: &str, program: &Command) -> &mut Criterion {
-        analysis::program(id, program, self);
+    pub fn bench_program(&mut self, id: &str, mut program: Command) -> &mut Criterion {
+        analysis::program(id, &mut program, self);
 
         self
     }
@@ -369,13 +358,13 @@ impl Criterion {
     ///
     /// This is a convenience method to execute several related benchmarks. Each benchmark will
     /// receive the id: `${id}/${input}`.
-    pub fn bench_program_with_inputs<I>(
+    pub fn bench_program_with_inputs<I: IntoIterator, F: FnMut() -> Command>(
         &mut self,
         id: &str,
-        program: &Command,
-        inputs: &[I],
+        program: F,
+        inputs: I,
     ) -> &mut Criterion where
-        I: fmt::Display,
+        I::Item: fmt::Display,
     {
         analysis::program_with_inputs(id, program, inputs, self);
 
@@ -391,4 +380,25 @@ impl Criterion {
 
         self
     }
+}
+enum Plotting {
+    Disabled,
+    Enabled,
+    NotAvailable,
+}
+
+impl Plotting {
+    fn is_enabled(&self) -> bool {
+        match *self {
+            Plotting::Enabled => true,
+            _ => false,
+        }
+    }
+}
+
+#[derive(Copy, PartialEq, RustcDecodable, RustcEncodable)]
+struct ConfidenceInterval {
+    confidence_level: f64,
+    lower_bound: f64,
+    upper_bound: f64,
 }

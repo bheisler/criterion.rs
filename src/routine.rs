@@ -1,15 +1,20 @@
 use std::iter::{AdditiveIterator, self};
 use std::num::Float;
+
 use time;
 
 use format;
 use {Bencher, Criterion};
 
+/// PRIVATE
 pub trait Routine {
-    fn bench<I: Iterator<Item=u64>>(&mut self, iters: I) -> Vec<u64>;
+    /// PRIVATE
+    fn bench<I: Iterator<Item=u64>>(&mut self, iters: I) -> Vec<f64>;
+    /// PRIVATE
     fn warm_up(&mut self, how_long_ns: u64) -> (u64, u64);
 
-    fn sample(&mut self, criterion: &Criterion) -> Vec<(u64, u64)> {
+    /// PRIVATE
+    fn sample(&mut self, criterion: &Criterion) -> (Box<[f64]>, Box<[f64]>) {
         let wu_ns = criterion.warm_up_time_ns;
         let m_ns = criterion.measurement_time_ns;
 
@@ -30,14 +35,14 @@ pub trait Routine {
         println!("> Collecting {} samples in estimated {}", n, format::time(m_ns));
         let m_elapsed = self.bench(m_iters.iter().map(|&x| x));
 
-        m_iters.into_iter().zip(m_elapsed.into_iter()).collect()
+        (m_iters.map_in_place(|x| x as f64).into_boxed_slice(), m_elapsed.into_boxed_slice())
     }
 }
 
 pub struct Function<F>(pub F) where F: FnMut(&mut Bencher);
 
 impl<F> Routine for Function<F> where F: FnMut(&mut Bencher) {
-    fn bench<I: Iterator<Item=u64>>(&mut self, iters: I) -> Vec<u64> {
+    fn bench<I: Iterator<Item=u64>>(&mut self, iters: I) -> Vec<f64> {
         let Function(ref mut f) = *self;
 
         let mut b = Bencher { iters: 0, ns_start: 0, ns_end: 0 };
@@ -45,7 +50,7 @@ impl<F> Routine for Function<F> where F: FnMut(&mut Bencher) {
         iters.map(|iters| {
             b.iters = iters;
             (*f)(&mut b);
-            b.ns_end - b.ns_start
+            (b.ns_end - b.ns_start) as f64
         }).collect()
     }
 

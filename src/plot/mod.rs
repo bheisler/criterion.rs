@@ -1,17 +1,17 @@
-use simplot::prelude::*;
-use stats::Stats;
-use stats::outliers::Outliers;
-use stats::outliers::Label::{HighMild, HighSevere, LowMild, LowSevere};
-use stats::regression::Slope;
-use std::old_io::fs::PathExtensions;
-use std::iter;
+use std::fs::PathExt;
 use std::num::Float;
-use std::str;
+use std::path::{Path, PathBuf};
+use std::{iter, str};
 
-use estimate::Statistic;
-use estimate::{Distributions, Estimate, Estimates};
-use fs;
-use kde;
+use simplot::prelude::*;
+use stats::Distribution;
+use stats::bivariate::Data;
+use stats::bivariate::regression::Slope;
+use stats::univariate::Sample;
+use stats::univariate::outliers::tukey::LabeledSample;
+
+use {fs, kde};
+use estimate::{Distributions, Estimate, Estimates, Statistic};
 
 pub mod both;
 
@@ -29,7 +29,6 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
     }
 }
 
-// TODO These should be configurable
 static DEFAULT_FONT: &'static str = "Helvetica";
 static KDE_POINTS: usize = 500;
 static SIZE: Size = Size(1280, 720);
@@ -41,17 +40,14 @@ const DARK_BLUE: Color = Color::Rgb(31, 120, 180);
 const DARK_ORANGE: Color = Color::Rgb(255, 127, 0);
 const DARK_RED: Color = Color::Rgb(227, 26, 28);
 
-pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &str) {
-    let path = Path::new(format!(".criterion/{}/new/pdf.svg", id));
+pub fn pdf(data: Data<f64, f64>, labeled_sample: LabeledSample<f64>, id: &str) {
+    let path = PathBuf::new(&format!(".criterion/{}/new/pdf.svg", id));
 
-    let (scale, prefix) = scale_time(sample.max());
-    let sample = sample.iter().map(|&t| t * scale).collect::<Vec<_>>();
-    let sample = &*sample;
+    let (x_scale, prefix) = scale_time(labeled_sample.max());
 
-    let max_iters = pairs.iter().map(|&(iters, _)| iters).max_by(|&iters| iters as u64).unwrap();
+    let &max_iters = data.x().as_slice().iter().max_by(|&&iters| iters as u64).unwrap();
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
     let y_scale = 10f64.powi(-exponent);
-    let iters = pairs.iter().map(|&(x, _)| x * y_scale).collect::<Vec<_>>();
 
     let y_label = if exponent == 0 {
         "Iterations".to_string()
@@ -59,29 +55,12 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
         format!("Iterations (x 10^{})", exponent)
     };
 
-    let (xs, ys) = kde::sweep(sample, KDE_POINTS, None);
+    let (xs, ys) = kde::sweep(&labeled_sample, KDE_POINTS, None);
+    let xs_ = Sample::new(&xs);
 
-    let (mut lost, mut lomt, mut himt, mut hist) = outliers.fences;
-    himt *= scale;
-    hist *= scale;
-    lomt *= scale;
-    lost *= scale;
+    let (lost, lomt, himt, hist) = labeled_sample.fences();
 
-    let (nlos, nlom, nnao, nhim, nhis) = outliers.count;
-    let mut mild = Vec::with_capacity(nlom + nhim);
-    let mut severe = Vec::with_capacity(nlos + nhis);
-    let mut normal = Vec::with_capacity(nnao);
-
-    for (time, (&label, i)) in sample.iter().zip(outliers.labels.iter().zip(iters.iter())) {
-        match label {
-            HighSevere | LowSevere => severe.push((i, time)),
-            LowMild | HighMild => mild.push((i, time)),
-            _ => normal.push((i, time)),
-
-        }
-    }
-
-    let vertical = &[0., max_iters * y_scale];
+    let vertical = &[0., max_iters];
     let zeros = iter::repeat(0);
 
     let gnuplot = Figure::new().
@@ -91,10 +70,12 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
         set(Title(id.to_string())).
         configure(Axis::BottomX, |a| a.
             set(Label(format!("Average time ({}s)", prefix))).
-            set(Range::Limits(xs.min(), xs.max()))).
+            set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale)).
+            set(ScaleFactor(x_scale))).
         configure(Axis::LeftY, |a| a.
             set(Label(y_label)).
-            set(Range::Limits(0., max_iters * y_scale))).
+            set(Range::Limits(0., max_iters * y_scale)).
+            set(ScaleFactor(y_scale))).
         configure(Axis::RightY, |a| a.
             set(Label("Density (a.u.)"))).
         configure(Key, |k| k.
@@ -111,24 +92,60 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
             set(Label("PDF")).
             set(Opacity(0.25))).
         plot(Points {
-            x: normal.iter().map(|x| x.1),
-            y: normal.iter().map(|x| x.0),
+            x: labeled_sample.iter().filter_map(|(t, label)| {
+                if label.is_outlier() {
+                    None
+                } else {
+                    Some(t)
+                }
+            }),
+            y: labeled_sample.iter().zip(data.x().as_slice().iter()).filter_map(|((_, label), i)| {
+                if label.is_outlier() {
+                    None
+                } else {
+                    Some(i)
+                }
+            }),
         }, |c| c.
             set(DARK_BLUE).
             set(Label("\"Clean\" sample")).
             set(PointType::FilledCircle).
             set(POINT_SIZE)).
         plot(Points {
-            x: mild.iter().map(|x| x.1),
-            y: mild.iter().map(|x| x.0),
+            x: labeled_sample.iter().filter_map(|(x, label)| {
+                if label.is_mild() {
+                    Some(x)
+                } else {
+                    None
+                }
+            }),
+            y: labeled_sample.iter().zip(data.x().as_slice().iter()).filter_map(|((_, label), i)| {
+                if label.is_mild() {
+                    Some(i)
+                } else {
+                    None
+                }
+            }),
         }, |c| c.
             set(DARK_ORANGE).
             set(Label("Mild outliers")).
             set(POINT_SIZE).
             set(PointType::FilledCircle)).
         plot(Points {
-            x: severe.iter().map(|x| x.1),
-            y: severe.iter().map(|x| x.0),
+            x: labeled_sample.iter().filter_map(|(x, label)| {
+                if label.is_severe() {
+                    Some(x)
+                } else {
+                    None
+                }
+            }),
+            y: labeled_sample.iter().zip(data.x().as_slice().iter()).filter_map(|((_, label), i)| {
+                if label.is_severe() {
+                    Some(i)
+                } else {
+                    None
+                }
+            }),
         }, |c| c.
             set(DARK_RED).
             set(Label("Severe outliers")).
@@ -164,37 +181,25 @@ pub fn pdf(pairs: &[(f64, f64)], sample: &[f64], outliers: &Outliers<f64>, id: &
             set(LineType::Dash)).
         draw().unwrap();
 
-    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(&*po.error).ok()
+    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
+        str::from_utf8(&output.stderr).ok()
     }))
 }
 
 pub fn regression(
-    pairs: &[(f64, f64)],
+    data: Data<f64, f64>,
     point: &Slope<f64>,
-    (lb, ub): (&Slope<f64>, &Slope<f64>),
+    (lb, ub): (Slope<f64>, Slope<f64>),
     id: &str,
 ) {
-    let path = Path::new(format!(".criterion/{}/new/regression.svg", id));
+    let path = PathBuf::new(&format!(".criterion/{}/new/regression.svg", id));
 
-    let (mut max_iters, mut max_elapsed) = (0., 0.);
-
-    for &(iters, elapsed) in pairs.iter() {
-        if max_iters < iters {
-            max_iters = iters;
-        }
-
-        if max_elapsed < elapsed {
-            max_elapsed = elapsed;
-        }
-    }
+    let (max_iters, max_elapsed) = (data.x().max(), data.y().max());
 
     let (y_scale, prefix) = scale_time(max_elapsed);
-    let elapsed = pairs.iter().map(|&(_, y)| y as f64 * y_scale).collect::<Vec<_>>();
 
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
     let x_scale = 10f64.powi(-exponent);
-    let iters = pairs.iter().map(|&(x, _)| x as f64 * x_scale).collect::<Vec<_>>();
 
     let x_label = if exponent == 0 {
         "Iterations".to_string()
@@ -202,10 +207,10 @@ pub fn regression(
         format!("Iterations (x 10^{})", exponent)
     };
 
-    let lb = lb.0 * max_iters * y_scale;
-    let point = point.0 * max_iters * y_scale;
-    let ub = ub.0 * max_iters * y_scale;
-    let max_iters = max_iters * x_scale;
+    let lb = lb.0 * max_iters;
+    let point = point.0 * max_iters;
+    let ub = ub.0 * max_iters;
+    let max_iters = max_iters;
 
     let gnuplot = Figure::new().
         set(Font(DEFAULT_FONT)).
@@ -219,14 +224,16 @@ pub fn regression(
         configure(Axis::BottomX, |a| a.
             configure(Grid::Major, |g| g.
                 show()).
-            set(Label(x_label))).
+            set(Label(x_label)).
+            set(ScaleFactor(x_scale))).
         configure(Axis::LeftY, |a| a.
             configure(Grid::Major, |g| g.
                  show()).
-            set(Label(format!("Total time ({}s)", prefix)))).
+            set(Label(format!("Total time ({}s)", prefix))).
+            set(ScaleFactor(y_scale))).
         plot(Points {
-            x: &*iters,
-            y: &*elapsed,
+            x: data.x().as_slice(),
+            y: data.y().as_slice(),
         }, |c| c.
             set(DARK_BLUE).
             set(Label("Sample")).
@@ -250,8 +257,8 @@ pub fn regression(
             set(Opacity(0.25))).
         draw().unwrap();
 
-    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(&*po.error).ok()
+    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
+        str::from_utf8(&output.stderr).ok()
     }))
 }
 
@@ -264,15 +271,14 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
 
         let start = lb - (ub - lb) / 9.;
         let end = ub + (ub - lb) / 9.;
-        let (xs, ys) = kde::sweep(distribution.as_slice(), KDE_POINTS, Some((start, end)));
+        let (xs, ys) = kde::sweep(&distribution, KDE_POINTS, Some((start, end)));
+        let xs_ = Sample::new(&xs);
 
-        let (scale, prefix) = scale_time(xs.max());
-        let rscale = scale.recip();
-        let xs = xs.into_iter().map(|x| x * scale).collect::<Vec<_>>();
-        let ys = ys.into_iter().map(|y| y * rscale).collect::<Vec<_>>();
+        let (x_scale, prefix) = scale_time(xs_.max());
+        let y_scale = x_scale.recip();
 
-        let (lb, ub) = (lb * scale, ub * scale);
-        let p = estimate.point_estimate * scale;
+        let p = estimate.point_estimate;
+
         let n_p = xs.iter().enumerate().filter(|&(_, &x)| x >= p).next().unwrap().0;
         let y_p =
             ys[n_p - 1] + (ys[n_p] - ys[n_p - 1]) / (xs[n_p] - xs[n_p - 1]) * (p - xs[n_p - 1]);
@@ -285,14 +291,16 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
 
         Figure::new().
             set(Font(DEFAULT_FONT)).
-            set(Output(Path::new(format!(".criterion/{}/new/{}.svg", id, statistic)))).
+            set(Output(PathBuf::new(&format!(".criterion/{}/new/{}.svg", id, statistic)))).
             set(SIZE).
             set(Title(format!("{}: {}", id, statistic))).
             configure(Axis::BottomX, |a| a.
                 set(Label(format!("Average time ({}s)", prefix))).
-                set(Range::Limits(xs.min(), xs.max()))).
+                set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale)).
+                set(ScaleFactor(x_scale))).
             configure(Axis::LeftY, |a| a.
-                set(Label("Density (a.u.)"))).
+                set(Label("Density (a.u.)")).
+                set(ScaleFactor(y_scale))).
             configure(Key, |k| k.
                 set(Justification::Left).
                 set(Order::SampleText).
@@ -324,9 +332,9 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
             draw().unwrap()
     }).collect::<Vec<_>>();
 
-    for gnuplot in gnuplots.into_iter() {
-        assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-            str::from_utf8(&*po.error).ok()
+    for gnuplot in gnuplots {
+        assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
+            str::from_utf8(&output.stderr).ok()
         }))
     }
 }
@@ -351,7 +359,7 @@ pub fn rel_distributions(
             set(Position::Outside(Vertical::Top, Horizontal::Right)));
 
     let gnuplots = distributions.iter().map(|(&statistic, distribution)| {
-        let path = Path::new(format!(".criterion/{}/change/{}.svg", id, statistic));
+        let path = PathBuf::new(&format!(".criterion/{}/change/{}.svg", id, statistic));
 
         let estimate = estimates[statistic];
         let ci = estimate.confidence_interval;
@@ -359,14 +367,10 @@ pub fn rel_distributions(
 
         let start = lb - (ub - lb) / 9.;
         let end = ub + (ub - lb) / 9.;
-        let (xs, ys) = kde::sweep(distribution.as_slice(), KDE_POINTS, Some((start, end)));
-        let xs = xs.into_iter().map(|x| x * 100.).collect::<Vec<_>>();
-        let xs = &*xs;
-        let ys = &*ys;
+        let (xs, ys) = kde::sweep(&distribution, KDE_POINTS, Some((start, end)));
+        let xs_ = Sample::new(&xs);
 
-        let nt = nt * 100.;
-        let (lb, ub) = (lb * 100., ub * 100.);
-        let p = estimate.point_estimate * 100.;
+        let p = estimate.point_estimate;
         let n_p = xs.iter().enumerate().filter(|&(_, &x)| x >= p).next().unwrap().0;
         let y_p =
             ys[n_p - 1] + (ys[n_p] - ys[n_p - 1]) / (xs[n_p] - xs[n_p - 1]) * (p - xs[n_p - 1]);
@@ -378,8 +382,8 @@ pub fn rel_distributions(
         let end = xs.iter().enumerate().rev().filter(|&(_, &x)| x <= ub).next().unwrap().0;
         let len = end - start;
 
-        let x_min = xs.min();
-        let x_max = xs.max();
+        let x_min = xs_.min();
+        let x_max = xs_.max();
 
         let (fc_start, fc_end) = if nt < x_min || -nt > x_max {
             let middle = (x_min + x_max) / 2.;
@@ -394,10 +398,11 @@ pub fn rel_distributions(
             set(Title(format!("{}: {}", id, statistic))).
             configure(Axis::BottomX, |a| a.
                 set(Label("Relative change (%)")).
-                set(Range::Limits(x_min, x_max))).
+                set(Range::Limits(x_min * 100., x_max * 100.)).
+                set(ScaleFactor(100.))).
             plot(Lines {
-                x: xs,
-                y: ys,
+                x: &*xs,
+                y: &*ys,
             }, |c| c.
                 set(DARK_BLUE).
                 set(LINEWIDTH).
@@ -433,17 +438,16 @@ pub fn rel_distributions(
 
     // FIXME This sometimes fails!
     for gnuplot in gnuplots.into_iter() {
-        assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-            str::from_utf8(&*po.error).ok()
+        assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
+            str::from_utf8(&output.stderr).ok()
         }))
     }
 }
 
-pub fn t_test(t: f64, distribution: &[f64], id: &str) {
-    let path = Path::new(format!(".criterion/{}/change/t-test.svg", id));
+pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str) {
+    let path = PathBuf::new(&format!(".criterion/{}/change/t-test.svg", id));
 
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, None);
-    let ys = &*ys;
     let zero = iter::repeat(0);
 
     let gnuplot = Figure::new().
@@ -478,8 +482,8 @@ pub fn t_test(t: f64, distribution: &[f64], id: &str) {
             set(LineType::Solid)).
         draw().unwrap();
 
-    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-        str::from_utf8(&*po.error).ok()
+    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
+        str::from_utf8(&output.stderr).ok()
     }))
 }
 
@@ -493,7 +497,9 @@ fn log_floor(x: f64) -> f64 {
     (x / t).floor() * t
 }
 
+/// Private
 trait Append<T> {
+    /// Private
     fn append_(self, item: T) -> Self;
 }
 
@@ -511,22 +517,22 @@ pub fn summarize(id: &str) {
     }
 
     let dir = Path::new(".criterion").join(id);
-    let contents = fs::ls(&dir);
+    let contents: Vec<_> = fs::ls(&dir).map(|e| e.unwrap().path()).collect();
 
     // XXX Plot both summaries?
     for &sample in ["new", "base"].iter() {
         let mut benches = contents.iter().filter_map(|entry| {
-            if entry.is_dir() && entry.filename_str() != Some("summary") {
-                let label = entry.filename_str().unwrap();
+            if entry.is_dir() && entry.file_name().and_then(|s| s.to_str()) != Some("summary") {
+                let label = entry.file_name().unwrap().to_str().unwrap();
                 let root = entry.join(sample);
 
                 if let Some(estimates) = Estimate::load(&root.join("estimates.json")) {
-                    let sample: Vec<(u64, u64)> = fs::load(&root.join("sample.json"));
-                    let sample = sample.into_iter().map(|(iters, time)| {
-                        time as f64 / iters as f64
+                    let (iters, times): (Vec<f64>, Vec<f64>) = fs::load(&root.join("sample.json"));
+                    let avg_times = iters.into_iter().zip(times.into_iter()).map(|(iters, time)| {
+                        time / iters
                     }).collect::<Vec<_>>();
 
-                    Some((label, label.parse::<usize>(), estimates, sample))
+                    Some((label, label.parse::<usize>(), estimates, avg_times))
                 } else {
                     None
                 }
@@ -539,7 +545,7 @@ pub fn summarize(id: &str) {
             continue;
         }
 
-        fs::mkdirp(&dir.join(format!("summary/{}", sample)));
+        fs::mkdirp(&dir.join(&format!("summary/{}", sample)));
 
         let gnuplots = if benches.iter().all(|&(_, ref input, _, _)| input.is_ok()) {
             // TODO trendline
@@ -561,24 +567,23 @@ pub fn summarize(id: &str) {
                 let ubs = benches.iter().map(|&(_, _, ref estimates, _)| {
                     estimates[statistic].confidence_interval.upper_bound
                 }).collect::<Vec<_>>();
+                let lbs_ = Sample::new(&lbs);
+                let ubs_ = Sample::new(&ubs);
 
                 // XXX scale inputs?
                 let inputs = benches.iter().map(|&(_, input, _, _)| input).collect::<Vec<_>>();
 
-                let (scale, prefix) = scale_time(ubs.max());
-                let points = points.iter().map(|&x| x * scale).collect::<Vec<_>>();
-                let lbs = lbs.iter().map(|&x| x * scale).collect::<Vec<_>>();
-                let ubs = ubs.iter().map(|&x| x * scale).collect::<Vec<_>>();
+                let (scale, prefix) = scale_time(ubs_.max());
 
                 // XXX Logscale triggering may need tweaking
                 let xscale = if inputs.len() < 3 {
                     Scale::Linear
                 } else {
                     let inputs = inputs.iter().map(|&x| x as f64).collect::<Vec<_>>();
-                    let linear = diff(&*inputs).std_dev(None);
+                    let linear = Sample::new(&diff(&*inputs)).std_dev(None);
                     let log = {
                         let v = inputs.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        diff(&*v).std_dev(None)
+                        Sample::new(&diff(&*v)).std_dev(None)
                     };
 
                     if linear < log {
@@ -591,10 +596,10 @@ pub fn summarize(id: &str) {
                 let yscale = if points.len() < 3 {
                     Scale::Linear
                 } else {
-                    let linear = diff(&*points).std_dev(None);
+                    let linear = Sample::new(&diff(&*points)).std_dev(None);
                     let log = {
                         let v = points.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        diff(&*v).std_dev(None)
+                        Sample::new(&diff(&*v)).std_dev(None)
                     };
 
                     if linear < log {
@@ -607,7 +612,7 @@ pub fn summarize(id: &str) {
                 // TODO Review axis scaling
                 Figure::new().
                     set(Font(DEFAULT_FONT)).
-                    set(Output(dir.join(format!("summary/{}/{}s.svg", sample, statistic)))).
+                    set(Output(dir.join(&format!("summary/{}/{}s.svg", sample, statistic)))).
                     set(SIZE).
                     set(Title(format!("{}", id))).
                     configure(Axis::BottomX, |a| a.
@@ -636,12 +641,13 @@ pub fn summarize(id: &str) {
                             Scale::Logarithmic => g.show(),
                         }).
                         set(Label(format!("Average time ({}s)", prefix))).
-                        set(yscale)).
+                        set(yscale).
+                        set(ScaleFactor(scale))).
                     configure(Axis::LeftY, |a| match yscale {
                         Scale::Linear => a,
                         Scale::Logarithmic => {
-                            let start = lbs.min();
-                            let end = ubs.max();
+                            let start = lbs_.min() * scale;
+                            let end = ubs_.max() * scale;
 
                             a.set(Range::Limits(log_floor(start), log_ceil(end)))
                         },
@@ -680,19 +686,18 @@ pub fn summarize(id: &str) {
                 let ubs = benches.iter().map(|&(_, _, ref estimates, _)| {
                     estimates[statistic].confidence_interval.upper_bound
                 }).collect::<Vec<_>>();
+                let lbs_ = Sample::new(&lbs);
+                let ubs_ = Sample::new(&ubs);
 
-                let (scale, prefix) = scale_time(ubs.max());
-                let points = points.iter().map(|&x| x * scale).collect::<Vec<_>>();
-                let lbs = lbs.iter().map(|&x| x * scale).collect::<Vec<_>>();
-                let ubs = ubs.iter().map(|&x| x * scale).collect::<Vec<_>>();
+                let (scale, prefix) = scale_time(ubs_.max());
 
                 let xscale = if points.len() < 3 {
                     Scale::Linear
                 } else {
-                    let linear = diff(&*points).std_dev(None);
+                    let linear = Sample::new(&diff(&*points)).std_dev(None);
                     let log = {
                         let v = points.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        diff(&*v).std_dev(None)
+                        Sample::new(&diff(&*v)).std_dev(None)
                     };
 
                     if linear < log {
@@ -709,7 +714,7 @@ pub fn summarize(id: &str) {
                 // TODO Review axis scaling
                 Figure::new().
                     set(Font(DEFAULT_FONT)).
-                    set(Output(dir.join(format!("summary/{}/{}s.svg", sample, statistic)))).
+                    set(Output(dir.join(&format!("summary/{}/{}s.svg", sample, statistic)))).
                     set(SIZE).
                     set(Title(format!("{}: Estimates of the {}s", id, statistic))).
                     configure(Axis::BottomX, |a| a.
@@ -720,12 +725,13 @@ pub fn summarize(id: &str) {
                             Scale::Logarithmic => g.show(),
                         }).
                         set(Label(format!("Average time ({}s)", prefix))).
-                        set(xscale)).
+                        set(xscale).
+                        set(ScaleFactor(scale))).
                     configure(Axis::BottomX, |a| match xscale {
                         Scale::Linear => a,
                         Scale::Logarithmic => {
-                            let start = lbs.min();
-                            let end = ubs.max();
+                            let start = lbs_.min() * scale;
+                            let end = ubs_.max() * scale;
 
                             a.set(Range::Limits(log_floor(start), log_ceil(end)))
                         },
@@ -757,8 +763,8 @@ pub fn summarize(id: &str) {
                     draw().unwrap()
             }).collect::<Vec<_>>().append_({
                 let kdes = benches.iter().map(|&(_, _, _, ref sample)| {
-                    let (x, mut y) = kde::sweep(&**sample, KDE_POINTS, None);
-                    let y_max = y.max();
+                    let (x, mut y) = kde::sweep(Sample::new(sample), KDE_POINTS, None);
+                    let y_max = Sample::new(&y).max();
                     for y in y.iter_mut() {
                         *y /= y_max;
                     }
@@ -766,7 +772,7 @@ pub fn summarize(id: &str) {
                     (x, y)
                 }).collect::<Vec<_>>();
                 let medians = benches.iter().map(|&(_, _, _, ref sample)| {
-                    sample.percentiles().median()
+                    Sample::new(sample).percentiles().median()
                 }).collect::<Vec<_>>();
                 let mut xs = kdes.iter().flat_map(|&(ref x, _)| x.iter());
                 let (mut min, mut max) = {
@@ -781,16 +787,14 @@ pub fn summarize(id: &str) {
                     }
                 }
                 let (scale, prefix) = scale_time(max);
-                min *= scale;
-                max *= scale;
 
                 let xscale = if medians.len() < 3 {
                     Scale::Linear
                 } else {
-                    let linear = diff(&*medians).std_dev(None);
+                    let linear = Sample::new(&diff(&*medians)).std_dev(None);
                     let log = {
                         let v = medians.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        diff(&*v).std_dev(None)
+                        Sample::new(&diff(&*v)).std_dev(None)
                     };
 
                     if linear < log {
@@ -804,7 +808,7 @@ pub fn summarize(id: &str) {
                 let mut f = Figure::new();
                 f.
                     set(Font(DEFAULT_FONT)).
-                    set(Output(dir.join(format!("summary/{}/violin_plot.svg", sample)))).
+                    set(Output(dir.join(&format!("summary/{}/violin_plot.svg", sample)))).
                     set(SIZE).
                     set(Title(format!("{}: Violin plot", id))).
                     configure(Axis::BottomX, |a| a.
@@ -815,11 +819,12 @@ pub fn summarize(id: &str) {
                             Scale::Logarithmic => g.show(),
                         }).
                         set(Label(format!("Average time ({}s)", prefix))).
-                        set(xscale)).
+                        set(xscale).
+                        set(ScaleFactor(scale))).
                     configure(Axis::BottomX, |a| match xscale {
                         Scale::Linear => a,
                         Scale::Logarithmic => {
-                            a.set(Range::Limits(log_floor(min), log_ceil(max)))
+                            a.set(Range::Limits(log_floor(min * scale), log_ceil(max * scale)))
                         },
                     }).
                     configure(Axis::LeftY, |a| a.
@@ -830,7 +835,7 @@ pub fn summarize(id: &str) {
                             labels: benches.iter().map(|&(label, _, _, _)| label),
                         })).
                         plot(Points {
-                            x: medians.iter().map(|&median| median * scale),
+                            x: medians.iter().map(|&median| median),
                             y: tics,
                         }, |c| c.
                         set(Color::Black).
@@ -841,12 +846,11 @@ pub fn summarize(id: &str) {
                 let mut is_first = true;
                 for (i, &(ref x, ref y)) in kdes.iter().enumerate() {
                     let i = i as f64 + 0.5;
-                    let x = x.iter().map(|&x| x * scale);
                     let y1 = y.iter().map(|&y| i + y * 0.5);
                     let y2 = y.iter().map(|&y| i - y * 0.5);
 
                     f.plot(FilledCurve {
-                        x: x,
+                        x: &**x,
                         y1: y1,
                         y2: y2,
                     }, |c| if is_first {
@@ -862,9 +866,9 @@ pub fn summarize(id: &str) {
             })
         };
 
-        for gnuplot in gnuplots.into_iter() {
-            assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|po| {
-                str::from_utf8(&*po.error).ok()
+        for gnuplot in gnuplots {
+            assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
+                str::from_utf8(&output.stderr).ok()
             }))
         }
     }

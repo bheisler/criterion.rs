@@ -1,26 +1,27 @@
-use stats::kde::Kde;
+use space;
+use stats::univariate::Sample;
+use stats::univariate::kde::kernel::Gaussian;
+use stats::univariate::kde::{Bandwidth, Kde};
 
-use test::stats::Stats;
-
-pub fn sweep(sample: &[f64], npoints: usize, range: Option<(f64, f64)>) -> (Vec<f64>, Vec<f64>) {
+pub fn sweep(
+    sample: &Sample<f64>,
+    npoints: usize,
+    range: Option<(f64, f64)>,
+) -> (Box<[f64]>, Box<[f64]>) {
     let x_min = sample.min();
     let x_max = sample.max();
 
-    let kde = Kde::new(sample);
+    let kde = Kde::new(sample, Gaussian, Bandwidth::Silverman);
     let h = kde.bandwidth();
 
-    let xy = match range {
-        Some((start, end)) => kde.sweep((start, end), npoints),
-        None => kde.sweep((x_min - 3. * h, x_max + 3. * h), npoints),
+    let (start, end) = match range {
+        Some((start, end)) => (start, end),
+        None => (x_min - 3. * h, x_max + 3. * h),
     };
 
-    let mut x = Vec::with_capacity(npoints);
-    let mut y = Vec::with_capacity(npoints);
+    let xs: Vec<_> = space::linspace(start, end, npoints).collect();
 
-    for &(a, b) in xy.iter() {
-        x.push(a);
-        y.push(b);
-    }
+    let ys = kde.map(&xs);
 
-    (x, y)
+    (xs.into_boxed_slice(), ys)
 }
