@@ -33,14 +33,14 @@ impl <'a, A> Resamples<'a, A> where A: 'a + ::Float {
                 let mut stage = Vec::with_capacity(n);
 
                 for _ in 0..n {
-                    stage.push(self.sample[self.range.ind_sample(rng)].clone())
+                    stage.push(self.sample[self.range.ind_sample(rng)])
                 }
 
                 self.stage = Some(stage);
             },
             Some(ref mut stage) => {
                 for elem in stage.iter_mut() {
-                    *elem = self.sample[self.range.ind_sample(rng)].clone()
+                    *elem = self.sample[self.range.ind_sample(rng)]
                 }
             },
         }
