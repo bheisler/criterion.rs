@@ -127,8 +127,18 @@ traits::Plot<FilledCurve<X, Y1, Y2>> for Figure where
         F: FnOnce(&mut Properties) -> &mut Properties,
     {
         let FilledCurve { x, y1, y2 } = fc;
-        let data = Matrix::new(zip!(x, y1, y2));
-        self.plots.push(Plot::new(data, configure(&mut Default::default())));
+
+        let mut props = Default::default();
+        configure(&mut props);
+
+        let (x_factor, y_factor) =
+            ::scale_factor(&self.axes, props.axes.unwrap_or(::Axes::BottomXLeftY));
+
+        let data = Matrix::new(
+            zip!(x, y1, y2),
+            (x_factor, y_factor, y_factor),
+        );
+        self.plots.push(Plot::new(data, &props));
         self
     }
 }

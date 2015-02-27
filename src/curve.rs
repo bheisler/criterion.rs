@@ -255,8 +255,14 @@ impl<X: IntoIterator, Y: IntoIterator> traits::Plot<Curve<X, Y>> for Figure wher
             Curve::Steps { x, y } => (x, y),
         };
 
-        let data = Matrix::new(zip!(x, y));
-        self.plots.push(Plot::new(data, configure(&mut CurveDefault::default(style))));
+        let mut props = CurveDefault::default(style);
+        configure(&mut props);
+
+        let (x_factor, y_factor) =
+            ::scale_factor(&self.axes, props.axes.unwrap_or(::Axes::BottomXLeftY));
+
+        let data = Matrix::new(zip!(x, y), (x_factor, y_factor));
+        self.plots.push(Plot::new(data, &props));
         self
     }
 }

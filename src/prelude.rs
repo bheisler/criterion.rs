@@ -2,7 +2,7 @@
 
 pub use {
     Axes, Axis, BoxWidth, Color, Figure, FontSize, Grid, Key, LineType, LineWidth, Opacity,
-    PointSize, PointType, Range, Scale, Size, Terminal, TicLabels,
+    PointSize, PointType, Range, Scale, ScaleFactor, Size, Terminal, TicLabels,
 };
 pub use candlestick::Candlesticks;
 pub use curve::Curve::{Dots, Impulses, Lines, LinesPoints, Points, Steps};

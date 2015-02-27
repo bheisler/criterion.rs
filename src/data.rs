@@ -29,7 +29,7 @@ pub struct Matrix {
 }
 
 impl Matrix {
-    pub fn new<A, I>(rows: I) -> Matrix where A: Row, I: Iterator<Item=A> {
+    pub fn new<A: Row, I>(rows: I, scale: A::Scale) -> Matrix where I: Iterator<Item=A> {
         let ncols = <A as Row>::ncols();
         let bytes_per_row = ncols * mem::size_of::<f64>();
         let mut buffer = Vec::with_capacity(rows.size_hint().0 * bytes_per_row);
@@ -37,7 +37,7 @@ impl Matrix {
         let mut nrows = 0;
         for row in rows {
             nrows += 1;
-            row.append_to(&mut buffer);
+            row.append_to(&mut buffer, scale);
         }
 
         Matrix {
@@ -62,18 +62,23 @@ impl Matrix {
 
 /// Data that can serve as a row of the data matrix
 trait Row {
+    /// Private
+    type Scale: Copy;
+
     /// Append this row to a buffer
-    fn append_to(self, buffer: &mut Vec<u8>);
+    fn append_to(self, buffer: &mut Vec<u8>, scale: Self::Scale);
     /// Number of columns of the row
     fn ncols() -> usize;
 }
 
 impl<A, B> Row for (A, B) where A: Data, B: Data {
-    fn append_to(self, buffer: &mut Vec<u8>) {
+    type Scale = (f64, f64);
+
+    fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64)) {
         let (a, b) = self;
 
-        buffer.write_le_f64(a.f64()).unwrap();
-        buffer.write_le_f64(b.f64()).unwrap();
+        buffer.write_le_f64(a.f64() * scale.0).unwrap();
+        buffer.write_le_f64(b.f64() * scale.1).unwrap();
     }
 
     fn ncols() -> usize {
@@ -82,12 +87,14 @@ impl<A, B> Row for (A, B) where A: Data, B: Data {
 }
 
 impl<A, B, C> Row for (A, B, C) where A: Data, B: Data, C: Data {
-    fn append_to(self, buffer: &mut Vec<u8>) {
+    type Scale = (f64, f64, f64);
+
+    fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64)) {
         let (a, b, c) = self;
 
-        buffer.write_le_f64(a.f64()).unwrap();
-        buffer.write_le_f64(b.f64()).unwrap();
-        buffer.write_le_f64(c.f64()).unwrap();
+        buffer.write_le_f64(a.f64() * scale.0).unwrap();
+        buffer.write_le_f64(b.f64() * scale.1).unwrap();
+        buffer.write_le_f64(c.f64() * scale.2).unwrap();
     }
 
     fn ncols() -> usize {
@@ -96,13 +103,15 @@ impl<A, B, C> Row for (A, B, C) where A: Data, B: Data, C: Data {
 }
 
 impl<A, B, C, D> Row for (A, B, C, D) where A: Data, B: Data, C: Data, D: Data {
-    fn append_to(self, buffer: &mut Vec<u8>) {
+    type Scale = (f64, f64, f64, f64);
+
+    fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64, f64)) {
         let (a, b, c, d) = self;
 
-        buffer.write_le_f64(a.f64()).unwrap();
-        buffer.write_le_f64(b.f64()).unwrap();
-        buffer.write_le_f64(c.f64()).unwrap();
-        buffer.write_le_f64(d.f64()).unwrap();
+        buffer.write_le_f64(a.f64() * scale.0).unwrap();
+        buffer.write_le_f64(b.f64() * scale.1).unwrap();
+        buffer.write_le_f64(c.f64() * scale.2).unwrap();
+        buffer.write_le_f64(d.f64() * scale.3).unwrap();
     }
 
     fn ncols() -> usize {
@@ -111,14 +120,16 @@ impl<A, B, C, D> Row for (A, B, C, D) where A: Data, B: Data, C: Data, D: Data {
 }
 
 impl<A, B, C, D, E> Row for (A, B, C, D, E) where A: Data, B: Data, C: Data, D: Data, E: Data {
-    fn append_to(self, buffer: &mut Vec<u8>) {
+    type Scale = (f64, f64, f64, f64, f64);
+
+    fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64, f64, f64)) {
         let (a, b, c, d, e) = self;
 
-        buffer.write_le_f64(a.f64()).unwrap();
-        buffer.write_le_f64(b.f64()).unwrap();
-        buffer.write_le_f64(c.f64()).unwrap();
-        buffer.write_le_f64(d.f64()).unwrap();
-        buffer.write_le_f64(e.f64()).unwrap();
+        buffer.write_le_f64(a.f64() * scale.0).unwrap();
+        buffer.write_le_f64(b.f64() * scale.1).unwrap();
+        buffer.write_le_f64(c.f64() * scale.2).unwrap();
+        buffer.write_le_f64(d.f64() * scale.3).unwrap();
+        buffer.write_le_f64(e.f64() * scale.4).unwrap();
     }
 
     fn ncols() -> usize {
