@@ -375,7 +375,7 @@ use std::process::{Child, Command};
 use std::str;
 
 use plot::Plot;
-use traits::{Configure, IntoCowPath, Set};
+use traits::{Configure, Set};
 
 mod data;
 mod display;
