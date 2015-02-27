@@ -813,6 +813,11 @@ pub enum Scale {
     Logarithmic,
 }
 
+/// Axis scale factor
+#[allow(missing_docs)]
+#[derive(Copy)]
+pub struct ScaleFactor(pub f64);
+
 /// Output terminal
 #[allow(missing_docs)]
 #[derive(Clone, Copy)]
@@ -862,6 +867,45 @@ pub fn version() -> io::Result<(usize, usize, usize)> {
     let patchlevel = words.skip(1).next().unwrap().parse().unwrap();
 
     Ok((major, minor, patchlevel))
+}
+
+fn scale_factor(map: &map::axis::Map<axis::Properties>, axes: Axes) -> (f64, f64) {
+    use Axes::*;
+    use Axis::*;
+
+    match axes {
+        BottomXLeftY => {
+            (
+                map.get(BottomX).map(|props| props.scale_factor()).unwrap_or(1.),
+                map.get(LeftY).map(|props| props.scale_factor()).unwrap_or(1.),
+            )
+        },
+        BottomXRightY => {
+            (
+                map.get(BottomX).map(|props| props.scale_factor()).unwrap_or(1.),
+                map.get(RightY).map(|props| props.scale_factor()).unwrap_or(1.),
+            )
+        },
+        TopXLeftY => {
+            (
+                map.get(TopX).map(|props| props.scale_factor()).unwrap_or(1.),
+                map.get(LeftY).map(|props| props.scale_factor()).unwrap_or(1.),
+            )
+        },
+        TopXRightY => {
+            (
+                map.get(TopX).map(|props| props.scale_factor()).unwrap_or(1.),
+                map.get(RightY).map(|props| props.scale_factor()).unwrap_or(1.),
+            )
+        },
+    }
+}
+
+// XXX :-1: to intra-crate privacy rules
+/// Private
+trait ScaleFactorTrait {
+    /// Private
+    fn scale_factor(&self) -> f64;
 }
 
 #[cfg(test)]

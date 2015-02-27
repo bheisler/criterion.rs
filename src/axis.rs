@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::iter::IntoIterator;
 
 use map;
-use {Axis, Default, Display, Grid, Label, Range, Scale, Script, TicLabels, grid};
+use {Axis, Default, Display, Grid, Label, Range, Scale, ScaleFactor, Script, TicLabels, grid};
 use traits::{Configure, Data, Set};
 
 /// Properties of the coordinate axes
@@ -15,6 +15,7 @@ pub struct Properties {
     label: Option<Cow<'static, str>>,
     logarithmic: bool,
     range: Option<(f64, f64)>,
+    scale_factor: f64,
     tics: Option<String>,
 }
 
@@ -26,6 +27,7 @@ impl Default for Properties {
             label: None,
             logarithmic: false,
             range: None,
+            scale_factor: 1.,
             tics: None,
         }
     }
@@ -108,6 +110,20 @@ impl Set<Scale> for Properties {
     }
 }
 
+impl Set<ScaleFactor> for Properties {
+    /// Changes the *scale factor* of the axis.
+    ///
+    /// All the data plotted against this axis will have its corresponding coordinate scaled with
+    /// this factor before being plotted.
+    ///
+    /// **Note** The default scale factor is `1`.
+    fn set(&mut self, factor: ScaleFactor) -> &mut Properties {
+        self.scale_factor = factor.0;
+
+        self
+    }
+}
+
 // FIXME(rust-lang/rust#20300) move bounds to where clauses
 impl<P: IntoIterator, L: IntoIterator> Set<TicLabels<P, L>> for Properties where
     P::Item: Data,
@@ -165,5 +181,11 @@ impl<'a> Script for (Axis, &'a Properties) {
         }
 
         script
+    }
+}
+
+impl ::ScaleFactorTrait for Properties {
+    fn scale_factor(&self) -> f64 {
+        self.scale_factor
     }
 }

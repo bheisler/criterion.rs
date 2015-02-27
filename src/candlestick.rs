@@ -127,9 +127,13 @@ traits::Plot<Candlesticks<X, WM, BM, BH, WH>> for Figure where
     ) -> &mut Figure where
         F: FnOnce(&mut Properties) -> &mut Properties
     {
+        let (x_factor, y_factor) = ::scale_factor(&self.axes, ::Axes::BottomXLeftY);
         let Candlesticks { x, whisker_min, box_min, box_high, whisker_high } = candlesticks;
 
-        let data = Matrix::new(zip!(x, box_min, whisker_min, whisker_high, box_high));
+        let data = Matrix::new(
+            zip!(x, box_min, whisker_min, whisker_high, box_high),
+            (x_factor, y_factor, y_factor, y_factor, y_factor),
+        );
         self.plots.push(Plot::new(data, configure(&mut Default::default())));
         self
     }

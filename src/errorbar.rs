@@ -229,14 +229,20 @@ for Figure where
     fn plot<F>(&mut self, e: ErrorBar<X, Y, L, H>, configure: F) -> &mut Figure where
         F: FnOnce(&mut Properties) -> &mut Properties,
     {
+        let (x_factor, y_factor) = ::scale_factor(&self.axes, ::Axes::BottomXLeftY);
+
         let style = e.style();
-        let (x, y, l, h) = match e {
-            ErrorBar::XErrorBars { x, y, x_low, x_high } => (x, y, x_low, x_high),
-            ErrorBar::XErrorLines { x, y, x_low, x_high } => (x, y, x_low, x_high),
-            ErrorBar::YErrorBars { x, y, y_low, y_high } => (x, y, y_low, y_high),
-            ErrorBar::YErrorLines { x, y, y_low, y_high } => (x, y, y_low, y_high),
+        let (x, y, l, h, e_factor) = match e {
+            ErrorBar::XErrorBars { x, y, x_low, x_high } => (x, y, x_low, x_high, x_factor),
+            ErrorBar::XErrorLines { x, y, x_low, x_high } => (x, y, x_low, x_high, x_factor),
+            ErrorBar::YErrorBars { x, y, y_low, y_high } => (x, y, y_low, y_high, y_factor),
+            ErrorBar::YErrorLines { x, y, y_low, y_high } => (x, y, y_low, y_high, y_factor),
         };
-        let data = Matrix::new(zip!(x, y, l, h));
+        let data = Matrix::new(
+            zip!(x, y, l, h),
+            // FIXME
+            (x_factor, y_factor, e_factor, e_factor),
+        );
         self.plots.push(Plot::new(data, configure(&mut ErrorBarDefault::default(style))));
         self
     }
