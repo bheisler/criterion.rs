@@ -10,11 +10,13 @@ use Distribution;
 
 /// Any tuple: `(A, B, ..)`
 pub trait Tuple: MarkerTrait {
+    /// A tuple of distributions associated with this tuple
     type Distributions: TupledDistributions<Item=Self>;
 }
 
 /// A tuple of distributions: `(Distribution<A>, Distribution<B>, ..)`
 pub trait TupledDistributions {
+    /// A tuple that can be pushed/inserted into the tupled distributions
     type Item: Tuple<Distributions=Self>;
 
     /// Creates a tuple of unitialized distributions, where each distribution has the same `length`

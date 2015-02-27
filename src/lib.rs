@@ -10,6 +10,7 @@
 #![feature(plugin)]
 #![feature(std_misc)]
 #![feature(unboxed_closures)]
+#![feature(unique)]
 
 extern crate blas;
 extern crate cast;
