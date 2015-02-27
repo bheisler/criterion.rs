@@ -1,13 +1,20 @@
 language: rust
-sudo: false
 
 env:
   global:
     - secure: D08wHRxR0AT2yx0yXOLWKhlAxDeV7XXRCMs7yrULom3iS0BKM2qviohpYNx0Jx5NyOC97ksAz6FZ3oSSURMjW/19L9bUjZimHOIVeKFDNBn4OmUASv2LywNgFfh56z8w3znuI0bs9JOGGcH3HozW/vTENDJs3SjB7lrzszrs45g=
 
+before_install:
+  - sudo apt-get update
+
+install:
+  - sudo apt-get install libblas-dev
+
 script:
   - cargo build --verbose
   - cargo test --verbose
+  # run optimized tests too
+  - cargo bench test -- --test
   - cargo doc --verbose
   - ./check-line-length.sh
 
