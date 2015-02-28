@@ -33,7 +33,7 @@ impl<A> Sample<A> {
 }
 
 // TODO(rust-lang/rfcs#735) move this `impl` into a private percentiles module
-impl<A: ::Float> Sample<A> {
+impl<A> Sample<A> where A: ::Float {
     /// Creates a new sample from an existing slice
     ///
     /// # Panics
@@ -223,13 +223,14 @@ impl<A: ::Float> Sample<A> {
     /// - Multi-threaded
     /// - Time: `O(nresamples)`
     /// - Memory: `O(nresamples)`
-    pub fn bootstrap<T: Tuple, S>(
+    pub fn bootstrap<T, S>(
         &self,
         nresamples: usize,
         statistic: S,
     ) -> T::Distributions where
         S: Fn(&Sample<A>) -> T,
         S: Sync,
+        T: Tuple,
         T::Distributions: Send,
     {
         let ncpus = os::num_cpus();

@@ -11,7 +11,7 @@ use bivariate::Data;
 #[derive(Clone, Copy)]
 pub struct Slope<A>(pub A) where A: ::Float;
 
-impl<A: ::Float> Slope<A> {
+impl<A> Slope<A> where A: ::Float {
     /// Fits the data to a straight line that passes through the origin using ordinary least
     /// squares
     ///
@@ -128,7 +128,7 @@ pub struct StraightLine<A> where A: ::Float {
     pub slope: A,
 }
 
-impl<A: ::Float> StraightLine<A> {
+impl<A> StraightLine<A> where A: ::Float {
     /// Fits the data to a straight line using ordinary least squares
     ///
     /// - Acceleration: BLAS + SIMD

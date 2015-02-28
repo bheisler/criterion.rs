@@ -8,7 +8,7 @@ use univariate::Sample;
 use univariate::resamples::Resamples;
 
 /// Performs a *mixed* two-sample bootstrap
-pub fn bootstrap<A, T: Tuple, S>(
+pub fn bootstrap<A, T, S>(
     a: &Sample<A>,
     b: &Sample<A>,
     nresamples: usize,
@@ -16,6 +16,7 @@ pub fn bootstrap<A, T: Tuple, S>(
 ) -> T::Distributions where
     A: ::Float,
     S: Fn(&Sample<A>, &Sample<A>) -> T + Sync,
+    T: Tuple,
     T::Distributions: Send,
 {
     let ncpus = os::num_cpus();

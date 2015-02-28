@@ -41,9 +41,10 @@ impl<'a, X, Y> Data<'a, X, Y> where X: ::Float, Y: ::Float {
     /// - Multi-threaded
     /// - Time: `O(nresamples)`
     /// - Memory: `O(nresamples)`
-    pub fn bootstrap<T: Tuple, S>(&self, nresamples: usize, statistic: S) -> T::Distributions where
+    pub fn bootstrap<T, S>(&self, nresamples: usize, statistic: S) -> T::Distributions where
         S: Fn(Data<X, Y>) -> T,
         S: Sync,
+        T: Tuple,
         T::Distributions: Send,
     {
         let ncpus = os::num_cpus();

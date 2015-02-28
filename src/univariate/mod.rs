@@ -25,7 +25,7 @@ pub use self::sample::Sample;
 /// - Multithreaded
 /// - Time: `O(nresamples)`
 /// - Memory: `O(nresamples)`
-pub fn bootstrap<A, B, T: Tuple, S>(
+pub fn bootstrap<A, B, T, S>(
     a: &Sample<A>,
     b: &Sample<B>,
     nresamples: usize,
@@ -35,6 +35,7 @@ pub fn bootstrap<A, B, T: Tuple, S>(
     B: ::Float,
     S: Fn(&Sample<A>, &Sample<B>) -> T,
     S: Sync,
+    T: Tuple,
     T::Distributions: Send,
 {
     let ncpus = os::num_cpus();

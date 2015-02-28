@@ -12,7 +12,7 @@ use univariate::Sample;
 use self::kernel::Kernel;
 
 /// Univariate kernel density estimator
-pub struct Kde<'a, A: ::Float, K> where A: 'a, K: Kernel<A>, A::Vector: 'a {
+pub struct Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A>, A::Vector: 'a {
     bandwidth: A,
     kernel: K,
     sample: &'a Sample<A>,
@@ -69,7 +69,7 @@ impl<'a, A, K> Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
     }
 }
 
-impl<'a, A: ::Float, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a, K: Kernel<A> {
+impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
     type Output = A;
 
     /// Estimates the probability density of `x`
