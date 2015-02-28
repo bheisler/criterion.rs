@@ -235,9 +235,10 @@ impl Display<&'static str> for Style {
     }
 }
 
-// FIXME(rust-lang/rust#20300) move bounds to where clauses
-impl<X: IntoIterator, Y: IntoIterator> traits::Plot<Curve<X, Y>> for Figure where
+impl<X, Y> traits::Plot<Curve<X, Y>> for Figure where
+    X: IntoIterator,
     X::Item: Data,
+    Y: IntoIterator,
     Y::Item: Data,
 {
     type Properties = Properties;

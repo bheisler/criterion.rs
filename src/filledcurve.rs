@@ -114,11 +114,12 @@ pub struct FilledCurve<X, Y1, Y2> {
     pub y2: Y2,
 }
 
-// FIXME(rust-lang/rust#20300) move bounds to where clauses
-impl<X: IntoIterator, Y1: IntoIterator, Y2: IntoIterator>
-traits::Plot<FilledCurve<X, Y1, Y2>> for Figure where
+impl<X, Y1, Y2> traits::Plot<FilledCurve<X, Y1, Y2>> for Figure where
+    X: IntoIterator,
     X::Item: Data,
+    Y1: IntoIterator,
     Y1::Item: Data,
+    Y2: IntoIterator,
     Y2::Item: Data,
 {
     type Properties = Properties;

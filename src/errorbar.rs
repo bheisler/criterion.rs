@@ -215,14 +215,15 @@ impl<X, Y, L, H> ErrorBar<X, Y, L, H> {
     }
 }
 
-// FIXME(rust-lang/rust#20300) move bounds to where clauses
-impl<X: IntoIterator, Y: IntoIterator, L: IntoIterator, H: IntoIterator>
-traits::Plot<ErrorBar<X, Y, L, H>>
-for Figure where
-    X::Item: Data,
-    Y::Item: Data,
-    L::Item: Data,
+impl<X, Y, L, H>  traits::Plot<ErrorBar<X, Y, L, H>> for Figure where
+    H: IntoIterator,
     H::Item: Data,
+    L: IntoIterator,
+    L::Item: Data,
+    X: IntoIterator,
+    X::Item: Data,
+    Y: IntoIterator,
+    Y::Item: Data,
 {
     type Properties = Properties;
 
@@ -240,7 +241,6 @@ for Figure where
         };
         let data = Matrix::new(
             zip!(x, y, l, h),
-            // FIXME
             (x_factor, y_factor, e_factor, e_factor),
         );
         self.plots.push(Plot::new(data, configure(&mut ErrorBarDefault::default(style))));

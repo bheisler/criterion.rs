@@ -29,8 +29,11 @@ pub struct Matrix {
 }
 
 impl Matrix {
-    pub fn new<A: Row, I>(rows: I, scale: A::Scale) -> Matrix where I: Iterator<Item=A> {
-        let ncols = <A as Row>::ncols();
+    pub fn new<I>(rows: I, scale: <I::Item as Row>::Scale) -> Matrix where
+        I: Iterator,
+        I::Item: Row,
+    {
+        let ncols = I::Item::ncols();
         let bytes_per_row = ncols * mem::size_of::<f64>();
         let mut buffer = Vec::with_capacity(rows.size_hint().0 * bytes_per_row);
 

@@ -8,7 +8,9 @@ pub struct Plot {
 }
 
 impl Plot {
-    pub fn new<S: Script>(data: Matrix, script: &S) -> Plot {
+    pub fn new<S>(data: Matrix, script: &S) -> Plot where
+        S: Script,
+    {
         Plot {
             data: data,
             script: script.script(),

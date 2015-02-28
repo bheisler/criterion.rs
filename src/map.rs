@@ -7,7 +7,7 @@ pub mod axis {
 
     const LENGTH: usize = 4;
 
-    pub struct Items<'a, T: 'a> {
+    pub struct Items<'a, T> where T: 'a {
         map: &'a Map<T>,
         state: usize,
     }
@@ -79,7 +79,7 @@ pub mod grid {
 
     const LENGTH: usize = 2;
 
-    struct Items<'a, T: 'a> {
+    struct Items<'a, T> where T: 'a {
         map: &'a Map<T>,
         state: usize,
     }

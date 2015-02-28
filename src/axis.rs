@@ -124,10 +124,11 @@ impl Set<ScaleFactor> for Properties {
     }
 }
 
-// FIXME(rust-lang/rust#20300) move bounds to where clauses
-impl<P: IntoIterator, L: IntoIterator> Set<TicLabels<P, L>> for Properties where
-    P::Item: Data,
+impl<P, L> Set<TicLabels<P, L>> for Properties where
+    L: IntoIterator,
     L::Item: Str,
+    P: IntoIterator,
+    P::Item: Data,
 {
     /// Attaches labels to the tics of an axis
     fn set(&mut self, tics: TicLabels<P, L>) -> &mut Properties {
