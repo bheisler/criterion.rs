@@ -11,10 +11,11 @@ before_install:
   # This PPA has a newer version of gnuplot
   - if [[ $WITH_GNUPLOT == 'true' ]]; then
       sudo add-apt-repository ppa:gladky-anton/precise-backports -y;
-      sudo apt-get update -qq;
     fi
+  - sudo apt-get update -qq
 
 install:
+  - sudo apt-get install libblas-dev
   - if [[ $WITH_GNUPLOT == 'true' ]]; then
       sudo apt-get install -qq gnuplot;
     fi
