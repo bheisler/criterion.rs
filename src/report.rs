@@ -34,14 +34,14 @@ pub fn outliers(sample: LabeledSample<f64>) {
         return;
     }
 
-    let percent = |&: n: usize| { 100. * n as f64 / sample_size as f64 };
+    let percent = |n: usize| { 100. * n as f64 / sample_size as f64 };
 
     println!("> Found {} outliers among {} measurements ({:.2}%)",
              noutliers,
              sample_size,
              percent(noutliers));
 
-    let print = |&: n: usize, label| {
+    let print = |n, label| {
         if n != 0 {
             println!("  > {} ({:.2}%) {}", n, percent(n), label);
         }

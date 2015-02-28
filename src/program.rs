@@ -36,7 +36,9 @@ impl Program {
         }
     }
 
-    pub fn send<T: fmt::Display>(&mut self, line: T) -> &mut Program {
+    pub fn send<T>(&mut self, line: T) -> &mut Program where
+        T: fmt::Display,
+    {
         use std::io::Write;
 
         match writeln!(&mut self.stdin, "{}", line) {

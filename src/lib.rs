@@ -53,7 +53,9 @@ pub struct Bencher {
 
 impl Bencher {
     /// Callback to benchmark a routine
-    pub fn iter<T, F: FnMut() -> T>(&mut self, mut routine: F) {
+    pub fn iter<T, F>(&mut self, mut routine: F) where
+        F: FnMut() -> T,
+    {
         self.ns_start = time::precise_time_ns();
         for _ in 0..self.iters {
             test::black_box(routine());
@@ -302,12 +304,13 @@ impl Criterion {
     ///     b.iter(|| Vec::from_elem(size, 0u8));
     /// }, [1024, 2048, 4096]);
     /// ```
-    pub fn bench_with_inputs<I: IntoIterator, F>(
+    pub fn bench_with_inputs<I, F>(
         &mut self,
         id: &str,
         f: F,
         inputs: I,
     ) -> &mut Criterion where
+        I: IntoIterator,
         I::Item: fmt::Display,
         F: FnMut(&mut Bencher, &I::Item),
     {
@@ -358,12 +361,14 @@ impl Criterion {
     ///
     /// This is a convenience method to execute several related benchmarks. Each benchmark will
     /// receive the id: `${id}/${input}`.
-    pub fn bench_program_with_inputs<I: IntoIterator, F: FnMut() -> Command>(
+    pub fn bench_program_with_inputs<I, F>(
         &mut self,
         id: &str,
         program: F,
         inputs: I,
     ) -> &mut Criterion where
+        F: FnMut() -> Command,
+        I: IntoIterator,
         I::Item: fmt::Display,
     {
         analysis::program_with_inputs(id, program, inputs, self);

@@ -5,8 +5,13 @@ use rustc_serialize::json::Encoder;
 use rustc_serialize::{Decodable, Encodable, json};
 
 // TODO Proper error handling
-pub fn load<A: Decodable, P: AsPath + ?Sized>(path: &P) -> A {
-    fn load_<A: Decodable>(path: &Path) -> A {
+pub fn load<A, P: ?Sized>(path: &P) -> A where
+    A: Decodable,
+    P: AsPath,
+{
+    fn load_<A>(path: &Path) -> A where
+        A: Decodable,
+    {
         use std::io::Read;
 
         let mut string = String::new();
@@ -33,7 +38,9 @@ pub fn ls(dir: &Path) -> ReadDir {
     }
 }
 
-pub fn mkdirp<P: AsPath>(path: &P) {
+pub fn mkdirp<P>(path: &P) where
+    P: AsPath,
+{
     fn mkdirp_(path: &Path) {
         if let Err(e) = fs::create_dir_all(path) {
             panic!("`mkdir -p {}`: {}", path.display(), e)
@@ -56,8 +63,13 @@ pub fn rmrf(path: &Path) {
 }
 
 // TODO Proper error handling
-pub fn save<D: Encodable, P: AsPath>(data: &D, path: &P) {
-    fn save_<D: Encodable>(data: &D, path: &Path) {
+pub fn save<D, P>(data: &D, path: &P) where
+    D: Encodable,
+    P: AsPath,
+{
+    fn save_<D>(data: &D, path: &Path) where
+        D: Encodable,
+    {
         use std::io::Write;
 
         let mut buf = String::new();

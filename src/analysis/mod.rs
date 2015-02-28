@@ -93,7 +93,9 @@ pub fn program_with_inputs<I, F>(
 }
 
 // Common analysis procedure
-fn common<R: Routine>(id: &str, routine: &mut R, criterion: &Criterion) {
+fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
+    R: Routine,
+{
     println!("Benchmarking {}", id);
 
     let (iters, times) = routine.sample(criterion);
