@@ -80,11 +80,11 @@ impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
         let h = self.bandwidth;
         let n = slice.len().to::<A>();
 
-        let x_ = <A::Vector as Vector>::from_elem(x);
-        let h_ = <A::Vector as Vector>::from_elem(h);
-        let (head, body, tail) = <A::Vector as Vector>::cast(slice);
+        let x_ = A::Vector::from_elem(x);
+        let h_ = A::Vector::from_elem(h);
+        let (head, body, tail) = A::Vector::cast(slice);
 
-        let sum = body.iter().fold(<A::Vector as Vector>::zeroed(), |acc, &x_i| {
+        let sum = body.iter().fold(A::Vector::zeroed(), |acc, &x_i| {
             acc + ((x_ - x_i) / h_).map(self.kernel)
         }).sum();
 

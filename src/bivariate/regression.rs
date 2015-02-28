@@ -23,7 +23,7 @@ impl<A> Slope<A> where A: ::Float {
 
         unsafe {
             let n = xs.len().to::<::blas::blasint>().unwrap();
-            let dot = <A as ::blas::Dot>::dot();
+            let dot = A::dot();
             let xs = xs.as_ptr();
             let ys = ys.as_ptr();
 
@@ -47,15 +47,15 @@ impl<A> Slope<A> where A: ::Float {
         let y_bar = ::simd::sum(ys) / n;
 
         let (ss_res, ss_tot) = unsafe {
-            let (xhead, xbody, xtail) = <A::Vector as Vector>::cast(xs);
-            let (yhead, ybody, ytail) = <A::Vector as Vector>::cast(ys);
+            let (xhead, xbody, xtail) = A::Vector::cast(xs);
+            let (yhead, ybody, ytail) = A::Vector::cast(ys);
 
             if xhead.len() == yhead.len() {
-                let mut ss_res = <A::Vector as Vector>::zeroed();
-                let mut ss_tot = <A::Vector as Vector>::zeroed();
+                let mut ss_res = A::Vector::zeroed();
+                let mut ss_tot = A::Vector::zeroed();
 
-                let m_ = <A::Vector as Vector>::from_elem(m);
-                let y_bar_ = <A::Vector as Vector>::from_elem(y_bar);
+                let m_ = A::Vector::from_elem(m);
+                let y_bar_ = A::Vector::from_elem(y_bar);
 
                 for i in 0..xbody.len() {
                     let &x_ = xbody.get_unchecked(i);
@@ -138,7 +138,7 @@ impl<A> StraightLine<A> where A: ::Float {
         let ys = data.1;
 
         let (x2, xy) = unsafe {
-            let dot = <A as ::blas::Dot>::dot();
+            let dot = A::dot();
             let n = xs.len().to::<::blas::blasint>().unwrap();;
 
             let x2 = dot(&n, xs.as_ptr(), &1, xs.as_ptr(), &1);
@@ -182,16 +182,16 @@ impl<A> StraightLine<A> where A: ::Float {
         let y_bar = ::simd::sum(ys) / n;
 
         let (ss_res, ss_tot) = unsafe {
-            let (xhead, xbody, xtail) = <A::Vector as Vector>::cast(xs);
-            let (yhead, ybody, ytail) = <A::Vector as Vector>::cast(ys);
+            let (xhead, xbody, xtail) = A::Vector::cast(xs);
+            let (yhead, ybody, ytail) = A::Vector::cast(ys);
 
             if xhead.len() == yhead.len() {
-                let mut ss_res = <A::Vector as Vector>::zeroed();
-                let mut ss_tot = <A::Vector as Vector>::zeroed();
+                let mut ss_res = A::Vector::zeroed();
+                let mut ss_tot = A::Vector::zeroed();
 
-                let b_ = <A::Vector as Vector>::from_elem(b);
-                let m_ = <A::Vector as Vector>::from_elem(m);
-                let y_bar_ = <A::Vector as Vector>::from_elem(y_bar);
+                let b_ = A::Vector::from_elem(b);
+                let m_ = A::Vector::from_elem(m);
+                let y_bar_ = A::Vector::from_elem(y_bar);
 
                 for i in 0..xbody.len() {
                     let &x_ = xbody.get_unchecked(i);

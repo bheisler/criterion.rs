@@ -202,9 +202,9 @@ impl<A> Sample<A> where A: ::Float {
         let mean = mean.unwrap_or_else(|| self.mean());
         let slice = self.as_slice();
 
-        let (head, body, tail) = <A::Vector as Vector>::cast(slice);
-        let mean_ = <A::Vector as Vector>::from_elem(mean);
-        let acc = body.iter().fold(<A::Vector as Vector>::zeroed(), |acc, &chunk| {
+        let (head, body, tail) = A::Vector::cast(slice);
+        let mean_ = A::Vector::from_elem(mean);
+        let acc = body.iter().fold(A::Vector::zeroed(), |acc, &chunk| {
             let diff = chunk - mean_;
             acc + diff * diff
         }).sum();
