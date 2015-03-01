@@ -23,3 +23,7 @@ after_success:
 
 branches:
   only: master
+
+notifications:
+  email:
+    on_success: never
