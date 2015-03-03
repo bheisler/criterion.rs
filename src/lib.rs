@@ -361,7 +361,6 @@
 #![feature(io)]
 #![feature(old_io)]
 #![feature(path)]
-#![feature(process)]
 #![feature(str_words)]
 
 #[macro_use]
@@ -523,15 +522,15 @@ impl Figure {
 
     /// Spawns a drawing child process
     ///
-    /// NOTE: stderr, stdin, and stdout are captured
+    /// NOTE: stderr, stdin, and stdout are piped
     pub fn draw(&mut self) -> io::Result<Child> {
         use std::process::Stdio;
 
         let mut gnuplot = try!{
             Command::new("gnuplot").
-                stderr(Stdio::capture()).
-                stdin(Stdio::capture()).
-                stdout(Stdio::capture()).
+                stderr(Stdio::piped()).
+                stdin(Stdio::piped()).
+                stdout(Stdio::piped()).
                 spawn()
         };
         try!(self.dump(gnuplot.stdin.as_mut().unwrap()));
