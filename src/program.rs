@@ -18,9 +18,9 @@ pub struct Program {
 
 impl Program {
     pub fn spawn(cmd: &mut Command) -> Program {
-        cmd.stderr(Stdio::capture());
-        cmd.stdin(Stdio::capture());
-        cmd.stdout(Stdio::capture());
+        cmd.stderr(Stdio::piped());
+        cmd.stdin(Stdio::piped());
+        cmd.stdout(Stdio::piped());
 
         let mut child = match cmd.spawn() {
             Err(e) => panic!("`{:?}`: {}", cmd, e),

@@ -15,7 +15,6 @@
 #![feature(io)]
 #![feature(os)]
 #![feature(path)]
-#![feature(process)]
 #![feature(std_misc)]
 #![feature(test)]
 
