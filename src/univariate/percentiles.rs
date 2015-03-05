@@ -11,8 +11,6 @@ impl<A> Percentiles<A> where A: ::Float {
     ///
     /// - Make sure that `p` is in the range `[0, 100]`
     unsafe fn at_unchecked(&self, p: A) -> A {
-        #![allow(deprecated)]
-
         let _0 = 0.to::<A>();
         let _100 = 100.to::<A>();
         let len = self.0.len() - 1;
@@ -24,7 +22,7 @@ impl<A> Percentiles<A> where A: ::Float {
             let integer = rank.floor();
             let fraction = rank - integer;
             // FIXME replace `to_uint()` with `to::<usize>()`
-            let n = integer.to_uint().unwrap();
+            let n = integer.to_usize().unwrap();
             let &floor = self.0.get_unchecked(n);
             let &ceiling = self.0.get_unchecked(n + 1);
 
