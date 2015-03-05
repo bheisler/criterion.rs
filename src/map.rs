@@ -17,7 +17,7 @@ pub mod axis {
 
         fn next(&mut self) -> Option<(Axis, &'a T)> {
             while self.state < LENGTH {
-                let key = FromPrimitive::from_uint(self.state).unwrap();
+                let key = FromPrimitive::from_usize(self.state).unwrap();
                 self.state += 1;
 
                 if let Some(value) = self.map.get(key) {
@@ -89,7 +89,7 @@ pub mod grid {
 
         fn next(&mut self) -> Option<(Grid, &'a T)> {
             while self.state < LENGTH {
-                let key = FromPrimitive::from_uint(self.state).unwrap();
+                let key = FromPrimitive::from_usize(self.state).unwrap();
                 self.state += 1;
 
                 if let Some(value) = self.map.get(key) {
