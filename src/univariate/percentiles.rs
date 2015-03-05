@@ -11,6 +11,8 @@ impl<A> Percentiles<A> where A: ::Float {
     ///
     /// - Make sure that `p` is in the range `[0, 100]`
     unsafe fn at_unchecked(&self, p: A) -> A {
+        #![allow(deprecated)]
+
         let _0 = 0.to::<A>();
         let _100 = 100.to::<A>();
         let len = self.0.len() - 1;
