@@ -357,7 +357,6 @@
 #![deny(warnings)]
 #![feature(collections)]
 #![feature(core)]
-#![feature(fs)]
 #![feature(io)]
 #![feature(old_io)]
 #![feature(path)]
