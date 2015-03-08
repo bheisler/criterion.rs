@@ -6,6 +6,7 @@
 #![deny(warnings)]
 #![feature(collections)]
 #![feature(core)]
+#![feature(custom_attribute)]
 #![feature(os)]
 #![feature(plugin)]
 #![feature(std_misc)]
