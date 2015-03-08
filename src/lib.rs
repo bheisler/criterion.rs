@@ -11,10 +11,9 @@
 #![deny(warnings)]
 #![feature(collections)]
 #![feature(core)]
-#![feature(fs)]
 #![feature(io)]
-#![feature(os)]
 #![feature(path)]
+#![feature(path_ext)]
 #![feature(std_misc)]
 #![feature(test)]
 

@@ -1,3 +1,4 @@
+#![feature(custom_attribute)]
 #![feature(plugin)]
 #![plugin(criterion_macros)]
 
