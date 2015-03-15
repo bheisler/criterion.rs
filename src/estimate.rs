@@ -40,7 +40,7 @@ impl Estimate {
             Err(_) => None,
             Ok(mut f) => match f.read_to_string(&mut string) {
                 Err(_) => None,
-                Ok(()) => match json::decode(&string) {
+                Ok(_) => match json::decode(&string) {
                     Err(_) => None,
                     Ok(estimates) => Some(estimates),
                 },

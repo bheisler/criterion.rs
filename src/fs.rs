@@ -20,7 +20,7 @@ pub fn load<A, P: ?Sized>(path: &P) -> A where
             Err(e) => panic!("{}", e),
             Ok(mut f) => match f.read_to_string(&mut string) {
                 Err(e) => panic!("{}", e),
-                Ok(()) => match json::decode(&*string) {
+                Ok(_) => match json::decode(&*string) {
                     Err(e) => panic!("Couldn't decode {} ({:?})", string, e),
                     Ok(thing) => thing,
                 }

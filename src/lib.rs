@@ -11,8 +11,6 @@
 #![deny(warnings)]
 #![feature(collections)]
 #![feature(core)]
-#![feature(io)]
-#![feature(path)]
 #![feature(path_ext)]
 #![feature(std_misc)]
 #![feature(test)]

@@ -60,14 +60,14 @@ impl Program {
                     Err(e) => {
                         panic!("`read from child stderr`: {}", e);
                     },
-                    Ok(()) => {
+                    Ok(_) => {
                         println!("stderr:\n{}", self.buffer);
                     }
                 }
 
                 panic!("`read from child stdout`: {}", e);
             },
-            Ok(()) => &self.buffer,
+            Ok(_) => &self.buffer,
         }
     }
 }
