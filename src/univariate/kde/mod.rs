@@ -38,6 +38,8 @@ impl<'a, A, K> Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
     ///
     /// - Multihreaded
     pub fn map(&self, xs: &[A]) -> Box<[A]> {
+        #![allow(deprecated)]
+
         let n = xs.len();
         let ncpus = os::num_cpus();
 

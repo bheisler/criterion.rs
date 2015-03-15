@@ -233,6 +233,8 @@ impl<A> Sample<A> where A: ::Float {
         T: Tuple,
         T::Distributions: Send,
     {
+        #![allow(deprecated)]
+
         let ncpus = os::num_cpus();
 
         unsafe {

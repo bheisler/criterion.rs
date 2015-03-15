@@ -47,6 +47,8 @@ impl<'a, X, Y> Data<'a, X, Y> where X: ::Float, Y: ::Float {
         T: Tuple,
         T::Distributions: Send,
     {
+        #![allow(deprecated)]
+
         let ncpus = os::num_cpus();
 
         unsafe {

@@ -38,6 +38,8 @@ pub fn bootstrap<A, B, T, S>(
     T: Tuple,
     T::Distributions: Send,
 {
+    #![allow(deprecated)]
+
     let ncpus = os::num_cpus();
 
     unsafe {

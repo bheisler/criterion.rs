@@ -19,6 +19,8 @@ pub fn bootstrap<A, T, S>(
     T: Tuple,
     T::Distributions: Send,
 {
+    #![allow(deprecated)]
+
     let ncpus = os::num_cpus();
     let n_a = a.as_slice().len();
     let n_b = b.as_slice().len();
