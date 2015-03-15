@@ -357,9 +357,7 @@
 #![deny(warnings)]
 #![feature(collections)]
 #![feature(core)]
-#![feature(io)]
 #![feature(old_io)]
-#![feature(path)]
 #![feature(str_words)]
 
 #[macro_use]

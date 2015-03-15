@@ -78,6 +78,8 @@ impl<A, B> Row for (A, B) where A: Data, B: Data {
     type Scale = (f64, f64);
 
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64)) {
+        #![allow(deprecated)]
+
         let (a, b) = self;
 
         buffer.write_le_f64(a.f64() * scale.0).unwrap();
@@ -93,6 +95,8 @@ impl<A, B, C> Row for (A, B, C) where A: Data, B: Data, C: Data {
     type Scale = (f64, f64, f64);
 
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64)) {
+        #![allow(deprecated)]
+
         let (a, b, c) = self;
 
         buffer.write_le_f64(a.f64() * scale.0).unwrap();
@@ -109,6 +113,8 @@ impl<A, B, C, D> Row for (A, B, C, D) where A: Data, B: Data, C: Data, D: Data {
     type Scale = (f64, f64, f64, f64);
 
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64, f64)) {
+        #![allow(deprecated)]
+
         let (a, b, c, d) = self;
 
         buffer.write_le_f64(a.f64() * scale.0).unwrap();
@@ -126,6 +132,8 @@ impl<A, B, C, D, E> Row for (A, B, C, D, E) where A: Data, B: Data, C: Data, D: 
     type Scale = (f64, f64, f64, f64, f64);
 
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64, f64, f64)) {
+        #![allow(deprecated)]
+
         let (a, b, c, d, e) = self;
 
         buffer.write_le_f64(a.f64() * scale.0).unwrap();
