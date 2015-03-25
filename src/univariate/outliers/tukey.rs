@@ -117,7 +117,7 @@ impl<'a, A> Deref for LabeledSample<'a, A> where A: ::Float {
 impl<'a, A> Index<usize> for LabeledSample<'a, A> where A: ::Float {
     type Output = Label;
 
-    fn index(&self, &i: &usize) -> &Label {
+    fn index(&self, i: usize) -> &Label {
         static LOW_SEVERE: Label = LowSevere;
         static LOW_MILD: Label = LowMild;
         static HIGH_MILD: Label = HighMild;

@@ -47,7 +47,7 @@ impl <'a, A> Resamples<'a, A> where A: 'a + ::Float {
 
         if let Some(ref v) = self.stage {
             unsafe {
-                mem::transmute(v.as_slice())
+                mem::transmute::<&[_], _>(v)
             }
         } else {
             unreachable!();
