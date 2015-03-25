@@ -10,8 +10,9 @@ use stats::bivariate::regression::Slope;
 use stats::univariate::Sample;
 use stats::univariate::outliers::tukey::LabeledSample;
 
+use Estimate;
+use estimate::{Distributions, Estimates, Statistic};
 use {fs, kde};
-use estimate::{Distributions, Estimate, Estimates, Statistic};
 
 pub mod both;
 
@@ -41,7 +42,7 @@ const DARK_ORANGE: Color = Color::Rgb(255, 127, 0);
 const DARK_RED: Color = Color::Rgb(227, 26, 28);
 
 pub fn pdf(data: Data<f64, f64>, labeled_sample: LabeledSample<f64>, id: &str) {
-    let path = PathBuf::new(&format!(".criterion/{}/new/pdf.svg", id));
+    let path = PathBuf::from(format!(".criterion/{}/new/pdf.svg", id));
 
     let (x_scale, prefix) = scale_time(labeled_sample.max());
 
@@ -192,7 +193,7 @@ pub fn regression(
     (lb, ub): (Slope<f64>, Slope<f64>),
     id: &str,
 ) {
-    let path = PathBuf::new(&format!(".criterion/{}/new/regression.svg", id));
+    let path = PathBuf::from(format!(".criterion/{}/new/regression.svg", id));
 
     let (max_iters, max_elapsed) = (data.x().max(), data.y().max());
 
@@ -264,7 +265,7 @@ pub fn regression(
 
 pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, id: &str) {
     let gnuplots = distributions.iter().map(|(&statistic, distribution)| {
-        let estimate = estimates[statistic];
+        let estimate = estimates[&statistic];
 
         let ci = estimate.confidence_interval;
         let (lb, ub) = (ci.lower_bound, ci.upper_bound);
@@ -291,7 +292,7 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
 
         Figure::new().
             set(Font(DEFAULT_FONT)).
-            set(Output(PathBuf::new(&format!(".criterion/{}/new/{}.svg", id, statistic)))).
+            set(Output(PathBuf::from(format!(".criterion/{}/new/{}.svg", id, statistic)))).
             set(SIZE).
             set(Title(format!("{}: {}", id, statistic))).
             configure(Axis::BottomX, |a| a.
@@ -359,9 +360,9 @@ pub fn rel_distributions(
             set(Position::Outside(Vertical::Top, Horizontal::Right)));
 
     let gnuplots = distributions.iter().map(|(&statistic, distribution)| {
-        let path = PathBuf::new(&format!(".criterion/{}/change/{}.svg", id, statistic));
+        let path = PathBuf::from(format!(".criterion/{}/change/{}.svg", id, statistic));
 
-        let estimate = estimates[statistic];
+        let estimate = estimates[&statistic];
         let ci = estimate.confidence_interval;
         let (lb, ub) = (ci.lower_bound, ci.upper_bound);
 
@@ -445,7 +446,7 @@ pub fn rel_distributions(
 }
 
 pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str) {
-    let path = PathBuf::new(&format!(".criterion/{}/change/t-test.svg", id));
+    let path = PathBuf::from(format!(".criterion/{}/change/t-test.svg", id));
 
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, None);
     let zero = iter::repeat(0);
@@ -559,13 +560,13 @@ pub fn summarize(id: &str) {
 
             [Statistic::Mean, Statistic::Median, Statistic::Slope].iter().map(|&statistic| {
                 let points = benches.iter().map(|&(_, _, ref estimates, _)| {
-                    estimates[statistic].point_estimate
+                    estimates[&statistic].point_estimate
                 }).collect::<Vec<_>>();
                 let lbs = benches.iter().map(|&(_, _, ref estimates, _)| {
-                    estimates[statistic].confidence_interval.lower_bound
+                    estimates[&statistic].confidence_interval.lower_bound
                 }).collect::<Vec<_>>();
                 let ubs = benches.iter().map(|&(_, _, ref estimates, _)| {
-                    estimates[statistic].confidence_interval.upper_bound
+                    estimates[&statistic].confidence_interval.upper_bound
                 }).collect::<Vec<_>>();
                 let lbs_ = Sample::new(&lbs);
                 let ubs_ = Sample::new(&ubs);
@@ -672,19 +673,19 @@ pub fn summarize(id: &str) {
             // NB median go last because we reuse the ordered set in the next step (summary)
             [Statistic::Mean, Statistic::Slope, Statistic::Median].iter().map(|&statistic| {
                 benches.sort_by(|&(_, _, ref a, _), &(_, _, ref b, _)| {
-                    let a = a[statistic].point_estimate;
-                    let b = b[statistic].point_estimate;
+                    let a = a[&statistic].point_estimate;
+                    let b = b[&statistic].point_estimate;
                     b.partial_cmp(&a).unwrap()
                 });
 
                 let points = benches.iter().map(|&(_, _, ref estimates, _)| {
-                    estimates[statistic].point_estimate
+                    estimates[&statistic].point_estimate
                 }).collect::<Vec<_>>();
                 let lbs = benches.iter().map(|&(_, _, ref estimates, _)| {
-                    estimates[statistic].confidence_interval.lower_bound
+                    estimates[&statistic].confidence_interval.lower_bound
                 }).collect::<Vec<_>>();
                 let ubs = benches.iter().map(|&(_, _, ref estimates, _)| {
-                    estimates[statistic].confidence_interval.upper_bound
+                    estimates[&statistic].confidence_interval.upper_bound
                 }).collect::<Vec<_>>();
                 let lbs_ = Sample::new(&lbs);
                 let ubs_ = Sample::new(&ubs);
@@ -710,7 +711,7 @@ pub fn summarize(id: &str) {
                 let min = *points.last().unwrap();
                 let rel = points.iter().map(|&x| format!("{:.02}", x / min)).collect::<Vec<_>>();
 
-                let tics = iter::count(0.5, 1f64);
+                let tics = (1f64..).step_by(0.5);
                 // TODO Review axis scaling
                 Figure::new().
                     set(Font(DEFAULT_FONT)).
@@ -748,11 +749,11 @@ pub fn summarize(id: &str) {
                         set(Range::Limits(0., benches.len() as f64)).
                         set(TicLabels {
                             positions: tics,
-                            labels: rel.iter().map(|x| x.as_slice()),
+                            labels: rel.iter(),
                         })).
                     plot(XErrorBars {
                         x: &*points,
-                        y: iter::count(0.5, 1f64),
+                        y: (1f64..).step_by(0.5),
                         x_low: &*lbs,
                         x_high: &*ubs,
                     }, |eb| eb.
@@ -804,7 +805,7 @@ pub fn summarize(id: &str) {
                     }
                 };
 
-                let tics = iter::count(0.5, 1f64);
+                let tics = (1f64..).step_by(0.5);
                 let mut f = Figure::new();
                 f.
                     set(Font(DEFAULT_FONT)).

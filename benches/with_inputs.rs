@@ -1,5 +1,4 @@
-#![feature(fs)]
-#![feature(path)]
+#![feature(path_ext)]
 
 extern crate criterion;
 

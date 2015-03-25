@@ -1,6 +1,4 @@
-#![feature(fs)]
-#![feature(os)]
-#![feature(path)]
+#![feature(fs_walk)]
 
 extern crate criterion;
 

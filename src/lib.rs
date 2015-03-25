@@ -10,14 +10,16 @@
 #![deny(missing_docs)]
 #![deny(warnings)]
 #![feature(collections)]
+#![feature(convert)]
 #![feature(core)]
 #![feature(path_ext)]
 #![feature(std_misc)]
+#![feature(step_by)]
 #![feature(test)]
 
 #[macro_use]
 extern crate log;
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate rustc_serialize;
 extern crate simplot;
 extern crate space;
 extern crate stats;
@@ -38,6 +40,13 @@ use std::fmt;
 use std::iter::IntoIterator;
 use std::process::Command;
 use std::time::Duration;
+
+use rustc_serialize::json;
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
+
+use estimate::{Distributions, Estimates};
 
 /// Helper struct to build functions that follow the setup - bench - teardown pattern
 #[derive(Copy)]
@@ -403,3 +412,44 @@ struct ConfidenceInterval {
     lower_bound: f64,
     upper_bound: f64,
 }
+
+#[derive(Copy, PartialEq, RustcDecodable, RustcEncodable)]
+struct Estimate {
+    pub confidence_interval: ConfidenceInterval,
+    pub point_estimate: f64,
+    pub standard_error: f64,
+}
+
+impl Estimate {
+    fn new(distributions: &Distributions, points: &[f64], cl: f64) -> Estimates {
+        distributions.iter().zip(points.iter()).map(|((&statistic, distribution), &point)| {
+            let (lb, ub) = distribution.confidence_interval(cl);
+
+            (statistic, Estimate {
+                confidence_interval: ConfidenceInterval {
+                    confidence_level: cl,
+                    lower_bound: lb,
+                    upper_bound: ub,
+                },
+                point_estimate: point,
+                standard_error: distribution.std_dev(None),
+            })
+        }).collect()
+    }
+
+    fn load(path: &Path) -> Option<Estimates> {
+        let mut string = String::new();
+
+        match File::open(path) {
+            Err(_) => None,
+            Ok(mut f) => match f.read_to_string(&mut string) {
+                Err(_) => None,
+                Ok(_) => match json::decode(&string) {
+                    Err(_) => None,
+                    Ok(estimates) => Some(estimates),
+                },
+            }
+        }
+    }
+}
+

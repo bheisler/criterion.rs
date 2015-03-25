@@ -11,10 +11,10 @@ use stats::univariate::Sample;
 use stats::univariate::outliers::tukey::{LabeledSample, self};
 use time;
 
-use estimate::{Distributions, Estimate, Estimates, Statistic};
+use estimate::{Distributions, Estimates, Statistic};
 use program::Program;
 use routine::{Function, Routine};
-use {Bencher, ConfidenceInterval, Criterion};
+use {Bencher, ConfidenceInterval, Criterion, Estimate};
 use {format, fs, plot, report};
 
 macro_rules! elapsed {
@@ -85,8 +85,7 @@ pub fn program_with_inputs<I, F>(
     for input in inputs {
         let id = format!("{}/{}", id, input);
 
-        // FIXME uncomment
-        program(id.as_slice(), prog().arg(&format!("{}", input)), criterion);
+        program(&id, prog().arg(&format!("{}", input)), criterion);
     }
 
     summarize(id, criterion);

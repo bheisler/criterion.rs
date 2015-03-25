@@ -82,7 +82,7 @@ impl Routine for Program {
 
         (0..n).map(|_| {
             let msg = self.recv();
-            let msg = msg.as_slice().trim();
+            let msg = msg.trim();
 
             let elapsed: u64 = msg.parse().ok().expect("Couldn't parse program output");
             elapsed as f64

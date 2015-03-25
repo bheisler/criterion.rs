@@ -4,9 +4,9 @@ use stats::univariate::Sample;
 use stats::univariate::{mixed, self};
 use time;
 
-use Criterion;
+use {Criterion, Estimate};
 use estimate::Statistic::{Mean, Median};
-use estimate::{Distributions, Estimate, Estimates};
+use estimate::{Distributions, Estimates};
 use self::ComparisonResult::*;
 use {format, fs, plot, report};
 

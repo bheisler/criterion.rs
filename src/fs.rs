@@ -1,5 +1,5 @@
 use std::fs::{File, ReadDir, self};
-use std::path::{AsPath, Path};
+use std::path::Path;
 
 use rustc_serialize::json::Encoder;
 use rustc_serialize::{Decodable, Encodable, json};
@@ -7,7 +7,7 @@ use rustc_serialize::{Decodable, Encodable, json};
 // TODO Proper error handling
 pub fn load<A, P: ?Sized>(path: &P) -> A where
     A: Decodable,
-    P: AsPath,
+    P: AsRef<Path>,
 {
     fn load_<A>(path: &Path) -> A where
         A: Decodable,
@@ -28,7 +28,7 @@ pub fn load<A, P: ?Sized>(path: &P) -> A where
         }
     }
 
-    load_(path.as_path())
+    load_(path.as_ref())
 }
 
 pub fn ls(dir: &Path) -> ReadDir {
@@ -39,7 +39,7 @@ pub fn ls(dir: &Path) -> ReadDir {
 }
 
 pub fn mkdirp<P>(path: &P) where
-    P: AsPath,
+    P: AsRef<Path>,
 {
     fn mkdirp_(path: &Path) {
         if let Err(e) = fs::create_dir_all(path) {
@@ -47,7 +47,7 @@ pub fn mkdirp<P>(path: &P) where
         }
     }
 
-    mkdirp_(path.as_path())
+    mkdirp_(path.as_ref())
 }
 
 pub fn mv(from: &Path, to: &Path) {
@@ -65,7 +65,7 @@ pub fn rmrf(path: &Path) {
 // TODO Proper error handling
 pub fn save<D, P>(data: &D, path: &P) where
     D: Encodable,
-    P: AsPath,
+    P: AsRef<Path>,
 {
     fn save_<D>(data: &D, path: &Path) where
         D: Encodable,
@@ -80,5 +80,5 @@ pub fn save<D, P>(data: &D, path: &P) where
         File::create(path).unwrap().write_all(buf.as_bytes()).ok().expect("Couldn't save data")
     }
 
-    save_(data, path.as_path())
+    save_(data, path.as_ref())
 }

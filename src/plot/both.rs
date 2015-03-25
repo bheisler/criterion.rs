@@ -6,9 +6,9 @@ use simplot::prelude::*;
 use stats::bivariate::Data;
 use stats::univariate::Sample;
 
-use ConfidenceInterval;
+use {ConfidenceInterval, Estimate};
 use estimate::Statistic::Slope;
-use estimate::{Estimate, Estimates};
+use estimate::Estimates;
 use kde;
 use super::scale_time;
 use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
@@ -20,7 +20,7 @@ pub fn regression(
     estimates: &Estimates,
     id: &str,
 ) {
-    let path = PathBuf::new(&format!(".criterion/{}/both/regression.svg", id));
+    let path = PathBuf::from(format!(".criterion/{}/both/regression.svg", id));
 
     let max_iters = base_data.x().max().max(data.x().max());
     let max_elapsed = base_data.y().max().max(data.y().max());
@@ -40,13 +40,13 @@ pub fn regression(
         confidence_interval: ConfidenceInterval { lower_bound: base_lb, upper_bound: base_ub, .. },
         point_estimate: base_point,
         ..
-    } = base_estimates[Slope];
+    } = base_estimates[&Slope];
 
     let Estimate {
         confidence_interval: ConfidenceInterval { lower_bound: lb, upper_bound: ub, .. },
         point_estimate: point,
         ..
-    } = estimates[Slope];
+    } = estimates[&Slope];
 
     let gnuplot = Figure::new().
         set(Font(DEFAULT_FONT)).
@@ -105,7 +105,7 @@ pub fn regression(
 }
 
 pub fn pdfs(base_avg_times: &Sample<f64>, avg_times: &Sample<f64>, id: &str) {
-    let path = PathBuf::new(&format!(".criterion/{}/both/pdf.svg", id));
+    let path = PathBuf::from(format!(".criterion/{}/both/pdf.svg", id));
 
     let (base_xs, base_ys) = kde::sweep(base_avg_times, KDE_POINTS, None);
     let (xs, ys) = kde::sweep(avg_times, KDE_POINTS, None);
