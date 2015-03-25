@@ -66,6 +66,8 @@
 //! ![Plot](error_bar.svg)
 //!
 //! ```
+//! #![feature(core)]
+//!
 //! extern crate rand;
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
@@ -209,6 +211,8 @@
 //! ![Plot](multiaxis.svg)
 //!
 //! ```
+//! #![feature(core)]
+//!
 //! extern crate complex;  // https://github.com/japaric/complex.rs
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
@@ -284,6 +288,8 @@
 //! ![Plot](filled_curve.svg)
 //!
 //! ```
+//! #![feature(core)]
+//!
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
@@ -301,7 +307,7 @@
 //! let zeros = iter::repeat(0);
 //!
 //! fn gaussian(x: f64, mu: f64, sigma: f64) -> f64 {
-//!     (((x - mu).powi(2) / 2. / sigma.powi(2)).exp() * sigma * (2. * PI).sqrt()).recip()
+//!     1. / (((x - mu).powi(2) / 2. / sigma.powi(2)).exp() * sigma * (2. * PI).sqrt())
 //! }
 //!
 //! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
