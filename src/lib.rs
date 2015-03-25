@@ -370,13 +370,12 @@ use std::path::Path;
 use std::process::{Child, Command};
 use std::str;
 
-use plot::Plot;
+use data::Matrix;
 use traits::{Configure, Set};
 
 mod data;
 mod display;
 mod map;
-mod plot;
 
 pub mod axis;
 pub mod candlestick;
@@ -852,6 +851,30 @@ trait Script {
     fn script(&self) -> String;
 }
 
+#[derive(Clone)]
+struct Plot {
+    data: Matrix,
+    script: String,
+}
+
+impl Plot {
+    fn new<S>(data: Matrix, script: &S) -> Plot where
+        S: Script,
+    {
+        Plot {
+            data: data,
+            script: script.script(),
+        }
+    }
+
+    fn data(&self) -> &Matrix {
+        &self.data
+    }
+
+    fn script(&self) -> &str {
+        &self.script
+    }
+}
 /// Returns `gnuplot` version
 // FIXME Parsing may fail
 pub fn version() -> io::Result<(usize, usize, usize)> {

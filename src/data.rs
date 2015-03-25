@@ -1,5 +1,8 @@
+#![allow(deprecated)]
+
 use std::mem;
 use std::num::ToPrimitive;
+use std::old_io::Writer;
 
 use traits::Data;
 
@@ -64,7 +67,7 @@ impl Matrix {
 }
 
 /// Data that can serve as a row of the data matrix
-trait Row {
+pub trait Row {
     /// Private
     type Scale: Copy;
 

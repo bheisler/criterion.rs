@@ -4,11 +4,10 @@ use std::borrow::Cow;
 use std::iter::IntoIterator;
 
 use {
-    Color, Display, ErrorBarDefault, Figure, Label, LineType, LineWidth, PointSize, PointType,
-    Script,
+    Color, Display, ErrorBarDefault, Figure, Label, LineType, LineWidth, Plot, PointSize,
+    PointType, Script,
 };
 use data::Matrix;
-use plot::Plot;
 use traits::{Data, Set, self};
 
 /// Properties common to error bar plots

@@ -4,9 +4,8 @@ use std::borrow::Cow;
 use std::iter::IntoIterator;
 
 use data::Matrix;
-use plot::Plot;
 use traits::{Data, Set, self};
-use {Axes, Color, Default, Display, Figure, Label, Opacity, Script};
+use {Axes, Color, Default, Display, Figure, Label, Opacity, Plot, Script};
 
 /// Properties common to filled curve plots
 pub struct Properties {

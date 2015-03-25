@@ -4,9 +4,8 @@ use std::borrow::Cow;
 use std::iter::IntoIterator;
 
 use data::Matrix;
-use plot::Plot;
 use traits::{Data, Set, self};
-use {Color, Default, Display, Figure, Label, LineType, LineWidth, Script};
+use {Color, Default, Display, Figure, Label, LineType, LineWidth, Plot, Script};
 
 /// Properties common to candlestick plots
 pub struct Properties {

@@ -4,11 +4,10 @@ use std::borrow::Cow;
 use std::iter::IntoIterator;
 
 use {
-    Axes, Color, CurveDefault, Display, Figure, Label, LineType, LineWidth, PointType, PointSize,
-    Script,
+    Axes, Color, CurveDefault, Display, Figure, Label, LineType, LineWidth, Plot, PointType,
+    PointSize, Script,
 };
 use data::Matrix;
-use plot::Plot;
 use traits::{Data, Set, self};
 
 /// Properties common to simple "curve" like plots
