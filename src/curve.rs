@@ -66,7 +66,7 @@ impl Script for Properties {
 
         if let Some(ref label) = self.label {
             script.push_str("title '");
-            script.push_str(label.as_slice());
+            script.push_str(label);
             script.push('\'')
         } else {
             script.push_str("notitle")

@@ -356,7 +356,9 @@
 #![deny(missing_docs)]
 #![deny(warnings)]
 #![feature(collections)]
+#![feature(convert)]
 #![feature(core)]
+#![feature(into_cow)]
 #![feature(old_io)]
 #![feature(str_words)]
 

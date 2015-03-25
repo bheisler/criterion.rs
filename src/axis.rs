@@ -126,7 +126,7 @@ impl Set<ScaleFactor> for Properties {
 
 impl<P, L> Set<TicLabels<P, L>> for Properties where
     L: IntoIterator,
-    L::Item: Str,
+    L::Item: AsRef<str>,
     P: IntoIterator,
     P::Item: Data,
 {
@@ -135,7 +135,7 @@ impl<P, L> Set<TicLabels<P, L>> for Properties where
         let TicLabels { positions, labels } = tics;
 
         let pairs = positions.into_iter().zip(labels.into_iter()).map(|(pos, label)| {
-            format!("'{}' {}", label.as_slice(), pos.f64())
+            format!("'{}' {}", label.as_ref(), pos.f64())
         }).collect::<Vec<_>>();
 
         if pairs.len() == 0 {
