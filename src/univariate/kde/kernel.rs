@@ -12,10 +12,22 @@ impl<A, K> Kernel<A> for K where K: Copy + Fn(A) -> A + Sync, A: ::Float {}
 pub struct Gaussian;
 
 impl<A> Fn<(A,)> for Gaussian where A: ::Float {
-    type Output = A;
-
     extern "rust-call" fn call(&self, (x,): (A,)) -> A {
         (x.powi(2).exp() * ::std::f32::consts::PI_2.to::<A>()).sqrt().recip()
+    }
+}
+
+impl<A> FnMut<(A,)> for Gaussian where A: ::Float {
+    extern "rust-call" fn call_mut(&mut self, args: (A,)) -> A {
+        self.call(args)
+    }
+}
+
+impl<A> FnOnce<(A,)> for Gaussian where A: ::Float {
+    type Output = A;
+
+    extern "rust-call" fn call_once(self, args: (A,)) -> A {
+        self.call(args)
     }
 }
 

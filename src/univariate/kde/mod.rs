@@ -72,8 +72,6 @@ impl<'a, A, K> Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
 }
 
 impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
-    type Output = A;
-
     /// Estimates the probability density of `x`
     ///
     /// - Acceleration: SIMD
@@ -95,6 +93,20 @@ impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
         });
 
         sum / h / n
+    }
+}
+
+impl<'a, A, K> FnMut<(A,)> for Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
+    extern "rust-call" fn call_mut(&mut self, args: (A,)) -> A {
+        self.call(args)
+    }
+}
+
+impl<'a, A, K> FnOnce<(A,)> for Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
+    type Output = A;
+
+    extern "rust-call" fn call_once(self, args: (A,)) -> A {
+        self.call(args)
     }
 }
 

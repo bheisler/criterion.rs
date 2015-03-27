@@ -1,5 +1,6 @@
 //! SIMD/BLAS accelerated statistics
 
+#![cfg_attr(test, allow(trivial_casts))]  // quickcheck
 #![cfg_attr(test, feature(test))]
 #![cfg_attr(test, plugin(quickcheck_macros))]
 #![deny(missing_docs)]
