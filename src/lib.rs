@@ -96,11 +96,11 @@
 //! // Fake some data
 //! let ref mut rng: XorShiftRng = rand::thread_rng().gen();
 //! let xs = linspace::<f64>(-4., 4., 13).skip(1).take(11);
-//! let ys = xs.map(|x| sinc(x) + 0.05 * rng.gen() - 0.025).collect::<Vec<_>>();
-//! let y_low = ys.iter().map(|&y| y - 0.025 - 0.075 * rng.gen()).collect::<Vec<_>>();
-//! let y_high = ys.iter().map(|&y| y + 0.025 + 0.075 * rng.gen()).collect::<Vec<_>>();
+//! let ys = xs.map(|x| sinc(x) + 0.05 * rng.gen::<f64>() - 0.025).collect::<Vec<_>>();
+//! let y_low = ys.iter().map(|&y| y - 0.025 - 0.075 * rng.gen::<f64>()).collect::<Vec<_>>();
+//! let y_high = ys.iter().map(|&y| y + 0.025 + 0.075 * rng.gen::<f64>()).collect::<Vec<_>>();
 //! let xs = linspace::<f64>(-4., 4., 13).skip(1).take(11);
-//! let xs = xs.clone().map(|x| x + 0.2 * rng.gen() - 0.1);
+//! let xs = xs.clone().map(|x| x + 0.2 * rng.gen::<f64>() - 0.1);
 //!
 //! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
@@ -161,11 +161,12 @@
 //!
 //! // Fake some data
 //! let mut rng = rand::thread_rng();
-//! let bh = xs.clone().map(|_| 5f64 + 2.5 * rng.gen()).collect::<Vec<_>>();
-//! let bm = xs.clone().map(|_| 2.5f64 + 2.5 * rng.gen()).collect::<Vec<_>>();
-//! let wh = bh.iter().map(|&y| y + (10. - y) * rng.gen()).collect::<Vec<_>>();
-//! let wm = bm.iter().map(|&y| y * rng.gen()).collect::<Vec<_>>();
-//! let m = bm.iter().zip(bh.iter()).map(|(&l, &h)| (h - l) * rng.gen() + l).collect::<Vec<_>>();
+//! let bh = xs.clone().map(|_| 5f64 + 2.5 * rng.gen::<f64>()).collect::<Vec<_>>();
+//! let bm = xs.clone().map(|_| 2.5f64 + 2.5 * rng.gen::<f64>()).collect::<Vec<_>>();
+//! let wh = bh.iter().map(|&y| y + (10. - y) * rng.gen::<f64>()).collect::<Vec<_>>();
+//! let wm = bm.iter().map(|&y| y * rng.gen::<f64>()).collect::<Vec<_>>();
+//! let m = bm.iter().zip(bh.iter()).map(|(&l, &h)| (h - l) * rng.gen::<f64>() + l)
+//!     .collect::<Vec<_>>();
 //!
 //! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
