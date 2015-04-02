@@ -1,8 +1,8 @@
 [package]
 
+authors = ["Jorge Aparicio <japaricious@gmail.com>"]
 name = "simplot"
 version = "0.0.0"
-authors = ["Jorge Aparicio <japaric@linux.com>"]
 
 [dependencies.zip]
 git = "https://github.com/japaric/zip.rs"
