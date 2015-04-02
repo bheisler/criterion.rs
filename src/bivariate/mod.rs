@@ -5,10 +5,12 @@ mod resamples;
 
 pub mod regression;
 
-use std::num::Float;
 use std::ptr::Unique;
-use std::{cmp, mem, os, thread};
+use std::{cmp, mem, thread};
 
+use num_cpus;
+
+use Float;
 use bivariate::resamples::Resamples;
 use tuple::{Tuple, TupledDistributions};
 use univariate::Sample;
@@ -22,7 +24,7 @@ use univariate::Sample;
 #[derive(Copy)]
 pub struct Data<'a, X, Y>(&'a [X], &'a [Y]) where X: 'a, Y: 'a;
 
-impl<'a, X, Y> Data<'a, X, Y> where X: ::Float, Y: ::Float {
+impl<'a, X, Y> Data<'a, X, Y> where X: Float, Y: Float {
     /// Creates a new data set from two existing slices
     pub fn new(xs: &'a [X], ys: &'a [Y]) -> Data<'a, X, Y> {
         assert!(
@@ -47,9 +49,7 @@ impl<'a, X, Y> Data<'a, X, Y> where X: ::Float, Y: ::Float {
         T: Tuple,
         T::Distributions: Send,
     {
-        #![allow(deprecated)]
-
-        let ncpus = os::num_cpus();
+        let ncpus = num_cpus::get();
 
         unsafe {
             // TODO need some sensible threshold to trigger the multi-threaded path

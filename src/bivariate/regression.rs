@@ -1,17 +1,17 @@
 //! Regression analysis
 
-use std::num::Float;
-
-use cast::CastTo;
+use blas::blasint;
+use cast::From;
 use simd::traits::Vector;
 
+use Float;
 use bivariate::Data;
 
 /// A straight line that passes through the origin `y = m * x`
 #[derive(Clone, Copy)]
-pub struct Slope<A>(pub A) where A: ::Float;
+pub struct Slope<A>(pub A) where A: Float;
 
-impl<A> Slope<A> where A: ::Float {
+impl<A> Slope<A> where A: Float {
     /// Fits the data to a straight line that passes through the origin using ordinary least
     /// squares
     ///
@@ -22,7 +22,7 @@ impl<A> Slope<A> where A: ::Float {
         let ys = data.1;
 
         unsafe {
-            let n = xs.len().to::<::blas::blasint>().unwrap();
+            let n = blasint::from(xs.len()).unwrap();
             let dot = A::dot();
             let xs = xs.as_ptr();
             let ys = ys.as_ptr();
@@ -39,11 +39,12 @@ impl<A> Slope<A> where A: ::Float {
     /// - Acceleration: SIMD (iff the `X` and `Y` slices are "aligned")
     /// - Time: `O(length)`
     pub fn r_squared(&self, data: Data<A, A>) -> A {
+        let _0 = A::from(0);
         let m = self.0;
         let xs = data.0;
         let ys = data.1;
 
-        let n = xs.len().to::<A>();
+        let n = A::from(xs.len());
         let y_bar = ::simd::sum(ys) / n;
 
         let (ss_res, ss_tot) = unsafe {
@@ -92,7 +93,7 @@ impl<A> Slope<A> where A: ::Float {
 
                 (ss_res, ss_tot)
             } else {
-                let mut ss_res = Float::zero();
+                let mut ss_res = _0;
 
                 for i in 0..xs.len() {
                     let &x = xs.get_unchecked(i);
@@ -103,7 +104,7 @@ impl<A> Slope<A> where A: ::Float {
                     ss_res = ss_res + diff * diff;
                 }
 
-                let ss_tot = ys.iter().fold(Float::zero(), |acc, &y| {
+                let ss_tot = ys.iter().fold(_0, |acc, &y| {
                     let diff = y - y_bar;
 
                     acc + diff * diff
@@ -113,7 +114,7 @@ impl<A> Slope<A> where A: ::Float {
             }
         };
 
-        let _1 = 1.to::<A>();
+        let _1 = A::from(1);
 
         _1 - ss_res / ss_tot
     }
@@ -121,14 +122,14 @@ impl<A> Slope<A> where A: ::Float {
 
 /// A straight line `y = m * x + b`
 #[derive(Clone, Copy)]
-pub struct StraightLine<A> where A: ::Float {
+pub struct StraightLine<A> where A: Float {
     /// The y-intercept of the line
     pub intercept: A,
     /// The slope of the line
     pub slope: A,
 }
 
-impl<A> StraightLine<A> where A: ::Float {
+impl<A> StraightLine<A> where A: Float {
     /// Fits the data to a straight line using ordinary least squares
     ///
     /// - Acceleration: BLAS + SIMD
@@ -139,7 +140,7 @@ impl<A> StraightLine<A> where A: ::Float {
 
         let (x2, xy) = unsafe {
             let dot = A::dot();
-            let n = xs.len().to::<::blas::blasint>().unwrap();;
+            let n = blasint::from(xs.len()).unwrap();;
 
             let x2 = dot(&n, xs.as_ptr(), &1, xs.as_ptr(), &1);
             let xy = dot(&n, xs.as_ptr(), &1, ys.as_ptr(), &1);
@@ -147,7 +148,7 @@ impl<A> StraightLine<A> where A: ::Float {
             (x2, xy)
         };
 
-        let n = xs.len().to::<A>();
+        let n = A::from(xs.len());
         let x2_bar = x2 / n;
         let x_bar = ::simd::sum(xs) / n;
         let xy_bar = xy / n;
@@ -173,12 +174,13 @@ impl<A> StraightLine<A> where A: ::Float {
     /// - Acceleration: SIMD (iff the `X` and `Y` slices are "aligned")
     /// - Time: `O(length)`
     pub fn r_squared(&self, data: Data<A, A>) -> A {
+        let _0 = A::from(0);
         let m = self.slope;
         let b = self.intercept;
         let xs = data.0;
         let ys = data.1;
 
-        let n = xs.len().to::<A>();
+        let n = A::from(xs.len());
         let y_bar = ::simd::sum(ys) / n;
 
         let (ss_res, ss_tot) = unsafe {
@@ -219,7 +221,7 @@ impl<A> StraightLine<A> where A: ::Float {
 
                 (ss_res, ss_tot)
             } else {
-                let mut ss_res = Float::zero();
+                let mut ss_res = _0;
 
                 for i in 0..xs.len() {
                     let &x = xs.get_unchecked(i);
@@ -230,7 +232,7 @@ impl<A> StraightLine<A> where A: ::Float {
                     ss_res = ss_res + diff * diff;
                 }
 
-                let ss_tot = ys.iter().fold(Float::zero(), |acc, &y| {
+                let ss_tot = ys.iter().fold(_0, |acc, &y| {
                     let diff = y - y_bar;
 
                     acc + diff * diff
@@ -241,7 +243,7 @@ impl<A> StraightLine<A> where A: ::Float {
             }
         };
 
-        let _1 = 1.to::<A>();
+        let _1 = A::from(1);
 
         _1 - ss_res / ss_tot
     }

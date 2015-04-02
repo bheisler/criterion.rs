@@ -1,8 +1,6 @@
 macro_rules! test {
     ($ty:ident) => {
         mod $ty {
-            use std::num::Float;
-
             use quickcheck::TestResult;
 
             use univariate::{Sample, mixed, self};
@@ -86,8 +84,8 @@ macro_rules! test {
                         return TestResult::discard();
                     };
 
-                    let min = Float::min(a.min() - b.max(), b.min() - a.max());
-                    let max = Float::max(a.max() - b.min(), b.max() - a.min());
+                    let min = <$ty>::min(a.min() - b.max(), b.min() - a.max());
+                    let max = <$ty>::max(a.max() - b.min(), b.max() - a.min());
 
                     TestResult::from_bool(
                         // Computed the correct number of resamples
@@ -121,8 +119,8 @@ macro_rules! test {
                         return TestResult::discard();
                     };
 
-                    let min = Float::min(a.min() - b.max(), b.min() - a.max());
-                    let max = Float::max(a.max() - b.min(), b.max() - a.min());
+                    let min = <$ty>::min(a.min() - b.max(), b.min() - a.max());
+                    let max = <$ty>::max(a.max() - b.min(), b.max() - a.min());
 
                     TestResult::from_bool(
                         // Computed the correct number of resamples

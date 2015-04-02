@@ -1,29 +1,33 @@
 //! Kernels
 
-use cast::CastTo;
+use cast::From;
+
+use Float;
 
 /// Kernel function
-pub trait Kernel<A>: Copy + Fn(A) -> A + Sync where A: ::Float {}
+pub trait Kernel<A>: Copy + Fn(A) -> A + Sync where A: Float {}
 
-impl<A, K> Kernel<A> for K where K: Copy + Fn(A) -> A + Sync, A: ::Float {}
+impl<A, K> Kernel<A> for K where K: Copy + Fn(A) -> A + Sync, A: Float {}
 
 /// Gaussian kernel
 #[derive(Copy)]
 pub struct Gaussian;
 
-impl<A> Fn<(A,)> for Gaussian where A: ::Float {
+impl<A> Fn<(A,)> for Gaussian where A: Float {
     extern "rust-call" fn call(&self, (x,): (A,)) -> A {
-        (x.powi(2).exp() * ::std::f32::consts::PI_2.to::<A>()).sqrt().recip()
+        use std::f32::consts::PI_2;
+
+        (x.powi(2).exp() * A::from(PI_2)).sqrt().recip()
     }
 }
 
-impl<A> FnMut<(A,)> for Gaussian where A: ::Float {
+impl<A> FnMut<(A,)> for Gaussian where A: Float {
     extern "rust-call" fn call_mut(&mut self, args: (A,)) -> A {
         self.call(args)
     }
 }
 
-impl<A> FnOnce<(A,)> for Gaussian where A: ::Float {
+impl<A> FnOnce<(A,)> for Gaussian where A: Float {
     type Output = A;
 
     extern "rust-call" fn call_once(self, args: (A,)) -> A {

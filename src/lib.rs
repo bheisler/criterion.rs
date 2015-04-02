@@ -8,14 +8,14 @@
 #![feature(collections)]
 #![feature(core)]
 #![feature(custom_attribute)]
-#![feature(os)]
 #![feature(plugin)]
-#![feature(std_misc)]
 #![feature(unboxed_closures)]
 #![feature(unique)]
 
 extern crate blas;
 extern crate cast;
+extern crate float;
+extern crate num_cpus;
 extern crate rand;
 extern crate simd;
 
@@ -45,12 +45,12 @@ pub mod univariate;
 use std::mem;
 use std::ops::Deref;
 
-use cast::CastTo;
+use cast::From;
 
 use univariate::Sample;
 
-/// Either `f32` or `f64`
-pub trait Float: blas::Dot + simd::traits::Simd + cast::Float + Send + Sync {}
+/// A SIMD accelerated floating point number
+pub trait Float: blas::Dot + simd::traits::Simd + float::Float + Send + Sync {}
 
 impl Float for f32 {}
 impl Float for f64 {}
@@ -58,16 +58,18 @@ impl Float for f64 {}
 /// The bootstrap distribution of some parameter
 pub struct Distribution<A>(Box<[A]>);
 
-impl<A> Distribution<A> where A: ::Float {
+impl<A> Distribution<A> where A: Float {
     /// Computes the confidence interval of the population parameter using percentiles
     ///
     /// # Panics
     ///
     /// Panics if the `confidence_level` is not in the `(0, 1)` range.
-    pub fn confidence_interval(&self, confidence_level: A) -> (A, A) {
-        let _0 = 0.to::<A>();
-        let _1 = 1.to::<A>();
-        let _50 = 50.to::<A>();
+    pub fn confidence_interval(&self, confidence_level: A) -> (A, A) where
+        usize: From<A, Output=Option<usize>>,
+    {
+        let _0 = A::from(0);
+        let _1 = A::from(1);
+        let _50 = A::from(50);
 
         assert!(confidence_level > _0 && confidence_level < _1);
 
@@ -88,12 +90,12 @@ impl<A> Distribution<A> where A: ::Float {
         let n = self.0.len();
         let hits = self.0.iter().filter(|&&x| x < t).count();
 
-        let tails = match tails {
-            Tails::One => 1.to::<A>(),
-            Tails::Two => 2.to::<A>(),
-        };
+        let tails = A::from(match tails {
+            Tails::One => 1,
+            Tails::Two => 2,
+        });
 
-        cmp::min(hits, n - hits).to::<A>() / n.to::<A>() * tails
+        A::from(cmp::min(hits, n - hits)) / A::from(n) * tails
     }
 }
 

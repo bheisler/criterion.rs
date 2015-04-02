@@ -2,23 +2,25 @@
 
 pub mod kernel;
 
-use std::{os, ptr, thread};
+use std::{ptr, thread};
 
-use cast::CastTo;
+use cast::From;
+use num_cpus;
 use simd::traits::Vector;
 
+use Float;
 use univariate::Sample;
 
 use self::kernel::Kernel;
 
 /// Univariate kernel density estimator
-pub struct Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
+pub struct Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
     bandwidth: A,
     kernel: K,
     sample: &'a Sample<A>,
 }
 
-impl<'a, A, K> Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
+impl<'a, A, K> Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
     /// Creates a new kernel density estimator from the `sample`, using a kernel `k` and estimating
     /// the bandwidth using the method `bw`
     pub fn new(sample: &'a Sample<A>, k: K, bw: Bandwidth<A>) -> Kde<'a, A, K> {
@@ -38,10 +40,8 @@ impl<'a, A, K> Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
     ///
     /// - Multihreaded
     pub fn map(&self, xs: &[A]) -> Box<[A]> {
-        #![allow(deprecated)]
-
         let n = xs.len();
-        let ncpus = os::num_cpus();
+        let ncpus = num_cpus::get();
 
         // TODO need some sensible threshold to trigger the multi-threaded path
         if ncpus > 1 && n > ncpus {
@@ -71,14 +71,14 @@ impl<'a, A, K> Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
     }
 }
 
-impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
+impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
     /// Estimates the probability density of `x`
     ///
     /// - Acceleration: SIMD
     extern "rust-call" fn call(&self, (x,): (A,)) -> A {
         let slice = self.sample.as_slice();
         let h = self.bandwidth;
-        let n = slice.len().to::<A>();
+        let n = A::from(slice.len());
 
         let x_ = A::Vector::from_elem(x);
         let h_ = A::Vector::from_elem(h);
@@ -96,13 +96,13 @@ impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
     }
 }
 
-impl<'a, A, K> FnMut<(A,)> for Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
+impl<'a, A, K> FnMut<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
     extern "rust-call" fn call_mut(&mut self, args: (A,)) -> A {
         self.call(args)
     }
 }
 
-impl<'a, A, K> FnOnce<(A,)> for Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A> {
+impl<'a, A, K> FnOnce<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
     type Output = A;
 
     extern "rust-call" fn call_once(self, args: (A,)) -> A {
@@ -111,20 +111,20 @@ impl<'a, A, K> FnOnce<(A,)> for Kde<'a, A, K> where A: 'a + ::Float, K: Kernel<A
 }
 
 /// Method to estimate the bandwidth
-pub enum Bandwidth<A> where A: ::Float {
+pub enum Bandwidth<A> where A: Float {
     /// Use this value as the bandwidth
     Manual(A),
     /// Use Silverman's rule of thumb to estimate the bandwidth from the sample
     Silverman,
 }
 
-impl<A> Bandwidth<A> where A: ::Float {
+impl<A> Bandwidth<A> where A: Float {
     fn estimate(self, sample: &Sample<A>) -> A {
         match self {
             Bandwidth::Silverman => {
-                let factor = (4. / 3.).to::<A>();
-                let exponent = (1. / 5.).to::<A>();
-                let n = sample.as_slice().len().to::<A>();
+                let factor = A::from(4. / 3.);
+                let exponent = A::from(1. / 5.);
+                let n = A::from(sample.as_slice().len());
                 let sigma = sample.std_dev(None);
 
                 sigma * (factor / n).powf(exponent)

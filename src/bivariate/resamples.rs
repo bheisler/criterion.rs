@@ -1,16 +1,17 @@
 use rand::distributions::{IndependentSample, Range};
 use rand::{Rng, XorShiftRng};
 
+use Float;
 use bivariate::Data;
 
-pub struct Resamples<'a, X, Y> where X: 'a + ::Float, Y: 'a + ::Float {
+pub struct Resamples<'a, X, Y> where X: 'a + Float, Y: 'a + Float {
     range: Range<usize>,
     rng: XorShiftRng,
     data: (&'a [X], &'a [Y]),
     stage: Option<(Vec<X>, Vec<Y>)>,
 }
 
-impl<'a, X, Y> Resamples<'a, X, Y> where X: 'a + ::Float, Y: 'a + ::Float {
+impl<'a, X, Y> Resamples<'a, X, Y> where X: 'a + Float, Y: 'a + Float {
     pub fn new(data: Data<'a, X, Y>) -> Resamples<'a, X, Y> {
         Resamples {
             range: Range::new(0, data.0.len()),

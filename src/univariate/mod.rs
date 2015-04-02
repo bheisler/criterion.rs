@@ -9,10 +9,12 @@ pub mod kde;
 pub mod mixed;
 pub mod outliers;
 
-use std::num::Float;
 use std::ptr::Unique;
-use std::{cmp, os, thread};
+use std::{cmp, thread};
 
+use num_cpus;
+
+use Float;
 use tuple::{Tuple, TupledDistributions};
 
 use self::resamples::Resamples;
@@ -31,16 +33,14 @@ pub fn bootstrap<A, B, T, S>(
     nresamples: usize,
     statistic: S,
 ) -> T::Distributions where
-    A: ::Float,
-    B: ::Float,
+    A: Float,
+    B: Float,
     S: Fn(&Sample<A>, &Sample<B>) -> T,
     S: Sync,
     T: Tuple,
     T::Distributions: Send,
 {
-    #![allow(deprecated)]
-
-    let ncpus = os::num_cpus();
+    let ncpus = num_cpus::get();
 
     unsafe {
         // TODO need some sensible threshold to trigger the multi-threaded path

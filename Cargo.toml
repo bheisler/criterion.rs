@@ -5,6 +5,7 @@ name = "stats"
 version = "0.0.0"
 
 [dependencies]
+num_cpus = "*"
 rand = "*"
 
 [dependencies.blas]
@@ -12,6 +13,9 @@ git = "https://github.com/japaric/blas.rs"
 
 [dependencies.cast]
 git = "https://github.com/japaric/cast.rs"
+
+[dependencies.float]
+git = "https://github.com/japaric/float.rs"
 
 [dependencies.simd]
 git = "https://github.com/japaric/simd.rs"

@@ -1,8 +1,11 @@
 //! Mixed bootstrap
 
 use std::ptr::Unique;
-use std::{cmp, mem, os, thread};
+use std::{cmp, mem, thread};
 
+use num_cpus;
+
+use Float;
 use tuple::{Tuple, TupledDistributions};
 use univariate::Sample;
 use univariate::resamples::Resamples;
@@ -14,14 +17,12 @@ pub fn bootstrap<A, T, S>(
     nresamples: usize,
     statistic: S,
 ) -> T::Distributions where
-    A: ::Float,
+    A: Float,
     S: Fn(&Sample<A>, &Sample<A>) -> T + Sync,
     T: Tuple,
     T::Distributions: Send,
 {
-    #![allow(deprecated)]
-
-    let ncpus = os::num_cpus();
+    let ncpus = num_cpus::get();
     let n_a = a.as_slice().len();
     let n_b = b.as_slice().len();
     let mut c = Vec::with_capacity(n_a + n_b);
@@ -51,9 +52,9 @@ pub fn bootstrap<A, T, S>(
                     let mut resamples = Resamples::new(c);
 
                     for i in offset..end {
-                        let resample = resamples.next();
-                        let a: &Sample<A> = mem::transmute(&resample.as_slice()[..n_a]);
-                        let b: &Sample<A> = mem::transmute(&resample.as_slice()[n_a..]);
+                        let resample = resamples.next().as_slice();
+                        let a: &Sample<A> = mem::transmute(&resample[..n_a]);
+                        let b: &Sample<A> = mem::transmute(&resample[n_a..]);
 
                         distributions.set_unchecked(i, statistic(a, b))
                     }
@@ -68,8 +69,8 @@ pub fn bootstrap<A, T, S>(
 
             for i in 0..nresamples {
                 let resample = resamples.next().as_slice();
-                let a: &Sample<A> = mem::transmute(&resample.as_slice()[..n_a]);
-                let b: &Sample<A> = mem::transmute(&resample.as_slice()[n_a..]);
+                let a: &Sample<A> = mem::transmute(&resample[..n_a]);
+                let b: &Sample<A> = mem::transmute(&resample[n_a..]);
 
                 distributions.set_unchecked(i, statistic(a, b))
             }
