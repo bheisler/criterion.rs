@@ -1,5 +1,4 @@
 use std::fs::PathExt;
-use std::num::Float;
 use std::path::{Path, PathBuf};
 use std::{iter, str};
 
@@ -711,7 +710,7 @@ pub fn summarize(id: &str) {
                 let min = *points.last().unwrap();
                 let rel = points.iter().map(|&x| format!("{:.02}", x / min)).collect::<Vec<_>>();
 
-                let tics = (1f64..).step_by(0.5);
+                let tics = || { iter::iterate(1f64, |x| x + 0.5) };
                 // TODO Review axis scaling
                 Figure::new().
                     set(Font(DEFAULT_FONT)).
@@ -741,19 +740,19 @@ pub fn summarize(id: &str) {
                         set(Label("Input")).
                         set(Range::Limits(0., benches.len() as f64)).
                         set(TicLabels {
-                            positions: tics.clone(),
+                            positions: tics(),
                             labels: benches.iter().map(|&(label, _, _, _)| label),
                         })).
                     configure(Axis::RightY, |a| a.
                         set(Label("Relative time")).
                         set(Range::Limits(0., benches.len() as f64)).
                         set(TicLabels {
-                            positions: tics,
+                            positions: tics(),
                             labels: rel.iter(),
                         })).
                     plot(XErrorBars {
                         x: &*points,
-                        y: (1f64..).step_by(0.5),
+                        y: iter::iterate(1f64, |x| x + 0.5),
                         x_low: &*lbs,
                         x_high: &*ubs,
                     }, |eb| eb.
@@ -805,7 +804,7 @@ pub fn summarize(id: &str) {
                     }
                 };
 
-                let tics = (1f64..).step_by(0.5);
+                let tics = || { iter::iterate(1f64, |x| x + 0.5) };
                 let mut f = Figure::new();
                 f.
                     set(Font(DEFAULT_FONT)).
@@ -832,12 +831,12 @@ pub fn summarize(id: &str) {
                         set(Label("Input")).
                         set(Range::Limits(0., benches.len() as f64)).
                         set(TicLabels {
-                            positions: tics.clone(),
+                            positions: tics(),
                             labels: benches.iter().map(|&(label, _, _, _)| label),
                         })).
                         plot(Points {
                             x: medians.iter().map(|&median| median),
-                            y: tics,
+                            y: tics(),
                         }, |c| c.
                         set(Color::Black).
                         set(Label("Median")).

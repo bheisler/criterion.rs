@@ -1,4 +1,3 @@
-use std::num::Float;
 use std::path::PathBuf;
 use std::{iter, str};
 

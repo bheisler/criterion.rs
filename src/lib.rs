@@ -10,11 +10,9 @@
 #![deny(missing_docs)]
 #![deny(warnings)]
 #![feature(collections)]
-#![feature(convert)]
 #![feature(core)]
 #![feature(path_ext)]
 #![feature(std_misc)]
-#![feature(step_by)]
 #![feature(test)]
 
 #[macro_use]
