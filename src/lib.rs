@@ -672,40 +672,40 @@ impl Set<Title> for Figure {
 }
 
 /// Box width for box-related plots: bars, candlesticks, etc
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct BoxWidth(pub f64);
 
 /// A font name
 pub struct Font(Cow<'static, str>);
 
 /// The size of a font
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct FontSize(pub f64);
 
 /// The key or legend
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct Key;
 
 /// Plot label
 pub struct Label(Cow<'static, str>);
 
 /// Width of the lines
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct LineWidth(pub f64);
 
 /// Fill color opacity
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct Opacity(pub f64);
 
 /// Output file path
 pub struct Output(Cow<'static, Path>);
 
 /// Size of the points
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct PointSize(pub f64);
 
 /// Axis range
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub enum Range {
     /// Autoscale the axis
     Auto,
@@ -714,7 +714,7 @@ pub enum Range {
 }
 
 /// Figure size
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct Size(pub usize, pub usize);
 
 /// Labels attached to the tics of an axis
@@ -730,7 +730,7 @@ pub struct Title(Cow<'static, str>);
 
 /// A pair of axes that define a coordinate system
 #[allow(missing_docs)]
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub enum Axes {
     BottomXLeftY,
     BottomXRightY,
@@ -739,7 +739,7 @@ pub enum Axes {
 }
 
 /// A coordinate axis
-#[derive(Copy, FromPrimitive)]
+#[derive(Clone, Copy, FromPrimitive)]
 pub enum Axis {
     /// X axis on the bottom side of the figure
     BottomX,
@@ -753,7 +753,7 @@ pub enum Axis {
 
 /// Color
 #[allow(missing_docs)]
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub enum Color {
     Black,
     Blue,
@@ -772,7 +772,7 @@ pub enum Color {
 }
 
 /// Grid line
-#[derive(Copy, FromPrimitive)]
+#[derive(Clone, Copy, FromPrimitive)]
 pub enum Grid {
     /// Major gridlines
     Major,
@@ -782,7 +782,7 @@ pub enum Grid {
 
 /// Line type
 #[allow(missing_docs)]
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub enum LineType {
     Dash,
     Dot,
@@ -795,7 +795,7 @@ pub enum LineType {
 
 /// Point type
 #[allow(missing_docs)]
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub enum PointType {
     Circle,
     FilledCircle,
@@ -810,7 +810,7 @@ pub enum PointType {
 
 /// Axis scale
 #[allow(missing_docs)]
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub enum Scale {
     Linear,
     Logarithmic,
@@ -818,7 +818,7 @@ pub enum Scale {
 
 /// Axis scale factor
 #[allow(missing_docs)]
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct ScaleFactor(pub f64);
 
 /// Output terminal

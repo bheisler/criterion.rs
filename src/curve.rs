@@ -211,7 +211,7 @@ impl<X, Y> Curve<X, Y> {
     }
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 enum Style {
     Dots,
     Impulses,

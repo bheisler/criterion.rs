@@ -154,7 +154,7 @@ impl Set<Title> for Properties {
 
 /// Whether the key is surrounded by a box or not
 #[allow(missing_docs)]
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub enum Boxed {
     No,
     Yes,
