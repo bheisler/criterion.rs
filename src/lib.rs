@@ -47,7 +47,7 @@ use std::path::Path;
 use estimate::{Distributions, Estimates};
 
 /// Helper struct to build functions that follow the setup - bench - teardown pattern
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct Bencher {
     iters: u64,
     ns_end: u64,
@@ -404,14 +404,14 @@ impl Plotting {
     }
 }
 
-#[derive(Copy, PartialEq, RustcDecodable, RustcEncodable)]
+#[derive(Clone, Copy, PartialEq, RustcDecodable, RustcEncodable)]
 struct ConfidenceInterval {
     confidence_level: f64,
     lower_bound: f64,
     upper_bound: f64,
 }
 
-#[derive(Copy, PartialEq, RustcDecodable, RustcEncodable)]
+#[derive(Clone, Copy, PartialEq, RustcDecodable, RustcEncodable)]
 struct Estimate {
     pub confidence_interval: ConfidenceInterval,
     pub point_estimate: f64,
