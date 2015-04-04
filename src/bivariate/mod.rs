@@ -21,8 +21,15 @@ use univariate::Sample;
 ///
 /// - No `NaN`s in the data
 /// - At least two data points in the set
-#[derive(Copy)]
 pub struct Data<'a, X, Y>(&'a [X], &'a [Y]) where X: 'a, Y: 'a;
+
+impl<'a, X, Y> Copy for Data<'a, X, Y> {}
+
+impl<'a, X, Y> Clone for Data<'a, X, Y> {
+    fn clone(&self) -> Data<'a, X, Y> {
+        *self
+    }
+}
 
 impl<'a, X, Y> Data<'a, X, Y> where X: Float, Y: Float {
     /// Creates a new data set from two existing slices

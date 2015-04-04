@@ -10,7 +10,7 @@ pub trait Kernel<A>: Copy + Fn(A) -> A + Sync where A: Float {}
 impl<A, K> Kernel<A> for K where K: Copy + Fn(A) -> A + Sync, A: Float {}
 
 /// Gaussian kernel
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct Gaussian;
 
 impl<A> Fn<(A,)> for Gaussian where A: Float {

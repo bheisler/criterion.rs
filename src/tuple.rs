@@ -3,13 +3,12 @@
 // TODO(HKT) make this more "generic", and move into its own crate
 // TODO(negative_bounds) bounds should be `: !Drop` instead of `Copy`
 
-use std::marker::MarkerTrait;
 use std::ptr;
 
 use Distribution;
 
 /// Any tuple: `(A, B, ..)`
-pub trait Tuple: MarkerTrait {
+pub trait Tuple {
     /// A tuple of distributions associated with this tuple
     type Distributions: TupledDistributions<Item=Self>;
 }
