@@ -774,9 +774,9 @@ pub fn summarize(id: &str) {
                 let medians = benches.iter().map(|&(_, _, _, ref sample)| {
                     Sample::new(sample).percentiles().median()
                 }).collect::<Vec<_>>();
-                let mut xs = kdes.iter().flat_map(|&(ref x, _)| x.iter());
+                let mut xs = kdes.iter().flat_map(|&(ref x, _)| x.iter()).filter(|&&x| x > 0.);
                 let (mut min, mut max) = {
-                    let first = *xs.next().unwrap();
+                    let &first = xs.next().unwrap();
                     (first, first)
                 };
                 for &e in xs {
