@@ -710,7 +710,7 @@ pub fn summarize(id: &str) {
                 let min = *points.last().unwrap();
                 let rel = points.iter().map(|&x| format!("{:.02}", x / min)).collect::<Vec<_>>();
 
-                let tics = || { iter::iterate(1f64, |x| x + 0.5) };
+                let tics = || { iter::iterate(0.5, |x| x + 1f64) };
                 // TODO Review axis scaling
                 Figure::new().
                     set(Font(DEFAULT_FONT)).
@@ -752,7 +752,7 @@ pub fn summarize(id: &str) {
                         })).
                     plot(XErrorBars {
                         x: &*points,
-                        y: iter::iterate(1f64, |x| x + 0.5),
+                        y: tics(),
                         x_low: &*lbs,
                         x_high: &*ubs,
                     }, |eb| eb.
@@ -804,7 +804,7 @@ pub fn summarize(id: &str) {
                     }
                 };
 
-                let tics = || { iter::iterate(1f64, |x| x + 0.5) };
+                let tics = || { iter::iterate(0.5, |x| x + 1f64) };
                 let mut f = Figure::new();
                 f.
                     set(Font(DEFAULT_FONT)).
