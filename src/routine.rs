@@ -1,4 +1,4 @@
-use std::iter::{AdditiveIterator, self};
+use std::iter;
 
 use time;
 
@@ -30,7 +30,7 @@ pub trait Routine {
 
         let m_iters = iter::iterate(d, |a| a + d).take(n).collect::<Vec<u64>>();
 
-        let m_ns = m_iters.iter().map(|&x| x).sum() as f64 * met;
+        let m_ns = m_iters.iter().map(|&x| x).sum::<u64>() as f64 * met;
         println!("> Collecting {} samples in estimated {}", n, format::time(m_ns));
         let m_elapsed = self.bench(m_iters.iter().map(|&x| x));
 
