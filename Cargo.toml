@@ -31,6 +31,3 @@ git = "https://github.com/burntsushi/quickcheck"
 
 [dev-dependencies.space]
 git = "https://github.com/japaric/space.rs"
-
-[profile.test]
-debug = false
