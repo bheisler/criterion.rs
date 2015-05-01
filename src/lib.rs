@@ -9,6 +9,7 @@
 #![feature(core)]
 #![feature(custom_attribute)]
 #![feature(plugin)]
+#![feature(scoped)]
 #![feature(unboxed_closures)]
 #![feature(unique)]
 
