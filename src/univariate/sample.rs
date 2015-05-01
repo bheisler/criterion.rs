@@ -392,7 +392,6 @@ mod test {
         }
     }
 
-    test!(f32);
     test!(f64);
 }
 
@@ -479,6 +478,5 @@ mod bench {
         }
     }
 
-    bench!(f32);
     bench!(f64);
 }
