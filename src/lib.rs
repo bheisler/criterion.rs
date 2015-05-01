@@ -14,7 +14,6 @@
 //! # use std::path::Path;
 //! use simplot::prelude::*;
 //! use space::linspace;
-//! use std::num::Float;
 //!
 //! # fn main() {
 //! let xs = linspace::<f64>(-10., 10., 51);
@@ -66,8 +65,6 @@
 //! ![Plot](error_bar.svg)
 //!
 //! ```
-//! #![feature(core)]
-//!
 //! extern crate rand;
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
@@ -75,7 +72,6 @@
 //! # use std::fs;
 //! # use std::path::Path;
 //! use std::f64::consts::PI;
-//! use std::num::Float;
 //!
 //! use rand::{Rng, XorShiftRng};
 //! use simplot::prelude::*;
@@ -212,8 +208,6 @@
 //! ![Plot](multiaxis.svg)
 //!
 //! ```
-//! #![feature(core)]
-//!
 //! extern crate complex;  // https://github.com/japaric/complex.rs
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
@@ -300,7 +294,6 @@
 //! use space::linspace;
 //! use std::f64::consts::PI;
 //! use std::iter;
-//! use std::num::Float;
 //!
 //! # fn main() {
 //! let (start, end) = (-5., 5.);
@@ -363,15 +356,14 @@
 #![deny(missing_docs)]
 #![deny(warnings)]
 #![feature(collections)]
-#![feature(core)]
 #![feature(into_cow)]
-#![feature(old_io)]
-#![feature(str_words)]
 
+extern crate byteorder;
+extern crate cast;
 #[macro_use]
 extern crate zip;
 
-use std::borrow::{Cow, IntoCow};
+use std::borrow::Cow;
 use std::fs::File;
 use std::io;
 use std::path::Path;
@@ -423,7 +415,7 @@ impl Figure {
             font: None,
             font_size: None,
             key: None,
-            output: Path::new("output.plot").into_cow(),
+            output: Cow::Borrowed(Path::new("output.plot")),
             plots: Vec::new(),
             size: None,
             terminal: Terminal::Svg,
@@ -739,7 +731,7 @@ pub enum Axes {
 }
 
 /// A coordinate axis
-#[derive(Clone, Copy, FromPrimitive)]
+#[derive(Clone, Copy)]
 pub enum Axis {
     /// X axis on the bottom side of the figure
     BottomX,
@@ -749,6 +741,19 @@ pub enum Axis {
     RightY,
     /// X axis on the top side of the figure
     TopX,
+}
+
+impl Axis {
+    fn next(&self) -> Option<Axis> {
+        use Axis::*;
+
+        match *self {
+            BottomX => Some(LeftY),
+            LeftY => Some(RightY),
+            RightY => Some(TopX),
+            TopX => None,
+        }
+    }
 }
 
 /// Color
@@ -772,12 +777,23 @@ pub enum Color {
 }
 
 /// Grid line
-#[derive(Clone, Copy, FromPrimitive)]
+#[derive(Clone, Copy)]
 pub enum Grid {
     /// Major gridlines
     Major,
     /// Minor gridlines
     Minor,
+}
+
+impl Grid {
+    fn next(&self) -> Option<Grid> {
+        use Grid::*;
+
+        match *self {
+            Major => Some(Minor),
+            Minor => None,
+        }
+    }
 }
 
 /// Line type
@@ -887,7 +903,7 @@ impl Plot {
 // FIXME Parsing may fail
 pub fn version() -> io::Result<(usize, usize, usize)> {
     let stdout = try!(Command::new("gnuplot").arg("--version").output()).stdout;
-    let mut words = str::from_utf8(&stdout).unwrap().words().skip(1);
+    let mut words = str::from_utf8(&stdout).unwrap().split_whitespace().skip(1);
     let mut version = words.next().unwrap().split('.');
     let major = version.next().unwrap().parse().unwrap();
     let minor = version.next().unwrap().parse().unwrap();
@@ -939,6 +955,6 @@ trait ScaleFactorTrait {
 mod test {
     #[test]
     fn version() {
-        assert_eq!(super::version().ok().map(|(major, _, _)| major), Some(4));
+        assert_eq!(super::version().ok().map(|(major, _, _)| major >= 4), Some(true));
     }
 }

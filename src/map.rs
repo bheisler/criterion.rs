@@ -1,24 +1,21 @@
 //! Enum Maps
 
 pub mod axis {
-    use std::num::FromPrimitive;
-
     use Axis;
 
     const LENGTH: usize = 4;
 
     pub struct Items<'a, T> where T: 'a {
         map: &'a Map<T>,
-        state: usize,
+        state: Option<Axis>,
     }
 
     impl<'a, T> Iterator for Items<'a, T> {
         type Item = (Axis, &'a T);
 
         fn next(&mut self) -> Option<(Axis, &'a T)> {
-            while self.state < LENGTH {
-                let key = FromPrimitive::from_usize(self.state).unwrap();
-                self.state += 1;
+            while let Some(key) = self.state {
+                self.state = key.next();
 
                 if let Some(value) = self.map.get(key) {
                     return Some((key, value))
@@ -60,7 +57,7 @@ pub mod axis {
         pub fn iter<'a>(&'a self) -> Items<'a, T> {
             Items {
                 map: self,
-                state: 0,
+                state: Some(Axis::BottomX),
             }
         }
     }
@@ -73,24 +70,21 @@ pub mod axis {
 }
 
 pub mod grid {
-    use std::num::FromPrimitive;
-
     use Grid;
 
     const LENGTH: usize = 2;
 
     struct Items<'a, T> where T: 'a {
         map: &'a Map<T>,
-        state: usize,
+        state: Option<Grid>,
     }
 
     impl<'a, T> Iterator for Items<'a, T> {
         type Item = (Grid, &'a T);
 
         fn next(&mut self) -> Option<(Grid, &'a T)> {
-            while self.state < LENGTH {
-                let key = FromPrimitive::from_usize(self.state).unwrap();
-                self.state += 1;
+            while let Some(key) = self.state {
+                self.state = key.next();
 
                 if let Some(value) = self.map.get(key) {
                     return Some((key, value))
@@ -132,7 +126,7 @@ pub mod grid {
         pub fn iter<'a>(&'a self) -> Items<'a, T> {
             Items {
                 map: self,
-                state: 0,
+                state: Some(Grid::Major),
             }
         }
     }

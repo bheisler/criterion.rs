@@ -1,4 +1,4 @@
-use std::borrow::{Cow, IntoCow};
+use std::borrow::Cow;
 
 use key::{Horizontal, Justification, Order, Stacked, Vertical};
 use {Axis, Axes, Color, Display, Grid, LineType, PointType, Terminal};
@@ -28,19 +28,19 @@ impl Display<&'static str> for Axes {
 impl Display<Cow<'static, str>> for Color {
     fn display(&self) -> Cow<'static, str> {
         match *self {
-            Color::Black => "black".into_cow(),
-            Color::Blue => "blue".into_cow(),
-            Color::Cyan => "cyan".into_cow(),
-            Color::DarkViolet => "dark-violet".into_cow(),
-            Color::ForestGreen => "forest-green".into_cow(),
-            Color::Gold => "gold".into_cow(),
-            Color::Gray => "gray".into_cow(),
-            Color::Green => "green".into_cow(),
-            Color::Magenta => "magenta".into_cow(),
-            Color::Red => "red".into_cow(),
-            Color::Rgb(r, g, b) => format!("#{:02x}{:02x}{:02x}", r, g, b).into_cow(),
-            Color::White => "white".into_cow(),
-            Color::Yellow => "yellow".into_cow(),
+            Color::Black => Cow::from("black"),
+            Color::Blue => Cow::from("blue"),
+            Color::Cyan => Cow::from("cyan"),
+            Color::DarkViolet => Cow::from("dark-violet"),
+            Color::ForestGreen => Cow::from("forest-green"),
+            Color::Gold => Cow::from("gold"),
+            Color::Gray => Cow::from("gray"),
+            Color::Green => Cow::from("green"),
+            Color::Magenta => Cow::from("magenta"),
+            Color::Red => Cow::from("red"),
+            Color::Rgb(r, g, b) => Cow::from(format!("#{:02x}{:02x}{:02x}", r, g, b)),
+            Color::White => Cow::from("white"),
+            Color::Yellow => Cow::from("yellow"),
         }
     }
 }

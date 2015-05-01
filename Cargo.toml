@@ -4,6 +4,12 @@ authors = ["Jorge Aparicio <japaricious@gmail.com>"]
 name = "simplot"
 version = "0.0.0"
 
+[dependencies]
+byteorder = "*"
+
+[dependencies.cast]
+git = "https://github.com/japaric/cast.rs"
+
 [dependencies.zip]
 git = "https://github.com/japaric/zip.rs"
 

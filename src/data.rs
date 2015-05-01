@@ -1,25 +1,28 @@
 #![allow(deprecated)]
 
 use std::mem;
-use std::num::ToPrimitive;
-use std::old_io::Writer;
+
+use cast::From;
+use byteorder::{LittleEndian, WriteBytesExt};
 
 use traits::Data;
 
 macro_rules! impl_data {
-    ($($ty:ty),+) => {$(
-        impl Data for $ty {
-            fn f64(self) -> f64 {
-                self.to_f64().unwrap()
+    ($($ty:ty),+) => {
+        $(
+            impl Data for $ty {
+                fn f64(self) -> f64 {
+                    f64::from(self)
+                }
             }
-        }
 
-        impl<'a> Data for &'a $ty {
-            fn f64(self) -> f64 {
-                self.to_f64().unwrap()
+            impl<'a> Data for &'a $ty {
+                fn f64(self) -> f64 {
+                    f64::from(*self)
+                }
             }
-        }
-    )+}
+        )+
+    }
 }
 
 impl_data!(f32, f64, i16, i32, i64, i8, isize, u16, u32, u64, u8, usize);
@@ -81,12 +84,10 @@ impl<A, B> Row for (A, B) where A: Data, B: Data {
     type Scale = (f64, f64);
 
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64)) {
-        #![allow(deprecated)]
-
         let (a, b) = self;
 
-        buffer.write_le_f64(a.f64() * scale.0).unwrap();
-        buffer.write_le_f64(b.f64() * scale.1).unwrap();
+        buffer.write_f64::<LittleEndian>(a.f64() * scale.0).unwrap();
+        buffer.write_f64::<LittleEndian>(b.f64() * scale.1).unwrap();
     }
 
     fn ncols() -> usize {
@@ -98,13 +99,11 @@ impl<A, B, C> Row for (A, B, C) where A: Data, B: Data, C: Data {
     type Scale = (f64, f64, f64);
 
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64)) {
-        #![allow(deprecated)]
-
         let (a, b, c) = self;
 
-        buffer.write_le_f64(a.f64() * scale.0).unwrap();
-        buffer.write_le_f64(b.f64() * scale.1).unwrap();
-        buffer.write_le_f64(c.f64() * scale.2).unwrap();
+        buffer.write_f64::<LittleEndian>(a.f64() * scale.0).unwrap();
+        buffer.write_f64::<LittleEndian>(b.f64() * scale.1).unwrap();
+        buffer.write_f64::<LittleEndian>(c.f64() * scale.2).unwrap();
     }
 
     fn ncols() -> usize {
@@ -116,14 +115,12 @@ impl<A, B, C, D> Row for (A, B, C, D) where A: Data, B: Data, C: Data, D: Data {
     type Scale = (f64, f64, f64, f64);
 
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64, f64)) {
-        #![allow(deprecated)]
-
         let (a, b, c, d) = self;
 
-        buffer.write_le_f64(a.f64() * scale.0).unwrap();
-        buffer.write_le_f64(b.f64() * scale.1).unwrap();
-        buffer.write_le_f64(c.f64() * scale.2).unwrap();
-        buffer.write_le_f64(d.f64() * scale.3).unwrap();
+        buffer.write_f64::<LittleEndian>(a.f64() * scale.0).unwrap();
+        buffer.write_f64::<LittleEndian>(b.f64() * scale.1).unwrap();
+        buffer.write_f64::<LittleEndian>(c.f64() * scale.2).unwrap();
+        buffer.write_f64::<LittleEndian>(d.f64() * scale.3).unwrap();
     }
 
     fn ncols() -> usize {
@@ -135,15 +132,13 @@ impl<A, B, C, D, E> Row for (A, B, C, D, E) where A: Data, B: Data, C: Data, D: 
     type Scale = (f64, f64, f64, f64, f64);
 
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64, f64, f64)) {
-        #![allow(deprecated)]
-
         let (a, b, c, d, e) = self;
 
-        buffer.write_le_f64(a.f64() * scale.0).unwrap();
-        buffer.write_le_f64(b.f64() * scale.1).unwrap();
-        buffer.write_le_f64(c.f64() * scale.2).unwrap();
-        buffer.write_le_f64(d.f64() * scale.3).unwrap();
-        buffer.write_le_f64(e.f64() * scale.4).unwrap();
+        buffer.write_f64::<LittleEndian>(a.f64() * scale.0).unwrap();
+        buffer.write_f64::<LittleEndian>(b.f64() * scale.1).unwrap();
+        buffer.write_f64::<LittleEndian>(c.f64() * scale.2).unwrap();
+        buffer.write_f64::<LittleEndian>(d.f64() * scale.3).unwrap();
+        buffer.write_f64::<LittleEndian>(e.f64() * scale.4).unwrap();
     }
 
     fn ncols() -> usize {

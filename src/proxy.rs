@@ -2,25 +2,25 @@
 
 #![allow(non_snake_case)]
 
-use std::borrow::IntoCow;
+use std::borrow::{Cow, IntoCow};
 use std::path::Path;
 
 /// Generic constructor for `Font`
 #[inline(always)]
-pub fn Font<S>(string: S) -> ::Font where S: IntoCow<'static, str> {
-    ::Font(string.into_cow())
+pub fn Font<S>(string: S) -> ::Font where S: Into<Cow<'static, str>> {
+    ::Font(string.into())
 }
 
 /// Generic constructor for `Label`
 #[inline(always)]
-pub fn Label<S>(string: S) -> ::Label where S: IntoCow<'static, str> {
-    ::Label(string.into_cow())
+pub fn Label<S>(string: S) -> ::Label where S: Into<Cow<'static, str>> {
+    ::Label(string.into())
 }
 
 /// Generic constructor for `Title`
 #[inline(always)]
-pub fn Title<S>(string: S) -> ::Title where S: IntoCow<'static, str> {
-    ::Title(string.into_cow())
+pub fn Title<S>(string: S) -> ::Title where S: Into<Cow<'static, str>> {
+    ::Title(string.into())
 }
 
 /// Generic constructor for `Output`
