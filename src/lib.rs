@@ -55,8 +55,22 @@ pub struct Bencher {
 }
 
 impl Bencher {
-    /// Callback to benchmark a routine
-    pub fn iter<T, F>(&mut self, mut routine: F) where
+    /// # Timing loop
+    ///
+    /// ``` ignore
+    /// self.ns_start = time::precise_time_ns();
+    /// for _ in 0..self.iters {
+    ///     test::black_box(routine());
+    /// }
+    /// self.ns_end = time::precise_time_ns();
+    /// ```
+    ///
+    /// # Timing model
+    ///
+    /// ``` ignore
+    /// elapsed = precise_time_ns + iters * (routine + drop(T))
+    /// ```
+    pub fn iter<F, T>(&mut self, mut routine: F) where
         F: FnMut() -> T,
     {
         self.ns_start = time::precise_time_ns();
@@ -64,6 +78,234 @@ impl Bencher {
             test::black_box(routine());
         }
         self.ns_end = time::precise_time_ns();
+    }
+
+    /// # Timing loop
+    ///
+    /// ``` ignore
+    /// let iters = self.iters;
+    /// let mut outputs = Vec::with_capacity(iters);
+    ///
+    /// self.ns_start = time::precise_time_ns();
+    /// for _ in 0..iters {
+    ///     outputs.push(routine());
+    /// }
+    /// self.ns_end = time::precise_time_ns();
+    ///
+    /// drop(outputs);
+    /// ```
+    ///
+    /// # Timing model
+    ///
+    /// ``` ignore
+    /// elapsed = precise_time_ns + iters * (routine + Vec.push)
+    /// ```
+    ///
+    /// # Memory usage
+    ///
+    /// ``` ignore
+    /// max_iters * mem::size_of::<T>()
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// Benchmark `Vec.from_elem`
+    ///
+    /// ``` ignore
+    /// use criterion::Criterion;
+    ///
+    /// Criterion::default().
+    ///     bench("alloc", |b| {
+    ///         b.iter_with_large_drop(|| {
+    ///             (0..(1024 * 1024)).collect::<Vec<u32>()
+    ///         })
+    ///     });
+    /// ```
+    pub fn iter_with_large_drop<F, T>(&mut self, mut routine: F) where
+        F: FnMut() -> T,
+    {
+        let iters = self.iters;
+        let mut outputs = Vec::with_capacity(iters as usize);
+
+        self.ns_start = time::precise_time_ns();
+        for _ in 0..iters {
+            outputs.push(routine());
+        }
+        self.ns_end = time::precise_time_ns();
+
+        drop(outputs);
+    }
+
+    /// # Timing loop
+    ///
+    /// ``` ignore
+    /// let inputs = (0..self.iters).map(|_| setup()).collect::<Vec<_>>();
+    ///
+    /// self.ns_start = time::precise_time_ns();
+    /// for input in inputs.into_iter() {
+    ///     test::black_box(routine(input));
+    /// }
+    /// self.ns_end = time::precise_time_ns();
+    /// ```
+    ///
+    /// # Timing model
+    ///
+    /// ``` ignore
+    /// elapsed = precise_time_ns + iters * (routine + drop(U))
+    /// ```
+    ///
+    /// # Memory usage
+    ///
+    /// ``` ignore
+    /// max_iters * mem::size_of::<T>()
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// Benchmark `Vec` destructor
+    ///
+    /// ``` ignore
+    /// use criterion::Criterion;
+    ///
+    /// Criterion::default().
+    ///     bench("large_dealloc", |b| {
+    ///         b.iter_with_large_setup(|| {
+    ///             (0..(1024 * 1024)).collect::<Vec<u32>()
+    ///         }, |v| {
+    ///             drop(v)
+    ///         })
+    ///     });
+    /// ```
+    pub fn iter_with_large_setup<S, F, T, U>(&mut self, mut setup: S, mut routine: F) where
+        F: FnMut(T) -> U, S: FnMut() -> T
+    {
+        let inputs = (0..self.iters).map(|_| setup()).collect::<Vec<_>>();
+
+        self.ns_start = time::precise_time_ns();
+        for input in inputs.into_iter() {
+            test::black_box(routine(input));
+        }
+        self.ns_end = time::precise_time_ns();
+    }
+
+    /// # Timing loop
+    ///
+    /// ``` ignore
+    /// self.ns_start = 0;
+    /// self.ns_end = 0;
+    /// for _ in 0..self.iters {
+    ///     let input = setup();
+    ///     let start = time::precise_time_ns();
+    ///     let output = routine(input);
+    ///     let stop = time::precise_time_ns();
+    ///     self.ns_end += stop - start;
+    ///     drop(output);
+    /// }
+    /// ```
+    ///
+    /// # Timing model
+    ///
+    /// ``` ignore
+    /// elapsed = iters * (precise_time_ns + routine)
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// Benchmark `Vec` destructor
+    ///
+    /// ``` ignore
+    /// use criterion::Criterion;
+    ///
+    /// Criterion::default().
+    ///     bench("dealloc", |b| {
+    ///         b.iter_with_setup(|| {
+    ///             (0..(1024 * 1024)).collect::<Vec<u32>()
+    ///         }, |v| {
+    ///             drop(v)
+    ///         })
+    ///     });
+    /// ```
+    pub fn iter_with_setup<'t, S, F, T, U>(&mut self, mut setup: S, mut routine: F) where
+        S: FnMut() -> T, F: FnMut(T) -> U, T: 't, F: 't
+    {
+        self.ns_start = 0;
+        self.ns_end = 0;
+        for _ in 0..self.iters {
+            let input = setup();
+            let start = time::precise_time_ns();
+            let output = routine(input);
+            let stop = time::precise_time_ns();
+            self.ns_end += stop - start;
+            drop(output);
+        }
+    }
+
+    /// Timing loop that allows setup code to be run before timing starts
+    /// and verify code to be run after timing stops.
+    ///
+    /// Might be useful for example to bench sorting algorithms. Set up vector of unsorted
+    /// data in setup and verify that it's sorted in verify.
+    ///
+    /// # Timing loop
+    ///
+    /// ``` ignore
+    /// self.ns_start = 0;
+    /// self.ns_end = 0;
+    /// for _ in 0..self.iters {
+    ///     let input = setup();
+    ///     let start = time::precise_time_ns();
+    ///     let output = routine(input);
+    ///     let stop = time::precise_time_ns();
+    ///     self.ns_end += stop - start;
+    ///     verify(output);
+    /// }
+    /// ```
+    ///
+    /// # Timing model
+    ///
+    /// ``` ignore
+    /// elapsed = iters * (precise_time_ns + routine)
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// Benchmark `Vec` destructor
+    ///
+    /// ``` ignore
+    /// use criterion::Criterion;
+    ///
+    /// let len = 1024*1024;
+    /// Criterion::default().
+    ///     bench("dealloc", |b| {
+    ///    b.iter_with_setup_and_verify(|| {
+    ///        (0..len).collect::<Vec<usize>>()
+    ///    }, |mut v| {
+    ///        v[0] = 99;
+    ///        v
+    ///    }, |v| {
+    ///        assert_eq!(99, v[0]);
+    ///        assert_eq!(len, v.len());
+    ///        drop(v);
+    ///    })
+    /// });
+    /// ```
+    pub fn iter_with_setup_and_verify<'t, S, F, T, U, V>(
+        &mut self,
+        mut setup: S,
+        mut routine: F,
+        mut verify: V) where
+        S: FnMut() -> T, F: FnMut(T) -> U, V: FnMut(U), T: 't, F: 't
+    {
+        self.ns_start = 0;
+        self.ns_end = 0;
+        for _ in 0..self.iters {
+            let input = setup();
+            let start = time::precise_time_ns();
+            let output = routine(input);
+            let stop = time::precise_time_ns();
+            self.ns_end += stop - start;
+            verify(output);
+        }
     }
 }
 
@@ -450,4 +692,3 @@ impl Estimate {
         }
     }
 }
-
