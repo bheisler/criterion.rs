@@ -225,8 +225,8 @@ impl Bencher {
     ///         })
     ///     });
     /// ```
-    pub fn iter_with_setup<S, F, T, U>(&mut self, mut setup: S, mut routine: F) where
-        F: FnMut(T) -> U, S: FnMut() -> T
+    pub fn iter_with_setup<'t, S, F, T, U>(&mut self, mut setup: S, mut routine: F) where
+        S: FnMut() -> T, F: FnMut(T) -> U, T: 't, F: 't
     {
         self.ns_start = 0;
         self.ns_end = 0;
@@ -237,6 +237,68 @@ impl Bencher {
             let stop = time::precise_time_ns();
             self.ns_end += stop - start;
             drop(output);
+        }
+    }
+
+    /// # Timing loop
+    ///
+    /// ``` ignore
+    /// self.ns_start = 0;
+    /// self.ns_end = 0;
+    /// for _ in 0..self.iters {
+    ///     let input = setup();
+    ///     let start = time::precise_time_ns();
+    ///     let output = routine(input);
+    ///     let stop = time::precise_time_ns();
+    ///     self.ns_end += stop - start;
+    ///     verify(output);
+    /// }
+    /// ```
+    ///
+    /// # Timing model
+    ///
+    /// ``` ignore
+    /// elapsed = iters * (precise_time_ns + routine)
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// Benchmark `Vec` destructor
+    ///
+    /// ``` ignore
+    /// use criterion::Criterion;
+    ///
+    /// let len = 1024*1024;
+    /// Criterion::default().
+    ///     bench("dealloc", |b| {
+    ///    b.iter_with_setup_and_verify(|| {
+    ///        (0..len).collect::<Vec<usize>>()
+    ///    }, |mut v| {
+    ///        v[0] = 99;
+    ///        v
+    ///    }, |v| {
+    ///        assert_eq!(99, v[0]);
+    ///        assert_eq!(len, v.len());
+    ///        drop(v);
+    ///    })
+    /// });
+    /// ```
+    pub fn iter_with_setup_and_verify<'t, S, F, T, U, V>(
+        &mut self,
+        mut setup: S,
+        mut routine: F,
+        mut verify: V) where
+        S: FnMut() -> T, F: FnMut(T) -> U, V: FnMut(U), T: 't, F: 't
+    {
+        self.ns_start = 0;
+        self.ns_end = 0;
+        for _ in 0..self.iters {
+            let input = setup();
+            let start = time::precise_time_ns();
+            let output = routine(input);
+            let stop = time::precise_time_ns();
+            self.ns_end += stop - start;
+            verify(output);
         }
     }
 }
