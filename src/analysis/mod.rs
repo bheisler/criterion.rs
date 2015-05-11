@@ -14,6 +14,7 @@ use program::Program;
 use routine::{Function, Routine};
 use {Bencher, ConfidenceInterval, Criterion, Estimate};
 use {format, fs, plot, report};
+use ::Fun;
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => ({
@@ -43,6 +44,20 @@ pub fn function<F>(id: &str, f: F, criterion: &Criterion) where F: FnMut(&mut Be
     common(id, &mut Function(f), criterion);
 
     println!("");
+}
+
+pub fn functions<I>(id: &str,
+    funs: Vec<Fun<I>>,
+    input: &I,
+    criterion: &Criterion)
+    where I: fmt::Display
+{
+    for fun in funs.into_iter() {
+        let id = format!("{}/{}", id, fun.n);
+        let mut f = fun.f;
+        common(&id, &mut Function(|b| f(b, input)), criterion);
+    }
+    summarize(id, criterion);
 }
 
 pub fn function_with_inputs<I, F>(
