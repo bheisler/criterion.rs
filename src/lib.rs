@@ -12,7 +12,6 @@
 #![feature(collections)]
 #![feature(core)]
 #![feature(path_ext)]
-//#![feature(std_misc)]
 #![feature(test)]
 
 #[macro_use]
@@ -37,7 +36,6 @@ mod routine;
 use std::fmt;
 use std::iter::IntoIterator;
 use std::process::Command;
-//use std::time::Duration;
 
 use rustc_serialize::json;
 use std::fs::File;
@@ -146,14 +144,12 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the warm up time is set to a non-positive value
-    // pub fn warm_up_time(&mut self, dur: Duration) -> &mut Criterion {
-    //     let ns = dur.num_nanoseconds().expect("duration overflow");
+    pub fn warm_up_time(&mut self, ns: u64) -> &mut Criterion {
+        assert!(ns > 0);
 
-    //     assert!(ns > 0);
-
-    //     self.warm_up_time_ns = ns as u64;
-    //     self
-    // }
+        self.warm_up_time_ns = ns;
+        self
+    }
 
     /// Changes the measurement time
     ///
@@ -165,14 +161,12 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the measurement time is set to a non-positive value
-    // pub fn measurement_time(&mut self, dur: Duration) -> &mut Criterion {
-    //     let ns = dur.num_nanoseconds().expect("duration overflow");
+    pub fn measurement_time(&mut self, ns: u64) -> &mut Criterion {
+        assert!(ns > 0);
 
-    //     assert!(ns > 0);
-
-    //     self.measurement_time_ns = ns as u64;
-    //     self
-    // }
+        self.measurement_time_ns = ns;
+        self
+    }
 
     /// Changes the number of resamples
     ///
