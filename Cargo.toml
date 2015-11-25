@@ -14,7 +14,8 @@ git = "https://github.com/rust-lang/log"
 git = "https://github.com/rust-lang/rustc-serialize"
 
 [dependencies.simplot]
-git = "https://github.com/laumann/simplot.rs"
+git = "https://github.com/brianw1/simplot.rs"
+branch = "brianw1/master"
 
 [dependencies.space]
 git = "https://github.com/japaric/space.rs"
