@@ -8,8 +8,6 @@
 //! - Plots!
 
 #![deny(missing_docs)]
-#![feature(collections)]
-#![feature(core)]
 #![feature(path_ext)]
 #![feature(test)]
 #![feature(iter_iterate)]
