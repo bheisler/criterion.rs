@@ -1,4 +1,3 @@
-use std::fs::PathExt;
 use std::path::{Path, PathBuf};
 use std::{iter, str};
 

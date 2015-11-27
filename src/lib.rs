@@ -8,7 +8,6 @@
 //! - Plots!
 
 #![deny(missing_docs)]
-#![feature(path_ext)]
 #![feature(test)]
 #![feature(iter_cmp)]
 
