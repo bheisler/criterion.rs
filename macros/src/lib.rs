@@ -63,7 +63,7 @@ fn expand_meta_criterion(
             let default_criterion = cx.expr_call_global(span, criterion_path, vec!());
 
             // `.bench("routine", routine);`
-            let routine_str = cx.expr_str(span, token::get_ident(routine.ident));
+            let routine_str = cx.expr_str(span, routine.ident.name.as_str());
             let routine_ident = cx.expr_ident(span, routine.ident);
             let bench_ident = token::str_to_ident("bench");
             let bench_call = cx.expr_method_call(span, default_criterion, bench_ident,

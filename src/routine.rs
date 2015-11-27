@@ -1,5 +1,3 @@
-use std::iter;
-
 use time;
 
 use format;
@@ -24,17 +22,20 @@ pub trait Routine {
         // Initial guess for the mean execution time
         let met = wu_elapsed as f64 / wu_iters as f64;
 
-        let n = criterion.sample_size;
+        let n = criterion.sample_size as u64;
         // Solve: [d + 2*d + 3*d + ... + n*d] * met = m_ns
-        let d = (2. * m_ns as f64 / met / (n * (n + 1)) as f64).ceil() as u64;
+        let total_runs = n * (n + 1) / 2;
+        let d = (m_ns as f64 / met / total_runs as f64).ceil() as u64;
 
-        let m_iters = iter::iterate(d, |a| a + d).take(n).collect::<Vec<u64>>();
+        let m_iters = (1..n as u64).map(|a| a*d).collect::<Vec<u64>>();
 
-        let m_ns = m_iters.iter().map(|&x| x).sum::<u64>() as f64 * met;
+        let m_ns = total_runs as f64 * met;
         println!("> Collecting {} samples in estimated {}", n, format::time(m_ns));
         let m_elapsed = self.bench(m_iters.iter().map(|&x| x));
 
-        (m_iters.map_in_place(|x| x as f64).into_boxed_slice(), m_elapsed.into_boxed_slice())
+        let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();
+
+        (m_iters_f.into_boxed_slice(), m_elapsed.into_boxed_slice())
     }
 }
 

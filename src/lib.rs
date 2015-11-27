@@ -10,10 +10,7 @@
 #![deny(missing_docs)]
 #![feature(path_ext)]
 #![feature(test)]
-#![feature(iter_iterate)]
 #![feature(iter_cmp)]
-#![feature(iter_arith)]
-#![feature(map_in_place)]
 
 #[macro_use]
 extern crate log;

@@ -21,7 +21,7 @@ branch = "brianw1/master"
 git = "https://github.com/japaric/space.rs"
 
 [dependencies.stats]
-git = "https://github.com/laumann/stats.rs"
+git = "https://github.com/faern/stats.rs"
 
 [dependencies.time]
 git = "https://github.com/rust-lang/time"
