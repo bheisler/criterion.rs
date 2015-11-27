@@ -1,4 +1,3 @@
-use std::fs::PathExt;
 use std::path::{Path, PathBuf};
 use std::{iter, str};
 
@@ -710,7 +709,7 @@ pub fn summarize(id: &str) {
                 let min = *points.last().unwrap();
                 let rel = points.iter().map(|&x| format!("{:.02}", x / min)).collect::<Vec<_>>();
 
-                let tics = || { iter::iterate(0.5, |x| x + 1f64) };
+                let tics = || { (0..).map(|x| (x as f64)+0.5) };
                 // TODO Review axis scaling
                 Figure::new().
                     set(Font(DEFAULT_FONT)).
@@ -804,7 +803,7 @@ pub fn summarize(id: &str) {
                     }
                 };
 
-                let tics = || { iter::iterate(0.5, |x| x + 1f64) };
+                let tics = || { (0..).map(|x| (x as f64)+0.5) };
                 let mut f = Figure::new();
                 f.
                     set(Font(DEFAULT_FONT)).

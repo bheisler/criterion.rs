@@ -1,5 +1,4 @@
 use std::fmt;
-use std::fs::PathExt;
 use std::iter::IntoIterator;
 use std::path::Path;
 use std::process::Command;
