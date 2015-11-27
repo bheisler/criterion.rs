@@ -2,10 +2,10 @@
 #![feature(plugin_registrar)]
 #![feature(rustc_private)]
 
-extern crate rustc;
+extern crate rustc_plugin;
 extern crate syntax;
 
-use rustc::plugin::Registry;
+use rustc_plugin::registry::Registry;
 use syntax::ast::{DUMMY_NODE_ID, DeclItem, Item, ItemFn, MetaItem, StmtDecl, self};
 use syntax::codemap::{Span, self};
 use syntax::ext::base::{ExtCtxt, MultiModifier, Annotatable};
