@@ -74,7 +74,7 @@ pub mod grid {
 
     const LENGTH: usize = 2;
 
-    struct Items<'a, T> where T: 'a {
+    pub struct Items<'a, T> where T: 'a {
         map: &'a Map<T>,
         state: Option<Grid>,
     }

@@ -2,7 +2,7 @@
 
 #![allow(non_snake_case)]
 
-use std::borrow::{Cow, IntoCow};
+use std::borrow::Cow;
 use std::path::Path;
 
 /// Generic constructor for `Font`
@@ -25,6 +25,6 @@ pub fn Title<S>(string: S) -> ::Title where S: Into<Cow<'static, str>> {
 
 /// Generic constructor for `Output`
 #[inline(always)]
-pub fn Output<P>(path: P) -> ::Output where P: IntoCow<'static, Path> {
-    ::Output(path.into_cow())
+pub fn Output<P>(path: P) -> ::Output where P: Into<Cow<'static, Path>> {
+    ::Output(path.into())
 }

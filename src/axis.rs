@@ -141,7 +141,7 @@ impl<P, L> Set<TicLabels<P, L>> for Properties where
         if pairs.len() == 0 {
             self.tics = None
         } else {
-            self.tics = Some(pairs.connect(", "));
+            self.tics = Some(pairs.join(", "));
         }
 
         self
