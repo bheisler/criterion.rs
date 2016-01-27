@@ -56,16 +56,16 @@ impl Script for Properties {
         };
 
         match self.position {
-            None => {},
+            None => {}
             Some(Position::Inside(v, h)) => {
                 script.push_str(&format!("inside {} {} ", v.display(), h.display()))
-            },
+            }
             Some(Position::Outside(v, h)) => {
                 script.push_str(&format!("outside {} {} ", v.display(), h.display()))
-            },
+            }
         }
 
-        if let Some(stacked) =  self.stacked {
+        if let Some(stacked) = self.stacked {
             script.push_str(stacked.display());
             script.push(' ');
         }
@@ -75,7 +75,7 @@ impl Script for Properties {
             script.push(' ');
         }
 
-        if let Some(order) =  self.order {
+        if let Some(order) = self.order {
             script.push_str(order.display());
             script.push(' ');
         }
@@ -208,7 +208,7 @@ pub enum Stacked {
 
 /// Vertical position of the key
 #[derive(Clone, Copy)]
-pub enum Vertical{
+pub enum Vertical {
     /// Bottom border of the figure
     Bottom,
     /// Center of the figure

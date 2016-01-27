@@ -55,8 +55,8 @@ impl Configure<Grid> for Properties {
     type Properties = grid::Properties;
 
     /// Configures the gridlines
-    fn configure<F>(&mut self, grid: Grid, configure: F) -> &mut Properties where
-        F: FnOnce(&mut grid::Properties) -> &mut grid::Properties,
+    fn configure<F>(&mut self, grid: Grid, configure: F) -> &mut Properties
+        where F: FnOnce(&mut grid::Properties) -> &mut grid::Properties
     {
         if self.grids.contains_key(grid) {
             configure(self.grids.get_mut(grid).unwrap());
@@ -124,19 +124,20 @@ impl Set<ScaleFactor> for Properties {
     }
 }
 
-impl<P, L> Set<TicLabels<P, L>> for Properties where
-    L: IntoIterator,
-    L::Item: AsRef<str>,
-    P: IntoIterator,
-    P::Item: Data,
+impl<P, L> Set<TicLabels<P, L>> for Properties
+    where L: IntoIterator,
+          L::Item: AsRef<str>,
+          P: IntoIterator,
+          P::Item: Data
 {
     /// Attaches labels to the tics of an axis
     fn set(&mut self, tics: TicLabels<P, L>) -> &mut Properties {
         let TicLabels { positions, labels } = tics;
 
-        let pairs = positions.into_iter().zip(labels.into_iter()).map(|(pos, label)| {
-            format!("'{}' {}", label.as_ref(), pos.f64())
-        }).collect::<Vec<_>>();
+        let pairs = positions.into_iter()
+                             .zip(labels.into_iter())
+                             .map(|(pos, label)| format!("'{}' {}", label.as_ref(), pos.f64()))
+                             .collect::<Vec<_>>();
 
         if pairs.len() == 0 {
             self.tics = None

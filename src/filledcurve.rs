@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::iter::IntoIterator;
 
 use data::Matrix;
-use traits::{Data, Set, self};
+use traits::{self, Data, Set};
 use {Axes, Color, Default, Display, Figure, Label, Opacity, Plot, Script};
 
 /// Properties common to filled curve plots
@@ -26,9 +26,6 @@ impl Default for Properties {
     }
 }
 
-impl Properties {
-}
-
 impl Script for Properties {
     fn script(&self) -> String {
         let mut script = if let Some(axes) = self.axes {
@@ -47,7 +44,7 @@ impl Script for Properties {
         // TODO border shoulde be configurable
         script.push_str("noborder ");
 
-        if let Some(color) =  self.color {
+        if let Some(color) = self.color {
             script.push_str(&format!("lc rgb '{}' ", color.display()));
         }
 
@@ -113,31 +110,28 @@ pub struct FilledCurve<X, Y1, Y2> {
     pub y2: Y2,
 }
 
-impl<X, Y1, Y2> traits::Plot<FilledCurve<X, Y1, Y2>> for Figure where
-    X: IntoIterator,
-    X::Item: Data,
-    Y1: IntoIterator,
-    Y1::Item: Data,
-    Y2: IntoIterator,
-    Y2::Item: Data,
+impl<X, Y1, Y2> traits::Plot<FilledCurve<X, Y1, Y2>> for Figure
+    where X: IntoIterator,
+          X::Item: Data,
+          Y1: IntoIterator,
+          Y1::Item: Data,
+          Y2: IntoIterator,
+          Y2::Item: Data
 {
     type Properties = Properties;
 
-    fn plot<F>(&mut self, fc: FilledCurve<X, Y1, Y2>, configure: F) -> &mut Figure where
-        F: FnOnce(&mut Properties) -> &mut Properties,
+    fn plot<F>(&mut self, fc: FilledCurve<X, Y1, Y2>, configure: F) -> &mut Figure
+        where F: FnOnce(&mut Properties) -> &mut Properties
     {
         let FilledCurve { x, y1, y2 } = fc;
 
         let mut props = Default::default();
         configure(&mut props);
 
-        let (x_factor, y_factor) =
-            ::scale_factor(&self.axes, props.axes.unwrap_or(::Axes::BottomXLeftY));
+        let (x_factor, y_factor) = ::scale_factor(&self.axes,
+                                                  props.axes.unwrap_or(::Axes::BottomXLeftY));
 
-        let data = Matrix::new(
-            zip!(x, y1, y2),
-            (x_factor, y_factor, y_factor),
-        );
+        let data = Matrix::new(zip!(x, y1, y2), (x_factor, y_factor, y_factor));
         self.plots.push(Plot::new(data, &props));
         self
     }
