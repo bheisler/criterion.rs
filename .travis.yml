@@ -1,18 +1,16 @@
+sudo: false
 language: rust
 rust:
   - nightly
 
+addons:
+  apt:
+    packages:
+      - gnuplot
+
 env:
   global:
     - secure: C2Oij4OPM2pdkbpEV6bsCJ8PpqDk2NtjFhFiO+4ZlYrRCQnbv+TAOuWNj5aX1EOWPlMQdP/95VrEOizUcK1twsCuc6d8PnAoCu8WnLRsOSO8GftVynC+CEJSnaDpAVO3N23f5jrCsKQhZx9R/hADpY5ni2ik0rKNWGllaYzuUCc=
-
-before_install:
-  # This PPA has a newer version of gnuplot
-  - sudo add-apt-repository ppa:gladky-anton/precise-backports -y
-  - sudo apt-get update -qq
-
-install:
-  - sudo apt-get install -qq gnuplot
 
 script:
   - cargo build --verbose
