@@ -2,7 +2,7 @@
 
 # stats.rs
 
-SIMD/BLAS accelerated statistics
+Statistics
 
 ## [Documentation][docs]
 

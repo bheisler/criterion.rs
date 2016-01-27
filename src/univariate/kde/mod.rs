@@ -2,11 +2,11 @@
 
 pub mod kernel;
 
-use std::{ptr, thread};
+use std::ptr;
 
 use cast::From;
 use num_cpus;
-use simd::traits::Vector;
+use thread_scoped as thread;
 
 use Float;
 use univariate::Sample;
@@ -73,24 +73,13 @@ impl<'a, A, K> Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
 
 impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
     /// Estimates the probability density of `x`
-    ///
-    /// - Acceleration: SIMD
     extern "rust-call" fn call(&self, (x,): (A,)) -> A {
+        let _0 = A::from(0);
         let slice = self.sample.as_slice();
         let h = self.bandwidth;
         let n = A::from(slice.len());
 
-        let x_ = A::Vector::from_elem(x);
-        let h_ = A::Vector::from_elem(h);
-        let (head, body, tail) = A::Vector::cast(slice);
-
-        let sum = body.iter().fold(A::Vector::zeroed(), |acc, &x_i| {
-            acc + ((x_ - x_i) / h_).map(self.kernel)
-        }).sum();
-
-        let sum = head.iter().chain(tail.iter()).fold(sum, |acc, &x_i| {
-            acc + (self.kernel)((x - x_i) / h)
-        });
+        let sum = slice.iter().fold(_0, |acc, &x_i| acc + (self.kernel)((x - x_i) / h));
 
         sum / h / n
     }

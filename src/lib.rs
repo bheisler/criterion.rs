@@ -1,24 +1,21 @@
-//! SIMD/BLAS accelerated statistics
+//! Statistics
 
 #![cfg_attr(test, allow(trivial_casts))]  // quickcheck
 #![cfg_attr(test, feature(test))]
 #![cfg_attr(test, plugin(quickcheck_macros))]
 #![deny(missing_docs)]
-#![deny(warnings)]
-#![feature(collections)]
-#![feature(core)]
+//#![deny(warnings)]
 #![feature(custom_attribute)]
+#![feature(fn_traits)]
 #![feature(plugin)]
-#![feature(scoped)]
 #![feature(unboxed_closures)]
 #![feature(unique)]
 
-extern crate blas;
 extern crate cast;
 extern crate float;
 extern crate num_cpus;
 extern crate rand;
-extern crate simd;
+extern crate thread_scoped;
 
 #[cfg(test)] extern crate test as stdtest;
 #[cfg(test)] extern crate approx;
@@ -50,8 +47,8 @@ use cast::From;
 
 use univariate::Sample;
 
-/// A SIMD accelerated floating point number
-pub trait Float: blas::Dot + simd::traits::Simd + float::Float + Send + Sync {}
+/// A floating point number
+pub trait Float: float::Float + Send + Sync {}
 
 impl Float for f32 {}
 impl Float for f64 {}
@@ -118,4 +115,18 @@ pub enum Tails {
     One,
     /// Two tailed test
     Two,
+}
+
+fn dot<A>(xs: &[A], ys: &[A]) -> A
+    where A: Float
+{
+    xs.iter().zip(ys).fold(A::from(0), |acc, (&x, &y)| acc + x * y)
+}
+
+fn sum<A>(xs: &[A]) -> A
+    where A: Float
+{
+    use std::ops::Add;
+
+    xs.iter().cloned().fold(A::from(0), Add::add)
 }

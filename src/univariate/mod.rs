@@ -10,9 +10,10 @@ pub mod mixed;
 pub mod outliers;
 
 use std::ptr::Unique;
-use std::{cmp, thread};
+use std::cmp;
 
 use num_cpus;
+use thread_scoped as thread;
 
 use Float;
 use tuple::{Tuple, TupledDistributions};

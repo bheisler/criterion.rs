@@ -15,9 +15,9 @@ pub struct Gaussian;
 
 impl<A> Fn<(A,)> for Gaussian where A: Float {
     extern "rust-call" fn call(&self, (x,): (A,)) -> A {
-        use std::f32::consts::PI_2;
+        use std::f32::consts::PI;
 
-        (x.powi(2).exp() * A::from(PI_2)).sqrt().recip()
+        (x.powi(2).exp() * A::from(2. * PI)).sqrt().recip()
     }
 }
 

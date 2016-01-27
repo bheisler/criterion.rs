@@ -1,9 +1,9 @@
 use std::ptr::Unique;
-use std::{cmp, mem, thread};
+use std::{cmp, mem};
 
 use cast::From;
 use num_cpus;
-use simd::traits::Vector;
+use thread_scoped as thread;
 
 use Float;
 use tuple::{Tuple, TupledDistributions};
@@ -66,7 +66,6 @@ impl<A> Sample<A> where A: Float {
 
     /// Returns the arithmetic average of the sample
     ///
-    /// - Acceleration: SIMD
     /// - Time: `O(length)`
     pub fn mean(&self) -> A {
         let n = self.as_slice().len();
@@ -158,7 +157,6 @@ impl<A> Sample<A> where A: Float {
     ///
     /// The `mean` can be optionally passed along to speed up (2X) the computation
     ///
-    /// - Acceleration: SIMD
     /// - Time: `O(length)`
     pub fn std_dev(&self, mean: Option<A>) -> A {
         self.var(mean).sqrt()
@@ -166,7 +164,6 @@ impl<A> Sample<A> where A: Float {
 
     /// Returns the standard deviation as a percentage of the mean
     ///
-    /// - Acceleration: SIMD
     /// - Time: `O(length)`
     pub fn std_dev_pct(&self) -> A {
         let _100 = A::from(100);
@@ -178,15 +175,13 @@ impl<A> Sample<A> where A: Float {
 
     /// Returns the sum of all the elements of the sample
     ///
-    /// - Acceleration: SIMD
     /// - Time: `O(length)`
     pub fn sum(&self) -> A {
-        ::simd::sum(self.as_slice())
+        ::sum(self.as_slice())
     }
 
     /// Returns the t score between these two samples
     ///
-    /// - Acceleration: SIMD
     /// - Time: `O(length)`
     pub fn t(&self, other: &Sample<A>) -> A {
         let (x_bar, y_bar) = (self.mean(), other.mean());
@@ -203,23 +198,14 @@ impl<A> Sample<A> where A: Float {
     ///
     /// The `mean` can be optionally passed along to speed up (2X) the computation
     ///
-    /// - Acceleration: SIMD
     /// - Time: `O(length)`
     pub fn var(&self, mean: Option<A>) -> A {
+        use std::ops::Add;
+
         let mean = mean.unwrap_or_else(|| self.mean());
         let slice = self.as_slice();
 
-        let (head, body, tail) = A::Vector::cast(slice);
-        let mean_ = A::Vector::from_elem(mean);
-        let acc = body.iter().fold(A::Vector::zeroed(), |acc, &chunk| {
-            let diff = chunk - mean_;
-            acc + diff * diff
-        }).sum();
-
-        let sum = head.iter().chain(tail.iter()).fold(acc, |acc, &x| {
-            let diff = x - mean;
-            acc + diff * diff
-        });
+        let sum = slice.iter().map(|&x| (x - mean).powi(2)).fold(A::from(0), Add::add);
 
         sum / A::from(slice.len() - 1)
     }

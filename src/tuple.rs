@@ -8,13 +8,13 @@ use std::ptr;
 use Distribution;
 
 /// Any tuple: `(A, B, ..)`
-pub trait Tuple {
+pub trait Tuple: Sized {
     /// A tuple of distributions associated with this tuple
     type Distributions: TupledDistributions<Item=Self>;
 }
 
 /// A tuple of distributions: `(Distribution<A>, Distribution<B>, ..)`
-pub trait TupledDistributions {
+pub trait TupledDistributions: Sized {
     /// A tuple that can be pushed/inserted into the tupled distributions
     type Item: Tuple<Distributions=Self>;
 

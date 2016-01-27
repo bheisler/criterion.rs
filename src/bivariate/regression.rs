@@ -1,8 +1,6 @@
 //! Regression analysis
 
-use blas::blasint;
 use cast::From;
-use simd::traits::Vector;
 
 use Float;
 use bivariate::Data;
@@ -15,106 +13,37 @@ impl<A> Slope<A> where A: Float {
     /// Fits the data to a straight line that passes through the origin using ordinary least
     /// squares
     ///
-    /// - Acceleration: BLAS
     /// - Time: `O(length)`
     pub fn fit(data: Data<A, A>) -> Slope<A> {
         let xs = data.0;
         let ys = data.1;
 
-        unsafe {
-            let n = blasint::from(xs.len()).unwrap();
-            let dot = A::dot();
-            let xs = xs.as_ptr();
-            let ys = ys.as_ptr();
+        let xy = ::dot(xs, ys);
+        let x2 = ::dot(xs, xs);
 
-            let xy = dot(&n, xs, &1, ys, &1);
-            let x2 = dot(&n, xs, &1, xs, &1);
-
-            Slope(xy / x2)
-        }
+        Slope(xy / x2)
     }
 
     /// Computes the goodness of fit (coefficient of determination) for this data set
     ///
-    /// - Acceleration: SIMD (iff the `X` and `Y` slices are "aligned")
     /// - Time: `O(length)`
     pub fn r_squared(&self, data: Data<A, A>) -> A {
         let _0 = A::from(0);
+        let _1 = A::from(1);
         let m = self.0;
         let xs = data.0;
         let ys = data.1;
 
         let n = A::from(xs.len());
-        let y_bar = ::simd::sum(ys) / n;
+        let y_bar = ::sum(ys) / n;
 
-        let (ss_res, ss_tot) = unsafe {
-            let (xhead, xbody, xtail) = A::Vector::cast(xs);
-            let (yhead, ybody, ytail) = A::Vector::cast(ys);
+        let mut ss_res = _0;
+        let mut ss_tot = _0;
 
-            if xhead.len() == yhead.len() {
-                let mut ss_res = A::Vector::zeroed();
-                let mut ss_tot = A::Vector::zeroed();
-
-                let m_ = A::Vector::from_elem(m);
-                let y_bar_ = A::Vector::from_elem(y_bar);
-
-                for i in 0..xbody.len() {
-                    let &x_ = xbody.get_unchecked(i);
-                    let &y_ = ybody.get_unchecked(i);
-
-                    let diff = y_ - m_ * x_;
-                    ss_res = ss_res + diff * diff;
-
-                    let diff = y_ - y_bar_;
-                    ss_tot = ss_tot + diff * diff;
-                }
-
-                let ss_res = xhead.iter().zip(yhead.iter()).fold(ss_res.sum(), |acc, (&x, &y)| {
-                    let diff = y - m * x;
-
-                    acc + diff * diff
-                });
-                let ss_tot = yhead.iter().fold(ss_tot.sum(), |acc, &y| {
-                    let diff = y - y_bar;
-
-                    acc + diff * diff
-                });
-
-                let ss_res = xtail.iter().zip(ytail.iter()).fold(ss_res, |acc, (&x, &y)| {
-                    let diff = y - m * x;
-
-                    acc + diff * diff
-                });
-                let ss_tot = ytail.iter().fold(ss_tot, |acc, &y| {
-                    let diff = y - y_bar;
-
-                    acc + diff * diff
-                });
-
-                (ss_res, ss_tot)
-            } else {
-                let mut ss_res = _0;
-
-                for i in 0..xs.len() {
-                    let &x = xs.get_unchecked(i);
-                    let &y = ys.get_unchecked(i);
-
-                    let diff = y - m * x;
-
-                    ss_res = ss_res + diff * diff;
-                }
-
-                let ss_tot = ys.iter().fold(_0, |acc, &y| {
-                    let diff = y - y_bar;
-
-                    acc + diff * diff
-                });
-
-                (ss_res, ss_tot)
-            }
-        };
-
-        let _1 = A::from(1);
+        for (&x, &y) in data.iter() {
+            ss_res = ss_res + (y - m * x).powi(2);
+            ss_tot = ss_res + (y - y_bar).powi(2);
+        }
 
         _1 - ss_res / ss_tot
     }
@@ -132,27 +61,19 @@ pub struct StraightLine<A> where A: Float {
 impl<A> StraightLine<A> where A: Float {
     /// Fits the data to a straight line using ordinary least squares
     ///
-    /// - Acceleration: BLAS + SIMD
     /// - Time: `O(length)`
     pub fn fit(data: Data<A, A>) -> StraightLine<A> {
         let xs = data.0;
         let ys = data.1;
 
-        let (x2, xy) = unsafe {
-            let dot = A::dot();
-            let n = blasint::from(xs.len()).unwrap();;
-
-            let x2 = dot(&n, xs.as_ptr(), &1, xs.as_ptr(), &1);
-            let xy = dot(&n, xs.as_ptr(), &1, ys.as_ptr(), &1);
-
-            (x2, xy)
-        };
+        let x2 = ::dot(xs, xs);
+        let xy = ::dot(xs, ys);
 
         let n = A::from(xs.len());
         let x2_bar = x2 / n;
-        let x_bar = ::simd::sum(xs) / n;
+        let x_bar = ::sum(xs) / n;
         let xy_bar = xy / n;
-        let y_bar = ::simd::sum(ys) / n;
+        let y_bar = ::sum(ys) / n;
 
         let slope = {
             let num = xy_bar - x_bar * y_bar;
@@ -171,79 +92,24 @@ impl<A> StraightLine<A> where A: Float {
 
     /// Computes the goodness of fit (coefficient of determination) for this data set
     ///
-    /// - Acceleration: SIMD (iff the `X` and `Y` slices are "aligned")
     /// - Time: `O(length)`
     pub fn r_squared(&self, data: Data<A, A>) -> A {
         let _0 = A::from(0);
+        let _1 = A::from(1);
         let m = self.slope;
         let b = self.intercept;
         let xs = data.0;
         let ys = data.1;
 
         let n = A::from(xs.len());
-        let y_bar = ::simd::sum(ys) / n;
+        let y_bar = ::sum(ys) / n;
 
-        let (ss_res, ss_tot) = unsafe {
-            let (xhead, xbody, xtail) = A::Vector::cast(xs);
-            let (yhead, ybody, ytail) = A::Vector::cast(ys);
-
-            if xhead.len() == yhead.len() {
-                let mut ss_res = A::Vector::zeroed();
-                let mut ss_tot = A::Vector::zeroed();
-
-                let b_ = A::Vector::from_elem(b);
-                let m_ = A::Vector::from_elem(m);
-                let y_bar_ = A::Vector::from_elem(y_bar);
-
-                for i in 0..xbody.len() {
-                    let &x_ = xbody.get_unchecked(i);
-                    let &y_ = ybody.get_unchecked(i);
-
-                    let diff = y_ - m_ * x_ - b_;
-                    ss_res = ss_res + diff * diff;
-
-                    let diff = y_ - y_bar_;
-                    ss_tot = ss_tot + diff * diff;
-                }
-
-                let ss_res =
-                    xhead.iter().chain(xtail.iter()).zip(yhead.iter().chain(ytail.iter())).
-                        fold(ss_res.sum(), |acc, (&x, &y)| {
-                            let diff = y - m * x - b;
-
-                            acc + diff * diff
-                        });
-                let ss_tot = yhead.iter().chain(ytail.iter()).fold(ss_tot.sum(), |acc, &y| {
-                    let diff = y - y_bar;
-
-                    acc + diff * diff
-                });
-
-                (ss_res, ss_tot)
-            } else {
-                let mut ss_res = _0;
-
-                for i in 0..xs.len() {
-                    let &x = xs.get_unchecked(i);
-                    let &y = ys.get_unchecked(i);
-
-                    let diff = y - m * x - b;
-
-                    ss_res = ss_res + diff * diff;
-                }
-
-                let ss_tot = ys.iter().fold(_0, |acc, &y| {
-                    let diff = y - y_bar;
-
-                    acc + diff * diff
-                });
-
-
-                (ss_res, ss_tot)
-            }
-        };
-
-        let _1 = A::from(1);
+        let mut ss_res = _0;
+        let mut ss_tot = _0;
+        for (&x, &y) in data.iter() {
+            ss_res = ss_res + (y - m * x - b).powi(2);
+            ss_tot = ss_tot + (y - y_bar).powi(2);
+        }
 
         _1 - ss_res / ss_tot
     }
