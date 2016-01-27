@@ -29,7 +29,7 @@ pub trait Routine {
 
         let m_iters = (1..n as u64).map(|a| a*d).collect::<Vec<u64>>();
 
-        let m_ns = total_runs as f64 * met;
+        let m_ns = total_runs as f64 * d as f64 * met;
         println!("> Collecting {} samples in estimated {}", n, format::time(m_ns));
         let m_elapsed = self.bench(m_iters.iter().map(|&x| x));
 
