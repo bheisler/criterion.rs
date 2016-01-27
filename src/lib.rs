@@ -283,7 +283,6 @@
 //! ![Plot](filled_curve.svg)
 //!
 //! ```
-//! #![feature(core)]
 //!
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
@@ -355,8 +354,6 @@
 
 #![deny(missing_docs)]
 #![deny(warnings)]
-#![feature(collections)]
-#![feature(into_cow)]
 
 extern crate byteorder;
 extern crate cast;
@@ -510,7 +507,7 @@ impl Figure {
                 is_first = false;
                 buffer.push('\n' as u8);
             }
-            buffer.push_all(plot.data().bytes());
+            buffer.extend_from_slice(plot.data().bytes());
         }
 
         buffer
