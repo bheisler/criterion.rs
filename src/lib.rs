@@ -482,9 +482,8 @@ impl Figure {
                 s.push_str(", ");
             }
 
-            s.push_str(&format!(
-                    "'-' binary endian=little record={} format='%float64' using ",
-                    data.nrows()));
+            s.push_str(&format!("'-' binary endian=little record={} format='%float64' using ",
+                                data.nrows()));
 
             let mut is_first_col = true;
             for col in 0..data.ncols() {
@@ -531,7 +530,9 @@ impl Figure {
     }
 
     /// Dumps the script required to produce the figure into `sink`
-    pub fn dump<W>(&mut self, sink: &mut W) -> io::Result<&mut Figure> where W: io::Write {
+    pub fn dump<W>(&mut self, sink: &mut W) -> io::Result<&mut Figure>
+        where W: io::Write
+    {
         try!(sink.write_all(&self.script()));
         Ok(self)
     }
@@ -549,8 +550,8 @@ impl Configure<Axis> for Figure {
     type Properties = axis::Properties;
 
     /// Configures an axis
-    fn configure<F>(&mut self, axis: Axis, configure: F) -> &mut Figure where
-        F: FnOnce(&mut axis::Properties) -> &mut axis::Properties,
+    fn configure<F>(&mut self, axis: Axis, configure: F) -> &mut Figure
+        where F: FnOnce(&mut axis::Properties) -> &mut axis::Properties
     {
         if self.axes.contains_key(axis) {
             configure(self.axes.get_mut(axis).unwrap());
@@ -567,8 +568,8 @@ impl Configure<Key> for Figure {
     type Properties = key::Properties;
 
     /// Configures the key (legend)
-    fn configure<F>(&mut self, _: Key, configure: F) -> &mut Figure where
-        F: FnOnce(&mut key::Properties) -> &mut key::Properties,
+    fn configure<F>(&mut self, _: Key, configure: F) -> &mut Figure
+        where F: FnOnce(&mut key::Properties) -> &mut key::Properties
     {
         if self.key.is_some() {
             configure(self.key.as_mut().unwrap());
@@ -631,7 +632,6 @@ impl Set<Output> for Figure {
         self.output = output.0;
         self
     }
-
 }
 
 impl Set<Size> for Figure {
@@ -879,8 +879,8 @@ struct Plot {
 }
 
 impl Plot {
-    fn new<S>(data: Matrix, script: &S) -> Plot where
-        S: Script,
+    fn new<S>(data: Matrix, script: &S) -> Plot
+        where S: Script
     {
         Plot {
             data: data,
@@ -915,29 +915,21 @@ fn scale_factor(map: &map::axis::Map<axis::Properties>, axes: Axes) -> (f64, f64
 
     match axes {
         BottomXLeftY => {
-            (
-                map.get(BottomX).map(|props| props.scale_factor()).unwrap_or(1.),
-                map.get(LeftY).map(|props| props.scale_factor()).unwrap_or(1.),
-            )
-        },
+            (map.get(BottomX).map(|props| props.scale_factor()).unwrap_or(1.),
+             map.get(LeftY).map(|props| props.scale_factor()).unwrap_or(1.))
+        }
         BottomXRightY => {
-            (
-                map.get(BottomX).map(|props| props.scale_factor()).unwrap_or(1.),
-                map.get(RightY).map(|props| props.scale_factor()).unwrap_or(1.),
-            )
-        },
+            (map.get(BottomX).map(|props| props.scale_factor()).unwrap_or(1.),
+             map.get(RightY).map(|props| props.scale_factor()).unwrap_or(1.))
+        }
         TopXLeftY => {
-            (
-                map.get(TopX).map(|props| props.scale_factor()).unwrap_or(1.),
-                map.get(LeftY).map(|props| props.scale_factor()).unwrap_or(1.),
-            )
-        },
+            (map.get(TopX).map(|props| props.scale_factor()).unwrap_or(1.),
+             map.get(LeftY).map(|props| props.scale_factor()).unwrap_or(1.))
+        }
         TopXRightY => {
-            (
-                map.get(TopX).map(|props| props.scale_factor()).unwrap_or(1.),
-                map.get(RightY).map(|props| props.scale_factor()).unwrap_or(1.),
-            )
-        },
+            (map.get(TopX).map(|props| props.scale_factor()).unwrap_or(1.),
+             map.get(RightY).map(|props| props.scale_factor()).unwrap_or(1.))
+        }
     }
 }
 
@@ -952,6 +944,7 @@ trait ScaleFactorTrait {
 mod test {
     #[test]
     fn version() {
-        assert_eq!(super::version().ok().map(|(major, _, _)| major >= 4), Some(true));
+        assert_eq!(super::version().ok().map(|(major, _, _)| major >= 4),
+                   Some(true));
     }
 }

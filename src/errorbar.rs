@@ -3,12 +3,10 @@
 use std::borrow::Cow;
 use std::iter::IntoIterator;
 
-use {
-    Color, Display, ErrorBarDefault, Figure, Label, LineType, LineWidth, Plot, PointSize,
-    PointType, Script,
-};
+use {Color, Display, ErrorBarDefault, Figure, Label, LineType, LineWidth, Plot, PointSize,
+     PointType, Script};
 use data::Matrix;
-use traits::{Data, Set, self};
+use traits::{self, Data, Set};
 
 /// Properties common to error bar plots
 pub struct Properties {
@@ -57,7 +55,7 @@ impl Script for Properties {
             script.push_str(&format!("ps {} ", ps))
         }
 
-        if let Some(ref label) =  self.label {
+        if let Some(ref label) = self.label {
             script.push_str("title '");
             script.push_str(label);
             script.push('\'')
@@ -214,20 +212,20 @@ impl<X, Y, L, H> ErrorBar<X, Y, L, H> {
     }
 }
 
-impl<X, Y, L, H>  traits::Plot<ErrorBar<X, Y, L, H>> for Figure where
-    H: IntoIterator,
-    H::Item: Data,
-    L: IntoIterator,
-    L::Item: Data,
-    X: IntoIterator,
-    X::Item: Data,
-    Y: IntoIterator,
-    Y::Item: Data,
+impl<X, Y, L, H> traits::Plot<ErrorBar<X, Y, L, H>> for Figure
+    where H: IntoIterator,
+          H::Item: Data,
+          L: IntoIterator,
+          L::Item: Data,
+          X: IntoIterator,
+          X::Item: Data,
+          Y: IntoIterator,
+          Y::Item: Data
 {
     type Properties = Properties;
 
-    fn plot<F>(&mut self, e: ErrorBar<X, Y, L, H>, configure: F) -> &mut Figure where
-        F: FnOnce(&mut Properties) -> &mut Properties,
+    fn plot<F>(&mut self, e: ErrorBar<X, Y, L, H>, configure: F) -> &mut Figure
+        where F: FnOnce(&mut Properties) -> &mut Properties
     {
         let (x_factor, y_factor) = ::scale_factor(&self.axes, ::Axes::BottomXLeftY);
 
@@ -238,29 +236,26 @@ impl<X, Y, L, H>  traits::Plot<ErrorBar<X, Y, L, H>> for Figure where
             ErrorBar::YErrorBars { x, y, y_low, y_high } => (x, y, y_low, y_high, y_factor),
             ErrorBar::YErrorLines { x, y, y_low, y_high } => (x, y, y_low, y_high, y_factor),
         };
-        let data = Matrix::new(
-            zip!(x, y, l, h),
-            (x_factor, y_factor, e_factor, e_factor),
-        );
+        let data = Matrix::new(zip!(x, y, l, h), (x_factor, y_factor, e_factor, e_factor));
         self.plots.push(Plot::new(data, configure(&mut ErrorBarDefault::default(style))));
         self
     }
 }
 
 // TODO XY error bar
-//pub struct XyErrorBar<X, Y, XL, XH, YL, YH> {
-    //x: X,
-    //y: Y,
-    //x_low: XL,
-    //x_high: XH,
-    //y_low: YL,
-    //y_high: YH,
-//}
+// pub struct XyErrorBar<X, Y, XL, XH, YL, YH> {
+// x: X,
+// y: Y,
+// x_low: XL,
+// x_high: XH,
+// y_low: YL,
+// y_high: YH,
+// }
 
 // TODO Symmetric error bars
-//pub enum SymmetricErrorBar {
-    //XSymmetricErrorBar { x: X, y: Y, x_delta: D },
-    //XSymmetricErrorLines { x: X, y: Y, x_delta: D },
-    //YSymmetricErrorBar { x: X, y: Y, y_delta: D },
-    //YSymmetricErrorLines { x: X, y: Y, y_delta: D },
-//}
+// pub enum SymmetricErrorBar {
+// XSymmetricErrorBar { x: X, y: Y, x_delta: D },
+// XSymmetricErrorLines { x: X, y: Y, x_delta: D },
+// YSymmetricErrorBar { x: X, y: Y, y_delta: D },
+// YSymmetricErrorLines { x: X, y: Y, y_delta: D },
+// }

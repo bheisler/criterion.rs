@@ -1,9 +1,7 @@
 //! A collection of the most used traits, structs and enums
 
-pub use {
-    Axes, Axis, BoxWidth, Color, Figure, FontSize, Grid, Key, LineType, LineWidth, Opacity,
-    PointSize, PointType, Range, Scale, ScaleFactor, Size, Terminal, TicLabels,
-};
+pub use {Axes, Axis, BoxWidth, Color, Figure, FontSize, Grid, Key, LineType, LineWidth, Opacity,
+         PointSize, PointType, Range, Scale, ScaleFactor, Size, Terminal, TicLabels};
 pub use candlestick::Candlesticks;
 pub use curve::Curve::{Dots, Impulses, Lines, LinesPoints, Points, Steps};
 pub use errorbar::ErrorBar::{XErrorBars, XErrorLines, YErrorBars, YErrorLines};

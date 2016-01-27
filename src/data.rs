@@ -35,9 +35,9 @@ pub struct Matrix {
 }
 
 impl Matrix {
-    pub fn new<I>(rows: I, scale: <I::Item as Row>::Scale) -> Matrix where
-        I: Iterator,
-        I::Item: Row,
+    pub fn new<I>(rows: I, scale: <I::Item as Row>::Scale) -> Matrix
+        where I: Iterator,
+              I::Item: Row
     {
         let ncols = I::Item::ncols();
         let bytes_per_row = ncols * mem::size_of::<f64>();
@@ -80,7 +80,10 @@ pub trait Row {
     fn ncols() -> usize;
 }
 
-impl<A, B> Row for (A, B) where A: Data, B: Data {
+impl<A, B> Row for (A, B)
+    where A: Data,
+          B: Data
+{
     type Scale = (f64, f64);
 
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64)) {
@@ -95,7 +98,11 @@ impl<A, B> Row for (A, B) where A: Data, B: Data {
     }
 }
 
-impl<A, B, C> Row for (A, B, C) where A: Data, B: Data, C: Data {
+impl<A, B, C> Row for (A, B, C)
+    where A: Data,
+          B: Data,
+          C: Data
+{
     type Scale = (f64, f64, f64);
 
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64)) {
@@ -111,7 +118,12 @@ impl<A, B, C> Row for (A, B, C) where A: Data, B: Data, C: Data {
     }
 }
 
-impl<A, B, C, D> Row for (A, B, C, D) where A: Data, B: Data, C: Data, D: Data {
+impl<A, B, C, D> Row for (A, B, C, D)
+    where A: Data,
+          B: Data,
+          C: Data,
+          D: Data
+{
     type Scale = (f64, f64, f64, f64);
 
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64, f64)) {
@@ -128,7 +140,13 @@ impl<A, B, C, D> Row for (A, B, C, D) where A: Data, B: Data, C: Data, D: Data {
     }
 }
 
-impl<A, B, C, D, E> Row for (A, B, C, D, E) where A: Data, B: Data, C: Data, D: Data, E: Data {
+impl<A, B, C, D, E> Row for (A, B, C, D, E)
+    where A: Data,
+          B: Data,
+          C: Data,
+          D: Data,
+          E: Data
+{
     type Scale = (f64, f64, f64, f64, f64);
 
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64, f64, f64)) {

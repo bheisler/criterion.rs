@@ -5,14 +5,12 @@ use {Axis, Default, Display, Grid, Script};
 /// Gridline properties
 #[derive(Clone, Copy)]
 pub struct Properties {
-    hidden: bool
+    hidden: bool,
 }
 
 impl Default for Properties {
     fn default() -> Properties {
-        Properties {
-            hidden: true,
-        }
+        Properties { hidden: true }
     }
 }
 

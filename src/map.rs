@@ -5,7 +5,9 @@ pub mod axis {
 
     const LENGTH: usize = 4;
 
-    pub struct Items<'a, T> where T: 'a {
+    pub struct Items<'a, T>
+        where T: 'a
+    {
         map: &'a Map<T>,
         state: Option<Axis>,
     }
@@ -18,7 +20,7 @@ pub mod axis {
                 self.state = key.next();
 
                 if let Some(value) = self.map.get(key) {
-                    return Some((key, value))
+                    return Some((key, value));
                 }
             }
 
@@ -62,7 +64,9 @@ pub mod axis {
         }
     }
 
-    impl<T> Clone for Map<T> where T: Clone {
+    impl<T> Clone for Map<T>
+        where T: Clone
+{
         fn clone(&self) -> Map<T> {
             Map([self.0[0].clone(), self.0[1].clone(), self.0[2].clone(), self.0[3].clone()])
         }
@@ -74,7 +78,9 @@ pub mod grid {
 
     const LENGTH: usize = 2;
 
-    pub struct Items<'a, T> where T: 'a {
+    pub struct Items<'a, T>
+        where T: 'a
+    {
         map: &'a Map<T>,
         state: Option<Grid>,
     }
@@ -87,7 +93,7 @@ pub mod grid {
                 self.state = key.next();
 
                 if let Some(value) = self.map.get(key) {
-                    return Some((key, value))
+                    return Some((key, value));
                 }
             }
 
@@ -131,7 +137,9 @@ pub mod grid {
         }
     }
 
-    impl<T> Clone for Map<T> where T:Clone {
+    impl<T> Clone for Map<T>
+        where T: Clone
+{
         fn clone(&self) -> Map<T> {
             Map([self.0[0].clone(), self.0[1].clone()])
         }
