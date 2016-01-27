@@ -2,13 +2,13 @@
 #![feature(plugin_registrar)]
 #![feature(rustc_private)]
 
-extern crate rustc;
+extern crate rustc_plugin;
 extern crate syntax;
 
-use rustc::plugin::Registry;
+use rustc_plugin::registry::Registry;
 use syntax::ast::{DUMMY_NODE_ID, DeclItem, Item, ItemFn, MetaItem, StmtDecl, self};
 use syntax::codemap::{Span, self};
-use syntax::ext::base::{ExtCtxt, Modifier};
+use syntax::ext::base::{ExtCtxt, MultiModifier, Annotatable};
 use syntax::ext::build::AstBuilder;
 use syntax::parse::token;
 use syntax::ptr::P;
@@ -18,7 +18,7 @@ use syntax::ptr::P;
 pub fn plugin_registrar(reg: &mut Registry) {
     reg.register_syntax_extension(
         token::intern("criterion"),
-        Modifier(Box::new(expand_meta_criterion)));
+        MultiModifier(Box::new(expand_meta_criterion)));
 }
 
 /// Expands the `#[criterion]` attribute
@@ -48,10 +48,10 @@ fn expand_meta_criterion(
     cx: &mut ExtCtxt,
     span: Span,
     _: &MetaItem,
-    item: P<Item>,
-) -> P<Item> {
-    match item.node {
-        ItemFn(..) => {
+    item: Annotatable,
+) -> Annotatable {
+    if let Annotatable::Item(item) = item {
+        if let ItemFn(..) = item.node {
             // Copy original function without attributes
             let routine = P(Item { attrs: Vec::new(), .. (*item).clone() });
 
@@ -63,7 +63,7 @@ fn expand_meta_criterion(
             let default_criterion = cx.expr_call_global(span, criterion_path, vec!());
 
             // `.bench("routine", routine);`
-            let routine_str = cx.expr_str(span, token::get_ident(routine.ident));
+            let routine_str = cx.expr_str(span, routine.ident.name.as_str());
             let routine_ident = cx.expr_ident(span, routine.ident);
             let bench_ident = token::str_to_ident("bench");
             let bench_call = cx.expr_method_call(span, default_criterion, bench_ident,
@@ -86,11 +86,14 @@ fn expand_meta_criterion(
             attrs.
                 push(cx.attribute(span, cx.meta_word(span, token::intern_and_get_ident("test"))));
 
-            P(Item { attrs: attrs, .. (*test).clone() })
-        },
-        _ => {
+            Annotatable::Item(P(Item { attrs: attrs, .. (*test).clone() }))
+        } else {
             cx.span_err(span, "#[criterion] only supported on functions");
-            item
-        },
+            Annotatable::Item(item)
+        }
+    } else {
+        cx.span_err(span, "#[criterion] only supported on functions");
+        item
     }
+
 }
