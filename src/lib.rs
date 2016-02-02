@@ -9,7 +9,6 @@
 
 #![deny(missing_docs)]
 #![feature(test)]
-#![feature(iter_cmp)]
 
 #[macro_use]
 extern crate log;
@@ -395,17 +394,22 @@ impl Plotting {
     }
 }
 
+/// A confidence interval representation
 #[derive(Clone, Copy, PartialEq, RustcDecodable, RustcEncodable)]
-struct ConfidenceInterval {
+pub struct ConfidenceInterval {
     confidence_level: f64,
     lower_bound: f64,
     upper_bound: f64,
 }
 
+///
 #[derive(Clone, Copy, PartialEq, RustcDecodable, RustcEncodable)]
-struct Estimate {
+pub struct Estimate {
+    /// The confidence interval for this estimate
     pub confidence_interval: ConfidenceInterval,
+    ///
     pub point_estimate: f64,
+    /// The standard error of this estimate
     pub standard_error: f64,
 }
 
