@@ -14,14 +14,14 @@ git = "https://github.com/rust-lang/log"
 git = "https://github.com/rust-lang/rustc-serialize"
 
 [dependencies.simplot]
-git = "https://github.com/brianw1/simplot.rs"
-branch = "brianw1/master"
+git = "https://github.com/japaric/simplot.rs"
 
 [dependencies.space]
 git = "https://github.com/japaric/space.rs"
 
 [dependencies.stats]
-git = "https://github.com/faern/stats.rs"
+git = "https://github.com/japaric/stats.rs"
+branch = "no-simd"
 
 [dependencies.time]
 git = "https://github.com/rust-lang/time"
