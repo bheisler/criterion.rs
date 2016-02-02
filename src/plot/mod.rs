@@ -44,7 +44,7 @@ pub fn pdf(data: Data<f64, f64>, labeled_sample: LabeledSample<f64>, id: &str) {
 
     let (x_scale, prefix) = scale_time(labeled_sample.max());
 
-    let &max_iters = data.x().as_slice().iter().max_by(|&&iters| iters as u64).unwrap();
+    let &max_iters = data.x().as_slice().iter().max_by_key(|&&iters| iters as u64).unwrap();
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
     let y_scale = 10f64.powi(-exponent);
 
