@@ -394,7 +394,8 @@ impl Plotting {
     }
 }
 
-/// A confidence interval representation
+// TODO make private again
+#[doc(hidden)]
 #[derive(Clone, Copy, PartialEq, RustcDecodable, RustcEncodable)]
 pub struct ConfidenceInterval {
     confidence_level: f64,
@@ -402,7 +403,8 @@ pub struct ConfidenceInterval {
     upper_bound: f64,
 }
 
-///
+// TODO make private again
+#[doc(hidden)]
 #[derive(Clone, Copy, PartialEq, RustcDecodable, RustcEncodable)]
 pub struct Estimate {
     /// The confidence interval for this estimate
