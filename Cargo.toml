@@ -7,6 +7,8 @@ version = "0.0.0"
 log = "0.3.5"
 rustc-serialize = "0.3.16"
 time = "0.1.34"
+
+[dev-dependencies]
 walkdir = "0.1.5"
 
 [dependencies.criterion_macros]
