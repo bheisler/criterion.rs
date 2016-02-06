@@ -1,24 +1,18 @@
+sudo: false
 language: rust
+rust: nightly
 
 env:
   global:
     - secure: gPGjVs0jJTU1ZbYG0LapuP6bwaQ79ao9wYMrqwLYwgkiLfDAcsJXHecp0PUUGCJnEZvAzv9hhjsmGpgACMc6h718gHnXcXdZFyXPeW0SLHl8ZBOAX84GqAbENXv33O6BmiYgti3ao5a3pLXBTUZIC6sTZiAuFTksdizLAUa/i/4=
-  matrix:
-    - WITH_GNUPLOT=true
-    - WITH_GNUPLOT=false
 
-before_install:
-  # This PPA has a newer version of gnuplot
-  - if [[ $WITH_GNUPLOT == 'true' ]]; then
-      sudo add-apt-repository ppa:gladky-anton/precise-backports -y;
-    fi
-  - sudo apt-get update -qq
-
-install:
-  - sudo apt-get install libblas-dev
-  - if [[ $WITH_GNUPLOT == 'true' ]]; then
-      sudo apt-get install -qq gnuplot;
-    fi
+matrix:
+  include:
+    - env: GNUPLOT=yes
+      addons:
+        apt:
+          packages:
+            - gnuplot
 
 script:
   - cargo build --verbose
