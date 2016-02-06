@@ -1,8 +1,5 @@
-#![feature(path_ext)]
-
 extern crate criterion;
 
-use std::fs::PathExt;
 use std::iter;
 use std::path::Path;
 
