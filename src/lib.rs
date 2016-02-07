@@ -1,40 +1,26 @@
-//! SIMD/BLAS accelerated statistics
+//! Statistics
 
 #![cfg_attr(test, allow(trivial_casts))]  // quickcheck
 #![cfg_attr(test, feature(test))]
 #![cfg_attr(test, plugin(quickcheck_macros))]
 #![deny(missing_docs)]
-#![deny(warnings)]
-#![feature(collections)]
-#![feature(core)]
+//#![deny(warnings)]
 #![feature(custom_attribute)]
+#![feature(fn_traits)]
 #![feature(plugin)]
-#![feature(scoped)]
 #![feature(unboxed_closures)]
 #![feature(unique)]
 
-extern crate blas;
 extern crate cast;
-extern crate float;
+extern crate floaty;
 extern crate num_cpus;
 extern crate rand;
-extern crate simd;
+extern crate thread_scoped;
 
-#[cfg(test)] extern crate test as stdtest;
-#[cfg(test)] extern crate approx;
+#[cfg(test)] #[macro_use] extern crate approx;
+#[cfg(test)] extern crate itertools;
 #[cfg(test)] extern crate quickcheck;
-#[cfg(test)] extern crate space;
-
-#[cfg(test)]
-macro_rules! approx_eq {
-    ($lhs:expr, $rhs:expr) => ({
-        let ref lhs = $lhs;
-        let ref rhs = $rhs;
-
-        ::approx::eq(lhs, rhs, ::approx::Abs::tol(1e-5)) ||
-        ::approx::eq(lhs, rhs, ::approx::Rel::tol(1e-5))
-    })
-}
+#[cfg(test)] extern crate test as stdtest;
 
 #[cfg(test)] mod bench;
 #[cfg(test)] mod test;
@@ -47,30 +33,25 @@ use std::mem;
 use std::ops::Deref;
 
 use cast::From;
+use floaty::Floaty;
 
 use univariate::Sample;
-
-/// A SIMD accelerated floating point number
-pub trait Float: blas::Dot + simd::traits::Simd + float::Float + Send + Sync {}
-
-impl Float for f32 {}
-impl Float for f64 {}
 
 /// The bootstrap distribution of some parameter
 pub struct Distribution<A>(Box<[A]>);
 
-impl<A> Distribution<A> where A: Float {
+impl<A> Distribution<A> where A: Floaty {
     /// Computes the confidence interval of the population parameter using percentiles
     ///
     /// # Panics
     ///
     /// Panics if the `confidence_level` is not in the `(0, 1)` range.
-    pub fn confidence_interval(&self, confidence_level: A) -> (A, A) where
-        usize: From<A, Output=Option<usize>>,
+    pub fn confidence_interval(&self, confidence_level: A) -> (A, A)
+        where usize: cast::From<A, Output=Result<usize, cast::Error>>,
     {
-        let _0 = A::from(0);
-        let _1 = A::from(1);
-        let _50 = A::from(50);
+        let _0 = A::cast(0);
+        let _1 = A::cast(1);
+        let _50 = A::cast(50);
 
         assert!(confidence_level > _0 && confidence_level < _1);
 
@@ -91,12 +72,12 @@ impl<A> Distribution<A> where A: Float {
         let n = self.0.len();
         let hits = self.0.iter().filter(|&&x| x < t).count();
 
-        let tails = A::from(match tails {
+        let tails = A::cast(match tails {
             Tails::One => 1,
             Tails::Two => 2,
         });
 
-        A::from(cmp::min(hits, n - hits)) / A::from(n) * tails
+        A::cast(cmp::min(hits, n - hits)) / A::cast(n) * tails
     }
 }
 
@@ -118,4 +99,18 @@ pub enum Tails {
     One,
     /// Two tailed test
     Two,
+}
+
+fn dot<A>(xs: &[A], ys: &[A]) -> A
+    where A: Floaty
+{
+    xs.iter().zip(ys).fold(A::cast(0), |acc, (&x, &y)| acc + x * y)
+}
+
+fn sum<A>(xs: &[A]) -> A
+    where A: Floaty
+{
+    use std::ops::Add;
+
+    xs.iter().cloned().fold(A::cast(0), Add::add)
 }

@@ -1,11 +1,11 @@
 use std::ptr::Unique;
-use std::{cmp, mem, thread};
+use std::{cmp, mem};
 
-use cast::From;
+use cast::{self, From as _0};
+use floaty::Floaty;
 use num_cpus;
-use simd::traits::Vector;
+use thread_scoped as thread;
 
-use Float;
 use tuple::{Tuple, TupledDistributions};
 use univariate::Percentiles;
 use univariate::resamples::Resamples;
@@ -34,7 +34,7 @@ impl<A> Sample<A> {
 }
 
 // TODO(rust-lang/rfcs#735) move this `impl` into a private percentiles module
-impl<A> Sample<A> where A: Float {
+impl<A> Sample<A> where A: Floaty {
     /// Creates a new sample from an existing slice
     ///
     /// # Panics
@@ -66,12 +66,11 @@ impl<A> Sample<A> where A: Float {
 
     /// Returns the arithmetic average of the sample
     ///
-    /// - Acceleration: SIMD
     /// - Time: `O(length)`
     pub fn mean(&self) -> A {
         let n = self.as_slice().len();
 
-        self.sum() / A::from(n)
+        self.sum() / A::cast(n)
     }
 
     /// Returns the median absolute deviation
@@ -81,7 +80,7 @@ impl<A> Sample<A> where A: Float {
     /// - Time: `O(length)`
     /// - Memory: `O(length)`
     pub fn median_abs_dev(&self, median: Option<A>) -> A where
-        usize: From<A, Output=Option<usize>>,
+        usize: cast::From<A, Output=Result<usize, cast::Error>>,
     {
         let median = median.unwrap_or_else(|| self.percentiles().median());
 
@@ -93,7 +92,7 @@ impl<A> Sample<A> where A: Float {
             mem::transmute(&*abs_devs)
         };
 
-        abs_devs.percentiles().median() * A::from(1.4826)
+        abs_devs.percentiles().median() * A::cast(1.4826)
     }
 
     /// Returns the median absolute deviation as a percentage of the median
@@ -101,9 +100,9 @@ impl<A> Sample<A> where A: Float {
     /// - Time: `O(length)`
     /// - Memory: `O(length)`
     pub fn median_abs_dev_pct(&self) -> A where
-        usize: From<A, Output=Option<usize>>,
+        usize: cast::From<A, Output=Result<usize, cast::Error>>,
     {
-        let _100 = A::from(100);
+        let _100 = A::cast(100);
         let median = self.percentiles().median();
         let mad = self.median_abs_dev(Some(median));
 
@@ -130,7 +129,7 @@ impl<A> Sample<A> where A: Float {
     /// - Time: `O(N log N) where N = length`
     /// - Memory: `O(length)`
     pub fn percentiles(&self) -> Percentiles<A> where
-        usize: From<A, Output=Option<usize>>,
+        usize: cast::From<A, Output=Result<usize, cast::Error>>,
     {
         use std::cmp::Ordering;
 
@@ -158,7 +157,6 @@ impl<A> Sample<A> where A: Float {
     ///
     /// The `mean` can be optionally passed along to speed up (2X) the computation
     ///
-    /// - Acceleration: SIMD
     /// - Time: `O(length)`
     pub fn std_dev(&self, mean: Option<A>) -> A {
         self.var(mean).sqrt()
@@ -166,10 +164,9 @@ impl<A> Sample<A> where A: Float {
 
     /// Returns the standard deviation as a percentage of the mean
     ///
-    /// - Acceleration: SIMD
     /// - Time: `O(length)`
     pub fn std_dev_pct(&self) -> A {
-        let _100 = A::from(100);
+        let _100 = A::cast(100);
         let mean = self.mean();
         let std_dev = self.std_dev(Some(mean));
 
@@ -178,21 +175,19 @@ impl<A> Sample<A> where A: Float {
 
     /// Returns the sum of all the elements of the sample
     ///
-    /// - Acceleration: SIMD
     /// - Time: `O(length)`
     pub fn sum(&self) -> A {
-        ::simd::sum(self.as_slice())
+        ::sum(self.as_slice())
     }
 
     /// Returns the t score between these two samples
     ///
-    /// - Acceleration: SIMD
     /// - Time: `O(length)`
     pub fn t(&self, other: &Sample<A>) -> A {
         let (x_bar, y_bar) = (self.mean(), other.mean());
         let (s2_x, s2_y) = (self.var(Some(x_bar)), other.var(Some(y_bar)));
-        let n_x = A::from(self.as_slice().len());
-        let n_y = A::from(other.as_slice().len());
+        let n_x = A::cast(self.as_slice().len());
+        let n_y = A::cast(other.as_slice().len());
         let num = x_bar - y_bar;
         let den = (s2_x / n_x + s2_y / n_y).sqrt();
 
@@ -203,25 +198,16 @@ impl<A> Sample<A> where A: Float {
     ///
     /// The `mean` can be optionally passed along to speed up (2X) the computation
     ///
-    /// - Acceleration: SIMD
     /// - Time: `O(length)`
     pub fn var(&self, mean: Option<A>) -> A {
+        use std::ops::Add;
+
         let mean = mean.unwrap_or_else(|| self.mean());
         let slice = self.as_slice();
 
-        let (head, body, tail) = A::Vector::cast(slice);
-        let mean_ = A::Vector::from_elem(mean);
-        let acc = body.iter().fold(A::Vector::zeroed(), |acc, &chunk| {
-            let diff = chunk - mean_;
-            acc + diff * diff
-        }).sum();
+        let sum = slice.iter().map(|&x| (x - mean).powi(2)).fold(A::cast(0), Add::add);
 
-        let sum = head.iter().chain(tail.iter()).fold(acc, |acc, &x| {
-            let diff = x - mean;
-            acc + diff * diff
-        });
-
-        sum / A::from(slice.len() - 1)
+        sum / A::cast(slice.len() - 1)
     }
 
     // TODO Remove the `T` parameter in favor of `S::Output`
@@ -283,14 +269,14 @@ impl<A> Sample<A> where A: Float {
 
     #[cfg(test)]
     pub fn iqr(&self) -> A where
-        usize: From<A, Output=Option<usize>>,
+        usize: cast::From<A, Output=Result<usize, cast::Error>>,
     {
         self.percentiles().iqr()
     }
 
     #[cfg(test)]
     pub fn median(&self) -> A where
-        usize: From<A, Output=Option<usize>>,
+        usize: cast::From<A, Output=Result<usize, cast::Error>>,
     {
         self.percentiles().median()
     }
@@ -319,7 +305,7 @@ mod test {
                         let lhs = ::univariate::Sample::new(slice).$stat();
                         let rhs = slice.$stat();
 
-                        TestResult::from_bool(approx_eq!(lhs, rhs))
+                        TestResult::from_bool(relative_eq!(lhs, rhs, max_relative = 1e-5))
                     } else {
                         TestResult::discard()
                     }
@@ -338,7 +324,7 @@ mod test {
                         let lhs = ::univariate::Sample::new(slice).$stat(None);
                         let rhs = slice.$stat();
 
-                        TestResult::from_bool(approx_eq!(lhs, rhs))
+                        TestResult::from_bool(relative_eq!(lhs, rhs, max_relative = 1e-5))
                     } else {
                         TestResult::discard()
                     }
@@ -361,7 +347,7 @@ mod test {
                         };
                         let rhs = slice.$stat();
 
-                        TestResult::from_bool(approx_eq!(lhs, rhs))
+                        TestResult::from_bool(relative_eq!(lhs, rhs, max_relative = 1e-5))
                     } else {
                         TestResult::discard()
                     }

@@ -10,11 +10,12 @@ pub mod mixed;
 pub mod outliers;
 
 use std::ptr::Unique;
-use std::{cmp, thread};
+use std::cmp;
 
+use floaty::Floaty;
 use num_cpus;
+use thread_scoped as thread;
 
-use Float;
 use tuple::{Tuple, TupledDistributions};
 
 use self::resamples::Resamples;
@@ -33,8 +34,8 @@ pub fn bootstrap<A, B, T, S>(
     nresamples: usize,
     statistic: S,
 ) -> T::Distributions where
-    A: Float,
-    B: Float,
+    A: Floaty,
+    B: Floaty,
     S: Fn(&Sample<A>, &Sample<B>) -> T,
     S: Sync,
     T: Tuple,

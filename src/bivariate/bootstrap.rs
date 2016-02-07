@@ -29,12 +29,12 @@ macro_rules! test {
                         y_means.as_slice().len() == nresamples &&
                         // No uninitialized values
                         x_means.as_slice().iter().all(|&x| {
-                            (x > x_min || approx_eq!(x, x_min)) &&
-                            (x < x_max || approx_eq!(x, x_max))
+                            (x > x_min || relative_eq!(x, x_min)) &&
+                            (x < x_max || relative_eq!(x, x_max))
                         }) &&
                         y_means.as_slice().iter().all(|&y| {
-                            (y > y_min || approx_eq!(y, y_min)) &&
-                            (y < y_max || approx_eq!(y, y_max))
+                            (y > y_min || relative_eq!(y, y_min)) &&
+                            (y < y_max || relative_eq!(y, y_max))
                         })
                     )
                 } else {

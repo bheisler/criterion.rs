@@ -1,19 +1,19 @@
 use std::mem;
 
+use floaty::Floaty;
 use rand::distributions::{IndependentSample, Range};
 use rand::{Rng, XorShiftRng};
 
-use Float;
 use univariate::Sample;
 
-pub struct Resamples<'a, A> where A: 'a + Float {
+pub struct Resamples<'a, A> where A: 'a + Floaty {
     range: Range<usize>,
     rng: XorShiftRng,
     sample: &'a [A],
     stage: Option<Vec<A>>,
 }
 
-impl <'a, A> Resamples<'a, A> where A: 'a + Float {
+impl <'a, A> Resamples<'a, A> where A: 'a + Floaty {
     pub fn new(sample: &'a Sample<A>) -> Resamples<'a, A> {
         let slice = sample.as_slice();
 

@@ -6,11 +6,12 @@ mod resamples;
 pub mod regression;
 
 use std::ptr::Unique;
-use std::{cmp, mem, thread};
+use std::{cmp, mem};
 
+use floaty::Floaty;
 use num_cpus;
+use thread_scoped as thread;
 
-use Float;
 use bivariate::resamples::Resamples;
 use tuple::{Tuple, TupledDistributions};
 use univariate::Sample;
@@ -31,7 +32,22 @@ impl<'a, X, Y> Clone for Data<'a, X, Y> {
     }
 }
 
-impl<'a, X, Y> Data<'a, X, Y> where X: Float, Y: Float {
+impl<'a, X, Y> Data<'a, X, Y> {
+    /// Returns the length of the data set
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    /// Iterate over the data set
+    pub fn iter(&self) -> Pairs<'a, X, Y> {
+        Pairs {
+            data: *self,
+            state: 0,
+        }
+    }
+}
+
+impl<'a, X, Y> Data<'a, X, Y> where X: Floaty, Y: Floaty {
     /// Creates a new data set from two existing slices
     pub fn new(xs: &'a [X], ys: &'a [Y]) -> Data<'a, X, Y> {
         assert!(
@@ -108,6 +124,32 @@ impl<'a, X, Y> Data<'a, X, Y> where X: Float, Y: Float {
     pub fn y(&self) -> &'a Sample<Y> {
         unsafe {
             mem::transmute(self.1)
+        }
+    }
+}
+
+/// Iterator over `Data`
+pub struct Pairs<'a, X: 'a, Y: 'a> {
+    data: Data<'a, X, Y>,
+    state: usize,
+}
+
+impl<'a, X, Y> Iterator for Pairs<'a, X, Y> {
+    type Item = (&'a X, &'a Y);
+
+    fn next(&mut self) -> Option<(&'a X, &'a Y)> {
+        if self.state < self.data.len() {
+            let i = self.state;
+            self.state += 1;
+
+            unsafe {
+                Some((
+                    self.data.0.get_unchecked(i),
+                    self.data.1.get_unchecked(i),
+                ))
+            }
+        } else {
+            None
         }
     }
 }

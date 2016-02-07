@@ -24,8 +24,8 @@ macro_rules! test {
                         means.as_slice().len() == nresamples &&
                         // No uninitialized values
                         means.as_slice().iter().all(|&x| {
-                            (x > min || approx_eq!(x, min)) &&
-                            (x < max || approx_eq!(x, max))
+                            (x > min || relative_eq!(x, min)) &&
+                            (x < max || relative_eq!(x, max))
                         })
                     )
                 } else {
@@ -53,12 +53,12 @@ macro_rules! test {
                         medians.as_slice().len() == nresamples &&
                         // No uninitialized values
                         means.as_slice().iter().all(|&x| {
-                            (x > min || approx_eq!(x, min)) &&
-                            (x < max || approx_eq!(x, max))
+                            (x > min || relative_eq!(x, min)) &&
+                            (x < max || relative_eq!(x, max))
                         }) &&
                         medians.as_slice().iter().all(|&x| {
-                            (x > min || approx_eq!(x, min)) &&
-                            (x < max || approx_eq!(x, max))
+                            (x > min || relative_eq!(x, min)) &&
+                            (x < max || relative_eq!(x, max))
                         })
                     )
                 } else {
@@ -92,8 +92,8 @@ macro_rules! test {
                         distribution.as_slice().len() == nresamples &&
                         // No uninitialized values
                         distribution.as_slice().iter().all(|&x| {
-                            (x > min || approx_eq!(x, min)) &&
-                            (x < max || approx_eq!(x, max))
+                            (x > min || relative_eq!(x, min)) &&
+                            (x < max || relative_eq!(x, max))
                         })
                     )
                 } else {
@@ -127,8 +127,8 @@ macro_rules! test {
                         distribution.as_slice().len() == nresamples &&
                         // No uninitialized values
                         distribution.as_slice().iter().all(|&x| {
-                            (x > min || approx_eq!(x, min)) &&
-                            (x < max || approx_eq!(x, max))
+                            (x > min || relative_eq!(x, min)) &&
+                            (x < max || relative_eq!(x, max))
                         })
                     )
                 } else {

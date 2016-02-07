@@ -1,11 +1,12 @@
 //! Mixed bootstrap
 
 use std::ptr::Unique;
-use std::{cmp, mem, thread};
+use std::{cmp, mem};
 
+use floaty::Floaty;
 use num_cpus;
+use thread_scoped as thread;
 
-use Float;
 use tuple::{Tuple, TupledDistributions};
 use univariate::Sample;
 use univariate::resamples::Resamples;
@@ -17,7 +18,7 @@ pub fn bootstrap<A, T, S>(
     nresamples: usize,
     statistic: S,
 ) -> T::Distributions where
-    A: Float,
+    A: Floaty,
     S: Fn(&Sample<A>, &Sample<A>) -> T + Sync,
     T: Tuple,
     T::Distributions: Send,
@@ -26,8 +27,8 @@ pub fn bootstrap<A, T, S>(
     let n_a = a.as_slice().len();
     let n_b = b.as_slice().len();
     let mut c = Vec::with_capacity(n_a + n_b);
-    c.push_all(a.as_slice());
-    c.push_all(b.as_slice());
+    c.extend_from_slice(a.as_slice());
+    c.extend_from_slice(b.as_slice());
 
     unsafe {
         //let c: &Sample<A> = mem::transmute(c.as_slice());

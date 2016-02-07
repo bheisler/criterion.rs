@@ -41,9 +41,9 @@ use std::iter::IntoIterator;
 use std::ops::{Deref, Index};
 use std::slice;
 
-use cast::From;
+use cast::{self, From as _0};
+use floaty::Floaty;
 
-use Float;
 use univariate::Sample;
 
 use self::Label::*;
@@ -57,12 +57,12 @@ use self::Label::*;
 /// `IndexGet` trait lands in stdlib, the indexing operation will return a `(data_point, label)`
 /// pair.
 #[derive(Clone, Copy)]
-pub struct LabeledSample<'a, A> where A: 'a + Float {
+pub struct LabeledSample<'a, A> where A: 'a + Floaty {
     fences: (A, A, A, A),
     sample: &'a Sample<A>,
 }
 
-impl<'a, A> LabeledSample<'a, A> where A: Float {
+impl<'a, A> LabeledSample<'a, A> where A: Floaty {
     /// Returns the number of data points per label
     ///
     /// - Time: `O(length)`
@@ -106,7 +106,7 @@ impl<'a, A> LabeledSample<'a, A> where A: Float {
     }
 }
 
-impl<'a, A> Deref for LabeledSample<'a, A> where A: Float {
+impl<'a, A> Deref for LabeledSample<'a, A> where A: Floaty {
     type Target = Sample<A>;
 
     fn deref(&self) -> &Sample<A> {
@@ -115,7 +115,7 @@ impl<'a, A> Deref for LabeledSample<'a, A> where A: Float {
 }
 
 // FIXME Use the `IndexGet` trait
-impl<'a, A> Index<usize> for LabeledSample<'a, A> where A: Float {
+impl<'a, A> Index<usize> for LabeledSample<'a, A> where A: Floaty {
     type Output = Label;
 
     fn index(&self, i: usize) -> &Label {
@@ -142,7 +142,7 @@ impl<'a, A> Index<usize> for LabeledSample<'a, A> where A: Float {
     }
 }
 
-impl<'a, 'b, A> IntoIterator for &'b LabeledSample<'a, A> where A: Float {
+impl<'a, 'b, A> IntoIterator for &'b LabeledSample<'a, A> where A: Floaty {
     type Item = (A, Label);
     type IntoIter = Iter<'a, A>;
 
@@ -152,12 +152,12 @@ impl<'a, 'b, A> IntoIterator for &'b LabeledSample<'a, A> where A: Float {
 }
 
 /// Iterator over the labeled data
-pub struct Iter<'a, A> where A: 'a + Float {
+pub struct Iter<'a, A> where A: 'a + Floaty {
     fences: (A, A, A, A),
     iter: slice::Iter<'a, A>,
 }
 
-impl<'a, A> Iterator for Iter<'a, A> where A: Float {
+impl<'a, A> Iterator for Iter<'a, A> where A: Floaty {
     type Item = (A, Label);
 
     fn next(&mut self) -> Option<(A, Label)> {
@@ -245,16 +245,16 @@ impl Label {
 ///
 /// - Time: `O(N log N) where N = length`
 pub fn classify<A>(sample: &Sample<A>) -> LabeledSample<A> where
-    A: Float,
-    usize: From<A, Output=Option<usize>>,
+    A: Floaty,
+    usize: cast::From<A, Output=Result<usize, cast::Error>>,
 {
     let (q1, _, q3) = sample.percentiles().quartiles();
     let iqr = q3 - q1;
 
     // Mild
-    let k_m = A::from(1.5_f32);
+    let k_m = A::cast(1.5_f32);
     // Severe
-    let k_s = A::from(3);
+    let k_s = A::cast(3);
 
     LabeledSample {
         fences: (q1 - k_s * iqr, q1 - k_m * iqr, q3 + k_m * iqr, q3 + k_s * iqr),
