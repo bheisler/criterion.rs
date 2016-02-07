@@ -12,7 +12,7 @@
 #![feature(unique)]
 
 extern crate cast;
-extern crate float;
+extern crate floaty;
 extern crate num_cpus;
 extern crate rand;
 extern crate thread_scoped;
@@ -44,30 +44,25 @@ use std::mem;
 use std::ops::Deref;
 
 use cast::From;
+use floaty::Floaty;
 
 use univariate::Sample;
-
-/// A floating point number
-pub trait Float: float::Float + Send + Sync {}
-
-impl Float for f32 {}
-impl Float for f64 {}
 
 /// The bootstrap distribution of some parameter
 pub struct Distribution<A>(Box<[A]>);
 
-impl<A> Distribution<A> where A: Float {
+impl<A> Distribution<A> where A: Floaty {
     /// Computes the confidence interval of the population parameter using percentiles
     ///
     /// # Panics
     ///
     /// Panics if the `confidence_level` is not in the `(0, 1)` range.
-    pub fn confidence_interval(&self, confidence_level: A) -> (A, A) where
-        usize: From<A, Output=Option<usize>>,
+    pub fn confidence_interval(&self, confidence_level: A) -> (A, A)
+        where usize: cast::From<A, Output=Result<usize, cast::Error>>,
     {
-        let _0 = A::from(0);
-        let _1 = A::from(1);
-        let _50 = A::from(50);
+        let _0 = A::cast(0);
+        let _1 = A::cast(1);
+        let _50 = A::cast(50);
 
         assert!(confidence_level > _0 && confidence_level < _1);
 
@@ -88,12 +83,12 @@ impl<A> Distribution<A> where A: Float {
         let n = self.0.len();
         let hits = self.0.iter().filter(|&&x| x < t).count();
 
-        let tails = A::from(match tails {
+        let tails = A::cast(match tails {
             Tails::One => 1,
             Tails::Two => 2,
         });
 
-        A::from(cmp::min(hits, n - hits)) / A::from(n) * tails
+        A::cast(cmp::min(hits, n - hits)) / A::cast(n) * tails
     }
 }
 
@@ -118,15 +113,15 @@ pub enum Tails {
 }
 
 fn dot<A>(xs: &[A], ys: &[A]) -> A
-    where A: Float
+    where A: Floaty
 {
-    xs.iter().zip(ys).fold(A::from(0), |acc, (&x, &y)| acc + x * y)
+    xs.iter().zip(ys).fold(A::cast(0), |acc, (&x, &y)| acc + x * y)
 }
 
 fn sum<A>(xs: &[A]) -> A
-    where A: Float
+    where A: Floaty
 {
     use std::ops::Add;
 
-    xs.iter().cloned().fold(A::from(0), Add::add)
+    xs.iter().cloned().fold(A::cast(0), Add::add)
 }

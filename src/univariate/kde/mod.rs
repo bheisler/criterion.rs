@@ -4,23 +4,23 @@ pub mod kernel;
 
 use std::ptr;
 
-use cast::From;
+use cast::From as _0;
+use floaty::Floaty;
 use num_cpus;
 use thread_scoped as thread;
 
-use Float;
 use univariate::Sample;
 
 use self::kernel::Kernel;
 
 /// Univariate kernel density estimator
-pub struct Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
+pub struct Kde<'a, A, K> where A: 'a + Floaty, K: Kernel<A> {
     bandwidth: A,
     kernel: K,
     sample: &'a Sample<A>,
 }
 
-impl<'a, A, K> Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
+impl<'a, A, K> Kde<'a, A, K> where A: 'a + Floaty, K: Kernel<A> {
     /// Creates a new kernel density estimator from the `sample`, using a kernel `k` and estimating
     /// the bandwidth using the method `bw`
     pub fn new(sample: &'a Sample<A>, k: K, bw: Bandwidth<A>) -> Kde<'a, A, K> {
@@ -71,13 +71,13 @@ impl<'a, A, K> Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
     }
 }
 
-impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
+impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + Floaty, K: Kernel<A> {
     /// Estimates the probability density of `x`
     extern "rust-call" fn call(&self, (x,): (A,)) -> A {
-        let _0 = A::from(0);
+        let _0 = A::cast(0);
         let slice = self.sample.as_slice();
         let h = self.bandwidth;
-        let n = A::from(slice.len());
+        let n = A::cast(slice.len());
 
         let sum = slice.iter().fold(_0, |acc, &x_i| acc + (self.kernel)((x - x_i) / h));
 
@@ -85,13 +85,13 @@ impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
     }
 }
 
-impl<'a, A, K> FnMut<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
+impl<'a, A, K> FnMut<(A,)> for Kde<'a, A, K> where A: 'a + Floaty, K: Kernel<A> {
     extern "rust-call" fn call_mut(&mut self, args: (A,)) -> A {
         self.call(args)
     }
 }
 
-impl<'a, A, K> FnOnce<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
+impl<'a, A, K> FnOnce<(A,)> for Kde<'a, A, K> where A: 'a + Floaty, K: Kernel<A> {
     type Output = A;
 
     extern "rust-call" fn call_once(self, args: (A,)) -> A {
@@ -100,20 +100,20 @@ impl<'a, A, K> FnOnce<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> 
 }
 
 /// Method to estimate the bandwidth
-pub enum Bandwidth<A> where A: Float {
+pub enum Bandwidth<A> where A: Floaty {
     /// Use this value as the bandwidth
     Manual(A),
     /// Use Silverman's rule of thumb to estimate the bandwidth from the sample
     Silverman,
 }
 
-impl<A> Bandwidth<A> where A: Float {
+impl<A> Bandwidth<A> where A: Floaty {
     fn estimate(self, sample: &Sample<A>) -> A {
         match self {
             Bandwidth::Silverman => {
-                let factor = A::from(4. / 3.);
-                let exponent = A::from(1. / 5.);
-                let n = A::from(sample.as_slice().len());
+                let factor = A::cast(4. / 3.);
+                let exponent = A::cast(1. / 5.);
+                let n = A::cast(sample.as_slice().len());
                 let sigma = sample.std_dev(None);
 
                 sigma * (factor / n).powf(exponent)

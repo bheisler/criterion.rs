@@ -8,10 +8,10 @@ pub mod regression;
 use std::ptr::Unique;
 use std::{cmp, mem};
 
+use floaty::Floaty;
 use num_cpus;
 use thread_scoped as thread;
 
-use Float;
 use bivariate::resamples::Resamples;
 use tuple::{Tuple, TupledDistributions};
 use univariate::Sample;
@@ -47,7 +47,7 @@ impl<'a, X, Y> Data<'a, X, Y> {
     }
 }
 
-impl<'a, X, Y> Data<'a, X, Y> where X: Float, Y: Float {
+impl<'a, X, Y> Data<'a, X, Y> where X: Floaty, Y: Floaty {
     /// Creates a new data set from two existing slices
     pub fn new(xs: &'a [X], ys: &'a [Y]) -> Data<'a, X, Y> {
         assert!(

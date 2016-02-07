@@ -3,10 +3,10 @@
 use std::ptr::Unique;
 use std::{cmp, mem};
 
+use floaty::Floaty;
 use num_cpus;
 use thread_scoped as thread;
 
-use Float;
 use tuple::{Tuple, TupledDistributions};
 use univariate::Sample;
 use univariate::resamples::Resamples;
@@ -18,7 +18,7 @@ pub fn bootstrap<A, T, S>(
     nresamples: usize,
     statistic: S,
 ) -> T::Distributions where
-    A: Float,
+    A: Floaty,
     S: Fn(&Sample<A>, &Sample<A>) -> T + Sync,
     T: Tuple,
     T::Distributions: Send,

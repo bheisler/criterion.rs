@@ -1,15 +1,15 @@
 //! Regression analysis
 
-use cast::From;
+use cast::From as _0;
+use floaty::Floaty;
 
-use Float;
 use bivariate::Data;
 
 /// A straight line that passes through the origin `y = m * x`
 #[derive(Clone, Copy)]
-pub struct Slope<A>(pub A) where A: Float;
+pub struct Slope<A>(pub A) where A: Floaty;
 
-impl<A> Slope<A> where A: Float {
+impl<A> Slope<A> where A: Floaty {
     /// Fits the data to a straight line that passes through the origin using ordinary least
     /// squares
     ///
@@ -28,13 +28,13 @@ impl<A> Slope<A> where A: Float {
     ///
     /// - Time: `O(length)`
     pub fn r_squared(&self, data: Data<A, A>) -> A {
-        let _0 = A::from(0);
-        let _1 = A::from(1);
+        let _0 = A::cast(0);
+        let _1 = A::cast(1);
         let m = self.0;
         let xs = data.0;
         let ys = data.1;
 
-        let n = A::from(xs.len());
+        let n = A::cast(xs.len());
         let y_bar = ::sum(ys) / n;
 
         let mut ss_res = _0;
@@ -51,14 +51,14 @@ impl<A> Slope<A> where A: Float {
 
 /// A straight line `y = m * x + b`
 #[derive(Clone, Copy)]
-pub struct StraightLine<A> where A: Float {
+pub struct StraightLine<A> where A: Floaty {
     /// The y-intercept of the line
     pub intercept: A,
     /// The slope of the line
     pub slope: A,
 }
 
-impl<A> StraightLine<A> where A: Float {
+impl<A> StraightLine<A> where A: Floaty {
     /// Fits the data to a straight line using ordinary least squares
     ///
     /// - Time: `O(length)`
@@ -69,7 +69,7 @@ impl<A> StraightLine<A> where A: Float {
         let x2 = ::dot(xs, xs);
         let xy = ::dot(xs, ys);
 
-        let n = A::from(xs.len());
+        let n = A::cast(xs.len());
         let x2_bar = x2 / n;
         let x_bar = ::sum(xs) / n;
         let xy_bar = xy / n;
@@ -94,14 +94,14 @@ impl<A> StraightLine<A> where A: Float {
     ///
     /// - Time: `O(length)`
     pub fn r_squared(&self, data: Data<A, A>) -> A {
-        let _0 = A::from(0);
-        let _1 = A::from(1);
+        let _0 = A::cast(0);
+        let _1 = A::cast(1);
         let m = self.slope;
         let b = self.intercept;
         let xs = data.0;
         let ys = data.1;
 
-        let n = A::from(xs.len());
+        let n = A::cast(xs.len());
         let y_bar = ::sum(ys) / n;
 
         let mut ss_res = _0;
