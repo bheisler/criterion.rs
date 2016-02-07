@@ -134,8 +134,8 @@ macro_rules! test {
                     let r_squared = sl.r_squared(data);
 
                     TestResult::from_bool(
-                        (r_squared > 0. || approx_eq!(r_squared, 0.)) &&
-                            (r_squared < 1. || approx_eq!(r_squared, 1.))
+                        (r_squared > 0. || relative_eq!(r_squared, 0.)) &&
+                            (r_squared < 1. || relative_eq!(r_squared, 1.))
                     )
                 } else {
                     TestResult::discard()

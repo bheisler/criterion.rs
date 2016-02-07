@@ -17,21 +17,10 @@ extern crate num_cpus;
 extern crate rand;
 extern crate thread_scoped;
 
-#[cfg(test)] extern crate approx;
+#[cfg(test)] #[macro_use] extern crate approx;
 #[cfg(test)] extern crate itertools;
 #[cfg(test)] extern crate quickcheck;
 #[cfg(test)] extern crate test as stdtest;
-
-#[cfg(test)]
-macro_rules! approx_eq {
-    ($lhs:expr, $rhs:expr) => ({
-        let ref lhs = $lhs;
-        let ref rhs = $rhs;
-
-        ::approx::eq(lhs, rhs, ::approx::Abs::tol(1e-5)) ||
-        ::approx::eq(lhs, rhs, ::approx::Rel::tol(1e-5))
-    })
-}
 
 #[cfg(test)] mod bench;
 #[cfg(test)] mod test;

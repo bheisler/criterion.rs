@@ -305,7 +305,7 @@ mod test {
                         let lhs = ::univariate::Sample::new(slice).$stat();
                         let rhs = slice.$stat();
 
-                        TestResult::from_bool(approx_eq!(lhs, rhs))
+                        TestResult::from_bool(relative_eq!(lhs, rhs, max_relative = 1e-5))
                     } else {
                         TestResult::discard()
                     }
@@ -324,7 +324,7 @@ mod test {
                         let lhs = ::univariate::Sample::new(slice).$stat(None);
                         let rhs = slice.$stat();
 
-                        TestResult::from_bool(approx_eq!(lhs, rhs))
+                        TestResult::from_bool(relative_eq!(lhs, rhs, max_relative = 1e-5))
                     } else {
                         TestResult::discard()
                     }
@@ -347,7 +347,7 @@ mod test {
                         };
                         let rhs = slice.$stat();
 
-                        TestResult::from_bool(approx_eq!(lhs, rhs))
+                        TestResult::from_bool(relative_eq!(lhs, rhs, max_relative = 1e-5))
                     } else {
                         TestResult::discard()
                     }

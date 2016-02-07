@@ -44,7 +44,7 @@ macro_rules! test {
 
                 #[quickcheck]
                 fn symmetric(x: $ty) -> bool {
-                    approx_eq!(Gaussian(-x), Gaussian(x))
+                    relative_eq!(Gaussian(-x), Gaussian(x))
                 }
 
                 // Any [a b] integral should be in the range [0 1]
@@ -69,7 +69,7 @@ macro_rules! test {
                         }
 
                         TestResult::from_bool(
-                            (acc > 0. || approx_eq!(acc, 0.)) && (acc < 1. || approx_eq!(acc, 1.)))
+                            (acc > 0. || relative_eq!(acc, 0.)) && (acc < 1. || relative_eq!(acc, 1.)))
                     }
                 }
             }

@@ -132,10 +132,8 @@ macro_rules! test {
             use univariate::kde::kernel::Gaussian;
             use univariate::kde::{Bandwidth, Kde};
 
-            // FIXME flaky test for `f32`
             // The [-inf inf] integral of the estimated PDF should be one
             #[quickcheck]
-            #[ignore]
             fn integral(size: usize, start: usize) -> TestResult {
                 const DX: $ty = 1e-3;
 
@@ -161,7 +159,7 @@ macro_rules! test {
                         acc += DX * y / 2.;
                     }
 
-                    TestResult::from_bool(approx_eq!(acc, 1.))
+                    TestResult::from_bool(relative_eq!(acc, 1., epsilon = 2e-5))
                 } else {
                     TestResult::discard()
                 }
