@@ -1,24 +1,21 @@
 [package]
-
 authors = ["Jorge Aparicio <japaricious@gmail.com>"]
 name = "stats"
 version = "0.0.0"
 
 [dependencies]
+cast = "0.1.0"
+floaty = "0.1.0"
 num_cpus = "0.2.10"
 rand = "0.3.13"
 thread-scoped = "1.0.1"
-cast = { git = "https://github.com/japaric/cast.rs" }
-floaty = { git = "https://github.com/japaric/float.rs" }
+
+[dev-dependencies]
+quickcheck = "0.2.25"
+quickcheck_macros = "0.2.25"
 
 [dev-dependencies.approx]
 git = "https://github.com/japaric/approx.rs"
-
-[dev-dependencies.quickcheck]
-git = "https://github.com/burntsushi/quickcheck"
-
-[dev-dependencies.quickcheck_macros]
-git = "https://github.com/burntsushi/quickcheck"
 
 [dev-dependencies.space]
 git = "https://github.com/japaric/space.rs"
