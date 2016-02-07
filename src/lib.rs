@@ -32,6 +32,7 @@ mod routine;
 use std::fmt;
 use std::iter::IntoIterator;
 use std::process::Command;
+use std::default::Default;
 
 use rustc_serialize::json;
 use std::fs::File;
@@ -87,7 +88,8 @@ pub struct Criterion {
     warm_up_time_ns: u64,
 }
 
-impl Criterion {
+impl Default for Criterion {
+
     /// Creates a benchmark manager with the following default settings:
     ///
     /// - Sample size: 100 measurements
@@ -98,8 +100,7 @@ impl Criterion {
     /// - Confidence level: 0.95
     /// - Significance level: 0.05
     /// - Plotting: enabled (if gnuplot is available)
-    // TODO (UFCS) remove this method and implement the `Default` trait
-    pub fn default() -> Criterion {
+    fn default() -> Criterion {
         let plotting = if simplot::version().is_ok() {
             Plotting::Enabled
         } else {
@@ -119,6 +120,9 @@ impl Criterion {
             warm_up_time_ns: 3_000_000_000,
         }
     }
+}
+
+impl Criterion {
 
     /// Changes the size of the sample
     ///
