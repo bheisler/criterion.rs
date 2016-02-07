@@ -21,5 +21,4 @@ git = "https://github.com/japaric/simplot.rs"
 git = "https://github.com/japaric/space.rs"
 
 [dependencies.stats]
-branch = "no-simd"
 git = "https://github.com/japaric/stats.rs"
