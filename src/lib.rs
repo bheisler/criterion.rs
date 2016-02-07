@@ -17,10 +17,10 @@ extern crate num_cpus;
 extern crate rand;
 extern crate thread_scoped;
 
-#[cfg(test)] extern crate test as stdtest;
 #[cfg(test)] extern crate approx;
+#[cfg(test)] extern crate itertools;
 #[cfg(test)] extern crate quickcheck;
-#[cfg(test)] extern crate space;
+#[cfg(test)] extern crate test as stdtest;
 
 #[cfg(test)]
 macro_rules! approx_eq {

@@ -204,7 +204,7 @@ macro_rules! bench {
             fn map(b: &mut Bencher) {
                 let data = ::test::vec(SAMPLE_SIZE, 0).unwrap();
                 let kde = Kde::new(Sample::new(&data), Gaussian, Bandwidth::Silverman);
-                let xs: Vec<_> = ::space::linspace::<$ty>(0., 1., KDE_POINTS).collect();
+                let xs: Vec<_> = ::itertools::linspace::<$ty>(0., 1., KDE_POINTS).collect();
 
                 b.iter(|| {
                     kde.map(&xs)

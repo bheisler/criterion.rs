@@ -11,11 +11,9 @@ rand = "0.3.13"
 thread-scoped = "1.0.1"
 
 [dev-dependencies]
+itertools = "0.4.7"
 quickcheck = "0.2.25"
 quickcheck_macros = "0.2.25"
 
 [dev-dependencies.approx]
 git = "https://github.com/japaric/approx.rs"
-
-[dev-dependencies.space]
-git = "https://github.com/japaric/space.rs"
