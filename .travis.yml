@@ -1,24 +1,31 @@
 sudo: false
 language: rust
-rust:
-  - nightly
+
+rust: nightly
 
 addons:
   apt:
     packages:
       - gnuplot
 
-env:
-  global:
-    - secure: C2Oij4OPM2pdkbpEV6bsCJ8PpqDk2NtjFhFiO+4ZlYrRCQnbv+TAOuWNj5aX1EOWPlMQdP/95VrEOizUcK1twsCuc6d8PnAoCu8WnLRsOSO8GftVynC+CEJSnaDpAVO3N23f5jrCsKQhZx9R/hADpY5ni2ik0rKNWGllaYzuUCc=
+before_script:
+  - |
+      pip install 'travis-cargo<0.2' --user &&
+      export PATH=$HOME/.local/bin:$PATH
 
 script:
-  - cargo build --verbose
-  - cargo test --verbose
-  - cargo doc --verbose
+  - |
+      travis-cargo build &&
+      travis-cargo test &&
+      travis-cargo doc
 
 after_success:
-  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && bash upload-docs.sh'
+  - travis-cargo doc-upload
+
+env:
+  global:
+    - TRAVIS_CARGO_NIGHTLY_FEATURE=""
+    - secure: C2Oij4OPM2pdkbpEV6bsCJ8PpqDk2NtjFhFiO+4ZlYrRCQnbv+TAOuWNj5aX1EOWPlMQdP/95VrEOizUcK1twsCuc6d8PnAoCu8WnLRsOSO8GftVynC+CEJSnaDpAVO3N23f5jrCsKQhZx9R/hADpY5ni2ik0rKNWGllaYzuUCc=
 
 branches:
   only: master
