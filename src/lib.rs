@@ -7,16 +7,16 @@
 //! ![Plot](curve.svg)
 //!
 //! ```
+//! extern crate itertools;
 //! extern crate simplot;
-//! extern crate space;  // https://github.com/japaric/space.rs
 //!
 //! # use std::fs;
 //! # use std::path::Path;
+//! use itertools::linspace;
 //! use simplot::prelude::*;
-//! use space::linspace;
 //!
 //! # fn main() {
-//! let xs = linspace::<f64>(-10., 10., 51);
+//! let ref xs = linspace::<f64>(-10., 10., 51).collect::<Vec<_>>();
 //!
 //! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
@@ -30,8 +30,8 @@
 //!          .set(Position::Inside(Vertical::Top, Horizontal::Left))
 //!     })
 //!     .plot(LinesPoints {
-//!               x: xs.clone(),
-//!               y: xs.clone().map(|x| x.sin()),
+//!               x: xs,
+//!               y: xs.iter().map(|x| x.sin()),
 //!           },
 //!           |lp| {
 //!               lp.set(Color::DarkViolet)
@@ -41,8 +41,8 @@
 //!                 .set(PointType::Circle)
 //!           })
 //!     .plot(Steps {
-//!               x: xs.clone(),
-//!               y: xs.clone().map(|x| x.atan()),
+//!               x: xs,
+//!               y: xs.iter().map(|x| x.atan()),
 //!           },
 //!           |s| {
 //!               s.set(Color::Rgb(0, 158, 115))
@@ -50,8 +50,8 @@
 //!                .set(LineWidth(2.))
 //!           })
 //!     .plot(Impulses {
-//!               x: xs.clone(),
-//!               y: xs.map(|x| x.atan().cos()),
+//!               x: xs,
+//!               y: xs.iter().map(|x| x.atan().cos()),
 //!           },
 //!           |i| {
 //!               i.set(Color::Rgb(86, 180, 233))
@@ -71,17 +71,17 @@
 //! ![Plot](error_bar.svg)
 //!
 //! ```
+//! extern crate itertools;
 //! extern crate rand;
 //! extern crate simplot;
-//! extern crate space;  // https://github.com/japaric/space.rs
 //!
 //! # use std::fs;
 //! # use std::path::Path;
 //! use std::f64::consts::PI;
 //!
+//! use itertools::linspace;
 //! use rand::{Rng, XorShiftRng};
 //! use simplot::prelude::*;
-//! use space::linspace;
 //!
 //! fn sinc(mut x: f64) -> f64 {
 //!     if x == 0. {
@@ -93,7 +93,7 @@
 //! }
 //!
 //! # fn main() {
-//! let xs_ = linspace::<f64>(-4., 4., 101);
+//! let ref xs_ = linspace::<f64>(-4., 4., 101).collect::<Vec<_>>();
 //!
 //! // Fake some data
 //! let ref mut rng: XorShiftRng = rand::thread_rng().gen();
@@ -102,7 +102,7 @@
 //! let y_low = ys.iter().map(|&y| y - 0.025 - 0.075 * rng.gen::<f64>()).collect::<Vec<_>>();
 //! let y_high = ys.iter().map(|&y| y + 0.025 + 0.075 * rng.gen::<f64>()).collect::<Vec<_>>();
 //! let xs = linspace::<f64>(-4., 4., 13).skip(1).take(11);
-//! let xs = xs.clone().map(|x| x + 0.2 * rng.gen::<f64>() - 0.1);
+//! let xs = xs.map(|x| x + 0.2 * rng.gen::<f64>() - 0.1);
 //!
 //! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
@@ -120,8 +120,8 @@
 //!     .configure(Key,
 //!                |k| k.set(Position::Outside(Vertical::Top, Horizontal::Right)))
 //!     .plot(Lines {
-//!               x: xs_.clone(),
-//!               y: xs_.map(sinc),
+//!               x: xs_,
+//!               y: xs_.iter().cloned().map(sinc),
 //!           },
 //!           |l| {
 //!               l.set(Color::Rgb(0, 158, 115))
@@ -220,26 +220,27 @@
 //! ![Plot](multiaxis.svg)
 //!
 //! ```
+//! extern crate itertools;
 //! extern crate num;
 //! extern crate simplot;
-//! extern crate space;  // https://github.com/japaric/space.rs
 //!
 //! # use std::fs;
 //! # use std::path::Path;
+//! use std::f64::consts::PI;
+//!
+//! use itertools::linspace;
 //! use num::Complex;
 //! use simplot::prelude::*;
-//! use space::logspace;
-//! use std::f64::consts::PI;
 //!
 //! fn tf(x: f64) -> Complex<f64> {
 //!     Complex::new(0., x) / Complex::new(10., x) / Complex::new(1., x / 10_000.)
 //! }
 //!
 //! # fn main() {
-//! let (start, end) = (1.1, 90_000.);
-//! let xs = logspace(start, end, 101);
-//! let phase = xs.clone().map(|x| tf(x).arg() * 180. / PI);
-//! let magnitude = xs.clone().map(|x| tf(x).norm());
+//! let (start, end): (f64, f64) = (1.1, 90_000.);
+//! let ref xs = linspace(start.ln(), end.ln(), 101).map(|x| x.exp()).collect::<Vec<_>>();
+//! let phase = xs.iter().map(|&x| tf(x).arg() * 180. / PI);
+//! let magnitude = xs.iter().map(|&x| tf(x).norm());
 //!
 //! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
@@ -266,7 +267,7 @@
 //!         set(Position::Inside(Vertical::Top, Horizontal::Center)).
 //!         set(Title(" "))).
 //!     plot(Lines {
-//!         x: xs.clone(),
+//!         x: xs,
 //!         y: magnitude,
 //!     }, |l| l.
 //!         set(Color::DarkViolet).
@@ -294,20 +295,20 @@
 //! ![Plot](filled_curve.svg)
 //!
 //! ```
-//!
+//! extern crate itertools;
 //! extern crate simplot;
-//! extern crate space;  // https://github.com/japaric/space.rs
 //!
 //! # use std::fs;
 //! # use std::path::Path;
-//! use simplot::prelude::*;
-//! use space::linspace;
 //! use std::f64::consts::PI;
 //! use std::iter;
 //!
+//! use itertools::linspace;
+//! use simplot::prelude::*;
+//!
 //! # fn main() {
 //! let (start, end) = (-5., 5.);
-//! let xs = linspace(start, end, 101);
+//! let ref xs = linspace(start, end, 101).collect::<Vec<_>>();
 //! let zeros = iter::repeat(0);
 //!
 //! fn gaussian(x: f64, mu: f64, sigma: f64) -> f64 {
@@ -331,8 +332,8 @@
 //!          .set(Title("Gaussian Distribution"))
 //!     })
 //!     .plot(FilledCurve {
-//!               x: xs.clone(),
-//!               y1: xs.clone().map(|x| gaussian(x, 0.5, 0.5)),
+//!               x: xs,
+//!               y1: xs.iter().map(|&x| gaussian(x, 0.5, 0.5)),
 //!               y2: zeros.clone(),
 //!           },
 //!           |fc| {
@@ -340,8 +341,8 @@
 //!                 .set(Label("μ = 0.5 σ = 0.5"))
 //!           })
 //!     .plot(FilledCurve {
-//!               x: xs.clone(),
-//!               y1: xs.clone().map(|x| gaussian(x, 2.0, 1.0)),
+//!               x: xs,
+//!               y1: xs.iter().map(|&x| gaussian(x, 2.0, 1.0)),
 //!               y2: zeros.clone(),
 //!           },
 //!           |fc| {
@@ -350,8 +351,8 @@
 //!                 .set(Opacity(0.5))
 //!           })
 //!     .plot(FilledCurve {
-//!               x: xs.clone(),
-//!               y1: xs.map(|x| gaussian(x, -1.0, 2.0)),
+//!               x: xs,
+//!               y1: xs.iter().map(|&x| gaussian(x, -1.0, 2.0)),
 //!               y2: zeros,
 //!           },
 //!           |fc| {
