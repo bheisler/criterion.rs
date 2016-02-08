@@ -20,41 +20,47 @@
 //!
 //! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
-//! Figure::new().
-//! #   set(Font("Helvetica")).
-//! #   set(FontSize(12.)).
-//! #   set(Output(Path::new("target/doc/simplot/curve.svg"))).
-//! #   set(Size(1280, 720)).
-//!     configure(Key, |k| k.
-//!         set(Boxed::Yes).
-//!         set(Position::Inside(Vertical::Top, Horizontal::Left))).
-//!     plot(LinesPoints {
-//!         x: xs.clone(),
-//!         y: xs.clone().map(|x| x.sin()),
-//!     }, |lp| lp.
-//!         set(Color::DarkViolet).
-//!         set(Label("sin(x)")).
-//!         set(LineType::Dash).
-//!         set(PointSize(1.5)).
-//!         set(PointType::Circle)).
-//!     plot(Steps {
-//!         x: xs.clone(),
-//!         y: xs.clone().map(|x| x.atan()),
-//!     }, |s| s.
-//!         set(Color::Rgb(0, 158, 115)).
-//!         set(Label("atan(x)")).
-//!         set(LineWidth(2.))).
-//!     plot(Impulses {
-//!         x: xs.clone(),
-//!         y: xs.map(|x| x.atan().cos()),
-//!     }, |i| i.
-//!         set(Color::Rgb(86, 180, 233)).
-//!         set(Label("cos(atan(x))"))).
-//!     draw().  // (rest of the chain has been omitted)
-//! #   ok().and_then(|gnuplot| {
-//! #       gnuplot.wait_with_output().ok().and_then(|p| {
-//! #           String::from_utf8(p.stderr).ok()
-//! #       })
+//! Figure::new()
+//! #   .set(Font("Helvetica"))
+//! #   .set(FontSize(12.))
+//! #   .set(Output(Path::new("target/doc/simplot/curve.svg")))
+//! #   .set(Size(1280, 720))
+//!     .configure(Key, |k| {
+//!         k.set(Boxed::Yes)
+//!          .set(Position::Inside(Vertical::Top, Horizontal::Left))
+//!     })
+//!     .plot(LinesPoints {
+//!               x: xs.clone(),
+//!               y: xs.clone().map(|x| x.sin()),
+//!           },
+//!           |lp| {
+//!               lp.set(Color::DarkViolet)
+//!                 .set(Label("sin(x)"))
+//!                 .set(LineType::Dash)
+//!                 .set(PointSize(1.5))
+//!                 .set(PointType::Circle)
+//!           })
+//!     .plot(Steps {
+//!               x: xs.clone(),
+//!               y: xs.clone().map(|x| x.atan()),
+//!           },
+//!           |s| {
+//!               s.set(Color::Rgb(0, 158, 115))
+//!                .set(Label("atan(x)"))
+//!                .set(LineWidth(2.))
+//!           })
+//!     .plot(Impulses {
+//!               x: xs.clone(),
+//!               y: xs.map(|x| x.atan().cos()),
+//!           },
+//!           |i| {
+//!               i.set(Color::Rgb(86, 180, 233))
+//!                .set(Label("cos(atan(x))"))
+//!           })
+//!     .draw()  // (rest of the chain has been omitted)
+//! #   .ok()
+//! #   .and_then(|gnuplot| {
+//! #       gnuplot.wait_with_output().ok().and_then(|p| String::from_utf8(p.stderr).ok())
 //! #   }));
 //! # }
 //! ```
@@ -100,40 +106,44 @@
 //!
 //! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
-//! Figure::new().
-//! #   set(Font("Helvetica")).
-//! #   set(FontSize(12.)).
-//! #   set(Output(Path::new("target/doc/simplot/error_bar.svg"))).
-//! #   set(Size(1280, 720)).
-//!     configure(Axis::BottomX, |a| a.
-//!         set(TicLabels {
+//! Figure::new()
+//! #   .set(Font("Helvetica"))
+//! #   .set(FontSize(12.))
+//! #   .set(Output(Path::new("target/doc/simplot/error_bar.svg")))
+//! #   .set(Size(1280, 720))
+//!     .configure(Axis::BottomX, |a| {
+//!         a.set(TicLabels {
 //!             labels: &["-π", "0", "π"],
 //!             positions: &[-PI, 0., PI],
-//!         })).
-//!     configure(Key, |k| k.
-//!         set(Position::Outside(Vertical::Top, Horizontal::Right))).
-//!     plot(Lines {
-//!         x: xs_.clone(),
-//!         y: xs_.map(sinc),
-//!     }, |l| l.
-//!         set(Color::Rgb(0, 158, 115)).
-//!         set(Label("sinc(x)")).
-//!         set(LineWidth(2.))).
-//!     plot(YErrorBars {
-//!         x: xs,
-//!         y: &ys,
-//!         y_low: &y_low,
-//!         y_high: &y_high,
-//!     }, |eb| eb.
-//!         set(Color::DarkViolet).
-//!         set(LineWidth(2.)).
-//!         set(PointType::FilledCircle).
-//!         set(Label("measured"))).
-//!     draw().  // (rest of the chain has been omitted)
-//! #   ok().and_then(|gnuplot| {
-//! #       gnuplot.wait_with_output().ok().and_then(|p| {
-//! #           String::from_utf8(p.stderr).ok()
-//! #       })
+//!         })
+//!     })
+//!     .configure(Key,
+//!                |k| k.set(Position::Outside(Vertical::Top, Horizontal::Right)))
+//!     .plot(Lines {
+//!               x: xs_.clone(),
+//!               y: xs_.map(sinc),
+//!           },
+//!           |l| {
+//!               l.set(Color::Rgb(0, 158, 115))
+//!                .set(Label("sinc(x)"))
+//!                .set(LineWidth(2.))
+//!           })
+//!     .plot(YErrorBars {
+//!               x: xs,
+//!               y: &ys,
+//!               y_low: &y_low,
+//!               y_high: &y_high,
+//!           },
+//!           |eb| {
+//!               eb.set(Color::DarkViolet)
+//!                 .set(LineWidth(2.))
+//!                 .set(PointType::FilledCircle)
+//!                 .set(Label("measured"))
+//!           })
+//!     .draw()  // (rest of the chain has been omitted)
+//! #   .ok()
+//! #   .and_then(|gnuplot| {
+//! #       gnuplot.wait_with_output().ok().and_then(|p| String::from_utf8(p.stderr).ok())
 //! #   }));
 //! # }
 //! ```
@@ -166,39 +176,41 @@
 //!
 //! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
-//! Figure::new().
-//! #   set(Font("Helvetica")).
-//! #   set(FontSize(12.)).
-//! #   set(Output(Path::new("target/doc/simplot/candlesticks.svg"))).
-//! #   set(Size(1280, 720)).
-//!     set(BoxWidth(0.2)).
-//!     configure(Axis::BottomX, |a| a.
-//!         set(Range::Limits(0., 11.))).
-//!     plot(Candlesticks {
-//!         x: xs.clone(),
-//!         whisker_min: &wm,
-//!         box_min: &bm,
-//!         box_high: &bh,
-//!         whisker_high: &wh,
-//!     }, |cs| cs.
-//!         set(Color::Rgb(86, 180, 233)).
-//!         set(Label("Quartiles")).
-//!         set(LineWidth(2.))).
+//! Figure::new()
+//! #   .set(Font("Helvetica"))
+//! #   .set(FontSize(12.))
+//! #   .set(Output(Path::new("target/doc/simplot/candlesticks.svg")))
+//! #   .set(Size(1280, 720))
+//!     .set(BoxWidth(0.2))
+//!     .configure(Axis::BottomX, |a| a.set(Range::Limits(0., 11.)))
+//!     .plot(Candlesticks {
+//!               x: xs.clone(),
+//!               whisker_min: &wm,
+//!               box_min: &bm,
+//!               box_high: &bh,
+//!               whisker_high: &wh,
+//!           },
+//!           |cs| {
+//!               cs.set(Color::Rgb(86, 180, 233))
+//!                 .set(Label("Quartiles"))
+//!                 .set(LineWidth(2.))
+//!           })
 //!     // trick to plot the median
-//!     plot(Candlesticks {
-//!         x: xs,
-//!         whisker_min: &m,
-//!         box_min: &m,
-//!         box_high: &m,
-//!         whisker_high: &m,
-//!     }, |cs| cs.
-//!         set(Color::Black).
-//!         set(LineWidth(2.))).
-//!     draw().  // (rest of the chain has been omitted)
-//! #   ok().and_then(|gnuplot| {
-//! #       gnuplot.wait_with_output().ok().and_then(|p| {
-//! #           String::from_utf8(p.stderr).ok()
-//! #       })
+//!     .plot(Candlesticks {
+//!               x: xs,
+//!               whisker_min: &m,
+//!               box_min: &m,
+//!               box_high: &m,
+//!               whisker_high: &m,
+//!           },
+//!           |cs| {
+//!               cs.set(Color::Black)
+//!                 .set(LineWidth(2.))
+//!           })
+//!     .draw()  // (rest of the chain has been omitted)
+//! #   .ok()
+//! #   .and_then(|gnuplot| {
+//! #       gnuplot.wait_with_output().ok().and_then(|p| String::from_utf8(p.stderr).ok())
 //! #   }));
 //! # }
 //! ```
@@ -304,50 +316,54 @@
 //!
 //! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
-//! Figure::new().
-//! #   set(Font("Helvetica")).
-//! #   set(FontSize(12.)).
-//! #   set(Output(Path::new("target/doc/simplot/filled_curve.svg"))).
-//! #   set(Size(1280, 720)).
-//!     set(Title("Transparent filled curve")).
-//!     configure(Axis::BottomX, |a| a.
-//!         set(Range::Limits(start, end))).
-//!     configure(Axis::LeftY, |a| a.
-//!         set(Range::Limits(0., 1.))).
-//!     configure(Key, |k| k.
-//!         set(Justification::Left).
-//!         set(Order::SampleText).
-//!         set(Position::Inside(Vertical::Top, Horizontal::Left)).
-//!         set(Title("Gaussian Distribution"))).
-//!     plot(FilledCurve {
-//!         x: xs.clone(),
-//!         y1: xs.clone().map(|x| gaussian(x, 0.5, 0.5)),
-//!         y2: zeros.clone(),
-//!     }, |fc| fc.
-//!         set(Color::ForestGreen).
-//!         set(Label("μ = 0.5 σ = 0.5"))).
-//!     plot(FilledCurve {
-//!         x: xs.clone(),
-//!         y1: xs.clone().map(|x| gaussian(x, 2.0, 1.0)),
-//!         y2: zeros.clone(),
-//!     }, |fc| fc.
-//!         set(Color::Gold).
-//!         set(Label("μ = 2.0 σ = 1.0")).
-//!         set(Opacity(0.5))).
-//!     plot(FilledCurve {
-//!         x: xs.clone(),
-//!         y1: xs.map(|x| gaussian(x, -1.0, 2.0)),
-//!         y2: zeros,
-//!     }, |fc| fc.
-//!         set(Color::Red).
-//!         set(Label("μ = -1.0 σ = 2.0")).
-//!         set(Opacity(0.5))).
-//!     draw().  // (rest of the chain has been omitted)
-//! #   ok().and_then(|gnuplot| {
-//! #       gnuplot.wait_with_output().ok().and_then(|p| {
-//! #           String::from_utf8(p.stderr).ok()
-//! #       })
-//! #   }));
+//! Figure::new()
+//! #   .set(Font("Helvetica"))
+//! #   .set(FontSize(12.))
+//! #   .set(Output(Path::new("target/doc/simplot/filled_curve.svg")))
+//! #   .set(Size(1280, 720))
+//!     .set(Title("Transparent filled curve"))
+//!     .configure(Axis::BottomX, |a| a.set(Range::Limits(start, end)))
+//!     .configure(Axis::LeftY, |a| a.set(Range::Limits(0., 1.)))
+//!     .configure(Key, |k| {
+//!         k.set(Justification::Left)
+//!          .set(Order::SampleText)
+//!          .set(Position::Inside(Vertical::Top, Horizontal::Left))
+//!          .set(Title("Gaussian Distribution"))
+//!     })
+//!     .plot(FilledCurve {
+//!               x: xs.clone(),
+//!               y1: xs.clone().map(|x| gaussian(x, 0.5, 0.5)),
+//!               y2: zeros.clone(),
+//!           },
+//!           |fc| {
+//!               fc.set(Color::ForestGreen)
+//!                 .set(Label("μ = 0.5 σ = 0.5"))
+//!           })
+//!     .plot(FilledCurve {
+//!               x: xs.clone(),
+//!               y1: xs.clone().map(|x| gaussian(x, 2.0, 1.0)),
+//!               y2: zeros.clone(),
+//!           },
+//!           |fc| {
+//!               fc.set(Color::Gold)
+//!                 .set(Label("μ = 2.0 σ = 1.0"))
+//!                 .set(Opacity(0.5))
+//!           })
+//!     .plot(FilledCurve {
+//!               x: xs.clone(),
+//!               y1: xs.map(|x| gaussian(x, -1.0, 2.0)),
+//!               y2: zeros,
+//!           },
+//!           |fc| {
+//!               fc.set(Color::Red)
+//!                 .set(Label("μ = -1.0 σ = 2.0"))
+//!                 .set(Opacity(0.5))
+//!           })
+//!     .draw()
+//!     .ok()
+//!     .and_then(|gnuplot| {
+//!         gnuplot.wait_with_output().ok().and_then(|p| String::from_utf8(p.stderr).ok())
+//!     }));
 //! # }
 //! ```
 
