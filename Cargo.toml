@@ -6,9 +6,7 @@ version = "0.0.0"
 [dependencies]
 byteorder = "0.4.2"
 cast = "0.1.0"
-
-[dependencies.zip]
-git = "https://github.com/japaric/zip.rs"
+itertools = "0.4.7"
 
 [dev-dependencies]
 rand = "*"

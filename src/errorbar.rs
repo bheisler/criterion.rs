@@ -236,7 +236,7 @@ impl<X, Y, L, H> traits::Plot<ErrorBar<X, Y, L, H>> for Figure
             ErrorBar::YErrorBars { x, y, y_low, y_high } => (x, y, y_low, y_high, y_factor),
             ErrorBar::YErrorLines { x, y, y_low, y_high } => (x, y, y_low, y_high, y_factor),
         };
-        let data = Matrix::new(zip!(x, y, l, h), (x_factor, y_factor, e_factor, e_factor));
+        let data = Matrix::new(izip!(x, y, l, h), (x_factor, y_factor, e_factor, e_factor));
         self.plots.push(Plot::new(data, configure(&mut ErrorBarDefault::default(style))));
         self
     }

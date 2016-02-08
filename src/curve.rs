@@ -259,7 +259,7 @@ impl<X, Y> traits::Plot<Curve<X, Y>> for Figure
         let (x_factor, y_factor) = ::scale_factor(&self.axes,
                                                   props.axes.unwrap_or(::Axes::BottomXLeftY));
 
-        let data = Matrix::new(zip!(x, y), (x_factor, y_factor));
+        let data = Matrix::new(izip!(x, y), (x_factor, y_factor));
         self.plots.push(Plot::new(data, &props));
         self
     }

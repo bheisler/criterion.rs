@@ -131,7 +131,7 @@ impl<X, Y1, Y2> traits::Plot<FilledCurve<X, Y1, Y2>> for Figure
         let (x_factor, y_factor) = ::scale_factor(&self.axes,
                                                   props.axes.unwrap_or(::Axes::BottomXLeftY));
 
-        let data = Matrix::new(zip!(x, y1, y2), (x_factor, y_factor, y_factor));
+        let data = Matrix::new(izip!(x, y1, y2), (x_factor, y_factor, y_factor));
         self.plots.push(Plot::new(data, &props));
         self
     }
