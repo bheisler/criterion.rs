@@ -208,27 +208,26 @@
 //! ![Plot](multiaxis.svg)
 //!
 //! ```
-//! extern crate complex;  // https://github.com/japaric/complex.rs
+//! extern crate num;
 //! extern crate simplot;
 //! extern crate space;  // https://github.com/japaric/space.rs
 //!
 //! # use std::fs;
 //! # use std::path::Path;
-//! use complex::f64::I;
-//! use complex::{Complex, Math};
+//! use num::Complex;
 //! use simplot::prelude::*;
 //! use space::logspace;
 //! use std::f64::consts::PI;
 //!
 //! fn tf(x: f64) -> Complex<f64> {
-//!     (I * x) / (I * x + 10.) / (I * x / 10_000. + 1.)
+//!     Complex::new(0., x) / Complex::new(10., x) / Complex::new(1., x / 10_000.)
 //! }
 //!
 //! # fn main() {
 //! let (start, end) = (1.1, 90_000.);
 //! let xs = logspace(start, end, 101);
 //! let phase = xs.clone().map(|x| tf(x).arg() * 180. / PI);
-//! let magnitude = xs.clone().map(|x| tf(x).abs());
+//! let magnitude = xs.clone().map(|x| tf(x).norm());
 //!
 //! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
 //! # assert_eq!(Some(String::new()),
