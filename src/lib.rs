@@ -12,9 +12,9 @@
 
 #[macro_use]
 extern crate log;
+extern crate itertools;
 extern crate rustc_serialize;
 extern crate simplot;
-extern crate space;
 extern crate stats;
 extern crate test;
 extern crate time;

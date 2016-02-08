@@ -1,4 +1,4 @@
-use space;
+use itertools;
 use stats::univariate::Sample;
 use stats::univariate::kde::kernel::Gaussian;
 use stats::univariate::kde::{Bandwidth, Kde};
@@ -19,7 +19,7 @@ pub fn sweep(
         None => (x_min - 3. * h, x_max + 3. * h),
     };
 
-    let xs: Vec<_> = space::linspace(start, end, npoints).collect();
+    let xs: Vec<_> = itertools::linspace(start, end, npoints).collect();
 
     let ys = kde.map(&xs);
 
