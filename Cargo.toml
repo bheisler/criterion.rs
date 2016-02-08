@@ -9,7 +9,7 @@ cast = "0.1.0"
 itertools = "0.4.7"
 
 [dev-dependencies]
-rand = "*"
+rand = "0.3.13"
 
 [dev-dependencies.complex]
 git = "https://github.com/japaric/complex.rs"
