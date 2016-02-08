@@ -1,7 +1,10 @@
 sudo: false
 language: rust
 
-rust: nightly
+rust:
+  - stable
+  - beta
+  - nightly
 
 addons:
   apt:
@@ -17,10 +20,10 @@ script:
   - |
       travis-cargo build &&
       travis-cargo test &&
-      travis-cargo doc
+      travis-cargo --only stable doc
 
 after_success:
-  - travis-cargo doc-upload
+  - travis-cargo --only stable doc-upload
 
 env:
   global:
