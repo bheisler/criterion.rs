@@ -2,10 +2,6 @@ sudo: false
 language: rust
 rust: nightly
 
-env:
-  global:
-    - secure: gPGjVs0jJTU1ZbYG0LapuP6bwaQ79ao9wYMrqwLYwgkiLfDAcsJXHecp0PUUGCJnEZvAzv9hhjsmGpgACMc6h718gHnXcXdZFyXPeW0SLHl8ZBOAX84GqAbENXv33O6BmiYgti3ao5a3pLXBTUZIC6sTZiAuFTksdizLAUa/i/4=
-
 matrix:
   include:
     - env: GNUPLOT=yes
@@ -14,14 +10,24 @@ matrix:
           packages:
             - gnuplot
 
+before_script:
+  - |
+      pip install 'travis-cargo<0.2' --user &&
+      export PATH=$HOME/.local/bin:$PATH
+
 script:
-  - cargo build --verbose
-  - cargo bench --verbose -- --test --nocapture
-  - cargo doc --verbose
-  - ./check-line-length.sh
+  - |
+      travis-cargo build &&
+      travis-cargo test &&
+      travis-cargo doc
 
 after_success:
-  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && bash upload-docs.sh'
+  - travis-cargo doc-upload
+
+env:
+  global:
+    - TRAVIS_CARGO_NIGHTLY_FEATURE=""
+    - secure: gPGjVs0jJTU1ZbYG0LapuP6bwaQ79ao9wYMrqwLYwgkiLfDAcsJXHecp0PUUGCJnEZvAzv9hhjsmGpgACMc6h718gHnXcXdZFyXPeW0SLHl8ZBOAX84GqAbENXv33O6BmiYgti3ao5a3pLXBTUZIC6sTZiAuFTksdizLAUa/i/4=
 
 branches:
   only: master
