@@ -2,7 +2,6 @@ use stats::Tails;
 use stats::bivariate::Data;
 use stats::univariate::Sample;
 use stats::univariate::{mixed, self};
-use time;
 
 use {Criterion, Estimate};
 use estimate::Statistic::{Mean, Median};

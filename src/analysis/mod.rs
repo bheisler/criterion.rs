@@ -8,7 +8,6 @@ use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
 use stats::univariate::Sample;
 use stats::univariate::outliers::tukey::{LabeledSample, self};
-use time;
 
 use estimate::{Distributions, Estimates, Statistic};
 use program::Program;
@@ -18,11 +17,11 @@ use {format, fs, plot, report};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => ({
-        let start = time::precise_time_ns();
+        let start = ::std::time::Instant::now();
         let out = $block;
-        let stop = time::precise_time_ns();
+        let ref elapsed = start.elapsed();
 
-        info!("{} took {}", $msg, format::time((stop - start) as f64));
+        info!("{} took {}", $msg, format::time(::DurationExt::to_nanos(elapsed) as f64));
 
         out
     })

@@ -1,23 +1,23 @@
-use time;
+use std::time::{Duration, Instant};
 
 use format;
-use {Bencher, Criterion};
+use {Bencher, Criterion, DurationExt};
 
 /// PRIVATE
 pub trait Routine {
     /// PRIVATE
     fn bench<I: Iterator<Item=u64>>(&mut self, iters: I) -> Vec<f64>;
     /// PRIVATE
-    fn warm_up(&mut self, how_long_ns: u64) -> (u64, u64);
+    fn warm_up(&mut self, how_long: Duration) -> (u64, u64);
 
     /// PRIVATE
     fn sample(&mut self, criterion: &Criterion) -> (Box<[f64]>, Box<[f64]>) {
-        let wu_ns = criterion.warm_up_time_ns;
-        let m_ns = criterion.measurement_time_ns;
+        let wu = criterion.warm_up_time;
+        let m_ns = criterion.measurement_time.to_nanos();
 
-        println!("> Warming up for {}", format::time(wu_ns as f64));
+        println!("> Warming up for {}", format::time(wu.to_nanos() as f64));
 
-        let (wu_elapsed, wu_iters) = self.warm_up(wu_ns);
+        let (wu_elapsed, wu_iters) = self.warm_up(wu);
 
         // Initial guess for the mean execution time
         let met = wu_elapsed as f64 / wu_iters as f64;
@@ -45,25 +45,25 @@ impl<F> Routine for Function<F> where F: FnMut(&mut Bencher) {
     fn bench<I: Iterator<Item=u64>>(&mut self, iters: I) -> Vec<f64> {
         let Function(ref mut f) = *self;
 
-        let mut b = Bencher { iters: 0, ns_start: 0, ns_end: 0 };
+        let mut b = Bencher { iters: 0, elapsed: Duration::from_secs(0) };
 
         iters.map(|iters| {
             b.iters = iters;
             (*f)(&mut b);
-            (b.ns_end - b.ns_start) as f64
+            b.elapsed.to_nanos() as f64
         }).collect()
     }
 
-    fn warm_up(&mut self, how_long_ns: u64) -> (u64, u64) {
+    fn warm_up(&mut self, how_long: Duration) -> (u64, u64) {
         let Function(ref mut f) = *self;
-        let mut b = Bencher { iters: 1, ns_end: 0, ns_start: 0 };
-        let ns_start = time::precise_time_ns();
+        let mut b = Bencher { iters: 1, elapsed: Duration::from_secs(0) };
 
+        let start = Instant::now();
         loop {
             (*f)(&mut b);
 
-            if time::precise_time_ns() - ns_start > how_long_ns {
-                return (b.ns_end - b.ns_start, b.iters);
+            if start.elapsed() > how_long {
+                return (b.elapsed.to_nanos(), b.iters);
             }
 
             b.iters *= 2;

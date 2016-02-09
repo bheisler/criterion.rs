@@ -9,6 +9,7 @@
 
 #![deny(missing_docs)]
 #![feature(test)]
+#![feature(time2)]
 
 #[macro_use]
 extern crate log;
@@ -17,7 +18,6 @@ extern crate rustc_serialize;
 extern crate simplot;
 extern crate stats;
 extern crate test;
-extern crate time;
 
 mod analysis;
 mod estimate;
@@ -29,10 +29,11 @@ mod program;
 mod report;
 mod routine;
 
+use std::default::Default;
 use std::fmt;
 use std::iter::IntoIterator;
 use std::process::Command;
-use std::default::Default;
+use std::time::{Duration, Instant};
 
 use rustc_serialize::json;
 use std::fs::File;
@@ -45,8 +46,7 @@ use estimate::{Distributions, Estimates};
 #[derive(Clone, Copy)]
 pub struct Bencher {
     iters: u64,
-    ns_end: u64,
-    ns_start: u64,
+    elapsed: Duration,
 }
 
 impl Bencher {
@@ -54,11 +54,11 @@ impl Bencher {
     pub fn iter<T, F>(&mut self, mut routine: F) where
         F: FnMut() -> T,
     {
-        self.ns_start = time::precise_time_ns();
+        let start = Instant::now();
         for _ in 0..self.iters {
             test::black_box(routine());
         }
-        self.ns_end = time::precise_time_ns();
+        self.elapsed = start.elapsed();
     }
 }
 
@@ -79,13 +79,13 @@ impl Bencher {
 /// task panic
 pub struct Criterion {
     confidence_level: f64,
-    measurement_time_ns: u64,
+    measurement_time: Duration,
     noise_threshold: f64,
     nresamples: usize,
     plotting: Plotting,
     sample_size: usize,
     significance_level: f64,
-    warm_up_time_ns: u64,
+    warm_up_time: Duration,
 }
 
 impl Default for Criterion {
@@ -111,13 +111,13 @@ impl Default for Criterion {
 
         Criterion {
             confidence_level: 0.95,
-            measurement_time_ns: 5_000_000_000,
+            measurement_time: Duration::new(5, 0),
             noise_threshold: 0.01,
             nresamples: 100_000,
             sample_size: 100,
             plotting: plotting,
             significance_level: 0.05,
-            warm_up_time_ns: 3_000_000_000,
+            warm_up_time: Duration::new(3, 0),
         }
     }
 }
@@ -147,7 +147,7 @@ impl Criterion {
     pub fn warm_up_time(&mut self, ns: u64) -> &mut Criterion {
         assert!(ns > 0);
 
-        self.warm_up_time_ns = ns;
+        self.warm_up_time = Duration::from_nanos(ns);
         self
     }
 
@@ -164,7 +164,7 @@ impl Criterion {
     pub fn measurement_time(&mut self, ns: u64) -> &mut Criterion {
         assert!(ns > 0);
 
-        self.measurement_time_ns = ns;
+        self.measurement_time = Duration::from_nanos(ns);
         self
     }
 
@@ -320,31 +320,36 @@ impl Criterion {
     ///
     /// The external program must conform to the following specification:
     ///
-    /// ``` ignore-test
-    /// extern crate time;
-    ///
-    /// use std::io::stdio;
+    /// ``` no_run
+    /// use std::io::{self, BufRead};
+    /// use std::time::Instant;
+    /// # use std::time::Duration;
+    /// # trait DurationExt { fn to_nanos(&self) -> u64 { 0 } }
+    /// # impl DurationExt for Duration {}
     ///
     /// fn main() {
+    ///     let stdin = io::stdin();
+    ///     let ref mut stdin = stdin.lock();
+    ///
     ///     // For each line in stdin
-    ///     for line in stdio::stdin().lines() {
+    ///     for line in stdin.lines() {
     ///         // Parse line as the number of iterations
-    ///         let iters: u64 = from_str(line.unwrap().as_slice().trim()).unwrap();
+    ///         let iters: u64 = line.unwrap().trim().parse().unwrap();
     ///
     ///         // Setup
     ///
     ///         // Benchmark
-    ///         let ns_start = time::precise_time_ns();
+    ///         let start = Instant::now();
     ///         // Execute the routine "iters" times
     ///         for _ in 0..iters {
     ///             // Code to benchmark goes here
     ///         }
-    ///         let ns_end = time::precise_time_ns();
+    ///         let elapsed = start.elapsed();
     ///
     ///         // Teardown
     ///
     ///         // Report elapsed time in nanoseconds to stdout
-    ///         println!("{}", ns_end - ns_start);
+    ///         println!("{}", elapsed.to_nanos());
     ///     }
     /// }
     /// ```
@@ -395,6 +400,23 @@ impl Plotting {
             Plotting::Enabled => true,
             _ => false,
         }
+    }
+}
+
+trait DurationExt {
+    fn to_nanos(&self) -> u64;
+    fn from_nanos(u64) -> Self;
+}
+
+const NANOS_PER_SEC: u64 = 1_000_000_000;
+
+impl DurationExt for Duration {
+    fn to_nanos(&self) -> u64 {
+        self.as_secs() * NANOS_PER_SEC + self.subsec_nanos() as u64
+    }
+
+    fn from_nanos(ns: u64) -> Self {
+        Duration::new(ns / NANOS_PER_SEC, (ns % NANOS_PER_SEC) as u32)
     }
 }
 

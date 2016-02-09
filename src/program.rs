@@ -1,8 +1,7 @@
 use std::fmt;
-use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, Stdio};
 use std::io::BufReader;
-
-use time;
+use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, Stdio};
+use std::time::{Duration, Instant};
 
 use routine::Routine;
 
@@ -89,16 +88,16 @@ impl Routine for Program {
         }).collect()
     }
 
-    fn warm_up(&mut self, how_long_ns: u64) -> (u64, u64) {
+    fn warm_up(&mut self, how_long_ns: Duration) -> (u64, u64) {
         let mut iters = 1;
-        let ns_start = time::precise_time_ns();
 
+        let start = Instant::now();
         loop {
             let elapsed =
                 self.send(iters).recv().trim().parse().ok().
                     expect("Couldn't parse the program output");
 
-            if time::precise_time_ns() - ns_start > how_long_ns {
+            if start.elapsed() > how_long_ns {
                 return (elapsed, iters);
             }
 
