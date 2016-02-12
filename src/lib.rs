@@ -160,7 +160,7 @@ impl Bencher {
             let input = setup();
 
             let start = Instant::now();
-            let output = test::black_box(routine(input));
+            let output = test::black_box(routine(test::black_box(input)));
             let elapsed = start.elapsed();
 
             mem::drop(output);
@@ -221,7 +221,7 @@ impl Bencher {
     ///
     /// # Timing loop
     ///
-    /// ```
+    /// ``` ignore
     /// inputs = (0..iters).map(|_| setup()).collect();
     ///
     /// start = Instant::now();
@@ -233,7 +233,7 @@ impl Bencher {
     ///
     /// # Timing model
     ///
-    /// ```
+    /// ``` text
     /// elapsed = Instant::now + iters * (routine + vec::IntoIter::next)
     /// ```
     pub fn iter_with_large_setup<I, S, R>(&mut self, mut setup: S, mut routine: R)
