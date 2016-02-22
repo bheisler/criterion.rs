@@ -58,12 +58,15 @@ impl<F> Routine for Function<F> where F: FnMut(&mut Bencher) {
         let Function(ref mut f) = *self;
         let mut b = Bencher { iters: 1, elapsed: Duration::from_secs(0) };
 
+        let mut total_iters = 0;
         let start = Instant::now();
         loop {
             (*f)(&mut b);
 
-            if start.elapsed() > how_long {
-                return (b.elapsed.to_nanos(), b.iters);
+            total_iters += b.iters;
+            let elapsed = start.elapsed();
+            if elapsed > how_long {
+                return (elapsed.to_nanos(), total_iters);
             }
 
             b.iters *= 2;

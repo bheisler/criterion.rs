@@ -6,7 +6,7 @@ extern crate rustc_plugin;
 extern crate syntax;
 
 use rustc_plugin::registry::Registry;
-use syntax::ast::{DUMMY_NODE_ID, DeclItem, Item, ItemFn, MetaItem, StmtDecl, self};
+use syntax::ast::{DUMMY_NODE_ID, DeclKind, Item, ItemKind, MetaItem, StmtKind, self};
 use syntax::codemap::{Span, self};
 use syntax::ext::base::{ExtCtxt, MultiModifier, Annotatable};
 use syntax::ext::build::AstBuilder;
@@ -51,7 +51,7 @@ fn expand_meta_criterion(
     item: Annotatable,
 ) -> Annotatable {
     if let Annotatable::Item(item) = item {
-        if let ItemFn(..) = item.node {
+        if let ItemKind::Fn(..) = item.node {
             // Copy original function without attributes
             let routine = P(Item { attrs: Vec::new(), .. (*item).clone() });
 
@@ -71,12 +71,12 @@ fn expand_meta_criterion(
             let bench_call = cx.stmt_expr(bench_call);
 
             // Wrap original function + bench call in a test function
-            let fn_decl = P(codemap::respan(span, DeclItem(routine)));
-            let inner_fn = P(codemap::respan(span, StmtDecl(fn_decl, DUMMY_NODE_ID)));
+            let fn_decl = P(codemap::respan(span, DeclKind::Item(routine)));
+            let inner_fn = codemap::respan(span, StmtKind::Decl(fn_decl, DUMMY_NODE_ID));
             let body = cx.block(span, vec!(inner_fn, bench_call), None);
             let nil = P(ast::Ty {
                 id: ast::DUMMY_NODE_ID,
-                node: ast::TyTup(vec![]),
+                node: ast::TyKind::Tup(vec![]),
                 span: codemap::DUMMY_SP,
             });
             let test = cx.item_fn(span, item.ident, Vec::new(), nil, body);

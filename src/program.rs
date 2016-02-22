@@ -3,6 +3,7 @@ use std::io::BufReader;
 use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, Stdio};
 use std::time::{Duration, Instant};
 
+use DurationExt;
 use routine::Routine;
 
 // A two-way channel to the standard streams of a child process
@@ -91,14 +92,15 @@ impl Routine for Program {
     fn warm_up(&mut self, how_long_ns: Duration) -> (u64, u64) {
         let mut iters = 1;
 
+        let mut total_iters = 0;
         let start = Instant::now();
         loop {
-            let elapsed =
-                self.send(iters).recv().trim().parse().ok().
-                    expect("Couldn't parse the program output");
+            self.send(iters).recv();
 
-            if start.elapsed() > how_long_ns {
-                return (elapsed, iters);
+            total_iters += iters;
+            let elapsed = start.elapsed();
+            if elapsed > how_long_ns {
+                return (elapsed.to_nanos(), total_iters);
             }
 
             iters *= 2;

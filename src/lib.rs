@@ -30,10 +30,10 @@ mod report;
 mod routine;
 
 use std::default::Default;
-use std::fmt;
 use std::iter::IntoIterator;
 use std::process::Command;
 use std::time::{Duration, Instant};
+use std::{fmt, mem};
 
 use rustc_serialize::json;
 use std::fs::File;
@@ -42,7 +42,10 @@ use std::path::Path;
 
 use estimate::{Distributions, Estimates};
 
-/// Helper struct to build functions that follow the setup - bench - teardown pattern
+/// Helper struct to time routines
+///
+/// This struct provides different "timing loops" as methods. Each timing loop provides a different
+/// way to time a routine and each has advantages and disadvantages.
 #[derive(Clone, Copy)]
 pub struct Bencher {
     iters: u64,
@@ -50,13 +53,198 @@ pub struct Bencher {
 }
 
 impl Bencher {
-    /// Callback to benchmark a routine
-    pub fn iter<T, F>(&mut self, mut routine: F) where
-        F: FnMut() -> T,
+    /// Times a `routine` by executing it many times and timing the total elapsed time.
+    ///
+    /// Prefer this timing loop when `routine` returns a value that doesn't have a destructor.
+    ///
+    /// # Timing loop
+    ///
+    /// ``` ignore
+    /// start = Instant::new();
+    /// for _ in 0..iters {
+    ///     routine();
+    /// }
+    /// elapsed = start.elapsed();
+    /// ```
+    ///
+    /// # Timing model
+    ///
+    /// Note that the `Bencher` also times the time required to destroy the output of `routine()`.
+    /// Therefore prefer this timing loop when the runtime of `mem::drop(O)` is negligible compared
+    /// to the runtime of the `routine`.
+    ///
+    /// ``` text
+    /// elapsed = Instant::now + iters * (routine + mem::drop(O) + Range::next)
+    /// ```
+    ///
+    /// NOTE `Bencher` will choose `iters` to make `Instant::now` negligible compared to the product
+    /// on the RHS.
+    pub fn iter<O, R>(&mut self, mut routine: R) where
+        R: FnMut() -> O,
     {
         let start = Instant::now();
         for _ in 0..self.iters {
             test::black_box(routine());
+        }
+        self.elapsed = start.elapsed();
+    }
+
+    /// Times a `routine` that requires some `setup` on each iteration.
+    ///
+    /// For example, use this loop to benchmark sorting algorithms because they require unsorted
+    /// data on each iteration.
+    ///
+    /// # Example
+    ///
+    /// ``` no_run
+    /// extern crate criterion;
+    ///
+    /// use criterion::Bencher;
+    ///
+    /// fn create_data() -> Vec<u64> {
+    ///     # vec![]
+    ///     // ...
+    /// }
+    ///
+    /// // This should be a deterministic (i.e. not random) function
+    /// fn scramble(data: &mut [u64]) {
+    ///     // ...
+    /// }
+    ///
+    /// // The sorting algorithm to test
+    /// fn sort(data: &mut [u64]) {
+    ///     // ...
+    /// }
+    ///
+    /// fn benchmark(b: &mut Bencher) {
+    ///     let ref mut data = create_data();
+    ///
+    ///     b.iter_with_setup(|| scramble(data), |_| sort(data))
+    /// }
+    ///
+    /// # fn main() {}
+    /// ```
+    ///
+    /// # Timing loop
+    ///
+    /// ``` ignore
+    /// elapsed = 0;
+    /// for _ in 0..iters {
+    ///     let input = setup();
+    ///
+    ///     let start = Instant::now();
+    ///     let output = routine(input);
+    ///     let elapsed_in_iter = start.elapsed();
+    ///
+    ///     mem::drop(output);
+    ///
+    ///     elapsed += elapsed_in_iter;
+    /// }
+    /// ```
+    ///
+    /// # Timing model
+    ///
+    /// Note that `Bencher` also times the `Instant::now` function. Criterion will warn you (NOTE
+    /// not yet implemented) if the runtime of `routine` is small or comparable to the runtime of
+    /// `Instant::now` as this indicates that the measurement is useless.
+    ///
+    /// ``` text
+    /// elapsed = iters * (Instant::now + routine)
+    /// ```
+    pub fn iter_with_setup<I, O, S, R>(&mut self, mut setup: S, mut routine: R)
+        where S: FnMut() -> I,
+              R: FnMut(I) -> O
+    {
+        self.elapsed = Duration::from_secs(0);
+        for _ in 0..self.iters {
+            let input = setup();
+
+            let start = Instant::now();
+            let output = test::black_box(routine(test::black_box(input)));
+            let elapsed = start.elapsed();
+
+            mem::drop(output);
+
+            self.elapsed = self.elapsed + elapsed;
+        }
+    }
+
+    /// Times a `routine` by collecting its output on each iteration. This avoids timing the
+    /// destructor of the value returned by `routine`.
+    ///
+    /// WARNING: This requires `iters * mem::size_of::<O>()` of memory, and `iters` is not under the
+    /// control of the caller.
+    ///
+    /// # Timing loop
+    ///
+    /// ``` ignore
+    /// outputs = Vec::with_capacity(iters);
+    ///
+    /// start = Instant::now();
+    /// for _ in 0..iters {
+    ///     outputs.push(routine());
+    /// }
+    /// elapsed = start.elapsed();
+    ///
+    /// mem::drop(outputs);
+    /// ```
+    ///
+    /// # Timing model
+    ///
+    /// ``` text
+    /// elapsed = Instant::now + iters * (routine + Vec::push + Range::next)
+    /// ```
+    ///
+    /// NOTE `Bencher` will pick an `iters` that makes `Instant::now` negligible compared to the
+    /// product on the RHS. `Vec::push` will never incur in a re-allocation because its capacity is
+    /// pre-allocated.
+    pub fn iter_with_large_drop<O, R>(&mut self, mut routine: R)
+        where R: FnMut() -> O
+    {
+        let mut outputs = Vec::with_capacity(self.iters as usize);
+
+        let start = Instant::now();
+        for _ in 0..self.iters {
+            outputs.push(test::black_box(routine()));
+        }
+        self.elapsed = start.elapsed();
+
+        mem::drop(outputs);
+    }
+
+    /// Times a `routine` that needs to consume its input by first creating a pool of inputs.
+    ///
+    /// This function is handy for benchmarking destructors.
+    ///
+    /// WARNING This requires `iters * mem::size_of::<I>()` of memory, and `iters` is not under the
+    /// control of the caller.
+    ///
+    /// # Timing loop
+    ///
+    /// ``` ignore
+    /// inputs = (0..iters).map(|_| setup()).collect();
+    ///
+    /// start = Instant::now();
+    /// for input in inputs {
+    ///     routine(input);
+    /// }
+    /// elapsed = start.elapsed();
+    /// ```
+    ///
+    /// # Timing model
+    ///
+    /// ``` text
+    /// elapsed = Instant::now + iters * (routine + vec::IntoIter::next)
+    /// ```
+    pub fn iter_with_large_setup<I, S, R>(&mut self, mut setup: S, mut routine: R)
+        where S: FnMut() -> I,
+              R: FnMut(I)
+    {
+        let inputs = (0..self.iters).map(|_| setup()).collect::<Vec<_>>();
+
+        let start = Instant::now();
+        for input in inputs {
+            routine(test::black_box(input));
         }
         self.elapsed = start.elapsed();
     }
