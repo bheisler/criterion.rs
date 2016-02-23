@@ -20,6 +20,9 @@ script:
       travis-cargo build &&
       travis-cargo test &&
       travis-cargo doc
+  - |
+      cd macros &&
+      travis-cargo build
 
 after_success:
   - travis-cargo doc-upload
