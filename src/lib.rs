@@ -505,13 +505,13 @@ impl Criterion {
     /// ``` ignore-test
     /// fn bench_seq_fib(b: &mut Bencher, i: &u32) {
     ///     b.iter(|| {
-    ///         test::black_box(seq_fib(test::black_box(i)));
+    ///         seq_fib(test::black_box(i));
     ///     });
     /// }
     ///
     /// fn bench_par_fib(b: &mut Bencher, i: &u32) {
     ///     b.iter(|| {
-    ///         test::black_box(par_fib(test::black_box(i)));
+    ///         par_fib(test::black_box(i));
     ///     });
     /// }
     ///
