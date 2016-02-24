@@ -1,36 +1,56 @@
 sudo: false
+
 language: rust
+
 rust: nightly
 
+os:
+  - linux
+  - osx
+
 matrix:
+  # Clear the whole matrix
+  exclude:
+    - os: linux
+    - os: osx
+  # Add each target manually
   include:
-    - env: GNUPLOT=yes
+    - os: linux
+      env: GNUPLOT=no
+    - os: linux
+      env: GNUPLOT=yes
       addons:
         apt:
           packages:
             - gnuplot
+    - os: osx
+      env: GNUPLOT=no
+    - os: osx
+      env: GNUPLOT=yes
 
 before_script:
-  - |
-      pip install 'travis-cargo<0.2' --user &&
-      export PATH=$HOME/.local/bin:$PATH
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+      pip install 'travis-cargo<0.2' --user;
+      export PATH=$HOME/.local/bin:$PATH;
+    fi
+
+install:
+  - sh ci/install.sh
 
 script:
-  - |
-      cargo build &&
-      cargo test &&
-      cargo bench -- --test --nocapture
-      cargo doc
-  - |
-      cd macros &&
-      travis-cargo build
+  - cargo build
+  - cargo test
+  - cargo bench -- --test --nocapture
+  - cargo doc
+  - cd macros && cargo build
 
 after_success:
-  - travis-cargo doc-upload
+  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$GNUPLOT" = "yes" ]; then
+      travis-cargo doc-upload;
+    fi
 
 env:
   global:
-    - TRAVIS_CARGO_NIGHTLY_FEATURE=""
     - secure: gPGjVs0jJTU1ZbYG0LapuP6bwaQ79ao9wYMrqwLYwgkiLfDAcsJXHecp0PUUGCJnEZvAzv9hhjsmGpgACMc6h718gHnXcXdZFyXPeW0SLHl8ZBOAX84GqAbENXv33O6BmiYgti3ao5a3pLXBTUZIC6sTZiAuFTksdizLAUa/i/4=
 
 branches:
