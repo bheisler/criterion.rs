@@ -1,5 +1,5 @@
 [package]
-name = "criterion_macros"
+name = "criterion-macros"
 version = "0.0.0"
 authors = ["Jorge Aparicio <japaric@linux.com>"]
 
