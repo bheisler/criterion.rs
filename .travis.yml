@@ -17,9 +17,10 @@ before_script:
 
 script:
   - |
-      travis-cargo build &&
-      travis-cargo test &&
-      travis-cargo doc
+      cargo build &&
+      cargo test &&
+      cargo bench -- --test --nocapture
+      cargo doc
   - |
       cd macros &&
       travis-cargo build

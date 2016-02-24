@@ -15,4 +15,5 @@ git = "https://github.com/japaric/simplot.rs"
 git = "https://github.com/japaric/stats.rs"
 
 [dev-dependencies]
+criterion-macros = { path = "macros" }
 walkdir = "0.1.5"
