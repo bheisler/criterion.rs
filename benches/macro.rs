@@ -1,6 +1,5 @@
 #![feature(custom_attribute)]
 #![feature(plugin)]
-#![plugin(criterion_macros)]
 
 extern crate criterion;
 
