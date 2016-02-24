@@ -331,11 +331,11 @@ impl Criterion {
     ///
     /// # Panics
     ///
-    /// Panics if the warm up time is set to a non-positive value
-    pub fn warm_up_time(&mut self, ns: u64) -> &mut Criterion {
-        assert!(ns > 0);
+    /// Panics if the input duration is zero
+    pub fn warm_up_time(&mut self, dur: Duration) -> &mut Criterion {
+        assert!(dur.to_nanos() > 0);
 
-        self.warm_up_time = Duration::from_nanos(ns);
+        self.warm_up_time = dur;
         self
     }
 
@@ -348,11 +348,11 @@ impl Criterion {
     ///
     /// # Panics
     ///
-    /// Panics if the measurement time is set to a non-positive value
-    pub fn measurement_time(&mut self, ns: u64) -> &mut Criterion {
-        assert!(ns > 0);
+    /// Panics if the input duration in zero
+    pub fn measurement_time(&mut self, dur: Duration) -> &mut Criterion {
+        assert!(dur.to_nanos() > 0);
 
-        self.measurement_time = Duration::from_nanos(ns);
+        self.measurement_time = dur;
         self
     }
 
@@ -593,7 +593,6 @@ impl Plotting {
 
 trait DurationExt {
     fn to_nanos(&self) -> u64;
-    fn from_nanos(u64) -> Self;
 }
 
 const NANOS_PER_SEC: u64 = 1_000_000_000;
@@ -601,10 +600,6 @@ const NANOS_PER_SEC: u64 = 1_000_000_000;
 impl DurationExt for Duration {
     fn to_nanos(&self) -> u64 {
         self.as_secs() * NANOS_PER_SEC + self.subsec_nanos() as u64
-    }
-
-    fn from_nanos(ns: u64) -> Self {
-        Duration::new(ns / NANOS_PER_SEC, (ns % NANOS_PER_SEC) as u32)
     }
 }
 
