@@ -42,15 +42,19 @@ use std::path::Path;
 
 use estimate::{Distributions, Estimates};
 
-/// TODO
+/// Representing a function to benchmark together with a name of that function.
+/// Used together with `bench_compare_implementations` to represent one out of multiple functions
+/// under benchmark.
 pub struct Fun<I: fmt::Display> {
     n: String,
     f: Box<FnMut(&mut Bencher, &I)>,
 }
 
-impl<I: fmt::Display> Fun<I> {
-    /// TODO
-    pub fn new<F: FnMut(&mut Bencher, &I) + 'static>(name: &str, f: F) -> Fun<I> {
+impl<I> Fun<I> where I: fmt::Display {
+    /// Create a new `Fun` given a name and a closure
+    pub fn new<F>(name: &str, f: F) -> Fun<I>
+        where F: FnMut(&mut Bencher, &I) + 'static
+    {
         Fun {
             n: name.to_string(),
             f: Box::new(f),
@@ -493,13 +497,35 @@ impl Criterion {
         self
     }
 
-    /// TODO
+    /// Benchmarks multiple functions
+    ///
+    /// All functions get the same input and are compared with the other implementations.
+    /// Works similar to `bench`, but with multiple functions.
+    ///
+    /// ``` ignore-test
+    /// fn bench_seq_fib(b: &mut Bencher, i: &u32) {
+    ///     b.iter(|| {
+    ///         test::black_box(seq_fib(test::black_box(i)));
+    ///     });
+    /// }
+    ///
+    /// fn bench_par_fib(b: &mut Bencher, i: &u32) {
+    ///     b.iter(|| {
+    ///         test::black_box(par_fib(test::black_box(i)));
+    ///     });
+    /// }
+    ///
+    /// let sequential_fib = Fun::new("Sequential", bench_seq_fib);
+    /// let parallel_fib = Fun::new("Parallel", bench_par_fib);
+    /// let funs = vec![sequential_fib, parallel_fib];
+    ///
+    /// Criterion::default().bench_compare_implementations("Fibonacci", funs, &14);
+    /// ```
     pub fn bench_compare_implementations<I>(&mut self,
         id: &str,
         funs: Vec<Fun<I>>,
         input: &I) -> &mut Criterion
-        where
-        I: fmt::Display
+        where I: fmt::Display
     {
         analysis::functions(id, funs, input, self);
         self
