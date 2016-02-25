@@ -42,6 +42,26 @@ use std::path::Path;
 
 use estimate::{Distributions, Estimates};
 
+/// Representing a function to benchmark together with a name of that function.
+/// Used together with `bench_compare_implementations` to represent one out of multiple functions
+/// under benchmark.
+pub struct Fun<I: fmt::Display> {
+    n: String,
+    f: Box<FnMut(&mut Bencher, &I)>,
+}
+
+impl<I> Fun<I> where I: fmt::Display {
+    /// Create a new `Fun` given a name and a closure
+    pub fn new<F>(name: &str, f: F) -> Fun<I>
+        where F: FnMut(&mut Bencher, &I) + 'static
+    {
+        Fun {
+            n: name.to_string(),
+            f: Box::new(f),
+        }
+    }
+}
+
 /// Helper struct to time routines
 ///
 /// This struct provides different "timing loops" as methods. Each timing loop provides a different
@@ -486,11 +506,45 @@ impl Criterion {
     ///
     /// Criterion::default().bench("routine", routine);
     /// ```
-    pub fn bench<F>(&mut self, id: &str, f: F) -> &mut Criterion where
+    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion where
         F: FnMut(&mut Bencher),
     {
         analysis::function(id, f, self);
 
+        self
+    }
+
+    /// Benchmarks multiple functions
+    ///
+    /// All functions get the same input and are compared with the other implementations.
+    /// Works similar to `bench`, but with multiple functions.
+    ///
+    /// ``` ignore-test
+    /// fn bench_seq_fib(b: &mut Bencher, i: &u32) {
+    ///     b.iter(|| {
+    ///         seq_fib(i);
+    ///     });
+    /// }
+    ///
+    /// fn bench_par_fib(b: &mut Bencher, i: &u32) {
+    ///     b.iter(|| {
+    ///         par_fib(i);
+    ///     });
+    /// }
+    ///
+    /// let sequential_fib = Fun::new("Sequential", bench_seq_fib);
+    /// let parallel_fib = Fun::new("Parallel", bench_par_fib);
+    /// let funs = vec![sequential_fib, parallel_fib];
+    ///
+    /// Criterion::default().bench_functions("Fibonacci", funs, &14);
+    /// ```
+    pub fn bench_functions<I>(&mut self,
+        id: &str,
+        funs: Vec<Fun<I>>,
+        input: &I) -> &mut Criterion
+        where I: fmt::Display
+    {
+        analysis::functions(id, funs, input, self);
         self
     }
 
