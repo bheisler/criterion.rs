@@ -519,7 +519,11 @@ impl Criterion {
     /// All functions get the same input and are compared with the other implementations.
     /// Works similar to `bench`, but with multiple functions.
     ///
-    /// ``` ignore-test
+    /// ``` rust,no_run
+    /// # use self::criterion::{Bencher, Criterion, Fun};
+    /// # fn seq_fib(i: &u32) {}
+    /// # fn par_fib(i: &u32) {}
+    ///
     /// fn bench_seq_fib(b: &mut Bencher, i: &u32) {
     ///     b.iter(|| {
     ///         seq_fib(i);
