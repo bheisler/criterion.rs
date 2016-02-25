@@ -60,13 +60,14 @@ impl Bencher {
     /// # Timing loop
     ///
     /// ```rust,no_run
+    /// # use std::time::Instant;
     /// # fn routine() {}
-    /// let iters = 4_000_000;
-    /// let start = std::time::Instant::now();
+    /// # let iters = 4_000_000;
+    /// let start = Instant::now();
     /// for _ in 0..iters {
     ///     routine();
     /// }
-    /// println!("{:?}", start.elapsed());
+    /// let elapsed = start.elapsed();
     /// ```
     ///
     /// # Timing model
@@ -130,18 +131,20 @@ impl Bencher {
     /// # Timing loop
     ///
     /// ```rust,no_run
+    /// # use std::time::{Instant, Duration};
+    /// # use std::mem;
     /// # fn setup() {}
     /// # fn routine(input: ()) {}
-    /// let iters = 4_000_000;
-    /// let elapsed = std::time::Duration::new(0, 0);
+    /// # let iters = 4_000_000;
+    /// let elapsed = Duration::new(0, 0);
     /// for _ in 0..iters {
     ///     let input = setup();
     ///
-    ///     let start = std::time::Instant::now();
+    ///     let start = Instant::now();
     ///     let output = routine(input);
     ///     let elapsed_in_iter = start.elapsed();
     ///
-    ///     std::mem::drop(output);
+    ///     mem::drop(output);
     ///
     ///     elapsed = elapsed + elapsed_in_iter;
     /// }
@@ -183,17 +186,19 @@ impl Bencher {
     /// # Timing loop
     ///
     /// ```rust,no_run
-    /// let iters = 4_000_000;
+    /// # use std::mem;
+    /// # use std::time::Instant;
+    /// # let iters = 4_000_000;
     /// # fn routine() {}
     /// let outputs = Vec::with_capacity(iters);
     ///
-    /// let start = std::time::Instant::now();
+    /// let start = Instant::now();
     /// for _ in 0..iters {
     ///     outputs.push(routine());
     /// }
-    /// println!("{:?}", start.elapsed());
+    /// let elapsed = start.elapsed();
     ///
-    /// std::mem::drop(outputs);
+    /// mem::drop(outputs);
     /// ```
     ///
     /// # Timing model
@@ -229,16 +234,18 @@ impl Bencher {
     /// # Timing loop
     ///
     /// ```rust,no_run
+    /// # use std::time::Instant;
     /// # fn setup() {}
     /// # fn routine(input: ()) {}
-    /// let iters = 4_000_000;
+    /// # let iters = 4_000_000;
     /// let inputs: Vec<()> = (0..iters).map(|_| setup()).collect();
+    /// let start = Instant::now();
     ///
-    /// let start = std::time::Instant::now();
     /// for input in inputs {
     ///     routine(input);
     /// }
-    /// println!("{:?}", start.elapsed());
+    ///
+    /// let elapsed = start.elapsed();
     /// ```
     ///
     /// # Timing model
@@ -519,8 +526,8 @@ impl Criterion {
     /// The external program must conform to the following specification:
     ///
     /// ```rust,no_run
-    /// use std::io::{self, BufRead};
-    /// use std::time::Instant;
+    /// # use std::io::{self, BufRead};
+    /// # use std::time::Instant;
     /// # use std::time::Duration;
     /// # trait DurationExt { fn to_nanos(&self) -> u64 { 0 } }
     /// # impl DurationExt for Duration {}
