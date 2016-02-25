@@ -1,6 +1,9 @@
 environment:
-  global:
-    TARGET: x86_64-pc-windows-msvc
+  matrix:
+    - TARGET: x86_64-pc-windows-msvc
+      GNUPLOT: yes
+    - TARGET: x86_64-pc-windows-msvc
+      GNUPLOT: no
 
 install:
   - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-nightly-${env:TARGET}.exe"
@@ -8,6 +11,9 @@ install:
   - SET PATH=%PATH%;C:\Program Files (x86)\Rust\bin
   - rustc -V
   - cargo -V
+  - ps: if (${env:GNUPLOT} -eq "yes") { Start-FileDownload "https://sourceforge.net/projects/gnuplot/files/gnuplot/4.6.7/gp467-win64-setup.exe";  }
+  - if %GNUPLOT%==yes gp467-win64-setup.exe /VERYSILENT /NORESTART
+  - if %GNUPLOT%==yes SET PATH=%PATH%;C:\Program Files\gnuplot\bin
 
 build: false
 
