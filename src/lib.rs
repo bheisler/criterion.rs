@@ -59,12 +59,15 @@ impl Bencher {
     ///
     /// # Timing loop
     ///
-    /// ``` ignore
-    /// start = Instant::new();
+    /// ```rust,no_run
+    /// # use std::time::Instant;
+    /// # fn routine() {}
+    /// # let iters = 4_000_000;
+    /// let start = Instant::now();
     /// for _ in 0..iters {
     ///     routine();
     /// }
-    /// elapsed = start.elapsed();
+    /// let elapsed = start.elapsed();
     /// ```
     ///
     /// # Timing model
@@ -73,7 +76,7 @@ impl Bencher {
     /// Therefore prefer this timing loop when the runtime of `mem::drop(O)` is negligible compared
     /// to the runtime of the `routine`.
     ///
-    /// ``` text
+    /// ```text
     /// elapsed = Instant::now + iters * (routine + mem::drop(O) + Range::next)
     /// ```
     ///
@@ -96,7 +99,7 @@ impl Bencher {
     ///
     /// # Example
     ///
-    /// ``` no_run
+    /// ```rust,no_run
     /// extern crate criterion;
     ///
     /// use criterion::Bencher;
@@ -127,8 +130,13 @@ impl Bencher {
     ///
     /// # Timing loop
     ///
-    /// ``` ignore
-    /// elapsed = 0;
+    /// ```rust,no_run
+    /// # use std::time::{Instant, Duration};
+    /// # use std::mem;
+    /// # fn setup() {}
+    /// # fn routine(input: ()) {}
+    /// # let iters = 4_000_000;
+    /// let elapsed = Duration::new(0, 0);
     /// for _ in 0..iters {
     ///     let input = setup();
     ///
@@ -138,7 +146,7 @@ impl Bencher {
     ///
     ///     mem::drop(output);
     ///
-    ///     elapsed += elapsed_in_iter;
+    ///     elapsed = elapsed + elapsed_in_iter;
     /// }
     /// ```
     ///
@@ -177,14 +185,18 @@ impl Bencher {
     ///
     /// # Timing loop
     ///
-    /// ``` ignore
-    /// outputs = Vec::with_capacity(iters);
+    /// ```rust,no_run
+    /// # use std::mem;
+    /// # use std::time::Instant;
+    /// # let iters = 4_000_000;
+    /// # fn routine() {}
+    /// let outputs = Vec::with_capacity(iters);
     ///
-    /// start = Instant::now();
+    /// let start = Instant::now();
     /// for _ in 0..iters {
     ///     outputs.push(routine());
     /// }
-    /// elapsed = start.elapsed();
+    /// let elapsed = start.elapsed();
     ///
     /// mem::drop(outputs);
     /// ```
@@ -221,14 +233,19 @@ impl Bencher {
     ///
     /// # Timing loop
     ///
-    /// ``` ignore
-    /// inputs = (0..iters).map(|_| setup()).collect();
+    /// ```rust,no_run
+    /// # use std::time::Instant;
+    /// # fn setup() {}
+    /// # fn routine(input: ()) {}
+    /// # let iters = 4_000_000;
+    /// let inputs: Vec<()> = (0..iters).map(|_| setup()).collect();
+    /// let start = Instant::now();
     ///
-    /// start = Instant::now();
     /// for input in inputs {
     ///     routine(input);
     /// }
-    /// elapsed = start.elapsed();
+    ///
+    /// let elapsed = start.elapsed();
     /// ```
     ///
     /// # Timing model
@@ -454,8 +471,8 @@ impl Criterion {
     ///
     /// The function under test must follow the setup - bench - teardown pattern:
     ///
-    /// ``` ignore-test
-    /// use criterion::{Bencher, Criterion};
+    /// ```rust,no_run
+    /// use self::criterion::{Bencher, Criterion};
     ///
     /// fn routine(b: &mut Bencher) {
     ///     // Setup (construct data, allocate memory, etc)
@@ -482,12 +499,12 @@ impl Criterion {
     /// This is a convenience method to execute several related benchmarks. Each benchmark will
     /// receive the id: `${id}/${input}`.
     ///
-    /// ``` ignore-test
-    /// use criterion::{Bencher, Criterion};
+    /// ```rust,no_run
+    /// use self::criterion::{Bencher, Criterion};
     ///
-    /// Criterion::default().bench_with_inputs("from_elem", |b: &mut Bencher, &size: &usize| {
-    ///     b.iter(|| Vec::from_elem(size, 0u8));
-    /// }, [1024, 2048, 4096]);
+    /// Criterion::default().bench_with_inputs("from_elem", |b: &mut Bencher, &&size: &&usize| {
+    ///     b.iter(|| vec![0u8; size]);
+    /// }, &[1024, 2048, 4096]);
     /// ```
     pub fn bench_with_inputs<I, F>(
         &mut self,
@@ -508,9 +525,9 @@ impl Criterion {
     ///
     /// The external program must conform to the following specification:
     ///
-    /// ``` no_run
-    /// use std::io::{self, BufRead};
-    /// use std::time::Instant;
+    /// ```rust,no_run
+    /// # use std::io::{self, BufRead};
+    /// # use std::time::Instant;
     /// # use std::time::Duration;
     /// # trait DurationExt { fn to_nanos(&self) -> u64 { 0 } }
     /// # impl DurationExt for Duration {}
