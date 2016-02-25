@@ -506,7 +506,7 @@ impl Criterion {
     ///
     /// Criterion::default().bench("routine", routine);
     /// ```
-    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion where
+    pub fn bench<F>(&mut self, id: &str, f: F) -> &mut Criterion where
         F: FnMut(&mut Bencher),
     {
         analysis::function(id, f, self);
