@@ -489,7 +489,7 @@ impl Criterion {
     ///
     /// Criterion::default().bench("routine", routine);
     /// ```
-    pub fn bench<F>(&mut self, id: &str, f: F) -> &mut Criterion where
+    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion where
         F: FnMut(&mut Bencher),
     {
         analysis::function(id, f, self);
@@ -505,13 +505,13 @@ impl Criterion {
     /// ``` ignore-test
     /// fn bench_seq_fib(b: &mut Bencher, i: &u32) {
     ///     b.iter(|| {
-    ///         seq_fib(test::black_box(i));
+    ///         seq_fib(i);
     ///     });
     /// }
     ///
     /// fn bench_par_fib(b: &mut Bencher, i: &u32) {
     ///     b.iter(|| {
-    ///         par_fib(test::black_box(i));
+    ///         par_fib(i);
     ///     });
     /// }
     ///
@@ -519,9 +519,9 @@ impl Criterion {
     /// let parallel_fib = Fun::new("Parallel", bench_par_fib);
     /// let funs = vec![sequential_fib, parallel_fib];
     ///
-    /// Criterion::default().bench_compare_implementations("Fibonacci", funs, &14);
+    /// Criterion::default().bench_functions("Fibonacci", funs, &14);
     /// ```
-    pub fn bench_compare_implementations<I>(&mut self,
+    pub fn bench_functions<I>(&mut self,
         id: &str,
         funs: Vec<Fun<I>>,
         input: &I) -> &mut Criterion
