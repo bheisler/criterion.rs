@@ -37,7 +37,7 @@ install:
 
 script:
   - cargo build --target $TARGET
-  - RUST_TEST_THREADS=1 cargo test --target $TARGET
+  - cargo test --target $TARGET
   - cargo doc --target $TARGET
 
 after_success:
