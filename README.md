@@ -9,7 +9,7 @@
 **WARNING** This library is criterion's implementation detail and there no plans to stabilize it.
 In other words, the API may break at any time without notice.
 
-## [Docs](http://japaric.github.io/stats.rs/criterion-stats)
+## [Docs](http://japaric.github.io/stats.rs/criterion_stats)
 
 ## License
 
