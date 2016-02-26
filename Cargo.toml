@@ -1,7 +1,12 @@
 [package]
 authors = ["Jorge Aparicio <japaricious@gmail.com>"]
-name = "stats"
-version = "0.0.0"
+description = "Criterion's statistics library"
+documentation = "http://japaric.github.io/stats.rs/criterion-stats"
+keywords = ["statistics", "stats"]
+license = "MIT OR Apache-2.0"
+name = "criterion-stats"
+repository = "https://github.com/japaric/stats.rs"
+version = "0.1.0"
 
 [dependencies]
 cast = "0.1.0"

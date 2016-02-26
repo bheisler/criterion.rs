@@ -1,21 +1,49 @@
 sudo: false
+
 language: rust
 
 rust: nightly
+
+os:
+  - linux
+  - osx
+
+matrix:
+  exclude:
+    - os: linux
+    - os: osx
+  include:
+    - os: linux
+      env: TARGET=i686-unknown-linux-gnu
+      addons:
+        apt:
+          packages:
+            # Cross compiler and cross compiled C libraries
+            - gcc-multilib
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-gnu
+    - os: osx
+      env: TARGET=i686-apple-darwin
+    - os: osx
+      env: TARGET=x86_64-apple-darwin
 
 before_script:
   - |
       pip install 'travis-cargo<0.2' --user &&
       export PATH=$HOME/.local/bin:$PATH
 
+install:
+  - sh ci/install.sh
+
 script:
-  - |
-      travis-cargo build &&
-      travis-cargo test &&
-      travis-cargo doc
+  - cargo build --target $TARGET
+  - cargo test --target $TARGET
+  - cargo doc --target $TARGET
 
 after_success:
-  - travis-cargo doc-upload
+  - if [ "$TARGET" = "x86_64-unknown-linux-gnu" ]; then
+      travis-cargo doc-upload;
+    fi
 
 env:
   global:
