@@ -42,6 +42,7 @@ script:
 
 after_success:
   - if [ "$TARGET" = "x86_64-unknown-linux-gnu" ]; then
+      mv target/$TARGET/doc target/doc;
       travis-cargo doc-upload;
     fi
 
