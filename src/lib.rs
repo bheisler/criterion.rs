@@ -1,4 +1,9 @@
-//! Simple 2D plotting using `gnuplot`
+//! [Criterion]'s plotting library.
+//!
+//! [Criterion]: https://github.com/japaric/criterion.rs
+//!
+//! **WARNING** This library is criterion's implementation detail and there no plans to stabilize
+//! it. In other words, the API may break at any time without notice.
 //!
 //! # Examples
 //!
@@ -8,22 +13,22 @@
 //!
 //! ```
 //! extern crate itertools;
-//! extern crate simplot;
+//! extern crate criterion_plot as plot;
 //!
 //! # use std::fs;
 //! # use std::path::Path;
 //! use itertools::linspace;
-//! use simplot::prelude::*;
+//! use plot::prelude::*;
 //!
 //! # fn main() {
 //! let ref xs = linspace::<f64>(-10., 10., 51).collect::<Vec<_>>();
 //!
-//! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
+//! # fs::create_dir_all(Path::new("target/doc/criterion_plot")).unwrap();
 //! # assert_eq!(Some(String::new()),
 //! Figure::new()
 //! #   .set(Font("Helvetica"))
 //! #   .set(FontSize(12.))
-//! #   .set(Output(Path::new("target/doc/simplot/curve.svg")))
+//! #   .set(Output(Path::new("target/doc/criterion_plot/curve.svg")))
 //! #   .set(Size(1280, 720))
 //!     .configure(Key, |k| {
 //!         k.set(Boxed::Yes)
@@ -73,7 +78,7 @@
 //! ```
 //! extern crate itertools;
 //! extern crate rand;
-//! extern crate simplot;
+//! extern crate criterion_plot as plot;
 //!
 //! # use std::fs;
 //! # use std::path::Path;
@@ -81,7 +86,7 @@
 //!
 //! use itertools::linspace;
 //! use rand::{Rng, XorShiftRng};
-//! use simplot::prelude::*;
+//! use plot::prelude::*;
 //!
 //! fn sinc(mut x: f64) -> f64 {
 //!     if x == 0. {
@@ -104,12 +109,12 @@
 //! let xs = linspace::<f64>(-4., 4., 13).skip(1).take(11);
 //! let xs = xs.map(|x| x + 0.2 * rng.gen::<f64>() - 0.1);
 //!
-//! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
+//! # fs::create_dir_all(Path::new("target/doc/criterion_plot")).unwrap();
 //! # assert_eq!(Some(String::new()),
 //! Figure::new()
 //! #   .set(Font("Helvetica"))
 //! #   .set(FontSize(12.))
-//! #   .set(Output(Path::new("target/doc/simplot/error_bar.svg")))
+//! #   .set(Output(Path::new("target/doc/criterion_plot/error_bar.svg")))
 //! #   .set(Size(1280, 720))
 //!     .configure(Axis::BottomX, |a| {
 //!         a.set(TicLabels {
@@ -155,11 +160,11 @@
 //!
 //! ```
 //! extern crate rand;
-//! extern crate simplot;
+//! extern crate criterion_plot as plot;
 //!
 //! # use std::fs;
 //! # use std::path::Path;
-//! use simplot::prelude::*;
+//! use plot::prelude::*;
 //! use rand::Rng;
 //!
 //! # fn main() {
@@ -174,12 +179,12 @@
 //! let m = bm.iter().zip(bh.iter()).map(|(&l, &h)| (h - l) * rng.gen::<f64>() + l)
 //!     .collect::<Vec<_>>();
 //!
-//! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
+//! # fs::create_dir_all(Path::new("target/doc/criterion_plot")).unwrap();
 //! # assert_eq!(Some(String::new()),
 //! Figure::new()
 //! #   .set(Font("Helvetica"))
 //! #   .set(FontSize(12.))
-//! #   .set(Output(Path::new("target/doc/simplot/candlesticks.svg")))
+//! #   .set(Output(Path::new("target/doc/criterion_plot/candlesticks.svg")))
 //! #   .set(Size(1280, 720))
 //!     .set(BoxWidth(0.2))
 //!     .configure(Axis::BottomX, |a| a.set(Range::Limits(0., 11.)))
@@ -222,7 +227,7 @@
 //! ```
 //! extern crate itertools;
 //! extern crate num;
-//! extern crate simplot;
+//! extern crate criterion_plot as plot;
 //!
 //! # use std::fs;
 //! # use std::path::Path;
@@ -230,7 +235,7 @@
 //!
 //! use itertools::linspace;
 //! use num::Complex;
-//! use simplot::prelude::*;
+//! use plot::prelude::*;
 //!
 //! fn tf(x: f64) -> Complex<f64> {
 //!     Complex::new(0., x) / Complex::new(10., x) / Complex::new(1., x / 10_000.)
@@ -242,12 +247,12 @@
 //! let phase = xs.iter().map(|&x| tf(x).arg() * 180. / PI);
 //! let magnitude = xs.iter().map(|&x| tf(x).norm());
 //!
-//! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
+//! # fs::create_dir_all(Path::new("target/doc/criterion_plot")).unwrap();
 //! # assert_eq!(Some(String::new()),
 //! Figure::new().
 //! #   set(Font("Helvetica")).
 //! #   set(FontSize(12.)).
-//! #   set(Output(Path::new("target/doc/simplot/multiaxis.svg"))).
+//! #   set(Output(Path::new("target/doc/criterion_plot/multiaxis.svg"))).
 //! #   set(Size(1280, 720)).
 //!     set(Title("Frequency response")).
 //!     configure(Axis::BottomX, |a| a.
@@ -296,7 +301,7 @@
 //!
 //! ```
 //! extern crate itertools;
-//! extern crate simplot;
+//! extern crate criterion_plot as plot;
 //!
 //! # use std::fs;
 //! # use std::path::Path;
@@ -304,7 +309,7 @@
 //! use std::iter;
 //!
 //! use itertools::linspace;
-//! use simplot::prelude::*;
+//! use plot::prelude::*;
 //!
 //! # fn main() {
 //! let (start, end) = (-5., 5.);
@@ -315,12 +320,12 @@
 //!     1. / (((x - mu).powi(2) / 2. / sigma.powi(2)).exp() * sigma * (2. * PI).sqrt())
 //! }
 //!
-//! # fs::create_dir_all(Path::new("target/doc/simplot")).unwrap();
+//! # fs::create_dir_all(Path::new("target/doc/criterion_plot")).unwrap();
 //! # assert_eq!(Some(String::new()),
 //! Figure::new()
 //! #   .set(Font("Helvetica"))
 //! #   .set(FontSize(12.))
-//! #   .set(Output(Path::new("target/doc/simplot/filled_curve.svg")))
+//! #   .set(Output(Path::new("target/doc/criterion_plot/filled_curve.svg")))
 //! #   .set(Size(1280, 720))
 //!     .set(Title("Transparent filled curve"))
 //!     .configure(Axis::BottomX, |a| a.set(Range::Limits(start, end)))

@@ -1,7 +1,12 @@
 [package]
 authors = ["Jorge Aparicio <japaricious@gmail.com>"]
-name = "simplot"
-version = "0.0.0"
+description = "Criterion's plotting library"
+documentation = "http://japaric.github.io/simplot.rs/criterion-plot"
+keywords = ["plotting", "gnuplot", "criterion"]
+license = "MIT OR Apache-2.0"
+name = "criterion-plot"
+repository = "https://github.com/japaric/simplot.rs"
+version = "0.1.0"
 
 [dependencies]
 byteorder = "0.4.2"

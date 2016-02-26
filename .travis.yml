@@ -1,10 +1,15 @@
 sudo: false
+
 language: rust
 
 rust:
   - stable
   - beta
   - nightly
+
+os:
+  - linux
+  - osx
 
 addons:
   apt:
@@ -16,14 +21,20 @@ before_script:
       pip install 'travis-cargo<0.2' --user &&
       export PATH=$HOME/.local/bin:$PATH
 
+install:
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+      brew install gnuplot;
+    fi
+
 script:
-  - |
-      travis-cargo build &&
-      travis-cargo test &&
-      travis-cargo --only stable doc
+  - cargo build
+  - cargo test
+  - cargo doc
 
 after_success:
-  - travis-cargo --only stable doc-upload
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+      travis-cargo --only stable doc-upload;
+    fi
 
 env:
   global:

@@ -1,10 +1,15 @@
 [![Travis](https://travis-ci.org/japaric/simplot.rs.svg?branch=master)](https://travis-ci.org/japaric/simplot.rs)
 
-# `simplot.rs`
+# `criterion-plot`
 
-Simple 2D plotting using gnuplot.
+[Criterion]'s plotting library.
 
-## [Docs](http://japaric.github.io/simplot.rs/simplot/)
+[Criterion]: https://github.com/japaric/criterion.rs
+
+**WARNING** This library is criterion's implementation detail and there no plans to stabilize it.
+In other words, the API may break at any time without notice.
+
+## [Docs](http://japaric.github.io/simplot.rs/criterion_plot)
 
 ## License
 
