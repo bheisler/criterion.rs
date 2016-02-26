@@ -1,4 +1,9 @@
-//! Simple 2D plotting using `gnuplot`
+//! [Criterion]'s plotting library.
+//!
+//! [Criterion]: https://github.com/japaric/criterion.rs
+//!
+//! **WARNING** This library is criterion's implementation detail and there no plans to stabilize
+//! it. In other words, the API may break at any time without notice.
 //!
 //! # Examples
 //!
