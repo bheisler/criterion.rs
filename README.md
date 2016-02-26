@@ -1,5 +1,6 @@
 [![Travis](https://travis-ci.org/japaric/simplot.rs.svg?branch=master)](https://travis-ci.org/japaric/simplot.rs)
 [![Appveyor](https://ci.appveyor.com/api/projects/status/7v7uw6vparp0x3ak?svg=true)](https://ci.appveyor.com/project/japaric/simplot.rs)
+[![crates.io](http://meritbadge.herokuapp.com/criterion-plot)](https://crates.io/crates/criterion-plot)
 
 # `criterion-plot`
 
