@@ -1,5 +1,6 @@
 [![Travis](https://travis-ci.org/japaric/stats.rs.svg?branch=master)](https://travis-ci.org/japaric/stats.rs)
 [![Appveyor](https://ci.appveyor.com/api/projects/status/w1vi7xr5hvvrnukd?svg=true)](https://ci.appveyor.com/project/japaric/stats.rs)
+[![crates.io](http://meritbadge.herokuapp.com/criterion-stats)](https://crates.io/crates/criterion-stats)
 
 # `criterion-stats`
 
