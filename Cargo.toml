@@ -11,7 +11,7 @@ rustc-serialize = "0.3.16"
 [dependencies.simplot]
 git = "https://github.com/japaric/simplot.rs"
 
-[dependencies.stats]
+[dependencies.criterion-stats]
 git = "https://github.com/japaric/stats.rs"
 
 [dev-dependencies]

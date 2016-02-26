@@ -16,7 +16,7 @@ extern crate log;
 extern crate itertools;
 extern crate rustc_serialize;
 extern crate simplot;
-extern crate stats;
+extern crate criterion_stats as stats;
 extern crate test;
 
 mod analysis;
