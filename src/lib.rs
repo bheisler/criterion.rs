@@ -575,7 +575,7 @@ impl Criterion {
         I::Item: fmt::Display,
         F: FnMut(&mut Bencher, &I::Item),
     {
-        analysis::function_with_inputs(id, f, inputs, self);
+        analysis::function_over_inputs(id, f, inputs, self);
 
         self
     }
@@ -637,7 +637,7 @@ impl Criterion {
         I: IntoIterator,
         I::Item: fmt::Display,
     {
-        analysis::program_with_inputs(id, program, inputs, self);
+        analysis::program_over_inputs(id, program, inputs, self);
 
         self
     }
