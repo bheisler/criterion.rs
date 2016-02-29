@@ -41,7 +41,7 @@ pub fn plugin_registrar(reg: &mut Registry) {
 ///         b.iter(|| {});
 ///     }
 ///
-///     ::criterion::Criterion::default().bench("routine", routine);
+///     ::criterion::Criterion::default().bench_function("routine", routine);
 /// }
 /// ```
 fn expand_meta_criterion(
@@ -62,10 +62,10 @@ fn expand_meta_criterion(
             let criterion_path = vec!(crate_ident, struct_ident, method_ident);
             let default_criterion = cx.expr_call_global(span, criterion_path, vec!());
 
-            // `.bench("routine", routine);`
+            // `.bench_function("routine", routine);`
             let routine_str = cx.expr_str(span, routine.ident.name.as_str());
             let routine_ident = cx.expr_ident(span, routine.ident);
-            let bench_ident = token::str_to_ident("bench");
+            let bench_ident = token::str_to_ident("bench_function");
             let bench_call = cx.expr_method_call(span, default_criterion, bench_ident,
                                                  vec!(routine_str, routine_ident));
             let bench_call = cx.stmt_expr(bench_call);

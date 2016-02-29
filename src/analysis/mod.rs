@@ -60,7 +60,7 @@ pub fn functions<I>(id: &str,
     summarize(id, criterion);
 }
 
-pub fn function_with_inputs<I, F>(
+pub fn function_over_inputs<I, F>(
     id: &str,
     mut f: F,
     inputs: I,
@@ -85,7 +85,7 @@ pub fn program(id: &str, prog: &mut Command, criterion: &Criterion) {
     println!("");
 }
 
-pub fn program_with_inputs<I, F>(
+pub fn program_over_inputs<I, F>(
     id: &str,
     mut prog: F,
     inputs: I,

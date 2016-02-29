@@ -504,9 +504,9 @@ impl Criterion {
     ///     // Teardown (free resources)
     /// }
     ///
-    /// Criterion::default().bench("routine", routine);
+    /// Criterion::default().bench_function("routine", routine);
     /// ```
-    pub fn bench<F>(&mut self, id: &str, f: F) -> &mut Criterion where
+    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion where
         F: FnMut(&mut Bencher),
     {
         analysis::function(id, f, self);
@@ -560,11 +560,12 @@ impl Criterion {
     /// ```rust,no_run
     /// use self::criterion::{Bencher, Criterion};
     ///
-    /// Criterion::default().bench_with_inputs("from_elem", |b: &mut Bencher, &&size: &&usize| {
-    ///     b.iter(|| vec![0u8; size]);
-    /// }, &[1024, 2048, 4096]);
+    /// Criterion::default()
+    ///     .bench_function_over_inputs("from_elem", |b: &mut Bencher, &&size: &&usize| {
+    ///         b.iter(|| vec![0u8; size]);
+    ///     }, &[1024, 2048, 4096]);
     /// ```
-    pub fn bench_with_inputs<I, F>(
+    pub fn bench_function_over_inputs<I, F>(
         &mut self,
         id: &str,
         f: F,
@@ -574,7 +575,7 @@ impl Criterion {
         I::Item: fmt::Display,
         F: FnMut(&mut Bencher, &I::Item),
     {
-        analysis::function_with_inputs(id, f, inputs, self);
+        analysis::function_over_inputs(id, f, inputs, self);
 
         self
     }
@@ -626,7 +627,7 @@ impl Criterion {
     ///
     /// This is a convenience method to execute several related benchmarks. Each benchmark will
     /// receive the id: `${id}/${input}`.
-    pub fn bench_program_with_inputs<I, F>(
+    pub fn bench_program_over_inputs<I, F>(
         &mut self,
         id: &str,
         program: F,
@@ -636,7 +637,7 @@ impl Criterion {
         I: IntoIterator,
         I::Item: fmt::Display,
     {
-        analysis::program_with_inputs(id, program, inputs, self);
+        analysis::program_over_inputs(id, program, inputs, self);
 
         self
     }
