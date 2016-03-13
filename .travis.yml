@@ -34,9 +34,11 @@ before_script:
 
 install:
   - sh ci/install.sh
+  - export PATH=$HOME/cargo-clippy/target/release:$PATH
 
 script:
   - cargo build --target $TARGET
+  - cargo clippy --target $TARGET -- --cfg clippy
   - cargo test --target $TARGET
   - cargo doc --target $TARGET
 

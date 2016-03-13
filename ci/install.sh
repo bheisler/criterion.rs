@@ -2,6 +2,13 @@
 
 set -ex
 
+oldpath=$(pwd)
+cd $HOME
+git clone https://github.com/arcnmx/cargo-clippy
+cd $HOME/cargo-clippy
+cargo build --release
+cd $oldpath
+
 case $TARGET in
   # Install standard libraries needed for cross compilation
   arm-unknown-linux-gnueabihf | \
