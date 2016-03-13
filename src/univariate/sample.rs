@@ -236,7 +236,7 @@ impl<A> Sample<A> where A: Floaty {
                 let mut distributions: T::Distributions =
                     TupledDistributions::uninitialized(nresamples);
 
-                (0..ncpus).map(|i| {
+                let _ = (0..ncpus).map(|i| {
                     // NB Can't implement `chunks_mut` for the tupled distributions without HKT,
                     // for now I'll make do with aliasing and careful non-overlapping indexing
                     let mut ptr = Unique::new(&mut distributions);

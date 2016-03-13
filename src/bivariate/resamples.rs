@@ -11,6 +11,7 @@ pub struct Resamples<'a, X, Y> where X: 'a + Floaty, Y: 'a + Floaty {
     stage: Option<(Vec<X>, Vec<Y>)>,
 }
 
+#[cfg_attr(clippy, allow(should_implement_trait))]
 impl<'a, X, Y> Resamples<'a, X, Y> where X: 'a + Floaty, Y: 'a + Floaty {
     pub fn new(data: Data<'a, X, Y>) -> Resamples<'a, X, Y> {
         Resamples {
@@ -23,7 +24,7 @@ impl<'a, X, Y> Resamples<'a, X, Y> where X: 'a + Floaty, Y: 'a + Floaty {
 
     pub fn next(&mut self) -> Data<X, Y> {
         let n = self.data.0.len();
-        let ref mut rng = self.rng;
+        let rng = &mut self.rng;
 
         match self.stage {
             None => {

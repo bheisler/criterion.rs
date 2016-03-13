@@ -52,7 +52,7 @@ impl<'a, A, K> Kde<'a, A, K> where A: 'a + Floaty, K: Kernel<A> {
                 ys.set_len(n);
 
                 {
-                    ys.chunks_mut(granularity).enumerate().map(|(i, ys)| {
+                    let _ = ys.chunks_mut(granularity).enumerate().map(|(i, ys)| {
                         let offset = i * granularity;
 
                         thread::scoped(move || {

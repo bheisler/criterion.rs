@@ -26,6 +26,7 @@ pub struct Data<'a, X, Y>(&'a [X], &'a [Y]) where X: 'a, Y: 'a;
 
 impl<'a, X, Y> Copy for Data<'a, X, Y> {}
 
+#[cfg_attr(clippy, allow(expl_impl_clone_on_copy))]
 impl<'a, X, Y> Clone for Data<'a, X, Y> {
     fn clone(&self) -> Data<'a, X, Y> {
         *self
@@ -36,6 +37,11 @@ impl<'a, X, Y> Data<'a, X, Y> {
     /// Returns the length of the data set
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+
+    /// Checks whether the data set is empty
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     /// Iterate over the data set
@@ -82,7 +88,7 @@ impl<'a, X, Y> Data<'a, X, Y> where X: Floaty, Y: Floaty {
                 let mut distributions: T::Distributions =
                     TupledDistributions::uninitialized(nresamples);
 
-                (0..ncpus).map(|i| {
+                let _ = (0..ncpus).map(|i| {
                     // NB Can't implement `chunks_mut` for the tupled distributions without HKT,
                     // for now I'll make do with aliasing and careful non-overlapping indexing
                     let mut ptr = Unique::new(&mut distributions);

@@ -12,7 +12,6 @@ impl<A> Percentiles<A> where A: Floaty, usize: cast::From<A, Output=Result<usize
     ///
     /// - Make sure that `p` is in the range `[0, 100]`
     unsafe fn at_unchecked(&self, p: A) -> A {
-        let _0 = A::cast(0);
         let _100 = A::cast(100);
         let len = self.0.len() - 1;
 

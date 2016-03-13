@@ -13,6 +13,7 @@ pub struct Resamples<'a, A> where A: 'a + Floaty {
     stage: Option<Vec<A>>,
 }
 
+#[cfg_attr(clippy, allow(should_implement_trait))]
 impl <'a, A> Resamples<'a, A> where A: 'a + Floaty {
     pub fn new(sample: &'a Sample<A>) -> Resamples<'a, A> {
         let slice = sample.as_slice();
@@ -27,7 +28,7 @@ impl <'a, A> Resamples<'a, A> where A: 'a + Floaty {
 
     pub fn next(&mut self) -> &Sample<A> {
         let n = self.sample.len();
-        let ref mut rng = self.rng;
+        let rng = &mut self.rng;
 
         match self.stage {
             None => {
