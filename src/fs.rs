@@ -74,10 +74,10 @@ pub fn save<D, P>(data: &D, path: &P) where
 
         let mut buf = String::new();
         {
-            let ref mut encoder = Encoder::new_pretty(&mut buf);
+            let encoder = &mut Encoder::new_pretty(&mut buf);
             data.encode(encoder).unwrap();
         }
-        File::create(path).unwrap().write_all(buf.as_bytes()).ok().expect("Couldn't save data")
+        File::create(path).unwrap().write_all(buf.as_bytes()).expect("Couldn't save data")
     }
 
     save_(data, path.as_ref())

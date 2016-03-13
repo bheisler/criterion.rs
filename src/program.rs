@@ -84,7 +84,7 @@ impl Routine for Program {
             let msg = self.recv();
             let msg = msg.trim();
 
-            let elapsed: u64 = msg.parse().ok().expect("Couldn't parse program output");
+            let elapsed: u64 = msg.parse().expect("Couldn't parse program output");
             elapsed as f64
         }).collect()
     }

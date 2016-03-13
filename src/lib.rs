@@ -56,7 +56,7 @@ impl<I> Fun<I> where I: fmt::Display {
         where F: FnMut(&mut Bencher, &I) + 'static
     {
         Fun {
-            n: name.to_string(),
+            n: name.to_owned(),
             f: Box::new(f),
         }
     }

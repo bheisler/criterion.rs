@@ -49,7 +49,7 @@ pub fn pdf(data: Data<f64, f64>, labeled_sample: LabeledSample<f64>, id: &str) {
     let y_scale = 10f64.powi(-exponent);
 
     let y_label = if exponent == 0 {
-        "Iterations".to_string()
+        "Iterations".to_owned()
     } else {
         format!("Iterations (x 10^{})", exponent)
     };
@@ -66,7 +66,7 @@ pub fn pdf(data: Data<f64, f64>, labeled_sample: LabeledSample<f64>, id: &str) {
         set(Font(DEFAULT_FONT)).
         set(Output(path)).
         set(SIZE).
-        set(Title(id.to_string())).
+        set(Title(id.to_owned())).
         configure(Axis::BottomX, |a| a.
             set(Label(format!("Average time ({}s)", prefix))).
             set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale)).
@@ -201,7 +201,7 @@ pub fn regression(
     let x_scale = 10f64.powi(-exponent);
 
     let x_label = if exponent == 0 {
-        "Iterations".to_string()
+        "Iterations".to_owned()
     } else {
         format!("Iterations (x 10^{})", exponent)
     };
@@ -215,7 +215,7 @@ pub fn regression(
         set(Font(DEFAULT_FONT)).
         set(Output(path)).
         set(SIZE).
-        set(Title(id.to_string())).
+        set(Title(id.to_owned())).
         configure(Key, |k| k.
             set(Justification::Left).
             set(Order::SampleText).
@@ -519,7 +519,7 @@ pub fn summarize(id: &str) {
     let contents: Vec<_> = fs::ls(&dir).map(|e| e.unwrap().path()).collect();
 
     // XXX Plot both summaries?
-    for &sample in ["new", "base"].iter() {
+    for &sample in &["new", "base"] {
         let mut benches = contents.iter().filter_map(|entry| {
             if entry.is_dir() && entry.file_name().and_then(|s| s.to_str()) != Some("summary") {
                 let label = entry.file_name().unwrap().to_str().unwrap();
@@ -613,7 +613,7 @@ pub fn summarize(id: &str) {
                     set(Font(DEFAULT_FONT)).
                     set(Output(dir.join(&format!("summary/{}/{}s.svg", sample, statistic)))).
                     set(SIZE).
-                    set(Title(format!("{}", id))).
+                    set(Title(id.to_owned())).
                     configure(Axis::BottomX, |a| a.
                         configure(Grid::Major, |g| g.
                             show()).
@@ -834,7 +834,7 @@ pub fn summarize(id: &str) {
                             labels: benches.iter().map(|&(label, _, _, _)| label),
                         })).
                         plot(Points {
-                            x: medians.iter().map(|&median| median),
+                            x: medians.iter().cloned(),
                             y: tics(),
                         }, |c| c.
                         set(Color::Black).

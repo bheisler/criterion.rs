@@ -31,7 +31,7 @@ pub trait Routine {
 
         let m_ns = total_runs as f64 * d as f64 * met;
         println!("> Collecting {} samples in estimated {}", n, format::time(m_ns));
-        let m_elapsed = self.bench(m_iters.iter().map(|&x| x));
+        let m_elapsed = self.bench(m_iters.iter().cloned());
 
         let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();
 
