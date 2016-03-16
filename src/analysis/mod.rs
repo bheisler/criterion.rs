@@ -20,7 +20,7 @@ macro_rules! elapsed {
     ($msg:expr, $block:expr) => ({
         let start = ::std::time::Instant::now();
         let out = $block;
-        let ref elapsed = start.elapsed();
+        let elapsed = &start.elapsed();
 
         info!("{} took {}", $msg, format::time(::DurationExt::to_nanos(elapsed) as f64));
 

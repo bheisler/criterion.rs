@@ -125,7 +125,7 @@ fn estimates(
         [a, b]
     };
     let distributions: Distributions =
-        [Mean, Median].iter().map(|&x| x).zip(distributions.into_iter()).collect();
+        [Mean, Median].iter().cloned().zip(distributions.into_iter()).collect();
     let estimates = Estimate::new(&distributions, &points, cl);
 
     report::rel(&estimates);
@@ -143,7 +143,7 @@ fn estimates(
     }
 
     let mut regressed = vec!();
-    for (&statistic, estimate) in estimates.iter() {
+    for (&statistic, estimate) in &estimates {
         let result = compare_to_threshold(estimate, threshold);
 
         let p = estimate.point_estimate;

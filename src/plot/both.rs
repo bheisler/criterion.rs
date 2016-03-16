@@ -30,7 +30,7 @@ pub fn regression(
     let x_scale = 10f64.powi(-exponent);
 
     let x_label = if exponent == 0 {
-        "Iterations".to_string()
+        "Iterations".to_owned()
     } else {
         format!("Iterations (x 10^{})", exponent)
     };
@@ -51,7 +51,7 @@ pub fn regression(
         set(Font(DEFAULT_FONT)).
         set(Output(path)).
         set(SIZE).
-        set(Title(id.to_string())).
+        set(Title(id.to_owned())).
         configure(Axis::BottomX, |a| a.
             configure(Grid::Major, |g| g.
                 show()).
@@ -119,7 +119,7 @@ pub fn pdfs(base_avg_times: &Sample<f64>, avg_times: &Sample<f64>, id: &str) {
         set(Font(DEFAULT_FONT)).
         set(Output(path)).
         set(SIZE).
-        set(Title(id.to_string())).
+        set(Title(id.to_owned())).
         configure(Axis::BottomX, |a| a.
             set(Label(format!("Average time ({}s)", prefix))).
             set(ScaleFactor(x_scale))).
