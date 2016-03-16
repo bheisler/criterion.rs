@@ -14,6 +14,7 @@
 #![feature(plugin)]
 #![feature(unboxed_closures)]
 #![feature(unique)]
+#![cfg_attr(clippy, allow(used_underscore_binding))]
 
 extern crate cast;
 extern crate floaty;
