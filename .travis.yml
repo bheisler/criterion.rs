@@ -22,12 +22,17 @@ before_script:
       export PATH=$HOME/.local/bin:$PATH
 
 install:
+  - sh ci/install.sh
+  - export PATH=$HOME/cargo-clippy/target/release:$PATH
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
       brew install gnuplot;
     fi
 
 script:
   - cargo build
+  - if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then
+      cargo clippy -- --cfg clippy;
+    fi
   - cargo test
   - cargo doc
 
