@@ -245,12 +245,12 @@ impl<X, Y> traits::Plot<Curve<X, Y>> for Figure
     {
         let style = curve.style();
         let (x, y) = match curve {
-            Curve::Dots { x, y } => (x, y),
-            Curve::Impulses { x, y } => (x, y),
-            Curve::Lines { x, y } => (x, y),
-            Curve::LinesPoints { x, y } => (x, y),
-            Curve::Points { x, y } => (x, y),
-            Curve::Steps { x, y } => (x, y),
+            Curve::Dots { x, y }
+            | Curve::Impulses { x, y }
+            | Curve::Lines { x, y }
+            | Curve::LinesPoints { x, y }
+            | Curve::Points { x, y }
+            | Curve::Steps { x, y } => (x, y),
         };
 
         let mut props = CurveDefault::default(style);

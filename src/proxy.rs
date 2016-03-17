@@ -6,6 +6,7 @@ use std::borrow::Cow;
 use std::path::Path;
 
 /// Generic constructor for `Font`
+#[cfg_attr(clippy, allow(inline_always))]
 #[inline(always)]
 pub fn Font<S>(string: S) -> ::Font
     where S: Into<Cow<'static, str>>
@@ -14,6 +15,7 @@ pub fn Font<S>(string: S) -> ::Font
 }
 
 /// Generic constructor for `Label`
+#[cfg_attr(clippy, allow(inline_always))]
 #[inline(always)]
 pub fn Label<S>(string: S) -> ::Label
     where S: Into<Cow<'static, str>>
@@ -22,6 +24,7 @@ pub fn Label<S>(string: S) -> ::Label
 }
 
 /// Generic constructor for `Title`
+#[cfg_attr(clippy, allow(inline_always))]
 #[inline(always)]
 pub fn Title<S>(string: S) -> ::Title
     where S: Into<Cow<'static, str>>
@@ -30,6 +33,7 @@ pub fn Title<S>(string: S) -> ::Title
 }
 
 /// Generic constructor for `Output`
+#[cfg_attr(clippy, allow(inline_always))]
 #[inline(always)]
 pub fn Output<P>(path: P) -> ::Output
     where P: Into<Cow<'static, Path>>

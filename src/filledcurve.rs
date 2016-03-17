@@ -33,7 +33,7 @@ impl Script for Properties {
         } else {
             String::new()
         };
-        script.push_str(&format!("with filledcurves "));
+        script.push_str("with filledcurves ");
 
         script.push_str("fillstyle ");
 

@@ -50,9 +50,9 @@ impl Properties {
 impl Script for Properties {
     fn script(&self) -> String {
         let mut script = if self.hidden {
-            return "set key off\n".to_string();
+            return String::from("set key off\n");
         } else {
-            "set key on ".to_string()
+            String::from("set key on ")
         };
 
         match self.position {

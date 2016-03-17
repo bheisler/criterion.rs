@@ -375,6 +375,9 @@
 
 #![deny(missing_docs)]
 #![deny(warnings)]
+// This lint has lots of false positives ATM, see
+// https://github.com/Manishearth/rust-clippy/issues/761
+#![cfg_attr(clippy, allow(new_without_default))]
 
 extern crate byteorder;
 extern crate cast;
@@ -489,7 +492,7 @@ impl Figure {
         s.push_str("\nunset bars\n");
 
         let mut is_first_plot = true;
-        for plot in self.plots.iter() {
+        for plot in &self.plots {
             let data = plot.data();
 
             if data.bytes().len() == 0 {
@@ -522,10 +525,10 @@ impl Figure {
 
         let mut buffer = s.into_bytes();
         let mut is_first = true;
-        for plot in self.plots.iter() {
+        for plot in &self.plots {
             if is_first {
                 is_first = false;
-                buffer.push('\n' as u8);
+                buffer.push(b'\n');
             }
             buffer.extend_from_slice(plot.data().bytes());
         }
@@ -678,6 +681,12 @@ impl Set<Title> for Figure {
     fn set(&mut self, title: Title) -> &mut Figure {
         self.title = Some(title.0);
         self
+    }
+}
+
+impl Default for Figure {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -936,20 +945,20 @@ fn scale_factor(map: &map::axis::Map<axis::Properties>, axes: Axes) -> (f64, f64
 
     match axes {
         BottomXLeftY => {
-            (map.get(BottomX).map(|props| props.scale_factor()).unwrap_or(1.),
-             map.get(LeftY).map(|props| props.scale_factor()).unwrap_or(1.))
+            (map.get(BottomX).map_or(1., |props| props.scale_factor()),
+             map.get(LeftY).map_or(1., |props| props.scale_factor()))
         }
         BottomXRightY => {
-            (map.get(BottomX).map(|props| props.scale_factor()).unwrap_or(1.),
-             map.get(RightY).map(|props| props.scale_factor()).unwrap_or(1.))
+            (map.get(BottomX).map_or(1., |props| props.scale_factor()),
+             map.get(RightY).map_or(1., |props| props.scale_factor()))
         }
         TopXLeftY => {
-            (map.get(TopX).map(|props| props.scale_factor()).unwrap_or(1.),
-             map.get(LeftY).map(|props| props.scale_factor()).unwrap_or(1.))
+            (map.get(TopX).map_or(1., |props| props.scale_factor()),
+             map.get(LeftY).map_or(1., |props| props.scale_factor()))
         }
         TopXRightY => {
-            (map.get(TopX).map(|props| props.scale_factor()).unwrap_or(1.),
-             map.get(RightY).map(|props| props.scale_factor()).unwrap_or(1.))
+            (map.get(TopX).map_or(1., |props| props.scale_factor()),
+             map.get(RightY).map_or(1., |props| props.scale_factor()))
         }
     }
 }

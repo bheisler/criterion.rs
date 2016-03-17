@@ -28,7 +28,7 @@ impl Default for Properties {
 
 impl Script for Properties {
     fn script(&self) -> String {
-        let mut script = "with candlesticks ".to_string();
+        let mut script = String::from("with candlesticks ");
 
         script.push_str(&format!("lt {} ", self.line_type.display()));
 
