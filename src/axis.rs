@@ -139,7 +139,7 @@ impl<P, L> Set<TicLabels<P, L>> for Properties
                              .map(|(pos, label)| format!("'{}' {}", label.as_ref(), pos.f64()))
                              .collect::<Vec<_>>();
 
-        if pairs.len() == 0 {
+        if pairs.is_empty() {
             self.tics = None
         } else {
             self.tics = Some(pairs.join(", "));

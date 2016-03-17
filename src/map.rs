@@ -30,6 +30,12 @@ pub mod axis {
 
     pub struct Map<T>([Option<T>; LENGTH]);
 
+    impl<T> Default for Map<T> {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl<T> Map<T> {
         pub fn new() -> Map<T> {
             Map([None, None, None, None])
@@ -56,7 +62,7 @@ pub mod axis {
             old
         }
 
-        pub fn iter<'a>(&'a self) -> Items<'a, T> {
+        pub fn iter(&self) -> Items<T> {
             Items {
                 map: self,
                 state: Some(Axis::BottomX),
@@ -66,7 +72,7 @@ pub mod axis {
 
     impl<T> Clone for Map<T>
         where T: Clone
-{
+    {
         fn clone(&self) -> Map<T> {
             Map([self.0[0].clone(), self.0[1].clone(), self.0[2].clone(), self.0[3].clone()])
         }
@@ -129,7 +135,7 @@ pub mod grid {
             old
         }
 
-        pub fn iter<'a>(&'a self) -> Items<'a, T> {
+        pub fn iter(&self) -> Items<T> {
             Items {
                 map: self,
                 state: Some(Grid::Major),
@@ -139,9 +145,15 @@ pub mod grid {
 
     impl<T> Clone for Map<T>
         where T: Clone
-{
+    {
         fn clone(&self) -> Map<T> {
             Map([self.0[0].clone(), self.0[1].clone()])
+        }
+    }
+
+    impl<T> Default for Map<T> {
+        fn default() -> Self {
+            Self::new()
         }
     }
 }
