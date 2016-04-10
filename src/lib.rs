@@ -378,6 +378,8 @@
 // This lint has lots of false positives ATM, see
 // https://github.com/Manishearth/rust-clippy/issues/761
 #![cfg_attr(clippy, allow(new_without_default))]
+// False positives with images
+#![cfg_attr(clippy, allow(doc_markdown))]
 
 extern crate byteorder;
 extern crate cast;
@@ -871,7 +873,7 @@ pub enum Terminal {
     Svg,
 }
 
-/// Not public version of std::default::Default, used to not leak default constructors into the
+/// Not public version of `std::default::Default`, used to not leak default constructors into the
 /// public API
 trait Default {
     /// Creates `Properties` with default configuration
