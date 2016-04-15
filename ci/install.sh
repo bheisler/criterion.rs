@@ -36,7 +36,7 @@ install_cargo_clippy() {
     git clone --depth 1 https://github.com/arcnmx/cargo-clippy
     cd cargo-clippy
     cargo build --release
-    ln -s target/release/cargo-clippy ~/.cargo/bin
+    ln -s $(pwd)/target/release/cargo-clippy ~/.cargo/bin
     popd
 }
 
