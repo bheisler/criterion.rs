@@ -18,8 +18,8 @@ matrix:
     - os: osx
       env: TARGET=x86_64-apple-darwin CHANNEL=nightly
 
-before_script:
-  - export PATH=$HOME/.cargo/bin:$PATH
+before_install:
+  - export PATH=$PATH:$HOME/.cargo/bin
 
 install:
   - bash ci/install.sh
