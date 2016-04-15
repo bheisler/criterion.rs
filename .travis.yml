@@ -1,46 +1,31 @@
 sudo: false
 
-language: rust
-
-rust: nightly
-
-os:
-  - linux
-  - osx
+language: generic
 
 matrix:
-  exclude:
-    - os: linux
-    - os: osx
   include:
     - os: linux
-      env: TARGET=i686-unknown-linux-gnu
+      env: TARGET=i686-unknown-linux-gnu CHANNEL=nightly
       addons:
         apt:
           packages:
             # Cross compiler and cross compiled C libraries
             - gcc-multilib
     - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu
+      env: TARGET=x86_64-unknown-linux-gnu CHANNEL=nightly
     - os: osx
-      env: TARGET=i686-apple-darwin
+      env: TARGET=i686-apple-darwin CHANNEL=nightly
     - os: osx
-      env: TARGET=x86_64-apple-darwin
+      env: TARGET=x86_64-apple-darwin CHANNEL=nightly
 
 before_script:
-  - |
-      pip install 'travis-cargo<0.2' --user &&
-      export PATH=$HOME/.local/bin:$PATH
+  - export PATH=$HOME/.cargo/bin:$PATH
 
 install:
-  - sh ci/install.sh
-  - export PATH=$HOME/cargo-clippy/target/release:$PATH
+  - bash ci/install.sh
 
 script:
-  - cargo build --target $TARGET
-  - cargo clippy --target $TARGET -- --cfg clippy
-  - cargo test --target $TARGET
-  - cargo doc --target $TARGET
+  - bash ci/script.sh
 
 after_success:
   - if [ "$TARGET" = "x86_64-unknown-linux-gnu" ]; then
