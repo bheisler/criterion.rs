@@ -2,44 +2,54 @@
 
 set -ex
 
-oldpath=$(pwd)
-cd $HOME
-git clone https://github.com/arcnmx/cargo-clippy
-cd $HOME/cargo-clippy
-cargo build --release
-cd $oldpath
-
-case $TARGET in
-  # Install standard libraries needed for cross compilation
-  arm-unknown-linux-gnueabihf | \
-  i686-apple-darwin | \
-  i686-unknown-linux-gnu | \
-  x86_64-unknown-linux-musl)
-    if [ "$TARGET" = "arm-unknown-linux-gnueabihf" ]; then
-      # information about the cross compiler
-      arm-linux-gnueabihf-gcc -v
-
-      # tell cargo which linker to use for cross compilation
-      mkdir -p .cargo
-      cat >.cargo/config <<EOF
-[target.$TARGET]
-linker = "arm-linux-gnueabihf-gcc"
-EOF
-    fi
-
-    version=nightly
-    tarball=rust-std-${version}-${TARGET}
-
-    curl -Os http://static.rust-lang.org/dist/${tarball}.tar.gz
-
-    tar xzf ${tarball}.tar.gz
-
-    ${tarball}/install.sh --prefix=$(rustc --print sysroot)
-
-    rm -r ${tarball}
-    rm ${tarball}.tar.gz
-    ;;
-  # Nothing to do for native builds
-  *)
-    ;;
+case "$TRAVIS_OS_NAME" in
+    linux)
+        host=x86_64-unknown-linux-gnu
+        ;;
+    osx)
+        host=x86_64-apple-darwin
+        ;;
 esac
+
+mktempd() {
+    echo $(mktemp -d 2>/dev/null || mktemp -d -t tmp)
+}
+
+install_rustup() {
+    local td=$(mktempd)
+
+    pushd $td
+    curl -O https://static.rust-lang.org/rustup/dist/$host/rustup-setup
+    chmod +x rustup-setup
+    ./rustup-setup -y
+    popd
+
+    rm -r $td
+
+    rustup default $CHANNEL
+    rustc -V
+    cargo -V
+}
+
+install_cargo_clippy() {
+    pushd ~
+    git clone --depth 1 https://github.com/arcnmx/cargo-clippy
+    cd cargo-clippy
+    cargo build --release
+    ln -s $(pwd)/target/release/cargo-clippy ~/.cargo/bin
+    popd
+}
+
+install_std() {
+    if [ "$host" != "$TARGET" ]; then
+        rustup target add $TARGET
+    fi
+}
+
+main() {
+    install_rustup
+    install_cargo_clippy
+    install_std
+}
+
+main
