@@ -123,13 +123,8 @@ impl Bencher {
     ///
     /// use criterion::Bencher;
     ///
-    /// fn create_data() -> Vec<u64> {
+    /// fn create_scrambled_data() -> Vec<u64> {
     ///     # vec![]
-    ///     // ...
-    /// }
-    ///
-    /// // This should be a deterministic (i.e. not random) function
-    /// fn scramble(data: &mut [u64]) {
     ///     // ...
     /// }
     ///
@@ -139,9 +134,9 @@ impl Bencher {
     /// }
     ///
     /// fn benchmark(b: &mut Bencher) {
-    ///     let ref mut data = create_data();
+    ///     let data = create_scrambled_data();
     ///
-    ///     b.iter_with_setup(|| scramble(data), |_| sort(data))
+    ///     b.iter_with_setup(move || data.to_vec(), |mut data| sort(&mut data))
     /// }
     ///
     /// # fn main() {}
@@ -155,7 +150,7 @@ impl Bencher {
     /// # fn setup() {}
     /// # fn routine(input: ()) {}
     /// # let iters = 4_000_000;
-    /// let elapsed = Duration::new(0, 0);
+    /// let mut elapsed = Duration::new(0, 0);
     /// for _ in 0..iters {
     ///     let input = setup();
     ///
@@ -209,7 +204,7 @@ impl Bencher {
     /// # use std::time::Instant;
     /// # let iters = 4_000_000;
     /// # fn routine() {}
-    /// let outputs = Vec::with_capacity(iters);
+    /// let mut outputs = Vec::with_capacity(iters);
     ///
     /// let start = Instant::now();
     /// for _ in 0..iters {
