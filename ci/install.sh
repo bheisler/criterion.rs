@@ -16,17 +16,8 @@ mktempd() {
 }
 
 install_rustup() {
-    local td=$(mktempd)
+    curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=$CHANNEL
 
-    pushd $td
-    curl -O https://static.rust-lang.org/rustup/dist/$host/rustup-setup
-    chmod +x rustup-setup
-    ./rustup-setup -y
-    popd
-
-    rm -r $td
-
-    rustup default $CHANNEL
     rustc -V
     cargo -V
 }
