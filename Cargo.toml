@@ -9,7 +9,7 @@ repository = "https://github.com/japaric/simplot.rs"
 version = "0.1.0"
 
 [dependencies]
-byteorder = "0.4.2"
+byteorder = "1.0"
 cast = "0.1.0"
 itertools = "0.4.7"
 
