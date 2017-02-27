@@ -12,12 +12,12 @@
 //! ![Plot](curve.svg)
 //!
 //! ```
-//! extern crate itertools;
+//! extern crate itertools_num;
 //! extern crate criterion_plot as plot;
 //!
 //! # use std::fs;
 //! # use std::path::Path;
-//! use itertools::linspace;
+//! use itertools_num::linspace;
 //! use plot::prelude::*;
 //!
 //! # fn main() {
@@ -76,7 +76,7 @@
 //! ![Plot](error_bar.svg)
 //!
 //! ```
-//! extern crate itertools;
+//! extern crate itertools_num;
 //! extern crate rand;
 //! extern crate criterion_plot as plot;
 //!
@@ -84,7 +84,7 @@
 //! # use std::path::Path;
 //! use std::f64::consts::PI;
 //!
-//! use itertools::linspace;
+//! use itertools_num::linspace;
 //! use rand::{Rng, XorShiftRng};
 //! use plot::prelude::*;
 //!
@@ -225,7 +225,7 @@
 //! ![Plot](multiaxis.svg)
 //!
 //! ```
-//! extern crate itertools;
+//! extern crate itertools_num;
 //! extern crate num;
 //! extern crate criterion_plot as plot;
 //!
@@ -233,7 +233,7 @@
 //! # use std::path::Path;
 //! use std::f64::consts::PI;
 //!
-//! use itertools::linspace;
+//! use itertools_num::linspace;
 //! use num::Complex;
 //! use plot::prelude::*;
 //!
@@ -300,7 +300,7 @@
 //! ![Plot](filled_curve.svg)
 //!
 //! ```
-//! extern crate itertools;
+//! extern crate itertools_num;
 //! extern crate criterion_plot as plot;
 //!
 //! # use std::fs;
@@ -308,7 +308,7 @@
 //! use std::f64::consts::PI;
 //! use std::iter;
 //!
-//! use itertools::linspace;
+//! use itertools_num::linspace;
 //! use plot::prelude::*;
 //!
 //! # fn main() {
@@ -385,6 +385,8 @@ extern crate byteorder;
 extern crate cast;
 #[macro_use]
 extern crate itertools;
+#[cfg(test)]
+extern crate itertools_num;
 
 use std::borrow::Cow;
 use std::fs::File;
