@@ -1,4 +1,4 @@
-use cast::{self, usize, From as _0};
+use cast::{self, usize};
 use floaty::Floaty;
 
 /// A "view" into the percentiles of a sample

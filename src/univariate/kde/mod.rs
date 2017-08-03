@@ -4,7 +4,6 @@ pub mod kernel;
 
 use std::ptr;
 
-use cast::From as _0;
 use floaty::Floaty;
 use num_cpus;
 use thread_scoped as thread;
@@ -123,6 +122,7 @@ impl<A> Bandwidth<A> where A: Floaty {
     }
 }
 
+#[cfg(test)]
 macro_rules! test {
     ($ty:ident) => {
         mod $ty {
@@ -174,6 +174,7 @@ mod test {
     test!(f64);
 }
 
+#[cfg(test)]
 macro_rules! bench {
     ($ty:ident) => {
         mod $ty {

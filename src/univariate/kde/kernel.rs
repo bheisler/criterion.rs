@@ -1,6 +1,5 @@
 //! Kernels
 
-use cast::From as _0;
 use floaty::Floaty;
 
 /// Kernel function
@@ -34,6 +33,7 @@ impl<A> FnOnce<(A,)> for Gaussian where A: Floaty {
     }
 }
 
+#[cfg(test)]
 macro_rules! test {
     ($ty:ident) => {
         mod $ty {

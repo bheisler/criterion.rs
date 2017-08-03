@@ -37,7 +37,6 @@ pub mod univariate;
 use std::mem;
 use std::ops::Deref;
 
-use cast::From;
 use floaty::Floaty;
 
 use univariate::Sample;

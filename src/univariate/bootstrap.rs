@@ -1,3 +1,4 @@
+#[cfg(test)]
 macro_rules! test {
     ($ty:ident) => {
         mod $ty {
@@ -145,6 +146,7 @@ mod test {
     test!(f64);
 }
 
+#[cfg(test)]
 macro_rules! bench {
     ($ty:ident) => {
         mod $ty {

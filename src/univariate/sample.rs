@@ -1,7 +1,7 @@
 use std::ptr::Unique;
 use std::{cmp, mem};
 
-use cast::{self, From as _0};
+use cast;
 use floaty::Floaty;
 use num_cpus;
 use thread_scoped as thread;
@@ -244,7 +244,7 @@ impl<A> Sample<A> where A: Floaty {
                     let offset = i * granularity;
 
                     thread::scoped(move || {
-                        let distributions: &mut T::Distributions = ptr.get_mut();
+                        let distributions: &mut T::Distributions = ptr.as_mut();
 
                         for i in offset..cmp::min(offset + granularity, nresamples) {
                             distributions.set_unchecked(i, statistic(resamples.next()))

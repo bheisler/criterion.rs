@@ -41,7 +41,7 @@ use std::iter::IntoIterator;
 use std::ops::{Deref, Index};
 use std::slice;
 
-use cast::{self, From as _0};
+use cast;
 use floaty::Floaty;
 
 use univariate::Sample;

@@ -96,7 +96,7 @@ impl<'a, X, Y> Data<'a, X, Y> where X: Floaty, Y: Floaty {
                     let offset = i * granularity;
 
                     thread::scoped(move || {
-                        let distributions: &mut T::Distributions = ptr.get_mut();
+                        let distributions: &mut T::Distributions = ptr.as_mut();
 
                         for i in offset..cmp::min(offset + granularity, nresamples) {
                             distributions.set_unchecked(i, statistic(resamples.next()))
