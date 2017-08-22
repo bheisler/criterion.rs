@@ -1,6 +1,5 @@
 //! Regression analysis
 
-use cast::From as _0;
 use floaty::Floaty;
 
 use bivariate::Data;
@@ -116,6 +115,7 @@ impl<A> StraightLine<A> where A: Floaty {
     }
 }
 
+#[cfg(test)]
 macro_rules! test {
     ($ty:ident) => {
         mod $ty {
@@ -152,6 +152,7 @@ mod test {
     test!(f64);
 }
 
+#[cfg(test)]
 macro_rules! bench {
     ($ty:ident) => {
         mod $ty {

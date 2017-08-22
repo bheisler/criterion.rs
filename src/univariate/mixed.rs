@@ -48,7 +48,7 @@ pub fn bootstrap<A, T, S>(
                 let offset = i * granularity;
 
                 thread::scoped(move || {
-                    let distributions: &mut T::Distributions = ptr.get_mut();
+                    let distributions: &mut T::Distributions = ptr.as_mut();
                     let end = cmp::min(offset + granularity, nresamples);
                     let mut resamples = Resamples::new(c);
 
