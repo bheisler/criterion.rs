@@ -497,7 +497,7 @@ impl Figure {
         for plot in &self.plots {
             let data = plot.data();
 
-            if data.bytes().len() == 0 {
+            if data.bytes().is_empty() {
                 continue;
             }
 
@@ -522,7 +522,7 @@ impl Figure {
             }
             s.push(' ');
 
-            s.push_str(&plot.script());
+            s.push_str(plot.script());
         }
 
         let mut buffer = s.into_bytes();
@@ -936,7 +936,7 @@ pub fn version() -> io::Result<(usize, usize, usize)> {
     let mut version = words.next().unwrap().split('.');
     let major = version.next().unwrap().parse().unwrap();
     let minor = version.next().unwrap().parse().unwrap();
-    let patchlevel = words.skip(1).next().unwrap().parse().unwrap();
+    let patchlevel = words.nth(1).unwrap().parse().unwrap();
 
     Ok((major, minor, patchlevel))
 }

@@ -2,7 +2,7 @@ environment:
   global:
     TARGET: x86_64-pc-windows-msvc
   matrix:
-    - RUST_VERSION: 1.6.0
+    - RUST_VERSION: 1.9.0
     - RUST_VERSION: beta
     - RUST_VERSION: nightly
 
