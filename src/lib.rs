@@ -385,8 +385,6 @@ extern crate byteorder;
 extern crate cast;
 #[macro_use]
 extern crate itertools;
-#[cfg(test)]
-extern crate itertools_num;
 
 use std::borrow::Cow;
 use std::fs::File;
