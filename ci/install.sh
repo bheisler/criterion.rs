@@ -23,12 +23,7 @@ install_rustup() {
 }
 
 install_cargo_clippy() {
-    pushd ~
-    git clone --depth 1 https://github.com/arcnmx/cargo-clippy
-    cd cargo-clippy
-    cargo build --release
-    ln -s $(pwd)/target/release/cargo-clippy ~/.cargo/bin
-    popd
+    cargo install clippy
 }
 
 install_std() {

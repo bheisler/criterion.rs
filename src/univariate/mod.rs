@@ -23,6 +23,7 @@ pub use self::sample::Sample;
 /// - Multithreaded
 /// - Time: `O(nresamples)`
 /// - Memory: `O(nresamples)`
+#[cfg_attr(clippy, allow(cast_lossless))]
 pub fn bootstrap<A, B, T, S>(
     a: &Sample<A>,
     b: &Sample<B>,
