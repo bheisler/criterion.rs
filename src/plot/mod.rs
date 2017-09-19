@@ -270,7 +270,7 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
 
         let start = lb - (ub - lb) / 9.;
         let end = ub + (ub - lb) / 9.;
-        let (xs, ys) = kde::sweep(&distribution, KDE_POINTS, Some((start, end)));
+        let (xs, ys) = kde::sweep(distribution, KDE_POINTS, Some((start, end)));
         let xs_ = Sample::new(&xs);
 
         let (x_scale, prefix) = scale_time(xs_.max());
@@ -278,14 +278,14 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
 
         let p = estimate.point_estimate;
 
-        let n_p = xs.iter().enumerate().filter(|&(_, &x)| x >= p).next().unwrap().0;
+        let n_p = xs.iter().enumerate().find(|&(_, &x)| x >= p).unwrap().0;
         let y_p =
             ys[n_p - 1] + (ys[n_p] - ys[n_p - 1]) / (xs[n_p] - xs[n_p - 1]) * (p - xs[n_p - 1]);
 
         let zero = iter::repeat(0);
 
-        let start = xs.iter().enumerate().filter(|&(_, &x)| x >= lb).next().unwrap().0;
-        let end = xs.iter().enumerate().rev().filter(|&(_, &x)| x <= ub).next().unwrap().0;
+        let start = xs.iter().enumerate().find(|&(_, &x)| x >= lb).unwrap().0;
+        let end = xs.iter().enumerate().rev().find(|&(_, &x)| x <= ub).unwrap().0;
         let len = end - start;
 
         Figure::new().
@@ -366,19 +366,19 @@ pub fn rel_distributions(
 
         let start = lb - (ub - lb) / 9.;
         let end = ub + (ub - lb) / 9.;
-        let (xs, ys) = kde::sweep(&distribution, KDE_POINTS, Some((start, end)));
+        let (xs, ys) = kde::sweep(distribution, KDE_POINTS, Some((start, end)));
         let xs_ = Sample::new(&xs);
 
         let p = estimate.point_estimate;
-        let n_p = xs.iter().enumerate().filter(|&(_, &x)| x >= p).next().unwrap().0;
+        let n_p = xs.iter().enumerate().find(|&(_, &x)| x >= p).unwrap().0;
         let y_p =
             ys[n_p - 1] + (ys[n_p] - ys[n_p - 1]) / (xs[n_p] - xs[n_p - 1]) * (p - xs[n_p - 1]);
 
         let one = iter::repeat(1);
         let zero = iter::repeat(0);
 
-        let start = xs.iter().enumerate().filter(|&(_, &x)| x >= lb).next().unwrap().0;
-        let end = xs.iter().enumerate().rev().filter(|&(_, &x)| x <= ub).next().unwrap().0;
+        let start = xs.iter().enumerate().find(|&(_, &x)| x >= lb).unwrap().0;
+        let end = xs.iter().enumerate().rev().find(|&(_, &x)| x <= ub).unwrap().0;
         let len = end - start;
 
         let x_min = xs_.min();
@@ -436,7 +436,7 @@ pub fn rel_distributions(
     }).collect::<Vec<_>>();
 
     // FIXME This sometimes fails!
-    for gnuplot in gnuplots.into_iter() {
+    for gnuplot in gnuplots {
         assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
             str::from_utf8(&output.stderr).ok()
         }))
@@ -709,7 +709,7 @@ pub fn summarize(id: &str) {
                 let min = *points.last().unwrap();
                 let rel = points.iter().map(|&x| format!("{:.02}", x / min)).collect::<Vec<_>>();
 
-                let tics = || { (0..).map(|x| (x as f64)+0.5) };
+                let tics = || { (0..).map(|x| (f64::from(x))+0.5) };
                 // TODO Review axis scaling
                 Figure::new().
                     set(Font(DEFAULT_FONT)).
@@ -803,7 +803,7 @@ pub fn summarize(id: &str) {
                     }
                 };
 
-                let tics = || { (0..).map(|x| (x as f64)+0.5) };
+                let tics = || { (0..).map(|x| (f64::from(x))+0.5) };
                 let mut f = Figure::new();
                 f.
                     set(Font(DEFAULT_FONT)).

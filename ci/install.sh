@@ -1,11 +1,6 @@
 set -ex
 
-oldpath=$(pwd)
-cd $HOME
-git clone https://github.com/arcnmx/cargo-clippy
-cd $HOME/cargo-clippy
-cargo build --release
-cd $oldpath
+cargo install clippy
 
 if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$GNUPLOT" = "yes" ]; then
   brew install gnuplot

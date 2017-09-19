@@ -36,7 +36,6 @@ before_script:
 
 install:
   - sh ci/install.sh
-  - export PATH=$HOME/cargo-clippy/target/release:$PATH
 
 script:
   - cargo build

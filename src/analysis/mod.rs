@@ -52,7 +52,7 @@ pub fn functions<I>(id: &str,
     criterion: &Criterion)
     where I: fmt::Display
 {
-    for fun in funs.into_iter() {
+    for fun in funs {
         let id = format!("{}/{}", id, fun.n);
         let mut f = fun.f;
         common(&id, &mut Function(|b| f(b, input)), criterion);
@@ -247,9 +247,8 @@ fn estimates(
         Statistic::MedianAbsDev,
         Statistic::StdDev,
     ];
-    let distributions: Distributions = statistics.iter().map(|&x| {
-        x
-    }).zip(distributions.into_iter()).collect();
+    let distributions: Distributions = statistics.iter().cloned()
+        .zip(distributions.into_iter()).collect();
     let estimates = Estimate::new(&distributions, &points, cl);
 
     report::abs(&estimates);

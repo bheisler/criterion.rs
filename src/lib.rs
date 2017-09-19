@@ -187,7 +187,7 @@ impl Bencher {
 
             mem::drop(output);
 
-            self.elapsed = self.elapsed + elapsed;
+            self.elapsed += elapsed;
         }
     }
 
@@ -669,7 +669,7 @@ const NANOS_PER_SEC: u64 = 1_000_000_000;
 
 impl DurationExt for Duration {
     fn to_nanos(&self) -> u64 {
-        self.as_secs() * NANOS_PER_SEC + self.subsec_nanos() as u64
+        self.as_secs() * NANOS_PER_SEC + u64::from(self.subsec_nanos())
     }
 }
 
