@@ -42,11 +42,11 @@ script:
   - cargo clippy
   - cargo test
   - cargo bench -- --test --nocapture
-  - cargo doc
-  - cd macros && cargo build
+  - cargo doc --no-deps
+  - cd macros && cargo build && cd ..
 
 after_success:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$GNUPLOT" = "yes" ]; then
+  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$GNUPLOT" = "yes" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
       travis-cargo doc-upload;
     fi
 
