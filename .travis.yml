@@ -32,7 +32,7 @@ before_script:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
       pip install 'travis-cargo<0.2' --user;
       export PATH=$HOME/.local/bin:$PATH;
-      cargo install mdbook
+      cargo install mdbook;
     fi
 
 install:
@@ -48,10 +48,10 @@ script:
 
 after_success:
   - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$GNUPLOT" = "yes" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
-      cd book
-      mdbook build
-      cd ..
-      cp -r book/book target/doc/book
+      cd book;
+      mdbook build;
+      cd ..;
+      cp -r book/book target/doc/book;
       travis-cargo doc-upload;
     fi
 
