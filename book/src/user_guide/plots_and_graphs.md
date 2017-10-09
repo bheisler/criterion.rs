@@ -40,7 +40,7 @@ $BENCHMARK/
    └── tukey.json
 ```
 
-The `new` folder contains the statistics and plots for the last benchmarking run, while the `base` folder contains those for the previous run. Criterion-rs only keeps historical data for two runs. The `both` folder contains plots which show both runs on one plot, while the `change` folder contains plots showing the differences between the two runs.
+The `new` folder contains the statistics and plots for the last benchmarking run, while the `base` folder contains those for the previous run. Criterion-rs only keeps historical data for two runs. The `both` folder contains plots which show both runs on one plot, while the `change` folder contains plots showing the differences between the two runs. This example shows the plots produced by the default `bench_function` benchmark method. Other methods may produce additional charts, which will be detailed in their respective pages.
 
 ## MAD/Mean/Median/SD/Slope
 
