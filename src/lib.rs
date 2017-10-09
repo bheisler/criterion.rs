@@ -42,7 +42,7 @@ use std::path::Path;
 use estimate::{Distributions, Estimates};
 
 /// Representing a function to benchmark together with a name of that function.
-/// Used together with `bench_compare_implementations` to represent one out of multiple functions
+/// Used together with `bench_functions` to represent one out of multiple functions
 /// under benchmark.
 pub struct Fun<I: fmt::Display> {
     n: String,
