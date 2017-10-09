@@ -1,8 +1,8 @@
-## Getting Started ##
+# Getting Started #
 
 Note that Criterion-rs requires a nightly version of Rust. At time of writing, criterion-rs is not yet published to crates.io and must be used as a git dependency.
 
-#### Step 1 - Add Dependency to cargo.toml ####
+### Step 1 - Add Dependency to cargo.toml ###
 
 To enable Criterion-rs benchmarks, add the following to your `cargo.toml` file:
 
@@ -11,7 +11,7 @@ To enable Criterion-rs benchmarks, add the following to your `cargo.toml` file:
 criterion = { git = "https://github.com/japaric/criterion.rs.git" }
 ```
 
-#### Step 2 - Add Benchmark ####
+### Step 2 - Add Benchmark ###
 
 As an example, we'll benchmark an implementation of the Fibonacci function. Create a benchmark file at `$PROJECT/benches/my_benchmark.rs` with the following contents (see the Details section below for an explanation of this code):
 
@@ -35,7 +35,7 @@ fn criterion_benchmark() {
 }
 ```
 
-#### Step 3 - Run Benchmark ####
+### Step 3 - Run Benchmark ###
 
 To run this benchmark, use the following command:
 
@@ -68,7 +68,7 @@ test criterion_benchmark ... ok
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 ```
 
-#### Details ####
+### Details ###
 
 Let's go back and walk through that benchmark code in more detail.
 
@@ -107,7 +107,7 @@ Here we create a test to contain our benchmark code. The name of the benchmark t
 
 This is where the real work happens. The `bench_function` method defines a benchmark with a name and a closure. The closure must accept one argument, a [Bencher](http://japaric.github.io/criterion.rs/criterion/struct.Bencher.html). The bencher performs the benchmark - in this case, it simply calls our `fibonacci` function in a loop. `bench_function` returns a reference to the `Criterion` struct, so you can chain multiple calls to `bench_function` and similar methods to add more benchmarks to the group. See the API documentation for details on all of the different benchmarking options.
 
-#### Step 4 - Optimize ####
+### Step 4 - Optimize ###
 
 This fibonacci function is quite inefficient. We can do better:
 
