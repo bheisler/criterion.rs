@@ -43,7 +43,7 @@ In order to ensure reliable results, benchmarks should be run on a quiet compute
 
 Here, Criterion-rs attempts to calculate the time taken per iteration of the benchmark.
 
-The slope represents Criterion-rs' best guess at the time taken for each iteration of the benchmark. More precisely, this shows a 95% confidence interval on the time per iteration. The confidence level is configurable. A greater confidence level (eg. 99%) will widen the interval and thus provide the user with less information about the true mean. On the other hand, a lesser confidence interval (eg. 90%) will narrow the interval but then the user is less confident that the interval contains the true mean. 95% is generally a good balance.
+The slope represents Criterion-rs' best guess at the time taken for each iteration of the benchmark. More precisely, this shows a 95% confidence interval on the time per iteration. The confidence level is configurable. A greater confidence level (eg. 99%) will widen the interval and thus provide the user with less information about the true slope. On the other hand, a lesser confidence interval (eg. 90%) will narrow the interval but then the user is less confident that the interval contains the true slope. 95% is generally a good balance.
 
 The R^2 line indicates how accurately the linear model fits the measurements. If the measurements aren't too noisy and the benchmark is performing the same amount of work for each iteration, this number should be very close to 1.0. If it is not, the benchmark results may be unreliable.
 
@@ -57,7 +57,7 @@ The R^2 line indicates how accurately the linear model fits the measurements. If
   >     SD [61.936 us 538.86 us]
 ```
 
-Criterion-rs performs [bootstrap resampling](https://en.wikipedia.org/wiki/Bootstrapping_(statistics)) to estimate some important statistics about the samples collected.
+Criterion-rs performs [bootstrap resampling](https://en.wikipedia.org/wiki/Bootstrapping_(statistics)) to estimate some important statistics about the samples collected. The number of bootstrap samples is configurable, and defaults to 100,000.
 
 #### Mean/Median
 
@@ -84,7 +84,7 @@ alloc: Comparing with previous sample
   > median has improved by 32.84%
 ```
 
-First, Criterion-rs performs a statistical test to see whether the performance has changed significantly between runs. If it has (indicated by the 'Strong evidence...' line) it will proceed to estimate how much the performance has changed. In this case, the performance has improved significantly. The `p = 0` line is an indicator of the chances that the observed differences in mean iteration time could have happened by chance alone. If the difference in means is large compared to the noise (indicated by p being close to zero) then it is likely there is a true difference in performance between the benchmarking runs.
+First, Criterion-rs performs a statistical test to see whether the performance has changed significantly between runs (indicated by the 'Strong evidence...' line). Then it will proceed to estimate by how much the performance has changed. In this case, the performance has improved significantly. The `p = 0` line is an indicator of the chances that the observed differences in mean iteration time could have happened by chance alone. If the difference in means is large compared to the noise (indicated by p being close to zero) then it is likely there is a true difference in performance between the benchmarking runs.
 
 ```
 alloc: Comparing with previous sample
