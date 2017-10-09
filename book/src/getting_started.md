@@ -105,7 +105,7 @@ Here we create a test to contain our benchmark code. The name of the benchmark t
 }
 ```
 
-This is where the real work happens. The `bench_function` method defines a benchmark with a name and a closure. The closure must accept one argument, a [Bencher](http://japaric.github.io/criterion.rs/criterion/struct.Bencher.html). The bencher performs the benchmark - in this case, it simply calls our `fibonacci` function in a loop. `bench_function` returns a reference to the `Criterion` struct, so you can chain multiple calls to `bench_function` and similar methods to add more benchmarks to the group. See the API documentation for details on all of the different benchmarking options.
+This is where the real work happens. The `bench_function` method defines a benchmark with a name and a closure. THe name should be unique among all of the benchmarks for your project. The closure must accept one argument, a [Bencher](http://japaric.github.io/criterion.rs/criterion/struct.Bencher.html). The bencher performs the benchmark - in this case, it simply calls our `fibonacci` function in a loop. There are a number of other benchmark functions, including the option to benchmark with arguments, to benchmark external programs and to compare the performance of two functions. See the API documentation for details on all of the different benchmarking options.
 
 ### Step 4 - Optimize ###
 
