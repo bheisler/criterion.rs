@@ -57,7 +57,7 @@ Finally, we construct a Vec of the benchmark functions and run the benchmark. Th
 
 ## Means/Medians/Slopes
 
-![Means Chart](./user_guide/means.svg)
+![Means Chart](./user_guide/means_compare.svg)
 
 These charts show the absolute and relative differences in the appropriate statistics between the implementations. Here we can see that the recursive implementation took 40 microseconds per iteration, which is 1665 times slower than the iterative implementation.
 
