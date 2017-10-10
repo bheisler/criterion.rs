@@ -5,8 +5,7 @@ use criterion::Fun;
 
 fn fibonacci_slow(n: u64) -> u64 {
     match n {
-        0 => 1,
-        1 => 1,
+        0 | 1 => 1,
         n => fibonacci_slow(n-1) + fibonacci_slow(n-2),
     }
 }
@@ -14,7 +13,7 @@ fn fibonacci_slow(n: u64) -> u64 {
 fn fibonacci_fast(n: u64) -> u64 {
     let mut a = 0u64;
     let mut b = 1u64;
-    let mut c = 0u64;
+    let mut c : u64;
 
     if n == 0 {
         return 0
@@ -25,7 +24,7 @@ fn fibonacci_fast(n: u64) -> u64 {
         a = b;
         b = c;
     }
-    return b;
+    b
 }
 
 #[test]

@@ -11,8 +11,6 @@ MICROS = MILLIS * 1000
 NANOS = MICROS * 1000
 
 def benchmark():
-    argument = int(sys.argv[1])
-
     for line in sys.stdin:
         iters = int(line.strip())
 
@@ -20,7 +18,7 @@ def benchmark():
 
         start = time.perf_counter()
         for x in range(iters):
-            fibonacci(argument)
+            fibonacci(10)
         end = time.perf_counter()
 
         # Teardown

@@ -12,7 +12,5 @@ fn create_command() -> Command {
 #[test]
 fn python_fibonacci() {
     Criterion::default()
-        .bench_program_over_inputs("fibonacci-python",
-        create_command,
-        &[1, 2, 4, 8, 16]);
+        .bench_program("fibonacci-python", create_command());
 }
