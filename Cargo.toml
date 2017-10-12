@@ -1,12 +1,13 @@
 [package]
-authors = ["Jorge Aparicio <japaricious@gmail.com>"]
-description = "Criterion's statistics library"
-documentation = "http://japaric.github.io/stats.rs/criterion-stats"
-keywords = ["statistics", "stats"]
-license = "MIT OR Apache-2.0"
+authors = ["Jorge Aparicio <japaricious@gmail.com>", "Brook Heisler"]
 name = "criterion-stats"
-repository = "https://github.com/japaric/stats.rs"
 version = "0.1.0"
+
+description = "Criterion's statistics library"
+repository = "https://github.com/japaric/stats.rs"
+readme = "README.md"
+keywords = ["statistics", "stats", "criterion"]
+license = "MIT/Apache-2.0"
 
 [dependencies]
 cast = "0.1.0"
@@ -20,3 +21,7 @@ approx = "0.1.0"
 itertools = "0.4.7"
 quickcheck = "0.4.1"
 quickcheck_macros = "0.4.1"
+
+[badges]
+travis-ci = { repository = "japaric/stats.rs" }
+maintenance = { status = "actively-maintained" }
