@@ -4,11 +4,11 @@ name = "criterion"
 version = "0.0.0"
 
 description = "Statistics-driven micro-benchmarking library"
-homepage = ""https://japaric.github.io/criterion.rs/book/index.html"
+homepage = "https://japaric.github.io/criterion.rs/book/index.html"
 repository = "https://github.com/japaric/criterion.rs"
 readme = "README.md"
 keywords = ["criterion", "benchmark"]
-categories = ["development-tools::profiling"
+categories = ["development-tools::profiling"]
 license = "Apache-2.0/MIT"
 
 [dependencies]
