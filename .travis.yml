@@ -25,6 +25,7 @@ install:
   - sh ci/install.sh
   - export PATH=$HOME/cargo-clippy/target/release:$PATH
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+      brew update;
       brew install gnuplot;
     fi
 
