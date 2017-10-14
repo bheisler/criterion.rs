@@ -22,4 +22,5 @@ rand = "0.3.13"
 
 [badges]
 travis-ci = { repository = "japaric/simplot.rs" }
+appveyor = { repository = "japaric/simplot.rs", id = "ag858mwaiqh8i8dc" }
 maintenance = { status = "actively-maintained" }
