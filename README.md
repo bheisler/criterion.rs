@@ -1,5 +1,5 @@
 [![Travis](https://travis-ci.org/japaric/criterion.rs.svg?branch=master)](https://travis-ci.org/japaric/criterion.rs)
-[![Appveyor](https://ci.appveyor.com/api/projects/status/4255ads9ctpupcl2?svg=true)](https://ci.appveyor.com/project/japaric/criterion.rs)
+[![Appveyor](https://ci.appveyor.com/api/projects/status/4255ads9ctpupcl2?svg=true)](https://ci.appveyor.com/project/bheisler/criterion-rs-vt9fl)
 
 # `criterion.rs`
 
