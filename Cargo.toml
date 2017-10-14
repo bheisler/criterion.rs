@@ -24,4 +24,5 @@ quickcheck_macros = "0.4.1"
 
 [badges]
 travis-ci = { repository = "japaric/stats.rs" }
+appveyor = { repository = "japaric/stats.rs", id = "pmrliloj5nu3prw7" }
 maintenance = { status = "actively-maintained" }
