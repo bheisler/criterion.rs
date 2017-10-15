@@ -1,7 +1,7 @@
 set -ex
 
 cargo install clippy --force
-if [ "$TRAVIS_OS_NAME" = "linux"]; then
+if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     cargo install mdbook --force
 fi
 
