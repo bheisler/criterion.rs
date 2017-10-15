@@ -17,7 +17,7 @@ do_install() {
     fi
 }
 
-do_install clippy
+cargo install clippy --force
 if [ "$TRAVIS_OS_NAME" = "linux"]; then
     do_install mdbook
 fi
