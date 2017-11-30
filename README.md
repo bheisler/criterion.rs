@@ -3,16 +3,16 @@
 <div align="center">Statistics-driven Microbenchmarking in Rust</div>
 
 <div align="center">
-	<a href="https://japaric.github.io/Criterion.rs/book/getting_started.html">Getting Started</a>
+	<a href="https://japaric.github.io/criterion.rs/book/getting_started.html">Getting Started</a>
     |
-    <a href="https://japaric.github.io/Criterion.rs/book/index.html">User Guide</a>
+    <a href="https://japaric.github.io/criterion.rs/book/index.html">User Guide</a>
     |
-    <a href="https://japaric.github.io/Criterion.rs/criterion/">API Documentation</a>	
+    <a href="https://japaric.github.io/criterion.rs/criterion/">API Documentation</a>	
 </div>
 
 <div align="center">
-	<a href="https://travis-ci.org/japaric/Criterion.rs">
-    	<img src="https://travis-ci.org/japaric/Criterion.rs.svg?branch=master" alt="Travis-CI">
+	<a href="https://travis-ci.org/japaric/criterion.rs">
+    	<img src="https://travis-ci.org/japaric/criterion.rs.svg?branch=master" alt="Travis-CI">
     </a>
     |
     <a href="https://ci.appveyor.com/project/bheisler/criterion-rs-vt9fl">
@@ -45,7 +45,7 @@ To start with Criterion.<span></span>rs, add the following to your `cargo.toml` 
 
 ```toml
     [dev-dependencies]
-    criterion = { git = "https://github.com/japaric/Criterion.rs.git" }
+    criterion = { git = "https://github.com/japaric/criterion.rs.git" }
 ```
 
 Next, define a benchmark by creating a file at `$PROJECT/benches/my_benchmark.rs` with the following contents.
@@ -97,7 +97,7 @@ test criterion_benchmark ... ok
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 ```
 
-See the [Getting Started](https://japaric.github.io/Criterion.rs/book/getting_started.html) guide for more details.
+See the [Getting Started](https://japaric.github.io/criterion.rs/book/getting_started.html) guide for more details.
 
 ### Goals
 
