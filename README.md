@@ -18,6 +18,10 @@
     <a href="https://ci.appveyor.com/project/bheisler/criterion-rs-vt9fl">
     	<img src="https://ci.appveyor.com/api/projects/status/4255ads9ctpupcl2?svg=true" alt="Appveyor">
     </a>
+    |
+    <a href="https://crates.io/crates/criterion">
+        <img src="https://img.shields.io/crates/v/criterion.svg" alt="Crates.io">
+    </a>
 </div>
 
 Criterion.<span></span>rs helps you write fast code by detecting and measuring performance improvements or regressions, even small ones, quickly and accurately. You can optimize with confidence, knowing how each change affects the performance of your code.
