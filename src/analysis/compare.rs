@@ -52,10 +52,12 @@ pub fn common(
 
     fs::mkdirp(&format!(".criterion/{}/change", id));
     let different_mean = t_test(id, avg_times, base_avg_times, criterion);
-    let regressed = estimates(id, avg_times, base_avg_times, criterion);
 
-    if different_mean && regressed.into_iter().all(|x| x) {
-        panic!("{} has regressed", id);
+    if different_mean {
+        let regressed = estimates(id, avg_times, base_avg_times, criterion);
+        if regressed.into_iter().all(|x| x) {
+            println!("{} has regressed", id);
+        }
     }
 }
 
