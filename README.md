@@ -45,7 +45,7 @@ To start with Criterion.<span></span>rs, add the following to your `cargo.toml` 
 
 ```toml
     [dev-dependencies]
-    criterion = { git = "https://github.com/japaric/criterion.rs.git" }
+    criterion = "0.1.0"
 ```
 
 Next, define a benchmark by creating a file at `$PROJECT/benches/my_benchmark.rs` with the following contents.

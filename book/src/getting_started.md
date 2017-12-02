@@ -1,6 +1,6 @@
 # Getting Started #
 
-Note that Criterion-rs requires a nightly version of Rust. At time of writing, criterion-rs is not yet published to crates.io and must be used as a git dependency.
+Note that Criterion-rs requires a nightly version of Rust.
 
 ### Step 1 - Add Dependency to cargo.toml ###
 
@@ -8,7 +8,7 @@ To enable Criterion-rs benchmarks, add the following to your `cargo.toml` file:
 
 ```toml
 [dev-dependencies]
-criterion = { git = "https://github.com/japaric/criterion.rs.git" }
+criterion = "0.1.0"
 ```
 
 ### Step 2 - Add Benchmark ###
