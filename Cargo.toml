@@ -12,8 +12,8 @@ categories = ["development-tools::profiling"]
 license = "Apache-2.0/MIT"
 
 [dependencies]
-criterion-plot = "0.1.1"
-criterion-stats = "0.1.1"
+criterion-plot = { path="plot" }
+criterion-stats = { path="stats" }
 itertools = "0.4.7"
 log = "0.3.5"
 rustc-serialize = "0.3.16"
@@ -24,4 +24,5 @@ walkdir = "0.1.5"
 [badges]
 travis-ci = { repository = "japaric/criterion.rs" }
 appveyor = { repository = "japaric/criterion.rs", id = "4255ads9ctpupcl2" }
-maintenance = { status = "actively-maintained" }
+
+[workspace]

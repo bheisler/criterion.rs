@@ -78,7 +78,7 @@ fn t_test(
     let t_distribution = elapsed!(
         "Bootstrapping the T distribution",
         mixed::bootstrap(avg_times, base_avg_times, nresamples, |a, b| (a.t(b),))).0;
-    let p_value = t_distribution.p_value(t_statistic, Tails::Two);
+    let p_value = t_distribution.p_value(t_statistic, &Tails::Two);
     let different_mean = p_value < sl;
 
     println!("  > p = {}", p_value);
