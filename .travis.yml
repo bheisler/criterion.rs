@@ -17,8 +17,10 @@ before_install:
 install:
   - bash ci/install.sh
   - |
-      pip install 'travis-cargo<0.2' --user &&
-      export PATH=$HOME/.local/bin:$PATH
+      if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+        pip install 'travis-cargo<0.2' --user &&
+        export PATH=$HOME/.local/bin:$PATH
+      fi
 
 script:
   - bash ci/script.sh
