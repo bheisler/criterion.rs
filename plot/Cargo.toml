@@ -1,0 +1,26 @@
+[package]
+authors = ["Jorge Aparicio <japaricious@gmail.com>", "Brook Heisler"]
+name = "criterion-plot"
+version = "0.1.1"
+
+description = "Criterion's plotting library"
+repository = "https://github.com/japaric/simplot.rs"
+readme = "README.md"
+keywords = ["plotting", "gnuplot", "criterion"]
+categories = ["visualization"]
+license = "MIT/Apache-2.0"
+
+[dependencies]
+byteorder = "1.0"
+cast = "0.1.0"
+itertools = "0.5"
+
+[dev-dependencies]
+itertools-num = "0.1"
+num = "0.1.30"
+rand = "0.3.13"
+
+[badges]
+travis-ci = { repository = "japaric/simplot.rs" }
+appveyor = { repository = "japaric/simplot.rs", id = "ag858mwaiqh8i8dc" }
+maintenance = { status = "actively-maintained" }
