@@ -70,13 +70,13 @@ impl<A> Distribution<A> where A: Floaty {
 
     /// Computes the "likelihood" of seeing the value `t` or "more extreme" values in the
     /// distribution.
-    pub fn p_value(&self, t: A, tails: Tails) -> A {
+    pub fn p_value(&self, t: A, tails: &Tails) -> A {
         use std::cmp;
 
         let n = self.0.len();
         let hits = self.0.iter().filter(|&&x| x < t).count();
 
-        let tails = A::cast(match tails {
+        let tails = A::cast(match *tails {
             Tails::One => 1,
             Tails::Two => 2,
         });
