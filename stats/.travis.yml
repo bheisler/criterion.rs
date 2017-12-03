@@ -1,0 +1,44 @@
+sudo: false
+
+language: rust
+
+cache: cargo
+
+rust:
+  - nightly
+
+os:
+  - linux
+  - osx
+
+before_install:
+  - export PATH=$PATH:$HOME/.cargo/bin
+
+install:
+  - bash ci/install.sh
+  - |
+      if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+        pip install 'travis-cargo<0.2' --user &&
+        export PATH=$HOME/.local/bin:$PATH
+      fi
+
+script:
+  - bash ci/script.sh
+
+after_success:
+  - if [ "$TARGET" = "x86_64-unknown-linux-gnu" ]; then
+      mv target/$TARGET/doc target/doc;
+      travis-cargo doc-upload;
+    fi
+
+env:
+  global:
+    - TRAVIS_CARGO_NIGHTLY_FEATURE=""
+    - secure: D08wHRxR0AT2yx0yXOLWKhlAxDeV7XXRCMs7yrULom3iS0BKM2qviohpYNx0Jx5NyOC97ksAz6FZ3oSSURMjW/19L9bUjZimHOIVeKFDNBn4OmUASv2LywNgFfh56z8w3znuI0bs9JOGGcH3HozW/vTENDJs3SjB7lrzszrs45g=
+
+branches:
+  only: master
+
+notifications:
+  email:
+    on_success: never

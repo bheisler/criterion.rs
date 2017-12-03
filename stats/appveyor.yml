@@ -1,0 +1,29 @@
+environment:
+  global:
+    RUST_VERSION: nightly
+  matrix:
+    - TARGET: i686-pc-windows-gnu
+      MSYS2_BITS: 32
+    - TARGET: i686-pc-windows-msvc
+    - TARGET: x86_64-pc-windows-gnu
+      MSYS2_BITS: 64
+    - TARGET: x86_64-pc-windows-msvc
+
+install:
+  - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-${env:RUST_VERSION}-${env:TARGET}.exe"
+  - rust-%RUST_VERSION%-%TARGET%.exe /VERYSILENT /NORESTART /DIR="C:\Program Files (x86)\Rust"
+  - SET PATH=%PATH%;C:\Program Files (x86)\Rust\bin
+  - if defined MSYS2_BITS set PATH=%PATH%;C:\msys64\mingw%MSYS2_BITS%\bin
+  - rustc -V
+  - cargo -V
+
+build: false
+
+test_script:
+  - cargo build --verbose
+  - cargo test
+  - cargo doc
+
+branches:
+  only:
+    - master
