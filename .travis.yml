@@ -41,10 +41,10 @@ install:
 
 script:
   - cargo build
-  - cargo clippy
-  - cargo test
+  - cargo clippy --all
+  - cargo test --all
   - cargo bench -- --test --nocapture
-  - cargo doc --no-deps
+  - cargo doc --all --no-deps
   - cd macros && cargo build && cd ..
 
 after_success:

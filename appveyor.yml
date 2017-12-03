@@ -19,9 +19,9 @@ build: false
 
 test_script:
   - cargo build
-  - cargo test
+  - cargo test --all
   - cargo bench -- --test --nocapture
-  - cargo doc
+  - cargo doc --all --no-deps
   - cd macros && cargo build
 
 branches:
