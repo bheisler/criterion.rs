@@ -976,7 +976,12 @@ trait ScaleFactorTrait {
 mod test {
     #[test]
     fn version() {
-        assert_eq!(super::version().ok().map(|(major, _, _)| major >= 4),
-                   Some(true));
+        if let Ok(version) = super::version() {
+            let (major, _, _) = version;
+            assert!(major >= 4);
+        }
+        else {
+            println!("Gnuplot not installed.");
+        }
     }
 }
