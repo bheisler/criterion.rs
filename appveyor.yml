@@ -22,8 +22,7 @@ test_script:
   - cargo test --all
   - cargo bench -- --test --nocapture
   - cargo doc --all --no-deps
-  - cd macros && cargo build
-
+  
 branches:
   only:
     - master

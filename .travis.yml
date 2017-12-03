@@ -45,8 +45,7 @@ script:
   - cargo test --all
   - cargo bench -- --test --nocapture
   - cargo doc --all --no-deps
-  - cd macros && cargo build && cd ..
-
+  
 after_success:
   - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$GNUPLOT" = "yes" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
       cd book;
