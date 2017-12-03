@@ -7,7 +7,9 @@
     |
     <a href="https://japaric.github.io/criterion.rs/book/index.html">User Guide</a>
     |
-    <a href="https://japaric.github.io/criterion.rs/criterion/">API Documentation</a>	
+    <a href="https://japaric.github.io/criterion.rs/criterion/">API Documentation</a>
+    |
+    <a href="https://github.com/japaric/criterion.rs/blob/master/CHANGELOG.md">Changelog</a>
 </div>
 
 <div align="center">
