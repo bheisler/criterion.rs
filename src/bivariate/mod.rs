@@ -26,7 +26,7 @@ pub struct Data<'a, X, Y>(&'a [X], &'a [Y]) where X: 'a, Y: 'a;
 
 impl<'a, X, Y> Copy for Data<'a, X, Y> {}
 
-#[allow(expl_impl_clone_on_copy)]
+#[cfg_attr(clippy, allow(expl_impl_clone_on_copy))]
 impl<'a, X, Y> Clone for Data<'a, X, Y> {
     fn clone(&self) -> Data<'a, X, Y> {
         *self
