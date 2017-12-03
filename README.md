@@ -133,3 +133,4 @@ Criterion.<span></span>rs is dual licensed under the Apache 2.0 license and the 
 
 - [bencher](https://github.com/bluss/bencher) - A port of the libtest benchmark runner to stable Rust
 - [criterion](http://www.serpentine.com/criterion/) - The Haskell microbenchmarking library that inspired Criterion.<span></span>rs
+- [cargo-benchcmp](https://github.com/BurntSushi/cargo-benchcmp) - Cargo subcommand to compare the output of two libtest or bencher benchmark runs
