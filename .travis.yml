@@ -20,8 +20,10 @@ addons:
 
 before_script:
   - |
-      pip install 'travis-cargo<0.2' --user &&
-      export PATH=$HOME/.local/bin:$PATH
+      if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+        pip install 'travis-cargo<0.2' --user &&
+        export PATH=$HOME/.local/bin:$PATH
+      fi
 
 install:
   - sh ci/install.sh
