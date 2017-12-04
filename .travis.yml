@@ -25,6 +25,8 @@ matrix:
         apt:
           packages:
             - gnuplot
+    - os: linux
+      env: CLIPPY=yes
     - os: osx
       env: GNUPLOT=no
     - os: osx
@@ -40,11 +42,14 @@ install:
   - sh ci/install.sh
 
 script:
-  - cargo build --release
-  - cargo clippy --all --release -- --cfg clippy
-  - cargo test --all --release
-  - cargo bench -- --test --nocapture
-  - cargo doc --release --all --no-deps
+  - if [ "$CLIPPY" == "yes" ]; then
+      cargo clippy --all -- --cfg clippy;
+    else
+      cargo build --release;
+      cargo test --all --release;
+      cargo bench -- --test --nocapture;
+      cargo doc --release --all --no-deps;
+    fi
   
 after_success:
   - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$GNUPLOT" = "yes" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
