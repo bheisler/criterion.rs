@@ -4,7 +4,7 @@ if [ "$CLIPPY" = "yes" ]; then
   cargo install clippy --force
 fi
 
-if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+if [ "$DOCS" = "yes" ]; then
     cargo install mdbook --force
 fi
 
