@@ -18,10 +18,10 @@ install:
 build: false
 
 test_script:
-  - cargo build
-  - cargo test --all
+  - cargo build --release
+  - cargo test --all --release
   - cargo bench -- --test --nocapture
-  - cargo doc --all --no-deps
+  - cargo doc --release --all --no-deps
   
 branches:
   only:

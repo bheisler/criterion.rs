@@ -40,11 +40,11 @@ install:
   - sh ci/install.sh
 
 script:
-  - cargo build
-  - cargo clippy --all -- --cfg clippy
-  - cargo test --all
+  - cargo build --release
+  - cargo clippy --all --release -- --cfg clippy
+  - cargo test --all --release
   - cargo bench -- --test --nocapture
-  - cargo doc --all --no-deps
+  - cargo doc --release --all --no-deps
   
 after_success:
   - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$GNUPLOT" = "yes" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
