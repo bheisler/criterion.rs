@@ -41,7 +41,7 @@ install:
 
 script:
   - cargo build
-  - cargo clippy --all
+  - cargo clippy --all -- --cfg clippy
   - cargo test --all
   - cargo bench -- --test --nocapture
   - cargo doc --all --no-deps
