@@ -21,6 +21,9 @@
 //! use plot::prelude::*;
 //!
 //! # fn main() {
+//! # if let Err(_) = plot::version() {
+//! #     return;
+//! # }
 //! let ref xs = linspace::<f64>(-10., 10., 51).collect::<Vec<_>>();
 //!
 //! # fs::create_dir_all(Path::new("target/doc/criterion_plot")).unwrap();
@@ -98,6 +101,9 @@
 //! }
 //!
 //! # fn main() {
+//! # if let Err(_) = plot::version() {
+//! #     return;
+//! # }
 //! let ref xs_ = linspace::<f64>(-4., 4., 101).collect::<Vec<_>>();
 //!
 //! // Fake some data
@@ -168,6 +174,9 @@
 //! use rand::Rng;
 //!
 //! # fn main() {
+//! # if let Err(_) = plot::version() {
+//! #     return;
+//! # }
 //! let xs = 1..11;
 //!
 //! // Fake some data
@@ -242,6 +251,9 @@
 //! }
 //!
 //! # fn main() {
+//! # if let Err(_) = plot::version() {
+//! #     return;
+//! # }
 //! let (start, end): (f64, f64) = (1.1, 90_000.);
 //! let ref xs = linspace(start.ln(), end.ln(), 101).map(|x| x.exp()).collect::<Vec<_>>();
 //! let phase = xs.iter().map(|&x| tf(x).arg() * 180. / PI);
@@ -312,6 +324,9 @@
 //! use plot::prelude::*;
 //!
 //! # fn main() {
+//! # if let Err(_) = plot::version() {
+//! #     return;
+//! # }
 //! let (start, end) = (-5., 5.);
 //! let ref xs = linspace(start, end, 101).collect::<Vec<_>>();
 //! let zeros = iter::repeat(0);
