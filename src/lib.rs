@@ -312,8 +312,8 @@ impl Default for Criterion {
     /// Creates a benchmark manager with the following default settings:
     ///
     /// - Sample size: 100 measurements
-    /// - Warm-up time: 1 s
-    /// - Measurement time: 1 s
+    /// - Warm-up time: 3 s
+    /// - Measurement time: 5 s
     /// - Bootstrap size: 100 000 resamples
     /// - Noise threshold: 0.01 (1%)
     /// - Confidence level: 0.95
