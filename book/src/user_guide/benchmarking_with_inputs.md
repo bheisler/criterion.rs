@@ -1,6 +1,6 @@
 # Benchmarking With Inputs
 
-Criterion-rs can run benchmarks with multiple different input values to investigate how the performance behavior changes with different inputs.
+Criterion.rs can run benchmarks with multiple different input values to investigate how the performance behavior changes with different inputs.
 
 ```rust
     static KB: usize = 1024;
@@ -11,7 +11,7 @@ Criterion-rs can run benchmarks with multiple different input values to investig
     }, &[KB, 2 * KB, 4 * KB, 8 * KB, 16 * KB])
 ```
 
-In this example, we're benchmarking the time it takes to collect a iterator producing a sequence of N bytes into a Vec. We use the `bench_function_over_inputs` method. Unlike `bench_function`, the lambda here takes a Bencher and a reference to a parameter, in this case `size`. Finally, we provide a slice of potential input values. This generates five benchmarks, named "from_elem/1024" through "from_elem/16384" which individually behave the same as any other benchmark. Criterion-rs also generates some charts in `.criterion/$BENCHMARK/summary/` showing how the iteration time changes as a function of the input.
+In this example, we're benchmarking the time it takes to collect a iterator producing a sequence of N bytes into a Vec. We use the `bench_function_over_inputs` method. Unlike `bench_function`, the lambda here takes a Bencher and a reference to a parameter, in this case `size`. Finally, we provide a slice of potential input values. This generates five benchmarks, named "from_elem/1024" through "from_elem/16384" which individually behave the same as any other benchmark. Criterion.rs also generates some charts in `.criterion/$BENCHMARK/summary/` showing how the iteration time changes as a function of the input.
 
 ![Means Chart](./user_guide/means.svg)
 

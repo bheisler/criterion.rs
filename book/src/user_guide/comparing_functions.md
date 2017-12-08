@@ -1,6 +1,6 @@
 # Comparing Functions
 
-Criterion-rs can automatically benchmark multiple implementations of a function and produce summary graphs to show the differences in performance between them. First, lets create a comparison benchmark.
+Criterion.rs can automatically benchmark multiple implementations of a function and produce summary graphs to show the differences in performance between them. First, lets create a comparison benchmark.
 
 ```rust
 extern crate criterion;

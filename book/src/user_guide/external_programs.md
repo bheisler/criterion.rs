@@ -1,6 +1,6 @@
 # Benchmarking External Programs
 
-Criterion-rs has the ability to benchmark external programs (which may be written in any language) the same way that it can benchmark rust functions. What follows is an example of how that can be done and some of the pitfalls to avoid along the way.
+Criterion.rs has the ability to benchmark external programs (which may be written in any language) the same way that it can benchmark rust functions. What follows is an example of how that can be done and some of the pitfalls to avoid along the way.
 
 First, let's define our recursive Fibonacci function, only in Python this time:
 
@@ -11,7 +11,7 @@ def fibonacci(n):
     return fibonacci(n-1) + fibonacci(n-2)
 ```
 
-In order to benchmark this with Criterion-rs, we first need to write our own small benchmarking harness. I'll start with the complete code for this and then go over it in more detail:
+In order to benchmark this with Criterion.rs, we first need to write our own small benchmarking harness. I'll start with the complete code for this and then go over it in more detail:
 
 ```python
 import time
@@ -61,7 +61,7 @@ This example uses the `Criterion::bench_program_over_inputs` function to benchma
         iters = int(line.strip())
 ```
 
-Next, our harness reads a line from stdin and parses it into an integer. Starting an external process is slow, and it would mess with our measurements if we had to do so for each iteration of the benchmark. Besides which, it would obscure the results (since we're probably more interested in the performance of the function without the process-creation overhead). Therefore, Criterion-rs starts the process once per input value or benchmark and sends the iteration counts to the external program on stdin. Your external benchmark harness must read and parse this iteration count and call the benchmarked function the appropriate number of times.
+Next, our harness reads a line from stdin and parses it into an integer. Starting an external process is slow, and it would mess with our measurements if we had to do so for each iteration of the benchmark. Besides which, it would obscure the results (since we're probably more interested in the performance of the function without the process-creation overhead). Therefore, Criterion.rs starts the process once per input value or benchmark and sends the iteration counts to the external program on stdin. Your external benchmark harness must read and parse this iteration count and call the benchmarked function the appropriate number of times.
 
 ### Setup
 
@@ -93,7 +93,7 @@ If your benchmarked code requires any teardown, this is the time to do that.
 
 To report the measured time, simply print the elapsed number of nanoseconds to stdout. `perf_counter` reports its results as a floating-point number of seconds, so we first convert it to an integer number of nanoseconds before printing it.
 
-**Beware Buffering:** Criterion-rs will wait until it recieves the measurement before sending the next iteration count. If your benchmarks seem to be hanging during the warmup period, it may be because your benchmark harness is buffering the output on stdout, as Python does here. In this example we explicitly force Python to flush the buffer; you may need to do the same in your benchmarks.
+**Beware Buffering:** Criterion.rs will wait until it recieves the measurement before sending the next iteration count. If your benchmarks seem to be hanging during the warmup period, it may be because your benchmark harness is buffering the output on stdout, as Python does here. In this example we explicitly force Python to flush the buffer; you may need to do the same in your benchmarks.
 
 ## Defining the Benchmark
 

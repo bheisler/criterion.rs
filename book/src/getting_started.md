@@ -1,10 +1,10 @@
 # Getting Started #
 
-Note that Criterion-rs requires a nightly version of Rust.
+Note that Criterion.rs requires a nightly version of Rust.
 
 ### Step 1 - Add Dependency to cargo.toml ###
 
-To enable Criterion-rs benchmarks, add the following to your `cargo.toml` file:
+To enable Criterion.rs benchmarks, add the following to your `cargo.toml` file:
 
 ```toml
 [dev-dependencies]
