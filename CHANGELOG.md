@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - A changelog file.
+- Added a chapter to the book on how Criterion.rs collects and analyzes data.
 
 ## 0.1.0 - 2017-12-02
 ### Added

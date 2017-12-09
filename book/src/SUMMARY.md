@@ -8,3 +8,4 @@
     - [Benchmarking With Inputs](./user_guide/benchmarking_with_inputs.md)
     - [Comparing Functions](./user_guide/comparing_functions.md)
     - [Benchmarking External Programs](./user_guide/external_programs.md)
+- [Analysis Process](./analysis.md)
