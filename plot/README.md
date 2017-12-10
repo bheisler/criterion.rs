@@ -1,0 +1,1 @@
+This is the graphing subcrate of [Criterion.rs](https://github.com/japaric/criterion.rs). It is considered an implementation detail and is not stable. Anything may change at any time with no warning, including the public API. For further information, see the main repository.

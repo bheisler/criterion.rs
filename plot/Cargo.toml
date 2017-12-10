@@ -4,7 +4,7 @@ name = "criterion-plot"
 version = "0.1.1"
 
 description = "Criterion's plotting library"
-repository = "https://github.com/japaric/simplot.rs"
+repository = "https://github.com/japaric/criterion.rs"
 readme = "README.md"
 keywords = ["plotting", "gnuplot", "criterion"]
 categories = ["visualization"]
@@ -21,6 +21,6 @@ num = "0.1.30"
 rand = "0.3.13"
 
 [badges]
-travis-ci = { repository = "japaric/simplot.rs" }
-appveyor = { repository = "japaric/simplot.rs", id = "ag858mwaiqh8i8dc" }
+travis-ci = { repository = "japaric/criterion.rs" }
+appveyor = { repository = "japaric/criterion.rs", id = "4255ads9ctpupcl2" }
 maintenance = { status = "actively-maintained" }
