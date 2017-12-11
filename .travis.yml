@@ -57,7 +57,7 @@ script:
     else
       cargo build --release;
       cargo test --all --release;
-      cargo bench -- --test --nocapture;
+      cargo bench;
     fi
   
 env:
