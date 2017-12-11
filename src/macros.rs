@@ -63,6 +63,7 @@ macro_rules! criterion_group {
         pub fn $name() {
             $(
                 let mut criterion: Criterion = $config;
+                criterion.configure_from_args();
                 $target(&mut criterion);
             )+
         }
