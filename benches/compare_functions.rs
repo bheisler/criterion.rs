@@ -1,5 +1,3 @@
-extern crate criterion;
-
 use criterion::Criterion;
 use criterion::Fun;
 
@@ -27,13 +25,13 @@ fn fibonacci_fast(n: u64) -> u64 {
     b
 }
 
-#[test]
-fn fibonaccis() {
+fn compare_fibonaccis(c: &mut Criterion) {
     let fib_slow = Fun::new("Recursive", |b, i| b.iter(|| fibonacci_slow(*i)));
     let fib_fast = Fun::new("Iterative", |b, i| b.iter(|| fibonacci_fast(*i)));
 
     let functions = vec!(fib_slow, fib_fast);
     
-    Criterion::default()
-        .bench_functions("Fibonacci", functions, &20);
+    c.bench_functions("Fibonacci", functions, &20);
 }
+
+criterion_group!(fibonaccis, compare_fibonaccis);

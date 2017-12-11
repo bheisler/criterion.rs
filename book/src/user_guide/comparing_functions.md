@@ -3,11 +3,6 @@
 Criterion.rs can automatically benchmark multiple implementations of a function and produce summary graphs to show the differences in performance between them. First, lets create a comparison benchmark.
 
 ```rust
-extern crate criterion;
-
-use criterion::Criterion;
-use criterion::Fun;
-
 fn fibonacci_slow(n: u64) -> u64 {
     match n {
         0 => 1,
@@ -37,8 +32,7 @@ fn fibonacci_fast(n: u64) -> u64 {
 These are the same two fibonacci functions from the [Getting Started](./getting_started.html) page. The difference here is that we import the [Fun type](http://japaric.github.io/criterion.rs/criterion/struct.Fun.html) as well.
 
 ```rust
-#[test]
-fn fibonaccis() {
+fn fibonaccis(c: &mut Criterion) {
     let fib_slow = Fun::new("Recursive", |b, i| b.iter(|| fibonacci_slow(*i)));
     let fib_fast = Fun::new("Iterative", |b, i| b.iter(|| fibonacci_fast(*i)));
 ```
@@ -48,8 +42,7 @@ Here, we create two benchmark functions which simply call our two Fibonacci impl
 ```rust
     let functions = vec!(fib_slow, fib_fast);
     
-    Criterion::default()
-        .bench_functions("Fibonacci", functions, &20);
+    c.bench_functions("Fibonacci", functions, &20);
 }
 ```
 

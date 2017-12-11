@@ -27,6 +27,7 @@ mod plot;
 mod program;
 mod report;
 mod routine;
+mod macros;
 
 use std::default::Default;
 use std::iter::IntoIterator;
@@ -305,6 +306,7 @@ pub struct Criterion {
     sample_size: usize,
     significance_level: f64,
     warm_up_time: Duration,
+    filter: Option<String>,
 }
 
 impl Default for Criterion {
@@ -319,6 +321,7 @@ impl Default for Criterion {
     /// - Confidence level: 0.95
     /// - Significance level: 0.05
     /// - Plotting: enabled (if gnuplot is available)
+    /// - No filter
     fn default() -> Criterion {
         let plotting = if simplot::version().is_ok() {
             Plotting::Enabled
@@ -337,6 +340,7 @@ impl Default for Criterion {
             plotting: plotting,
             significance_level: 0.05,
             warm_up_time: Duration::new(3, 0),
+            filter: None,
         }
     }
 }
@@ -481,6 +485,29 @@ impl Criterion {
         }
     }
 
+    /// Filters the benchmarks. Only benchmarks with names that contain the
+    /// given string will be executed.
+    pub fn with_filter<S: Into<String>>(&mut self, filter: S) -> &mut Criterion {
+        self.filter = Some(filter.into());
+
+        self
+    }
+
+    /// Configure this criterion struct based on the command-line arguments to
+    /// this process.
+    pub fn configure_from_args(&mut self) {
+        if let Some(arg) = ::std::env::args().skip(1).find(|arg| *arg != "--bench") {
+            self.with_filter(arg);
+        }
+    }
+
+    fn filter_matches(&self, id: &str) -> bool {
+        match &self.filter {
+            &Some(ref string) => id.contains(string),
+            &None => true,
+        }
+    }
+
     /// Benchmarks a function
     ///
     /// The function under test must follow the setup - bench - teardown pattern:
@@ -503,7 +530,9 @@ impl Criterion {
     pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion where
         F: FnMut(&mut Bencher),
     {
-        analysis::function(id, f, self);
+        if self.filter_matches(id) {
+            analysis::function(id, f, self);
+        }
 
         self
     }
@@ -542,7 +571,9 @@ impl Criterion {
         input: &I) -> &mut Criterion
         where I: fmt::Display
     {
-        analysis::functions(id, funs, input, self);
+        if self.filter_matches(id) {
+            analysis::functions(id, funs, input, self);
+        }
         self
     }
 
@@ -569,7 +600,9 @@ impl Criterion {
         I::Item: fmt::Display,
         F: FnMut(&mut Bencher, &I::Item),
     {
-        analysis::function_over_inputs(id, f, inputs, self);
+        if self.filter_matches(id) {
+            analysis::function_over_inputs(id, f, inputs, self);
+        }
 
         self
     }
@@ -612,7 +645,9 @@ impl Criterion {
     /// }
     /// ```
     pub fn bench_program(&mut self, id: &str, mut program: Command) -> &mut Criterion {
-        analysis::program(id, &mut program, self);
+        if self.filter_matches(id) {
+            analysis::program(id, &mut program, self);
+        }
 
         self
     }
@@ -631,7 +666,9 @@ impl Criterion {
         I: IntoIterator,
         I::Item: fmt::Display,
     {
-        analysis::program_over_inputs(id, program, inputs, self);
+        if self.filter_matches(id) {
+            analysis::program_over_inputs(id, program, inputs, self);
+        }
 
         self
     }

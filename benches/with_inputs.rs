@@ -1,15 +1,12 @@
-extern crate criterion;
-
 use std::iter;
 use std::path::Path;
 
 use criterion::Criterion;
 
-#[test]
-fn from_elem() {
+fn from_elem(c: &mut Criterion) {
     static KB: usize = 1024;
 
-    let can_plot = Criterion::default().bench_function_over_inputs("from_elem", |b, &&size| {
+    let can_plot = c.bench_function_over_inputs("from_elem", |b, &&size| {
         b.iter(|| iter::repeat(0u8).take(size).collect::<Vec<_>>());
     }, &[KB, 2 * KB, 4 * KB, 8 * KB, 16 * KB]).can_plot();
 
@@ -19,3 +16,5 @@ fn from_elem() {
         assert!(summ_dir.join("means.svg").exists() && summ_dir.join("medians.svg").exists())
     }
 }
+
+criterion_group!(benches, from_elem);
