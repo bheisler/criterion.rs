@@ -1,7 +1,6 @@
-extern crate criterion;
-
 use criterion::Criterion;
 use std::process::Command;
+use std::process::Stdio;
 
 fn create_command() -> Command {
     let mut command = Command::new("python3");
@@ -9,16 +8,16 @@ fn create_command() -> Command {
     command
 }
 
-#[test]
-fn python_fibonacci() {
+fn python_fibonacci(c: &mut Criterion) {
     let has_python3 = Command::new("python3")
         .arg("--version")
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .output().is_ok();
 
     if has_python3 {
-        Criterion::default()
-            .bench_program("fibonacci-python", create_command());
+        c.bench_program("fibonacci-python", create_command());
     }
 }
+
+criterion_group!(benches, python_fibonacci);
