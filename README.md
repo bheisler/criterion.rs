@@ -52,11 +52,16 @@ To start with Criterion.<span></span>rs, add the following to your `cargo.toml` 
 ```toml
     [dev-dependencies]
     criterion = "0.1.0"
+
+    [[bench]]
+    name = "my_benchmark"
+    harness = false
 ```
 
 Next, define a benchmark by creating a file at `$PROJECT/benches/my_benchmark.rs` with the following contents.
 
 ```rust
+#[macro_use]
 extern crate criterion;
 
 use criterion::Criterion;
@@ -69,14 +74,16 @@ fn fibonacci(n: u64) -> u64 {
     }
 }
 
-#[test]
-fn criterion_benchmark() {
+fn criterion_benchmark(c: &mut Criterion) {
     Criterion::default()
         .bench_function("fib 20", |b| b.iter(|| fibonacci(20)));
 }
+
+criterion_group!(benches, criterion_benchmark);
+criterion_main!(benches);
 ```
 
-Finally, run this benchmark with `cargo bench -- criterion_benchmark --test --nocapture`. You should see output similar to the following:
+Finally, run this benchmark with `cargo bench`. You should see output similar to the following:
 
 ```
      Running target\release\deps\criterion_example-c6a3683ae7e18b5a.exe

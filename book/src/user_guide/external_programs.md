@@ -100,8 +100,6 @@ To report the measured time, simply print the elapsed number of nanoseconds to s
 If you've read the earlier pages, this will be quite familiar.
 
 ```rust
-extern crate criterion;
-
 use criterion::Criterion;
 use std::process::Command;
 
@@ -111,10 +109,8 @@ fn create_command() -> Command {
     command
 }
 
-#[test]
-fn python_fibonacci() {
-    Criterion::default()
-        .bench_program_over_inputs("fibonacci-python",
+fn python_fibonacci(c: &mut Criterion) {
+    c.bench_program_over_inputs("fibonacci-python",
         create_command,
         &[1, 2, 4, 8, 16]);
 }
