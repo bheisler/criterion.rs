@@ -27,6 +27,7 @@ mod plot;
 mod program;
 mod report;
 mod routine;
+mod macros;
 
 use std::default::Default;
 use std::iter::IntoIterator;
