@@ -128,6 +128,8 @@ Code or documentation improvements in the form of pull requests are also welcome
 
 If your issues or pull requests have no response after a few days, feel free to ping me (@bheisler)
 
+For more details, see the [CONTRIBUTING.md file](https://github.com/japaric/criterion.rs/blob/master/CONTRIBUTING.md)
+
 ### Maintenance
 
 Criterion.<span></span>rs was originally created by Jorge Aparicio (@japaric) and is currently being maintained by Brook Heisler (@bheisler).
