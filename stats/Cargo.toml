@@ -1,7 +1,7 @@
 [package]
 authors = ["Jorge Aparicio <japaricious@gmail.com>", "Brook Heisler"]
 name = "criterion-stats"
-version = "0.1.1"
+version = "0.1.2"
 
 description = "Criterion's statistics library"
 repository = "https://github.com/japaric/criterion.rs"
