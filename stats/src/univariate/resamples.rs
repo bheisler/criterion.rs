@@ -67,7 +67,7 @@ mod test {
 
     // FIXME
     // Check that the resample is a subset of the sample
-    #[quickcheck]
+quickcheck!{
     fn subset(size: usize, nresamples: usize) -> TestResult {
         if size > 1 {
             let v: Vec<_> = (0..size).map(|i| i as f32).collect();
@@ -85,6 +85,7 @@ mod test {
             TestResult::discard()
         }
     }
+}
 
     // XXX Perhaps add a check that the resamples are different
 }

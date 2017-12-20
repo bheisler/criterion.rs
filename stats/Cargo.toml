@@ -20,7 +20,6 @@ thread-scoped = "1.0.1"
 approx = "0.1.0"
 itertools = "0.4.7"
 quickcheck = "0.4.1"
-quickcheck_macros = "0.4.1"
 
 [badges]
 travis-ci = { repository = "japaric/criterion.rs" }

@@ -124,22 +124,23 @@ macro_rules! test {
             use bivariate::Data;
             use bivariate::regression::StraightLine;
 
-            #[quickcheck]
-            fn r_squared(size: usize, start: usize, offset: usize) -> TestResult {
-                if let Some(x) = ::test::vec::<$ty>(size, start) {
-                    let y = ::test::vec::<$ty>(size + offset, start + offset).unwrap();
-                    let data = Data::new(&x[start..], &y[start+offset..]);
+            quickcheck!{
+                fn r_squared(size: usize, start: usize, offset: usize) -> TestResult {
+                    if let Some(x) = ::test::vec::<$ty>(size, start) {
+                        let y = ::test::vec::<$ty>(size + offset, start + offset).unwrap();
+                        let data = Data::new(&x[start..], &y[start+offset..]);
 
-                    let sl = StraightLine::fit(data);
+                        let sl = StraightLine::fit(data);
 
-                    let r_squared = sl.r_squared(data);
+                        let r_squared = sl.r_squared(data);
 
-                    TestResult::from_bool(
-                        (r_squared > 0. || relative_eq!(r_squared, 0.)) &&
-                            (r_squared < 1. || relative_eq!(r_squared, 1.))
-                    )
-                } else {
-                    TestResult::discard()
+                        TestResult::from_bool(
+                            (r_squared > 0. || relative_eq!(r_squared, 0.)) &&
+                                (r_squared < 1. || relative_eq!(r_squared, 1.))
+                        )
+                    } else {
+                        TestResult::discard()
+                    }
                 }
             }
         }

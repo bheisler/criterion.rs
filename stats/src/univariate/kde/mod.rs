@@ -117,35 +117,36 @@ macro_rules! test {
             use univariate::kde::{Bandwidth, Kde};
 
             // The [-inf inf] integral of the estimated PDF should be one
-            #[quickcheck]
-            fn integral(size: usize, start: usize) -> TestResult {
-                const DX: $ty = 1e-3;
+            quickcheck!{
+                fn integral(size: usize, start: usize) -> TestResult {
+                    const DX: $ty = 1e-3;
 
-                if let Some(v) = ::test::vec::<$ty>(size, start) {
-                    let slice = &v[start..];
-                    let data = Sample::new(slice);
-                    let kde = Kde::new(data, Gaussian, Bandwidth::Silverman);
-                    let h = kde.bandwidth();
-                    // NB Obviously a [-inf inf] integral is not feasible, but this range works
-                    // quite well
-                    let (a, b) = (data.min() - 5. * h, data.max() + 5. * h);
+                    if let Some(v) = ::test::vec::<$ty>(size, start) {
+                        let slice = &v[start..];
+                        let data = Sample::new(slice);
+                        let kde = Kde::new(data, Gaussian, Bandwidth::Silverman);
+                        let h = kde.bandwidth();
+                        // NB Obviously a [-inf inf] integral is not feasible, but this range works
+                        // quite well
+                        let (a, b) = (data.min() - 5. * h, data.max() + 5. * h);
 
-                    let mut acc = 0.;
-                    let mut x = a;
-                    let mut y = kde.estimate(a);
+                        let mut acc = 0.;
+                        let mut x = a;
+                        let mut y = kde.estimate(a);
 
-                    while x < b {
-                        acc += DX * y / 2.;
+                        while x < b {
+                            acc += DX * y / 2.;
 
-                        x += DX;
-                        y = kde.estimate(x);
+                            x += DX;
+                            y = kde.estimate(x);
 
-                        acc += DX * y / 2.;
+                            acc += DX * y / 2.;
+                        }
+
+                        TestResult::from_bool(relative_eq!(acc, 1., epsilon = 2e-5))
+                    } else {
+                        TestResult::discard()
                     }
-
-                    TestResult::from_bool(relative_eq!(acc, 1., epsilon = 2e-5))
-                } else {
-                    TestResult::discard()
                 }
             }
         }

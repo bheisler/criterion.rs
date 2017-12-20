@@ -6,12 +6,9 @@
 //! it. In other words, the API may break at any time without notice.
 
 #![cfg_attr(test, feature(test))]
-#![cfg_attr(test, plugin(quickcheck_macros))]
 #![deny(missing_docs)]
 #![deny(warnings)]
 #![feature(unique)]
-#![feature(custom_attribute)]
-#![feature(plugin)]
 #![cfg_attr(clippy, allow(used_underscore_binding))]
 
 extern crate cast;
@@ -21,8 +18,8 @@ extern crate rand;
 extern crate thread_scoped;
 
 #[cfg(test)] #[macro_use] extern crate approx;
+#[cfg(test)] #[macro_use] extern crate quickcheck;
 #[cfg(test)] extern crate itertools;
-#[cfg(test)] extern crate quickcheck;
 #[cfg(test)] extern crate test as stdtest;
 
 #[cfg(test)] mod bench;

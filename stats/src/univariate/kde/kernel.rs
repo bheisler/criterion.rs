@@ -29,34 +29,36 @@ macro_rules! test {
 
                 use univariate::kde::kernel::{Kernel, Gaussian};
 
-                #[quickcheck]
-                fn symmetric(x: $ty) -> bool {
-                    relative_eq!(Gaussian.evaluate(-x), Gaussian.evaluate(x))
+                quickcheck!{
+                    fn symmetric(x: $ty) -> bool {
+                        relative_eq!(Gaussian.evaluate(-x), Gaussian.evaluate(x))
+                    }
                 }
 
                 // Any [a b] integral should be in the range [0 1]
-                #[quickcheck]
-                fn integral(a: $ty, b: $ty) -> TestResult {
-                    const DX: $ty = 1e-3;
+                quickcheck!{
+                    fn integral(a: $ty, b: $ty) -> TestResult {
+                        const DX: $ty = 1e-3;
 
-                    if a > b {
-                        TestResult::discard()
-                    } else {
-                        let mut acc = 0.;
-                        let mut x = a;
-                        let mut y = Gaussian.evaluate(a);
+                        if a > b {
+                            TestResult::discard()
+                        } else {
+                            let mut acc = 0.;
+                            let mut x = a;
+                            let mut y = Gaussian.evaluate(a);
 
-                        while x < b {
-                            acc += DX * y / 2.;
+                            while x < b {
+                                acc += DX * y / 2.;
 
-                            x += DX;
-                            y = Gaussian.evaluate(x);
+                                x += DX;
+                                y = Gaussian.evaluate(x);
 
-                            acc += DX * y / 2.;
+                                acc += DX * y / 2.;
+                            }
+
+                            TestResult::from_bool(
+                                (acc > 0. || relative_eq!(acc, 0.)) && (acc < 1. || relative_eq!(acc, 1.)))
                         }
-
-                        TestResult::from_bool(
-                            (acc > 0. || relative_eq!(acc, 0.)) && (acc < 1. || relative_eq!(acc, 1.)))
                     }
                 }
             }

@@ -298,16 +298,17 @@ mod test {
     macro_rules! stat {
         ($ty:ident <- $($stat:ident),+) => {
             $(
-                #[quickcheck]
-                fn $stat(size: usize, start: usize) -> TestResult {
-                    if let Some(v) = ::test::vec::<$ty>(size, start) {
-                        let slice = &v[start..];
-                        let lhs = ::univariate::Sample::new(slice).$stat();
-                        let rhs = slice.$stat();
+                quickcheck!{
+                    fn $stat(size: usize, start: usize) -> TestResult {
+                        if let Some(v) = ::test::vec::<$ty>(size, start) {
+                            let slice = &v[start..];
+                            let lhs = ::univariate::Sample::new(slice).$stat();
+                            let rhs = slice.$stat();
 
-                        TestResult::from_bool(relative_eq!(lhs, rhs, max_relative = 1e-5))
-                    } else {
-                        TestResult::discard()
+                            TestResult::from_bool(relative_eq!(lhs, rhs, max_relative = 1e-5))
+                        } else {
+                            TestResult::discard()
+                        }
                     }
                 }
             )+
@@ -317,16 +318,17 @@ mod test {
     macro_rules! stat_none {
         ($ty:ident <- $($stat:ident),+) => {
             $(
-                #[quickcheck]
-                fn $stat(size: usize, start: usize) -> TestResult {
-                    if let Some(v) = ::test::vec::<$ty>(size, start) {
-                        let slice = &v[start..];
-                        let lhs = ::univariate::Sample::new(slice).$stat(None);
-                        let rhs = slice.$stat();
+                quickcheck!{
+                    fn $stat(size: usize, start: usize) -> TestResult {
+                        if let Some(v) = ::test::vec::<$ty>(size, start) {
+                            let slice = &v[start..];
+                            let lhs = ::univariate::Sample::new(slice).$stat(None);
+                            let rhs = slice.$stat();
 
-                        TestResult::from_bool(relative_eq!(lhs, rhs, max_relative = 1e-5))
-                    } else {
-                        TestResult::discard()
+                            TestResult::from_bool(relative_eq!(lhs, rhs, max_relative = 1e-5))
+                        } else {
+                            TestResult::discard()
+                        }
                     }
                 }
             )+
@@ -336,20 +338,21 @@ mod test {
     macro_rules! fast_stat {
         ($ty:ident <- $(($stat:ident, $aux_stat:ident)),+) => {
             $(
-                #[quickcheck]
-                fn $stat(size: usize, start: usize) -> TestResult {
-                    if let Some(v) = ::test::vec::<$ty>(size, start) {
-                        let slice = &v[start..];
-                        let lhs = {
-                            let s = ::univariate::Sample::new(slice);
+                quickcheck!{
+                    fn $stat(size: usize, start: usize) -> TestResult {
+                        if let Some(v) = ::test::vec::<$ty>(size, start) {
+                            let slice = &v[start..];
+                            let lhs = {
+                                let s = ::univariate::Sample::new(slice);
 
-                            s.$stat(Some(s.$aux_stat()))
-                        };
-                        let rhs = slice.$stat();
+                                s.$stat(Some(s.$aux_stat()))
+                            };
+                            let rhs = slice.$stat();
 
-                        TestResult::from_bool(relative_eq!(lhs, rhs, max_relative = 1e-5))
-                    } else {
-                        TestResult::discard()
+                            TestResult::from_bool(relative_eq!(lhs, rhs, max_relative = 1e-5))
+                        } else {
+                            TestResult::discard()
+                        }
                     }
                 }
             )+
