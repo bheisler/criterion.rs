@@ -1,34 +1,21 @@
 use std::fs::{File, ReadDir, self};
+use std::io::Read;
 use std::path::Path;
-
-use rustc_serialize::json::Encoder;
-use rustc_serialize::{Decodable, Encodable, json};
+use serde_json;
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 // TODO Proper error handling
 pub fn load<A, P: ?Sized>(path: &P) -> A where
-    A: Decodable,
+    A: DeserializeOwned,
     P: AsRef<Path>,
 {
-    fn load_<A>(path: &Path) -> A where
-        A: Decodable,
-    {
-        use std::io::Read;
 
-        let mut string = String::new();
-
-        match File::open(path) {
-            Err(e) => panic!("{}", e),
-            Ok(mut f) => match f.read_to_string(&mut string) {
-                Err(e) => panic!("{}", e),
-                Ok(_) => match json::decode(&*string) {
-                    Err(e) => panic!("Couldn't decode {} ({:?})", string, e),
-                    Ok(thing) => thing,
-                }
-            }
-        }
-    }
-
-    load_(path.as_ref())
+    let mut f = File::open(path).unwrap_or_else(|e| { panic!("{}", e) });
+    let mut string = String::new();
+    let _ = f.read_to_string(&mut string);
+    let result: A = serde_json::from_str(string.as_str()).unwrap();
+    result
 }
 
 pub fn ls(dir: &Path) -> ReadDir {
@@ -64,19 +51,15 @@ pub fn rmrf(path: &Path) {
 
 // TODO Proper error handling
 pub fn save<D, P>(data: &D, path: &P) where
-    D: Encodable,
+    D: Serialize,
     P: AsRef<Path>,
 {
     fn save_<D>(data: &D, path: &Path) where
-        D: Encodable,
+        D: Serialize,
     {
         use std::io::Write;
 
-        let mut buf = String::new();
-        {
-            let encoder = &mut Encoder::new_pretty(&mut buf);
-            data.encode(encoder).unwrap();
-        }
+        let buf = serde_json::to_string(&data).unwrap();
         File::create(path).unwrap().write_all(buf.as_bytes()).expect("Couldn't save data")
     }
 

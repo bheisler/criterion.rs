@@ -13,10 +13,14 @@
 #[macro_use]
 extern crate log;
 extern crate itertools;
-extern crate rustc_serialize;
+extern crate serde;
+extern crate serde_json;
 extern crate criterion_plot as simplot;
 extern crate criterion_stats as stats;
 extern crate test;
+
+#[macro_use]
+extern crate serde_derive;
 
 mod analysis;
 mod estimate;
@@ -35,7 +39,6 @@ use std::process::Command;
 use std::time::{Duration, Instant};
 use std::{fmt, mem};
 
-use rustc_serialize::json;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -712,7 +715,7 @@ impl DurationExt for Duration {
 
 // TODO make private again
 #[doc(hidden)]
-#[derive(Clone, Copy, PartialEq, RustcDecodable, RustcEncodable)]
+#[derive(Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub struct ConfidenceInterval {
     confidence_level: f64,
     lower_bound: f64,
@@ -721,7 +724,7 @@ pub struct ConfidenceInterval {
 
 // TODO make private again
 #[doc(hidden)]
-#[derive(Clone, Copy, PartialEq, RustcDecodable, RustcEncodable)]
+#[derive(Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub struct Estimate {
     /// The confidence interval for this estimate
     pub confidence_interval: ConfidenceInterval,
@@ -755,7 +758,7 @@ impl Estimate {
             Err(_) => None,
             Ok(mut f) => match f.read_to_string(&mut string) {
                 Err(_) => None,
-                Ok(_) => match json::decode(&string) {
+                Ok(_) => match serde_json::from_str(&string) {
                     Err(_) => None,
                     Ok(estimates) => Some(estimates),
                 },

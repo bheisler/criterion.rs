@@ -5,7 +5,7 @@ use stats::Distribution;
 
 use Estimate;
 
-#[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd, RustcDecodable, RustcEncodable)]
+#[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize)]
 pub enum Statistic {
     Mean,
     Median,
