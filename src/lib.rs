@@ -1,11 +1,20 @@
 //! A statistics-driven micro-benchmarking library written in Rust.
 //!
-//! # Features
-//!
-//! - Can benchmark native (Rust) programs and also foreign (C, Python, Go, etc) programs
-//! - Easily benchmark a program under several inputs
-//! - Easy migration from `std::test::Bencher` to `criterion::Bencher`
-//! - Plots!
+//! This crate is a microbenchmarking library which aims to provide strong
+//! statistical confidence in detecting and estimating the size of performance
+//! improvements and regressions, whle also being easy to use.
+//! 
+//! See
+//! [the user guide](https://japaric.github.io/criterion.rs/book/index.html)
+//! for examples as well as details on the measurement and analysis process,
+//! and the output.
+//! 
+//! ## Features:
+//! * Benchmark Rust code as well as external programs
+//! * Collects detailed statistics, providing strong confidence that changes
+//!   to performance are real, not measurement noise
+//! * Produces detailed charts, providing thorough understanding of your code's
+//!   performance behavior.
 
 #![deny(missing_docs)]
 #![feature(test)]
@@ -67,8 +76,15 @@ impl<I> Fun<I> where I: fmt::Display {
 
 /// Helper struct to time routines
 ///
-/// This struct provides different "timing loops" as methods. Each timing loop provides a different
+/// This struct provides different timing loops as methods. Each timing loop provides a different
 /// way to time a routine and each has advantages and disadvantages.
+/// 
+/// * If your routine returns a value with an expensive `drop` method, use 
+///   iter_with_large_drop.
+/// * If your routine requires some per-iteration setup that shouldn't be timed,
+///   use iter_with_setup or (if the setup is expensive) use iter_with_large_setup
+///   to construct a pool of input data ahead of time
+/// * Otherwise, use iter.
 #[derive(Clone, Copy)]
 pub struct Bencher {
     iters: u64,
@@ -103,8 +119,6 @@ impl Bencher {
     /// elapsed = Instant::now + iters * (routine + mem::drop(O) + Range::next)
     /// ```
     ///
-    /// NOTE `Bencher` will choose `iters` to make `Instant::now` negligible compared to the product
-    /// on the RHS.
     pub fn iter<O, R>(&mut self, mut routine: R) where
         R: FnMut() -> O,
     {
@@ -170,10 +184,6 @@ impl Bencher {
     ///
     /// # Timing model
     ///
-    /// Note that `Bencher` also times the `Instant::now` function. Criterion will warn you (NOTE
-    /// not yet implemented) if the runtime of `routine` is small or comparable to the runtime of
-    /// `Instant::now` as this indicates that the measurement is useless.
-    ///
     /// ``` text
     /// elapsed = iters * (Instant::now + routine)
     /// ```
@@ -225,9 +235,6 @@ impl Bencher {
     /// elapsed = Instant::now + iters * (routine + Vec::push + Range::next)
     /// ```
     ///
-    /// NOTE `Bencher` will pick an `iters` that makes `Instant::now` negligible compared to the
-    /// product on the RHS. `Vec::push` will never incur in a re-allocation because its capacity is
-    /// pre-allocated.
     pub fn iter_with_large_drop<O, R>(&mut self, mut routine: R)
         where R: FnMut() -> O
     {
@@ -298,8 +305,7 @@ impl Bencher {
 /// - **Analysis**: The sample is analyzed and distiled into meaningful statistics that get
 /// reported to stdout, stored in files, and plotted
 /// - **Comparison**: The current sample is compared with the sample obtained in the previous
-/// benchmark. If a significant regression in performance is spotted, `Criterion` will trigger a
-/// task panic
+/// benchmark.
 pub struct Criterion {
     confidence_level: f64,
     measurement_time: Duration,

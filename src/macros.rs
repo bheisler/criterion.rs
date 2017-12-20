@@ -2,7 +2,8 @@
 //! in place of the standard benchmark harness. This allows the user to run
 //! Criterion.rs benchmarks with `cargo bench`.
 
-/// Macro used to define a benchmark group.
+/// Macro used to define a benchmark group for the benchmark harness; see the
+/// criterion! macro for more details.
 /// 
 /// This is used to define a benchmark group; a collection of related benchmarks
 /// which share a common configuration. Accepts two forms which can be seen
@@ -77,8 +78,41 @@ macro_rules! criterion_group {
     }
 }
 
-/// Macro which expands to a main function which executes all of the given
-/// benchmark groups.
+/// Macro which expands to a benchmark harness.
+/// 
+/// Currently, using Criterion.rs requires disabling the benchmark harness
+/// generated automatically by rustc. This can be done like so:
+/// 
+/// ```toml
+/// [[bench]]
+/// name = "my_bench"
+/// harness = false
+/// ```
+/// 
+/// In this case, 'my_bench' must be a rust file inside the 'benches' directory,
+/// like so:
+/// 
+/// `benches/my_bench.rs`
+/// 
+/// Since we've disabled the default benchmark harness, we need to add our own:
+/// 
+/// ```
+/// #[macro_use]
+/// extern crate criterion;
+/// use criterion::Criterion;
+/// fn bench_method1(c: &mut Criterion) {
+/// }
+/// 
+/// fn bench_method2(c: &mut Criterion) {
+/// }
+/// 
+/// criterion_group!(benches, bench_method1, bench_method2);
+/// criterion_main!(benches);
+/// ```
+/// 
+/// The criterion_main macro expands to a `main` function which runs all of the
+/// benchmarks in the given groups.
+/// 
 #[macro_export]
 macro_rules! criterion_main {
     ( $( $group:path ),+ ) => {
