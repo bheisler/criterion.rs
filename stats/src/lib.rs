@@ -9,11 +9,9 @@
 #![cfg_attr(test, plugin(quickcheck_macros))]
 #![deny(missing_docs)]
 #![deny(warnings)]
-#![feature(custom_attribute)]
-#![feature(fn_traits)]
-#![feature(plugin)]
-#![feature(unboxed_closures)]
 #![feature(unique)]
+#![feature(custom_attribute)]
+#![feature(plugin)]
 #![cfg_attr(clippy, allow(used_underscore_binding))]
 
 extern crate cast;

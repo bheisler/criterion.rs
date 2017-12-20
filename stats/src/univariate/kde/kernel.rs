@@ -3,33 +3,20 @@
 use ::float::Float;
 
 /// Kernel function
-pub trait Kernel<A>: Copy + Fn(A) -> A + Sync where A: Float {}
-
-impl<A, K> Kernel<A> for K where K: Copy + Fn(A) -> A + Sync, A: Float {}
+pub trait Kernel<A>: Copy + Sync where A: Float {
+    /// Apply the kernel function to the given x-value.
+    fn evaluate(&self, x: A) -> A;
+}
 
 /// Gaussian kernel
 #[derive(Clone, Copy)]
 pub struct Gaussian;
 
-impl<A> Fn<(A,)> for Gaussian where A: Float {
-    extern "rust-call" fn call(&self, (x,): (A,)) -> A {
+impl<A> Kernel<A> for Gaussian where A: Float {
+    fn evaluate(&self, x: A) -> A {
         use std::f32::consts::PI;
 
         (x.powi(2).exp() * A::cast(2. * PI)).sqrt().recip()
-    }
-}
-
-impl<A> FnMut<(A,)> for Gaussian where A: Float {
-    extern "rust-call" fn call_mut(&mut self, args: (A,)) -> A {
-        self.call(args)
-    }
-}
-
-impl<A> FnOnce<(A,)> for Gaussian where A: Float {
-    type Output = A;
-
-    extern "rust-call" fn call_once(self, args: (A,)) -> A {
-        self.call(args)
     }
 }
 
@@ -40,11 +27,11 @@ macro_rules! test {
             mod gaussian {
                 use quickcheck::TestResult;
 
-                use univariate::kde::kernel::Gaussian;
+                use univariate::kde::kernel::{Kernel, Gaussian};
 
                 #[quickcheck]
                 fn symmetric(x: $ty) -> bool {
-                    relative_eq!(Gaussian(-x), Gaussian(x))
+                    relative_eq!(Gaussian.evaluate(-x), Gaussian.evaluate(x))
                 }
 
                 // Any [a b] integral should be in the range [0 1]
@@ -57,13 +44,13 @@ macro_rules! test {
                     } else {
                         let mut acc = 0.;
                         let mut x = a;
-                        let mut y = Gaussian(a);
+                        let mut y = Gaussian.evaluate(a);
 
                         while x < b {
                             acc += DX * y / 2.;
 
                             x += DX;
-                            y = Gaussian(x);
+                            y = Gaussian.evaluate(x);
 
                             acc += DX * y / 2.;
                         }

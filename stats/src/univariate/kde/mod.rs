@@ -56,7 +56,7 @@ impl<'a, A, K> Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
 
                         thread::scoped(move || {
                             for (i, y) in ys.iter_mut().enumerate() {
-                                ptr::write(y, (self)(*xs.get_unchecked(offset + i)))
+                                ptr::write(y, self.estimate(*xs.get_unchecked(offset + i)))
                             }
                         })
                     }).collect::<Vec<_>>();
@@ -65,36 +65,20 @@ impl<'a, A, K> Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
                 ys.into_boxed_slice()
             }
         } else {
-            xs.iter().map(|&x| (self)(x)).collect::<Vec<_>>().into_boxed_slice()
+            xs.iter().map(|&x| self.estimate(x)).collect::<Vec<_>>().into_boxed_slice()
         }
     }
-}
 
-impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
     /// Estimates the probability density of `x`
-    extern "rust-call" fn call(&self, (x,): (A,)) -> A {
+    pub fn estimate(&self, x: A) -> A {
         let _0 = A::cast(0);
         let slice = self.sample.as_slice();
         let h = self.bandwidth;
         let n = A::cast(slice.len());
 
-        let sum = slice.iter().fold(_0, |acc, &x_i| acc + (self.kernel)((x - x_i) / h));
+        let sum = slice.iter().fold(_0, |acc, &x_i| acc + self.kernel.evaluate((x - x_i) / h));
 
         sum / h / n
-    }
-}
-
-impl<'a, A, K> FnMut<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
-    extern "rust-call" fn call_mut(&mut self, args: (A,)) -> A {
-        self.call(args)
-    }
-}
-
-impl<'a, A, K> FnOnce<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
-    type Output = A;
-
-    extern "rust-call" fn call_once(self, args: (A,)) -> A {
-        self.call(args)
     }
 }
 
@@ -148,13 +132,13 @@ macro_rules! test {
 
                     let mut acc = 0.;
                     let mut x = a;
-                    let mut y = kde(a);
+                    let mut y = kde.estimate(a);
 
                     while x < b {
                         acc += DX * y / 2.;
 
                         x += DX;
-                        y = kde(x);
+                        y = kde.estimate(x);
 
                         acc += DX * y / 2.;
                     }
@@ -195,7 +179,7 @@ macro_rules! bench {
                 let x = Sample::new(&data).mean();
 
                 b.iter(|| {
-                    kde(x)
+                    kde.estimate(x)
                 })
             }
 

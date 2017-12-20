@@ -96,7 +96,7 @@ macro_rules! criterion_group {
 /// 
 /// Since we've disabled the default benchmark harness, we need to add our own:
 /// 
-/// ```
+/// ```ignore
 /// #[macro_use]
 /// extern crate criterion;
 /// use criterion::Criterion;
