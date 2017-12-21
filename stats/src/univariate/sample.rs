@@ -1,4 +1,3 @@
-use std::ptr::Unique;
 use std::{cmp, mem};
 
 use cast;
@@ -6,7 +5,7 @@ use ::float::Float;
 use num_cpus;
 use thread_scoped as thread;
 
-use tuple::{Tuple, TupledDistributions};
+use tuple::{Tuple, TupledDistributionsBuilder};
 use univariate::Percentiles;
 use univariate::resamples::Resamples;
 
@@ -224,7 +223,9 @@ impl<A> Sample<A> where A: Float {
         S: Fn(&Sample<A>) -> T,
         S: Sync,
         T: Tuple,
+        T: Send,
         T::Distributions: Send,
+        T::Builder: Send,
     {
         let ncpus = num_cpus::get();
 
@@ -233,36 +234,39 @@ impl<A> Sample<A> where A: Float {
             if ncpus > 1 && nresamples > self.as_slice().len() {
                 let granularity = nresamples / ncpus + 1;
                 let statistic = &statistic;
-                let mut distributions: T::Distributions =
-                    TupledDistributions::uninitialized(nresamples);
 
-                let _ = (0..ncpus).map(|i| {
+                let chunks = (0..ncpus).map(|i| {
                     // NB Can't implement `chunks_mut` for the tupled distributions without HKT,
                     // for now I'll make do with aliasing and careful non-overlapping indexing
-                    let mut ptr = Unique::new_unchecked(&mut distributions);
+                    let mut sub_distributions: T::Builder =
+                        TupledDistributionsBuilder::new(nresamples);
                     let mut resamples = Resamples::new(self);
                     let offset = i * granularity;
 
                     thread::scoped(move || {
-                        let distributions: &mut T::Distributions = ptr.as_mut();
-
-                        for i in offset..cmp::min(offset + granularity, nresamples) {
-                            distributions.set_unchecked(i, statistic(resamples.next()))
+                        for _ in offset..cmp::min(offset + granularity, nresamples) {
+                            sub_distributions.push(statistic(resamples.next()))
                         }
+                        sub_distributions
                     })
                 }).collect::<Vec<_>>();
-
-                distributions
+                
+                let mut builder: T::Builder =
+                    TupledDistributionsBuilder::new(nresamples);
+                for mut chunk in chunks {
+                    builder.extend(&mut (chunk.join()));
+                }
+                builder.complete()
             } else {
-                let mut distributions: T::Distributions =
-                    TupledDistributions::uninitialized(nresamples);
+                let mut builder: T::Builder =
+                    TupledDistributionsBuilder::new(nresamples);
                 let mut resamples = Resamples::new(self);
 
-                for i in 0..nresamples {
-                    distributions.set_unchecked(i, statistic(resamples.next()));
+                for _ in 0..nresamples {
+                    builder.push(statistic(resamples.next()));
                 }
 
-                distributions
+                builder.complete()
             }
         }
     }
