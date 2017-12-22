@@ -1,10 +1,10 @@
 use rand::distributions::{IndependentSample, Range};
 use rand::{Rng, XorShiftRng};
-use floaty::Floaty;
+use ::float::Float;
 
 use bivariate::Data;
 
-pub struct Resamples<'a, X, Y> where X: 'a + Floaty, Y: 'a + Floaty {
+pub struct Resamples<'a, X, Y> where X: 'a + Float, Y: 'a + Float {
     range: Range<usize>,
     rng: XorShiftRng,
     data: (&'a [X], &'a [Y]),
@@ -12,7 +12,7 @@ pub struct Resamples<'a, X, Y> where X: 'a + Floaty, Y: 'a + Floaty {
 }
 
 #[cfg_attr(clippy, allow(should_implement_trait))]
-impl<'a, X, Y> Resamples<'a, X, Y> where X: 'a + Floaty, Y: 'a + Floaty {
+impl<'a, X, Y> Resamples<'a, X, Y> where X: 'a + Float, Y: 'a + Float {
     pub fn new(data: Data<'a, X, Y>) -> Resamples<'a, X, Y> {
         Resamples {
             range: Range::new(0, data.0.len()),

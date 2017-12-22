@@ -4,7 +4,7 @@ pub mod kernel;
 
 use std::ptr;
 
-use floaty::Floaty;
+use ::float::Float;
 use num_cpus;
 use thread_scoped as thread;
 
@@ -13,13 +13,13 @@ use univariate::Sample;
 use self::kernel::Kernel;
 
 /// Univariate kernel density estimator
-pub struct Kde<'a, A, K> where A: 'a + Floaty, K: Kernel<A> {
+pub struct Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
     bandwidth: A,
     kernel: K,
     sample: &'a Sample<A>,
 }
 
-impl<'a, A, K> Kde<'a, A, K> where A: 'a + Floaty, K: Kernel<A> {
+impl<'a, A, K> Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
     /// Creates a new kernel density estimator from the `sample`, using a kernel `k` and estimating
     /// the bandwidth using the method `bw`
     pub fn new(sample: &'a Sample<A>, k: K, bw: Bandwidth<A>) -> Kde<'a, A, K> {
@@ -70,7 +70,7 @@ impl<'a, A, K> Kde<'a, A, K> where A: 'a + Floaty, K: Kernel<A> {
     }
 }
 
-impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + Floaty, K: Kernel<A> {
+impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
     /// Estimates the probability density of `x`
     extern "rust-call" fn call(&self, (x,): (A,)) -> A {
         let _0 = A::cast(0);
@@ -84,13 +84,13 @@ impl<'a, A, K> Fn<(A,)> for Kde<'a, A, K> where A: 'a + Floaty, K: Kernel<A> {
     }
 }
 
-impl<'a, A, K> FnMut<(A,)> for Kde<'a, A, K> where A: 'a + Floaty, K: Kernel<A> {
+impl<'a, A, K> FnMut<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
     extern "rust-call" fn call_mut(&mut self, args: (A,)) -> A {
         self.call(args)
     }
 }
 
-impl<'a, A, K> FnOnce<(A,)> for Kde<'a, A, K> where A: 'a + Floaty, K: Kernel<A> {
+impl<'a, A, K> FnOnce<(A,)> for Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
     type Output = A;
 
     extern "rust-call" fn call_once(self, args: (A,)) -> A {
@@ -99,14 +99,14 @@ impl<'a, A, K> FnOnce<(A,)> for Kde<'a, A, K> where A: 'a + Floaty, K: Kernel<A>
 }
 
 /// Method to estimate the bandwidth
-pub enum Bandwidth<A> where A: Floaty {
+pub enum Bandwidth<A> where A: Float {
     /// Use this value as the bandwidth
     Manual(A),
     /// Use Silverman's rule of thumb to estimate the bandwidth from the sample
     Silverman,
 }
 
-impl<A> Bandwidth<A> where A: Floaty {
+impl<A> Bandwidth<A> where A: Float {
     fn estimate(self, sample: &Sample<A>) -> A {
         match self {
             Bandwidth::Silverman => {

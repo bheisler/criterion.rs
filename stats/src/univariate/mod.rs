@@ -9,7 +9,7 @@ pub mod kde;
 pub mod mixed;
 pub mod outliers;
 
-use floaty::Floaty;
+use ::float::Float;
 
 use tuple::{Tuple, TupledDistributions};
 
@@ -30,8 +30,8 @@ pub fn bootstrap<A, B, T, S>(
     nresamples: usize,
     statistic: S,
 ) -> T::Distributions where
-    A: Floaty,
-    B: Floaty,
+    A: Float,
+    B: Float,
     S: Fn(&Sample<A>, &Sample<B>) -> T,
     S: Sync,
     T: Tuple,

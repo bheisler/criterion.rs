@@ -42,7 +42,7 @@ use std::ops::{Deref, Index};
 use std::slice;
 
 use cast;
-use floaty::Floaty;
+use ::float::Float;
 
 use univariate::Sample;
 
@@ -57,12 +57,12 @@ use self::Label::*;
 /// `IndexGet` trait lands in stdlib, the indexing operation will return a `(data_point, label)`
 /// pair.
 #[derive(Clone, Copy)]
-pub struct LabeledSample<'a, A> where A: 'a + Floaty {
+pub struct LabeledSample<'a, A> where A: 'a + Float {
     fences: (A, A, A, A),
     sample: &'a Sample<A>,
 }
 
-impl<'a, A> LabeledSample<'a, A> where A: Floaty {
+impl<'a, A> LabeledSample<'a, A> where A: Float {
     /// Returns the number of data points per label
     ///
     /// - Time: `O(length)`
@@ -107,7 +107,7 @@ impl<'a, A> LabeledSample<'a, A> where A: Floaty {
     }
 }
 
-impl<'a, A> Deref for LabeledSample<'a, A> where A: Floaty {
+impl<'a, A> Deref for LabeledSample<'a, A> where A: Float {
     type Target = Sample<A>;
 
     fn deref(&self) -> &Sample<A> {
@@ -116,7 +116,7 @@ impl<'a, A> Deref for LabeledSample<'a, A> where A: Floaty {
 }
 
 // FIXME Use the `IndexGet` trait
-impl<'a, A> Index<usize> for LabeledSample<'a, A> where A: Floaty {
+impl<'a, A> Index<usize> for LabeledSample<'a, A> where A: Float {
     type Output = Label;
 
     #[cfg_attr(clippy, allow(similar_names))]
@@ -144,7 +144,7 @@ impl<'a, A> Index<usize> for LabeledSample<'a, A> where A: Floaty {
     }
 }
 
-impl<'a, 'b, A> IntoIterator for &'b LabeledSample<'a, A> where A: Floaty {
+impl<'a, 'b, A> IntoIterator for &'b LabeledSample<'a, A> where A: Float {
     type Item = (A, Label);
     type IntoIter = Iter<'a, A>;
 
@@ -154,12 +154,12 @@ impl<'a, 'b, A> IntoIterator for &'b LabeledSample<'a, A> where A: Floaty {
 }
 
 /// Iterator over the labeled data
-pub struct Iter<'a, A> where A: 'a + Floaty {
+pub struct Iter<'a, A> where A: 'a + Float {
     fences: (A, A, A, A),
     iter: slice::Iter<'a, A>,
 }
 
-impl<'a, A> Iterator for Iter<'a, A> where A: Floaty {
+impl<'a, A> Iterator for Iter<'a, A> where A: Float {
     type Item = (A, Label);
 
     #[cfg_attr(clippy, allow(similar_names))]
@@ -248,7 +248,7 @@ impl Label {
 ///
 /// - Time: `O(N log N) where N = length`
 pub fn classify<A>(sample: &Sample<A>) -> LabeledSample<A> where
-    A: Floaty,
+    A: Float,
     usize: cast::From<A, Output=Result<usize, cast::Error>>,
 {
     let (q1, _, q3) = sample.percentiles().quartiles();
