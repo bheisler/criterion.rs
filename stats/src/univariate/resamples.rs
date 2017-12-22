@@ -1,12 +1,12 @@
 use std::mem;
 
-use floaty::Floaty;
+use ::float::Float;
 use rand::distributions::{IndependentSample, Range};
 use rand::{Rng, XorShiftRng};
 
 use univariate::Sample;
 
-pub struct Resamples<'a, A> where A: 'a + Floaty {
+pub struct Resamples<'a, A> where A: 'a + Float {
     range: Range<usize>,
     rng: XorShiftRng,
     sample: &'a [A],
@@ -14,7 +14,7 @@ pub struct Resamples<'a, A> where A: 'a + Floaty {
 }
 
 #[cfg_attr(clippy, allow(should_implement_trait))]
-impl <'a, A> Resamples<'a, A> where A: 'a + Floaty {
+impl <'a, A> Resamples<'a, A> where A: 'a + Float {
     pub fn new(sample: &'a Sample<A>) -> Resamples<'a, A> {
         let slice = sample.as_slice();
 

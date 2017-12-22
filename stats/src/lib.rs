@@ -17,7 +17,7 @@
 #![cfg_attr(clippy, allow(used_underscore_binding))]
 
 extern crate cast;
-extern crate floaty;
+extern crate num_traits;
 extern crate num_cpus;
 extern crate rand;
 extern crate thread_scoped;
@@ -34,17 +34,18 @@ pub mod bivariate;
 pub mod tuple;
 pub mod univariate;
 
+mod float;
+
 use std::mem;
 use std::ops::Deref;
 
-use floaty::Floaty;
-
+use float::Float;
 use univariate::Sample;
 
 /// The bootstrap distribution of some parameter
 pub struct Distribution<A>(Box<[A]>);
 
-impl<A> Distribution<A> where A: Floaty {
+impl<A> Distribution<A> where A: Float {
     /// Computes the confidence interval of the population parameter using percentiles
     ///
     /// # Panics
@@ -106,13 +107,13 @@ pub enum Tails {
 }
 
 fn dot<A>(xs: &[A], ys: &[A]) -> A
-    where A: Floaty
+    where A: Float
 {
     xs.iter().zip(ys).fold(A::cast(0), |acc, (&x, &y)| acc + x * y)
 }
 
 fn sum<A>(xs: &[A]) -> A
-    where A: Floaty
+    where A: Float
 {
     use std::ops::Add;
 

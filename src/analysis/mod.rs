@@ -43,7 +43,7 @@ pub fn summarize(id: &str, criterion: &Criterion) {
 pub fn function<F>(id: &str, f: F, criterion: &Criterion) where F: FnMut(&mut Bencher) {
     common(id, &mut Function(f), criterion);
 
-    println!("");
+    println!();
 }
 
 pub fn functions<I>(id: &str,
@@ -82,7 +82,7 @@ pub fn function_over_inputs<I, F>(
 pub fn program(id: &str, prog: &mut Command, criterion: &Criterion) {
     common(id, &mut Program::spawn(prog), criterion);
 
-    println!("");
+    println!();
 }
 
 pub fn program_over_inputs<I, F>(

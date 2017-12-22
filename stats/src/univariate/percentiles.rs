@@ -1,11 +1,11 @@
 use cast::{self, usize};
-use floaty::Floaty;
+use ::float::Float;
 
 /// A "view" into the percentiles of a sample
-pub struct Percentiles<A>(Box<[A]>) where A: Floaty;
+pub struct Percentiles<A>(Box<[A]>) where A: Float;
 
 // TODO(rust-lang/rfcs#735) move this `impl` into a private percentiles module
-impl<A> Percentiles<A> where A: Floaty, usize: cast::From<A, Output=Result<usize, cast::Error>> {
+impl<A> Percentiles<A> where A: Float, usize: cast::From<A, Output=Result<usize, cast::Error>> {
     /// Returns the percentile at `p`%
     ///
     /// Safety:
@@ -73,4 +73,3 @@ impl<A> Percentiles<A> where A: Floaty, usize: cast::From<A, Output=Result<usize
         }
     }
 }
-

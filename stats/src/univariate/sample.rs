@@ -2,7 +2,7 @@ use std::ptr::Unique;
 use std::{cmp, mem};
 
 use cast;
-use floaty::Floaty;
+use ::float::Float;
 use num_cpus;
 use thread_scoped as thread;
 
@@ -34,7 +34,7 @@ impl<A> Sample<A> {
 }
 
 // TODO(rust-lang/rfcs#735) move this `impl` into a private percentiles module
-impl<A> Sample<A> where A: Floaty {
+impl<A> Sample<A> where A: Float {
     /// Creates a new sample from an existing slice
     ///
     /// # Panics
