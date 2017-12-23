@@ -8,7 +8,6 @@
 #![cfg_attr(test, feature(test))]
 #![deny(missing_docs)]
 #![deny(warnings)]
-#![feature(unique)]
 #![cfg_attr(clippy, allow(used_underscore_binding))]
 
 extern crate cast;

@@ -236,10 +236,8 @@ impl<A> Sample<A> where A: Float {
                 let statistic = &statistic;
 
                 let chunks = (0..ncpus).map(|i| {
-                    // NB Can't implement `chunks_mut` for the tupled distributions without HKT,
-                    // for now I'll make do with aliasing and careful non-overlapping indexing
                     let mut sub_distributions: T::Builder =
-                        TupledDistributionsBuilder::new(nresamples);
+                        TupledDistributionsBuilder::new(granularity);
                     let mut resamples = Resamples::new(self);
                     let offset = i * granularity;
 

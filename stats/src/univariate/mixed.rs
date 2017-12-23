@@ -1,13 +1,12 @@
 //! Mixed bootstrap
 
-use std::ptr::Unique;
 use std::{cmp, mem};
 
 use ::float::Float;
 use num_cpus;
 use thread_scoped as thread;
 
-use tuple::{Tuple, TupledDistributions};
+use tuple::{Tuple, TupledDistributions, TupledDistributionsBuilder};
 use univariate::Sample;
 use univariate::resamples::Resamples;
 
@@ -22,6 +21,7 @@ pub fn bootstrap<A, T, S>(
     S: Fn(&Sample<A>, &Sample<A>) -> T + Sync,
     T: Tuple,
     T::Distributions: Send,
+    T::Builder: Send,
 {
     let ncpus = num_cpus::get();
     let n_a = a.as_slice().len();
@@ -35,34 +35,36 @@ pub fn bootstrap<A, T, S>(
         let c = Sample::new(&c);
 
         // TODO need some sensible threshold to trigger the multi-threaded path
-        if ncpus > 10 && nresamples > n_a {
+        if ncpus > 1 && nresamples > n_a {
             let granularity = nresamples / ncpus + 1;
             let statistic = &statistic;
-            let mut distributions: T::Distributions =
-                TupledDistributions::uninitialized(nresamples);
 
-            let _ = (0..ncpus).map(|i| {
-                // NB Can't implement `chunks_mut` for the tupled distributions without HKT,
-                // for now I'll make do with aliasing and careful non-overlapping indexing
-                let mut ptr = Unique::new_unchecked(&mut distributions);
+            let chunks = (0..ncpus).map(|i| {
+                let mut sub_distributions: T::Builder =
+                        TupledDistributionsBuilder::new(granularity);
                 let offset = i * granularity;
 
                 thread::scoped(move || {
-                    let distributions: &mut T::Distributions = ptr.as_mut();
                     let end = cmp::min(offset + granularity, nresamples);
                     let mut resamples = Resamples::new(c);
 
-                    for i in offset..end {
+                    for _ in offset..end {
                         let resample = resamples.next().as_slice();
                         let a: &Sample<A> = mem::transmute(&resample[..n_a]);
                         let b: &Sample<A> = mem::transmute(&resample[n_a..]);
 
-                        distributions.set_unchecked(i, statistic(a, b))
+                        sub_distributions.push(statistic(a, b))
                     }
+                    sub_distributions
                 })
             }).collect::<Vec<_>>();
 
-            distributions
+            let mut builder: T::Builder =
+                    TupledDistributionsBuilder::new(nresamples);
+                for mut chunk in chunks {
+                    builder.extend(&mut (chunk.join()));
+                }
+                builder.complete()
         } else {
             let mut resamples = Resamples::new(c);
             let mut distributions: T::Distributions =
