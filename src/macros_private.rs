@@ -3,7 +3,8 @@
 /// Logs an error, ignores an `Ok` value.
 macro_rules! log_if_err {
     ($x:expr) => {
-        (|| { try_else_return!($x); })();
+        let closure = || { try_else_return!($x); };
+        closure();
     };
 }
 
@@ -26,7 +27,8 @@ macro_rules! try_else_return {
 
                 debug!("backtrace: {}", e.backtrace());
 
-                return ($el)();
+                let closure = $el;
+                return closure();
             },
         }
     };
