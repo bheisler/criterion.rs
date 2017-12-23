@@ -14,6 +14,8 @@ license = "Apache-2.0/MIT"
 [dependencies]
 criterion-plot = { path="plot", version="0.1.2" }
 criterion-stats = { path="stats", version="0.1.2" }
+failure = "0.1.1"
+failure_derive = "0.1.1"
 itertools = "0.4.7"
 log = "0.3.5"
 serde = "1.0.24"
