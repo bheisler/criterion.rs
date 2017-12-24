@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Criterion.rs now uses `serde` to save results. Existing results files will
   be automatically removed when benchmarks are run.
 
+### Fixed
+- Don't panic on IO errors
+
 ## [0.1.1]
 ### Added
 - A changelog file.

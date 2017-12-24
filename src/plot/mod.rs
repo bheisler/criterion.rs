@@ -1,5 +1,6 @@
-use std::path::{Path, PathBuf};
 use std::{iter, str};
+use std::path::{Path, PathBuf};
+use std::process::Child;
 
 use simplot::prelude::*;
 use stats::Distribution;
@@ -25,6 +26,17 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
         (10f64.powi(-6), "m")
     } else {
         (10f64.powi(-9), "")
+    }
+}
+
+fn wait_on_gnuplot(children: Vec<Child>) {
+    for child in children {
+
+        match child.wait_with_output() {
+            Ok(ref out) if out.status.success() => {}
+            Ok(out) => error!("Error in Gnuplot: {}", String::from_utf8_lossy(&out.stderr)),
+            Err(e) => error!("Got IO error while waiting for Gnuplot to complete: {}", e),
+        }
     }
 }
 
@@ -180,9 +192,7 @@ pub fn pdf(data: Data<f64, f64>, labeled_sample: LabeledSample<f64>, id: &str) {
             set(LineType::Dash)).
         draw().unwrap();
 
-    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
-        str::from_utf8(&output.stderr).ok()
-    }))
+    wait_on_gnuplot(vec![gnuplot]);
 }
 
 pub fn regression(
@@ -256,9 +266,7 @@ pub fn regression(
             set(Opacity(0.25))).
         draw().unwrap();
 
-    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
-        str::from_utf8(&output.stderr).ok()
-    }))
+    wait_on_gnuplot(vec![gnuplot]);
 }
 
 pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, id: &str) {
@@ -331,11 +339,7 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
             draw().unwrap()
     }).collect::<Vec<_>>();
 
-    for gnuplot in gnuplots {
-        assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
-            str::from_utf8(&output.stderr).ok()
-        }))
-    }
+    wait_on_gnuplot(gnuplots);
 }
 
 // TODO DRY: This is very similar to the `abs_distributions` method
@@ -436,11 +440,7 @@ pub fn rel_distributions(
     }).collect::<Vec<_>>();
 
     // FIXME This sometimes fails!
-    for gnuplot in gnuplots {
-        assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
-            str::from_utf8(&output.stderr).ok()
-        }))
-    }
+    wait_on_gnuplot(gnuplots);
 }
 
 pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str) {
@@ -481,9 +481,7 @@ pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str) {
             set(LineType::Solid)).
         draw().unwrap();
 
-    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
-        str::from_utf8(&output.stderr).ok()
-    }))
+    wait_on_gnuplot(vec![gnuplot]);
 }
 
 fn log_ceil(x: f64) -> f64 {
@@ -516,7 +514,7 @@ pub fn summarize(id: &str) {
     }
 
     let dir = Path::new(".criterion").join(id);
-    let contents: Vec<_> = fs::ls(&dir).map(|e| e.unwrap().path()).collect();
+    let contents: Vec<_> = try_else_return!(fs::ls(&dir)).map(|e| e.unwrap().path()).collect();
 
     // XXX Plot both summaries?
     for &sample in &["new", "base"] {
@@ -526,7 +524,8 @@ pub fn summarize(id: &str) {
                 let root = entry.join(sample);
 
                 if let Some(estimates) = Estimate::load(&root.join("estimates.json")) {
-                    let (iters, times): (Vec<f64>, Vec<f64>) = fs::load(&root.join("sample.json"));
+                    let (iters, times): (Vec<f64>, Vec<f64>) =
+                        try_else_return!(fs::load(&root.join("sample.json")), || None);
                     let avg_times = iters.into_iter().zip(times.into_iter()).map(|(iters, time)| {
                         time / iters
                     }).collect::<Vec<_>>();
@@ -544,7 +543,9 @@ pub fn summarize(id: &str) {
             continue;
         }
 
-        fs::mkdirp(&dir.join(&format!("summary/{}", sample)));
+        // The following code needs this directory,
+        // therefore we exit the function if anything goes wrong.
+        try_else_return!(fs::mkdirp(&dir.join(&format!("summary/{}", sample))));
 
         let gnuplots = if benches.iter().all(|&(_, ref input, _, _)| input.is_ok()) {
             // TODO trendline
@@ -865,10 +866,6 @@ pub fn summarize(id: &str) {
             })
         };
 
-        for gnuplot in gnuplots {
-            assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
-                str::from_utf8(&output.stderr).ok()
-            }))
-        }
+        wait_on_gnuplot(gnuplots);
     }
 }

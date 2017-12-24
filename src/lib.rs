@@ -22,6 +22,7 @@
 
 #[macro_use]
 extern crate log;
+extern crate failure;
 extern crate itertools;
 extern crate serde;
 extern crate serde_json;
@@ -30,9 +31,17 @@ extern crate criterion_stats as stats;
 #[cfg(real_blackbox)] extern crate test;
 
 #[macro_use]
+extern crate failure_derive;
+#[macro_use]
 extern crate serde_derive;
 
+// Needs to be declared before other modules
+// in order to be usable there.
+#[macro_use]
+mod macros_private;
+
 mod analysis;
+mod error;
 mod estimate;
 mod format;
 mod fs;

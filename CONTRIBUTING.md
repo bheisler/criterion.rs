@@ -18,7 +18,7 @@ To make changes to the code, fork the repo and clone it:
 
 `git clone git@github.com:your-username/criterion.rs.git`
 
-You'll probably want to install [qnuplot](http://www.gnuplot.info/) as well. See the gnuplot website for installation instructions. You'll need a nightly build of Rust to build Criterion.rs:
+You'll probably want to install [gnuplot](http://www.gnuplot.info/) as well. See the gnuplot website for installation instructions. You'll need a nightly build of Rust to build Criterion.rs:
 
 `rustup override set nightly`
 

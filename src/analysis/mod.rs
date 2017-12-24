@@ -119,7 +119,7 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
     }).collect::<Vec<f64>>();
     let avg_times = Sample::new(&avg_times);
 
-    fs::mkdirp(&format!(".criterion/{}/new", id));
+    log_if_err!(fs::mkdirp(&format!(".criterion/{}/new", id)));
 
     let data = Data::new(&iters, &times);
     let labeled_sample = outliers(id, avg_times);
@@ -143,10 +143,11 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
                 id));
     }
 
-    fs::save(
+    log_if_err!(fs::save(
         &(data.x().as_slice(), data.y().as_slice()),
-        &format!(".criterion/{}/new/sample.json", id));
-    fs::save(&estimates, &format!(".criterion/{}/new/estimates.json", id));
+        &format!(".criterion/{}/new/sample.json", id),
+    ));
+    log_if_err!(fs::save(&estimates, &format!(".criterion/{}/new/estimates.json", id)));
 
     if base_dir_exists(id) {
         compare::common(id, data, avg_times, &estimates, criterion);
@@ -205,7 +206,7 @@ fn outliers<'a>(id: &str, avg_times: &'a Sample<f64>) -> LabeledSample<'a, f64> 
     let sample = tukey::classify(avg_times);
 
     report::outliers(sample);
-    fs::save(&sample.fences(), &format!(".criterion/{}/new/tukey.json", id));
+    log_if_err!(fs::save(&sample.fences(), &format!(".criterion/{}/new/tukey.json", id)));
 
     sample
 }
@@ -261,6 +262,10 @@ fn rename_new_dir_to_base(id: &str) {
     let base_dir = root_dir.join("base");
     let new_dir = root_dir.join("new");
 
-    if base_dir.exists() { fs::rmrf(&base_dir) }
-    if new_dir.exists() { fs::mv(&new_dir, &base_dir) };
+    if base_dir.exists() {
+        try_else_return!(fs::rmrf(&base_dir));
+    }
+    if new_dir.exists() {
+        try_else_return!(fs::mv(&new_dir, &base_dir));
+    };
 }

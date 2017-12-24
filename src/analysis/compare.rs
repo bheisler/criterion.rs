@@ -3,11 +3,10 @@ use stats::bivariate::Data;
 use stats::univariate::Sample;
 use stats::univariate::{mixed, self};
 
-use {Criterion, Estimate};
 use estimate::Statistic::{Mean, Median};
 use estimate::{Distributions, Estimates};
 use self::ComparisonResult::*;
-use {format, fs, plot, report};
+use {Criterion, Estimate, format, fs, plot, report};
 
 // Common comparison procedure
 pub fn common(
@@ -19,20 +18,20 @@ pub fn common(
 ) {
     println!("{}: Comparing with previous sample", id);
 
-    let (iters, times): (Vec<f64>, Vec<f64>) =
-        fs::load(&format!(".criterion/{}/base/sample.json", id));
+    let sample_dir = format!(".criterion/{}/base/sample.json", id);
+    let (iters, times): (Vec<f64>, Vec<f64>) = try_else_return!(fs::load(&sample_dir));
 
     let base_data = Data::new(&iters, &times);
 
     let base_estimates: Estimates =
-        fs::load(&format!(".criterion/{}/base/estimates.json", id));
+        try_else_return!(fs::load(&format!(".criterion/{}/base/estimates.json", id)));
 
     let base_avg_times: Vec<f64> = iters.iter().zip(times.iter()).map(|(iters, elapsed)| {
         elapsed / iters
     }).collect();
     let base_avg_times = Sample::new(&base_avg_times);
 
-    fs::mkdirp(&format!(".criterion/{}/both", id));
+    log_if_err!(fs::mkdirp(&format!(".criterion/{}/both", id)));
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting both linear regressions",
@@ -50,7 +49,7 @@ pub fn common(
                 id));
     }
 
-    fs::mkdirp(&format!(".criterion/{}/change", id));
+    log_if_err!(fs::mkdirp(&format!(".criterion/{}/change", id)));
     let different_mean = t_test(id, avg_times, base_avg_times, criterion);
 
     if different_mean {
@@ -132,7 +131,7 @@ fn estimates(
 
     report::rel(&estimates);
 
-    fs::save(&estimates, &format!(".criterion/{}/change/estimates.json", id));
+    log_if_err!(fs::save(&estimates, &format!(".criterion/{}/change/estimates.json", id)));
 
     if criterion.plotting.is_enabled() {
         elapsed!(
