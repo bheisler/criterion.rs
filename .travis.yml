@@ -4,9 +4,8 @@ language: rust
 
 cache: cargo
 
-rust: 
+rust:
   - stable
-  - nightly
 
 os:
   - linux
@@ -22,19 +21,36 @@ matrix:
     - os: linux
       env: GNUPLOT=no
     - os: linux
+      env: GNUPLOT=no
+      rust: nightly
+    - os: linux
       env: GNUPLOT=yes
       addons:
         apt:
           packages:
             - gnuplot
     - os: linux
+      env: GNUPLOT=yes
+      rust: nightly
+      addons:
+        apt:
+          packages:
+            - gnuplot
+    - os: linux
       env: CLIPPY=yes
+      rust: nightly
     - os: linux
       env: DOCS=yes
     - os: osx
       env: GNUPLOT=no
     - os: osx
       env: GNUPLOT=yes
+    - os: osx
+      env: GNUPLOT=no
+      rust: nightly
+    - os: osx
+      env: GNUPLOT=yes
+      rust: nightly
 
 before_script:
   - if [ "$DOCS" = "yes" ]; then
