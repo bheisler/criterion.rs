@@ -17,7 +17,8 @@
 //!   performance behavior.
 
 #![deny(missing_docs)]
-#![feature(test)]
+
+#![cfg_attr(real_blackbox, feature(test))]
 
 #[macro_use]
 extern crate log;
@@ -26,7 +27,7 @@ extern crate serde;
 extern crate serde_json;
 extern crate criterion_plot as simplot;
 extern crate criterion_stats as stats;
-extern crate test;
+#[cfg(real_blackbox)] extern crate test;
 
 #[macro_use]
 extern crate serde_derive;
@@ -53,6 +54,29 @@ use std::io::Read;
 use std::path::Path;
 
 use estimate::{Distributions, Estimates};
+
+/// A function that is opaque to the optimizer, used to prevent the compiler from
+/// optimizing away computations in a benchmark.
+/// 
+/// This variant is backed by the (unstable) test::black_box function.
+#[cfg(real_blackbox)]
+pub fn black_box<T>(dummy: T) -> T {
+    test::black_box(dummy)
+}
+
+/// A function that is opaque to the optimizer, used to prevent the compiler from
+/// optimizing away computations in a benchmark.
+/// 
+/// This variant is stable-compatible, but it may cause some performance overhead
+/// or fail to prevent code from being eliminated.
+#[cfg(not(real_blackbox))]
+pub fn black_box<T>(dummy: T) -> T {
+    unsafe {
+        let ret = std::ptr::read_volatile(&dummy);
+        std::mem::forget(dummy);
+        ret
+    }
+}
 
 /// Representing a function to benchmark together with a name of that function.
 /// Used together with `bench_functions` to represent one out of multiple functions
@@ -124,7 +148,7 @@ impl Bencher {
     {
         let start = Instant::now();
         for _ in 0..self.iters {
-            test::black_box(routine());
+            black_box(routine());
         }
         self.elapsed = start.elapsed();
     }
@@ -196,7 +220,7 @@ impl Bencher {
             let input = setup();
 
             let start = Instant::now();
-            let output = test::black_box(routine(test::black_box(input)));
+            let output = black_box(routine(black_box(input)));
             let elapsed = start.elapsed();
 
             mem::drop(output);
@@ -242,7 +266,7 @@ impl Bencher {
 
         let start = Instant::now();
         for _ in 0..self.iters {
-            outputs.push(test::black_box(routine()));
+            outputs.push(black_box(routine()));
         }
         self.elapsed = start.elapsed();
 
@@ -286,7 +310,7 @@ impl Bencher {
 
         let start = Instant::now();
         for input in inputs {
-            routine(test::black_box(input));
+            routine(black_box(input));
         }
         self.elapsed = start.elapsed();
     }

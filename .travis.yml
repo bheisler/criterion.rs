@@ -4,7 +4,9 @@ language: rust
 
 cache: cargo
 
-rust: nightly
+rust: 
+  - nightly
+  - stable
 
 os:
   - linux
