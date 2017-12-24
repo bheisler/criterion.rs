@@ -5,7 +5,6 @@
 //! **WARNING** This library is criterion's implementation detail and there no plans to stabilize
 //! it. In other words, the API may break at any time without notice.
 
-#![cfg_attr(test, feature(test))]
 #![deny(missing_docs)]
 #![deny(warnings)]
 #![cfg_attr(clippy, allow(used_underscore_binding))]
@@ -19,9 +18,7 @@ extern crate thread_scoped;
 #[cfg(test)] #[macro_use] extern crate approx;
 #[cfg(test)] #[macro_use] extern crate quickcheck;
 #[cfg(test)] extern crate itertools;
-#[cfg(test)] extern crate test as stdtest;
 
-#[cfg(test)] mod bench;
 #[cfg(test)] mod test;
 
 pub mod bivariate;

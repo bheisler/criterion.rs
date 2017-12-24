@@ -20,8 +20,29 @@ thread-scoped = "1.0.1"
 approx = "0.1.0"
 itertools = "0.4.7"
 quickcheck = "0.4.1"
+criterion = { path=".." }
 
 [badges]
 travis-ci = { repository = "japaric/criterion.rs" }
 appveyor = { repository = "japaric/criterion.rs", id = "4255ads9ctpupcl2" }
 maintenance = { status = "actively-maintained" }
+
+[[bench]]
+name = "univariate_kde"
+harness = false
+
+[[bench]]
+name = "univariate_sample"
+harness = false
+
+[[bench]]
+name = "univariate_bootstrap"
+harness = false
+
+[[bench]]
+name = "bivariate_regression"
+harness = false
+
+[[bench]]
+name = "bivariate_bootstrap"
+harness = false

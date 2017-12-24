@@ -20,6 +20,7 @@ build: false
 test_script:
   - cargo build --release
   - cargo test --all --release
+  - cargo build --benches --all --release
   - cargo bench
   - cargo doc --release --all --no-deps
   

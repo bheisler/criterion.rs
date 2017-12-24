@@ -149,33 +149,3 @@ mod test {
     test!(f32);
     test!(f64);
 }
-
-#[cfg(test)]
-macro_rules! bench {
-    ($ty:ident) => {
-        mod $ty {
-            use stdtest::Bencher;
-
-            use univariate::Sample;
-
-            const NRESAMPLES: usize = 100_000;
-            const SAMPLE_SIZE: usize = 100;
-
-            #[bench]
-            fn mean(b: &mut Bencher) {
-                let v = ::test::vec::<$ty>(SAMPLE_SIZE, 0).unwrap();
-                let sample = Sample::new(&v);
-
-                b.iter(|| {
-                    sample.bootstrap(NRESAMPLES, |s| (s.mean(),))
-                });
-            }
-        }
-    }
-}
-
-#[cfg(test)]
-mod bench {
-    bench!(f32);
-    bench!(f64);
-}

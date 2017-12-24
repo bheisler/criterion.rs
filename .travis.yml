@@ -75,6 +75,7 @@ script:
     else
       cargo build --release;
       cargo test --all --release;
+      cargo build --benches --all --release;
       cargo bench;
     fi
   
