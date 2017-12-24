@@ -89,7 +89,7 @@ macro_rules! criterion_group {
 /// harness = false
 /// ```
 /// 
-/// In this case, 'my_bench' must be a rust file inside the 'benches' directory,
+/// In this case, `my_bench` must be a rust file inside the 'benches' directory,
 /// like so:
 /// 
 /// `benches/my_bench.rs`
@@ -110,7 +110,7 @@ macro_rules! criterion_group {
 /// criterion_main!(benches);
 /// ```
 /// 
-/// The criterion_main macro expands to a `main` function which runs all of the
+/// The `criterion_main` macro expands to a `main` function which runs all of the
 /// benchmarks in the given groups.
 /// 
 #[macro_export]

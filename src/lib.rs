@@ -104,11 +104,11 @@ impl<I> Fun<I> where I: fmt::Display {
 /// way to time a routine and each has advantages and disadvantages.
 /// 
 /// * If your routine returns a value with an expensive `drop` method, use 
-///   iter_with_large_drop.
+///   `iter_with_large_drop`.
 /// * If your routine requires some per-iteration setup that shouldn't be timed,
-///   use iter_with_setup or (if the setup is expensive) use iter_with_large_setup
+///   use `iter_with_setup` or (if the setup is expensive) use `iter_with_large_setup`
 ///   to construct a pool of input data ahead of time
-/// * Otherwise, use iter.
+/// * Otherwise, use `iter`.
 #[derive(Clone, Copy)]
 pub struct Bencher {
     iters: u64,

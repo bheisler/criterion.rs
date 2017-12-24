@@ -48,7 +48,7 @@ pub fn bootstrap<A, B, T, S>(
         if ncpus > 1 && nresamples > a.as_slice().len() + b.as_slice().len() {
             let granularity = nresamples / ncpus + 1;
             let granularity_sqrt = (granularity as f64).sqrt().ceil() as usize;
-            let ref statistic = statistic;
+            let statistic = &statistic;
 
             let chunks = (0..ncpus).map(|i| {
                 let mut sub_distributions: T::Builder =
