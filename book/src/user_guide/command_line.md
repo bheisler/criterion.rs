@@ -31,7 +31,7 @@ Criterion iterates the function to be benchmarked with a varying number of itera
 
 Criterion.rs attempts to detect unusually high or low samples and reports them as outliers. A large number of outliers suggests that the benchmark results are noisy and should be viewed with appropriate skepticism. In this case, you can see that there are some samples which took much longer than normal. This might be caused by unpredictable load on the computer running the benchmarks, thread or process scheduling, or irregularities in the time taken by the code being benchmarked.
 
-In order to ensure reliable results, benchmarks should be run on a quiet computer and should be designed to do approximately the same amount of work for each iteration. If this is not possible, consider increasing the sample size and/or measurement time to reduce the influence of outliers on the results at the cost of longer benchmarking time. Alternately, the warmup period can be extended (to ensure that any JIT compilers or similar are warmed up) or other iteration loops can be used to perform setup before each benchmark to prevent that from affecting the results.
+In order to ensure reliable results, benchmarks should be run on a quiet computer and should be designed to do approximately the same amount of work for each iteration. If this is not possible, consider increasing the measurement time to reduce the influence of outliers on the results at the cost of longer benchmarking period. Alternately, the warmup period can be extended (to ensure that any JIT compilers or similar are warmed up) or other iteration loops can be used to perform setup before each benchmark to prevent that from affecting the results.
 
 ## Linear Regression 
 
@@ -110,12 +110,10 @@ alloc: Comparing with previous sample
   > median [+49.228% +50.627%]
   > mean has regressed by 58.13%
   > median has regressed by 49.80%
-thread 'alloc' panicked at 'alloc has regressed', src/analysis/compare.rs:58:8
-note: Run with `RUST_BACKTRACE=1` for a backtrace.
-test alloc ... FAILED
+alloc has regressed
 ```
 
-In this example, the performance has regressed significantly. When Criterion.rs is confident of a performance regression, it panics in order to fail the test.
+In this example, the performance has regressed significantly.
 
 ## A Note Of Caution
 

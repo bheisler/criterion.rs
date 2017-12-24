@@ -41,6 +41,7 @@ Criterion.<span></span>rs helps you write fast code by detecting and measuring p
 
 - __Statistics__: Statistical analysis detects if, and by how much, performance has changed since the last benchmark run
 - __Charts__: Uses [gnuplot](http://www.gnuplot.info/) to generate detailed graphs of benchmark results.
+- __Stable-compatible__: Benchmark your code without installing Nightly Rust.
 - Benchmark external programs written in any language.
 
 ### Quickstart
@@ -75,8 +76,7 @@ fn fibonacci(n: u64) -> u64 {
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    Criterion::default()
-        .bench_function("fib 20", |b| b.iter(|| fibonacci(20)));
+    c.bench_function("fib 20", |b| b.iter(|| fibonacci(20)));
 }
 
 criterion_group!(benches, criterion_benchmark);

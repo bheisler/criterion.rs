@@ -1,7 +1,5 @@
 # Getting Started #
 
-Note that Criterion.rs requires a nightly version of Rust.
-
 ### Step 1 - Add Dependency to cargo.toml ###
 
 To enable Criterion.rs benchmarks, add the following to your `cargo.toml` file:
@@ -181,4 +179,4 @@ test criterion_benchmark ... ok
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 ```
 
-As you can see, Criterion is statistically confident that our optimization has made an improvement. If we introduce a performance regression, Criterion will instead fail the test by panicking.
+As you can see, Criterion is statistically confident that our optimization has made an improvement. If we introduce a performance regression, Criterion will instead print a message indicating this.

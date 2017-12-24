@@ -8,7 +8,7 @@ fn config() -> Criterion {
 }
 
 fn no_plots(c: &mut Criterion) {
-    c.bench_function("dummy", |b| b.iter(|| {}));
+    c.bench_function("dummy", |b| b.iter(|| {10}));
 
     let has_svg = !WalkDir::new(".criterion/dummy").into_iter().any(|entry| {
         entry.unwrap().path().extension().and_then(|ext| ext.to_str()) == Some("svg")

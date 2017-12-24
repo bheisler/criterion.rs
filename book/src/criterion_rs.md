@@ -2,7 +2,7 @@
 
 Criterion.rs is a statistics-driven micro-benchmarking tool. It is a Rust port of [Haskell's Criterion](https://hackage.haskell.org/package/criterion) library.
 
-Criterion.rs benchmarks collect and store statistical information from run to run and can automatically detect performance regressions.
+Criterion.rs benchmarks collect and store statistical information from run to run and can automatically detect performance regressions as well as measuring optimizations.
 
 Criterion.rs is free and open source. You can find the source on [GitHub](https://github.com/japaric/criterion.rs). Issues and feature requests can be posted on [the issue tracker](https://github.com/japaric/criterion.rs/issues).
 
