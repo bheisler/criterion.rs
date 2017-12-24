@@ -180,3 +180,17 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 ```
 
 As you can see, Criterion is statistically confident that our optimization has made an improvement. If we introduce a performance regression, Criterion will instead print a message indicating this.
+
+### Known Limitations ###
+
+There are currently a number of limitations to the use of Criterion.rs relative to the standard benchmark harness.
+
+First, it is necessary for Criterion.rs to provide its own `main` function using the `criterion_main` macro. This means that it's not currently possible to include benchmarks in the `src/` directory.
+
+Second, Criterion.rs provides a stable-compatible replacement for the `black_box` function provided by the standard test crate. This replacement is not as reliable as the official one, and it may allow dead-code-elimination to affect the benchmarks in some circumstances. If you're using a Nightly build of Rust, you can add the `real_blackbox` feature to your dependency on Criterion.rs to use the standard `black_box` function instead.
+
+Example:
+
+```toml
+criterion = { version = '...', features=['real_blackbox'] }
+```

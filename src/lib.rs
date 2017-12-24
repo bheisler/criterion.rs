@@ -18,7 +18,7 @@
 
 #![deny(missing_docs)]
 
-#![cfg_attr(real_blackbox, feature(test))]
+#![cfg_attr(feature = "real_blackbox", feature(test))]
 
 #[macro_use]
 extern crate log;
@@ -28,7 +28,7 @@ extern crate serde;
 extern crate serde_json;
 extern crate criterion_plot as simplot;
 extern crate criterion_stats as stats;
-#[cfg(real_blackbox)] extern crate test;
+#[cfg(feature = "real_blackbox")] extern crate test;
 
 #[macro_use]
 extern crate failure_derive;
@@ -68,7 +68,7 @@ use estimate::{Distributions, Estimates};
 /// optimizing away computations in a benchmark.
 /// 
 /// This variant is backed by the (unstable) test::black_box function.
-#[cfg(real_blackbox)]
+#[cfg(feature = "real_blackbox")]
 pub fn black_box<T>(dummy: T) -> T {
     test::black_box(dummy)
 }
@@ -78,7 +78,7 @@ pub fn black_box<T>(dummy: T) -> T {
 /// 
 /// This variant is stable-compatible, but it may cause some performance overhead
 /// or fail to prevent code from being eliminated.
-#[cfg(not(real_blackbox))]
+#[cfg(not(feature = "real_blackbox"))]
 pub fn black_box<T>(dummy: T) -> T {
     unsafe {
         let ret = std::ptr::read_volatile(&dummy);
