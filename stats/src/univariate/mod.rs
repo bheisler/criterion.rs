@@ -14,7 +14,7 @@ use num_cpus;
 use thread_scoped as thread;
 use std::cmp;
 
-use tuple::{Tuple, TupledDistributions, TupledDistributionsBuilder};
+use tuple::{Tuple, TupledDistributionsBuilder};
 
 use self::resamples::Resamples;
 
@@ -82,7 +82,7 @@ pub fn bootstrap<A, B, T, S>(
 
             let mut builder: T::Builder =
                     TupledDistributionsBuilder::new(nresamples);
-            for mut chunk in chunks {
+            for chunk in chunks {
                 builder.extend(&mut (chunk.join()));
             }
             builder.complete()
@@ -90,8 +90,8 @@ pub fn bootstrap<A, B, T, S>(
             let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as usize;
             let mut a_resamples = Resamples::new(a);
             let mut b_resamples = Resamples::new(b);
-            let mut distributions: T::Distributions =
-                TupledDistributions::uninitialized(nresamples);
+            let mut distributions: T::Builder =
+                TupledDistributionsBuilder::new(nresamples);
 
             let mut i = 0;
             'outer: for _ in 0..nresamples_sqrt {
@@ -104,13 +104,13 @@ pub fn bootstrap<A, B, T, S>(
 
                     let b_resample = b_resamples.next();
 
-                    distributions.set_unchecked(i, statistic(a_resample, b_resample));
+                    distributions.push(statistic(a_resample, b_resample));
 
                     i += 1;
                 }
             }
 
-            distributions
+            distributions.complete()
         }
     }
 }

@@ -236,6 +236,7 @@ impl<A> Sample<A> where A: Float {
                 let statistic = &statistic;
 
                 let chunks = (0..ncpus).map(|i| {
+                    // for now I'll make do with aliasing and careful non-overlapping indexing
                     let mut sub_distributions: T::Builder =
                         TupledDistributionsBuilder::new(granularity);
                     let mut resamples = Resamples::new(self);
@@ -251,7 +252,7 @@ impl<A> Sample<A> where A: Float {
                 
                 let mut builder: T::Builder =
                     TupledDistributionsBuilder::new(nresamples);
-                for mut chunk in chunks {
+                for chunk in chunks {
                     builder.extend(&mut (chunk.join()));
                 }
                 builder.complete()

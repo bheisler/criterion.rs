@@ -6,7 +6,7 @@ use ::float::Float;
 use num_cpus;
 use thread_scoped as thread;
 
-use tuple::{Tuple, TupledDistributions, TupledDistributionsBuilder};
+use tuple::{Tuple, TupledDistributionsBuilder};
 use univariate::Sample;
 use univariate::resamples::Resamples;
 
@@ -31,7 +31,6 @@ pub fn bootstrap<A, T, S>(
     c.extend_from_slice(b.as_slice());
 
     unsafe {
-        //let c: &Sample<A> = mem::transmute(c.as_slice());
         let c = Sample::new(&c);
 
         // TODO need some sensible threshold to trigger the multi-threaded path
@@ -61,24 +60,24 @@ pub fn bootstrap<A, T, S>(
 
             let mut builder: T::Builder =
                     TupledDistributionsBuilder::new(nresamples);
-                for mut chunk in chunks {
+                for chunk in chunks {
                     builder.extend(&mut (chunk.join()));
                 }
                 builder.complete()
         } else {
             let mut resamples = Resamples::new(c);
-            let mut distributions: T::Distributions =
-                TupledDistributions::uninitialized(nresamples);
+            let mut distributions: T::Builder =
+                    TupledDistributionsBuilder::new(nresamples);
 
-            for i in 0..nresamples {
+            for _ in 0..nresamples {
                 let resample = resamples.next().as_slice();
                 let a: &Sample<A> = mem::transmute(&resample[..n_a]);
                 let b: &Sample<A> = mem::transmute(&resample[n_a..]);
 
-                distributions.set_unchecked(i, statistic(a, b))
+                distributions.push(statistic(a, b))
             }
 
-            distributions
+            distributions.complete()
         }
     }
 }

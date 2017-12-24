@@ -12,7 +12,7 @@ use num_cpus;
 use thread_scoped as thread;
 
 use bivariate::resamples::Resamples;
-use tuple::{Tuple, TupledDistributions, TupledDistributionsBuilder};
+use tuple::{Tuple, TupledDistributionsBuilder};
 use univariate::Sample;
 
 /// Bivariate `(X, Y)` data
@@ -102,20 +102,20 @@ impl<'a, X, Y> Data<'a, X, Y> where X: Float, Y: Float {
 
                 let mut builder: T::Builder =
                     TupledDistributionsBuilder::new(nresamples);
-                for mut chunk in chunks {
+                for chunk in chunks {
                     builder.extend(&mut (chunk.join()));
                 }
                 builder.complete()
             } else {
-                let mut distributions: T::Distributions =
-                    TupledDistributions::uninitialized(nresamples);
+                let mut distributions: T::Builder =
+                    TupledDistributionsBuilder::new(nresamples);
                 let mut resamples = Resamples::new(*self);
 
-                for i in 0..nresamples {
-                    distributions.set_unchecked(i, statistic(resamples.next()));
+                for _ in 0..nresamples {
+                    distributions.push(statistic(resamples.next()));
                 }
 
-                distributions
+                distributions.complete()
             }
         }
     }
