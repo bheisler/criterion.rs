@@ -63,19 +63,19 @@ install:
 
 script:
   - if [ "$CLIPPY" = "yes" ]; then
-      cargo clippy --all -- --cfg clippy;
+      cargo clippy --all -- --cfg clippy || exit 1;
     elif [ "$DOCS" = "yes" ]; then
       cargo clean;
-      cargo doc --all --no-deps;
+      cargo doc --all --no-deps || exit 1;
       cd book;
       mdbook build;
       cd ..;
       cp -r book/book/ target/doc/book/;
       travis-cargo doc-upload || true;
     else
-      cargo build --release;
-      cargo test --all --release;
-      cargo build --benches --all --release;
+      cargo build --release || exit 1;
+      cargo test --all --release || exit 1;
+      cargo build --benches --all --release || exit 1;
       cargo bench;
     fi
   
