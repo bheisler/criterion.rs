@@ -126,15 +126,23 @@ macro_rules! test {
                         let min = <$ty>::min(a.min() - b.max(), b.min() - a.max());
                         let max = <$ty>::max(a.max() - b.min(), b.max() - a.min());
 
-                        TestResult::from_bool(
-                            // Computed the correct number of resamples
-                            distribution.as_slice().len() == nresamples &&
+                        // Computed the correct number of resamples
+                        let pass = distribution.as_slice().len() == nresamples &&
                             // No uninitialized values
                             distribution.as_slice().iter().all(|&x| {
                                 (x > min || relative_eq!(x, min)) &&
                                 (x < max || relative_eq!(x, max))
-                            })
-                        )
+                            });
+
+                        if !pass {
+                            println!("A: {:?} (len={})", a.as_slice(), a.as_slice().len());
+                            println!("B: {:?} (len={})", b.as_slice(), b.as_slice().len());
+                            println!("Dist: {:?} (len={})", distribution.as_slice(), distribution.as_slice().len());
+                            println!("Min: {}, Max: {}, nresamples: {}", 
+                                min, max, nresamples);
+                        }
+
+                        TestResult::from_bool(pass)
                     } else {
                         TestResult::discard()
                     }

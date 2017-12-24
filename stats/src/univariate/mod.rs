@@ -42,24 +42,27 @@ pub fn bootstrap<A, B, T, S>(
     T::Builder: Send,
 {
     let ncpus = num_cpus::get();
+    
 
     unsafe {
         // TODO need some sensible threshold to trigger the multi-threaded path
-        if ncpus > 1 && nresamples > a.as_slice().len() + b.as_slice().len() {
+        if true {//ncpus > 1 && nresamples > a.as_slice().len() + b.as_slice().len() {
             let granularity = nresamples / ncpus + 1;
             let granularity_sqrt = (granularity as f64).sqrt().ceil() as usize;
             let statistic = &statistic;
+            let mut cutoff = 0;
 
-            let chunks = (0..ncpus).map(|i| {
+            let chunks = (0..ncpus).map(|_| {
                 let mut sub_distributions: T::Builder =
                         TupledDistributionsBuilder::new(granularity);
-                let offset = i * granularity;
+                let start = cutoff;
+                let end = cmp::min(start + granularity, nresamples);
+                cutoff = end;
 
                 thread::scoped(move || {
-                    let end = cmp::min(offset + granularity, nresamples);
                     let mut a_resamples = Resamples::new(a);
                     let mut b_resamples = Resamples::new(b);
-                    let mut i = offset;
+                    let mut i = start;
 
                     for _ in 0..granularity_sqrt {
                         let a_resample = a_resamples.next();
