@@ -5,8 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Added
+### Changed
 - Criterion.rs is now stable-compatible!
+- Criterion.rs now includes its own stable-compatible `black_box` function.
+  Some benchmarks may now be affected by dead-code-elimination where they
+  previously weren't and may have to be updated.
+- Criterion.rs now uses `serde` to save results. Existing results files will
+  be automatically removed when benchmarks are run.
 
 ## [0.1.1]
 ### Added
