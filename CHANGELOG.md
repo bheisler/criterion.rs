@@ -13,8 +13,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Criterion.rs now uses `serde` to save results. Existing results files will
   be automatically removed when benchmarks are run.
 
+### Added
+- Running benchmarks with the variable "CRITERION_DEBUG" in the environment will
+  cause Criterion.rs to generate extra debug output and save the gnuplot scripts
+  alongside the generated plots.
+
 ### Fixed
-- Don't panic on IO errors
+- Don't panic on IO errors or gnuplot failures
+- Fix generation of invalid gnuplot scripts when benchmarking over inputs and inputs include values <= 0.
 
 ## [0.1.1]
 ### Added
