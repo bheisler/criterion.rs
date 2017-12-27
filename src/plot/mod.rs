@@ -51,6 +51,19 @@ const DARK_BLUE: Color = Color::Rgb(31, 120, 180);
 const DARK_ORANGE: Color = Color::Rgb(255, 127, 0);
 const DARK_RED: Color = Color::Rgb(227, 26, 28);
 
+fn debug_script(path: &PathBuf, figure: &Figure) {
+    if ::debug_enabled() {
+        let mut script_path = path.clone();
+        script_path.set_extension("gnuplot");
+        println!("Writing gnuplot script to {:?}", script_path);
+        let result = figure.save(script_path.as_path());
+        match result {
+            Err(e) => error!("Failed to write debug output: {}", e),
+            Ok(_) => (),
+        }
+    }
+}
+
 pub fn pdf(data: Data<f64, f64>, labeled_sample: LabeledSample<f64>, id: &str) {
     let path = PathBuf::from(format!(".criterion/{}/new/pdf.svg", id));
 
@@ -74,9 +87,9 @@ pub fn pdf(data: Data<f64, f64>, labeled_sample: LabeledSample<f64>, id: &str) {
     let vertical = &[0., max_iters];
     let zeros = iter::repeat(0);
 
-    let gnuplot = Figure::new().
+    let mut figure = Figure::new();
+    figure.
         set(Font(DEFAULT_FONT)).
-        set(Output(path)).
         set(SIZE).
         set(Title(id.to_owned())).
         configure(Axis::BottomX, |a| a.
@@ -189,7 +202,10 @@ pub fn pdf(data: Data<f64, f64>, labeled_sample: LabeledSample<f64>, id: &str) {
         }, |c| c.
             set(DARK_RED).
             set(LINEWIDTH).
-            set(LineType::Dash)).
+            set(LineType::Dash));
+    debug_script(&path, &figure);
+    let gnuplot = figure.
+        set(Output(path)).
         draw().unwrap();
 
     wait_on_gnuplot(vec![gnuplot]);
@@ -221,9 +237,9 @@ pub fn regression(
     let ub = ub.0 * max_iters;
     let max_iters = max_iters;
 
-    let gnuplot = Figure::new().
+    let mut figure = Figure::new();
+    figure.
         set(Font(DEFAULT_FONT)).
-        set(Output(path)).
         set(SIZE).
         set(Title(id.to_owned())).
         configure(Key, |k| k.
@@ -263,7 +279,10 @@ pub fn regression(
         }, |c| c.
             set(DARK_BLUE).
             set(Label("Confidence interval")).
-            set(Opacity(0.25))).
+            set(Opacity(0.25)));
+    debug_script(&path, &figure);
+    let gnuplot = figure.
+        set(Output(path)).
         draw().unwrap();
 
     wait_on_gnuplot(vec![gnuplot]);
@@ -271,6 +290,7 @@ pub fn regression(
 
 pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, id: &str) {
     let gnuplots = distributions.iter().map(|(&statistic, distribution)| {
+        let path = PathBuf::from(format!(".criterion/{}/new/{}.svg", id, statistic));
         let estimate = estimates[&statistic];
 
         let ci = estimate.confidence_interval;
@@ -296,9 +316,9 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
         let end = xs.iter().enumerate().rev().find(|&(_, &x)| x <= ub).unwrap().0;
         let len = end - start;
 
-        Figure::new().
+        let mut figure = Figure::new();
+        figure.
             set(Font(DEFAULT_FONT)).
-            set(Output(PathBuf::from(format!(".criterion/{}/new/{}.svg", id, statistic)))).
             set(SIZE).
             set(Title(format!("{}: {}", id, statistic))).
             configure(Axis::BottomX, |a| a.
@@ -335,7 +355,10 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
                 set(DARK_BLUE).
                 set(LINEWIDTH).
                 set(Label("Point estimate")).
-                set(LineType::Dash)).
+                set(LineType::Dash));
+        debug_script(&path, &figure);
+        figure.
+            set(Output(path)).
             draw().unwrap()
     }).collect::<Vec<_>>();
 
@@ -397,7 +420,6 @@ pub fn rel_distributions(
         };
 
         figure.clone().
-            set(Output(path)).
             set(Title(format!("{}: {}", id, statistic))).
             configure(Axis::BottomX, |a| a.
                 set(Label("Relative change (%)")).
@@ -435,7 +457,10 @@ pub fn rel_distributions(
                 set(Axes::BottomXRightY).
                 set(DARK_RED).
                 set(Label("Noise threshold")).
-                set(Opacity(0.1))).
+                set(Opacity(0.1)));
+        debug_script(&path, &figure);
+        figure.
+            set(Output(path)).
             draw().unwrap()
     }).collect::<Vec<_>>();
 
@@ -449,9 +474,9 @@ pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str) {
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, None);
     let zero = iter::repeat(0);
 
-    let gnuplot = Figure::new().
+    let mut figure = Figure::new();
+    figure.
         set(Font(DEFAULT_FONT)).
-        set(Output(path)).
         set(SIZE).
         set(Title(format!("{}: Welch t test", id))).
         configure(Axis::BottomX, |a| a.
@@ -478,7 +503,10 @@ pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str) {
             set(DARK_BLUE).
             set(LINEWIDTH).
             set(Label("t statistic")).
-            set(LineType::Solid)).
+            set(LineType::Solid));
+    debug_script(&path, &figure);
+    let gnuplot = figure.
+        set(Output(path)).
         draw().unwrap();
 
     wait_on_gnuplot(vec![gnuplot]);
@@ -572,7 +600,6 @@ pub fn summarize(id: &str) {
 
                 // XXX scale inputs?
                 let inputs = benches.iter().map(|&(_, input, _, _)| input).collect::<Vec<_>>();
-
                 let (scale, prefix) = scale_time(ubs_.max());
 
                 // XXX Logscale triggering may need tweaking
@@ -609,10 +636,11 @@ pub fn summarize(id: &str) {
                     }
                 };
 
+                let path = dir.join(&format!("summary/{}/{}s.svg", sample, statistic));
                 // TODO Review axis scaling
-                Figure::new().
+                let mut figure = Figure::new();
+                figure.
                     set(Font(DEFAULT_FONT)).
-                    set(Output(dir.join(&format!("summary/{}/{}s.svg", sample, statistic)))).
                     set(SIZE).
                     set(Title(id.to_owned())).
                     configure(Axis::BottomX, |a| a.
@@ -665,7 +693,10 @@ pub fn summarize(id: &str) {
                         set(LINEWIDTH).
                         set(Label(format!("{}", statistic))).
                         set(POINT_SIZE).
-                        set(PointType::FilledCircle)).
+                        set(PointType::FilledCircle));
+                debug_script(&path, &figure);
+                figure.
+                    set(Output(path)).
                     draw().unwrap()
             }).collect::<Vec<_>>()
         } else {
@@ -711,10 +742,11 @@ pub fn summarize(id: &str) {
                 let rel = points.iter().map(|&x| format!("{:.02}", x / min)).collect::<Vec<_>>();
 
                 let tics = || { (0..).map(|x| (f64::from(x))+0.5) };
+                let path = dir.join(&format!("summary/{}/{}s.svg", sample, statistic));
                 // TODO Review axis scaling
-                Figure::new().
+                let mut figure = Figure::new();
+                figure.
                     set(Font(DEFAULT_FONT)).
-                    set(Output(dir.join(&format!("summary/{}/{}s.svg", sample, statistic)))).
                     set(SIZE).
                     set(Title(format!("{}: Estimates of the {}s", id, statistic))).
                     configure(Axis::BottomX, |a| a.
@@ -759,7 +791,10 @@ pub fn summarize(id: &str) {
                         set(LINEWIDTH).
                         set(Label("Confidence Interval")).
                         set(POINT_SIZE).
-                        set(PointType::FilledCircle)).
+                        set(PointType::FilledCircle));
+                debug_script(&path, &figure);
+                figure.
+                    set(Output(path)).
                     draw().unwrap()
             }).collect::<Vec<_>>().append_({
                 let kdes = benches.iter().map(|&(_, _, _, ref sample)| {
@@ -805,10 +840,10 @@ pub fn summarize(id: &str) {
                 };
 
                 let tics = || { (0..).map(|x| (f64::from(x))+0.5) };
+                let path = dir.join(&format!("summary/{}/violin_plot.svg", sample));
                 let mut f = Figure::new();
                 f.
                     set(Font(DEFAULT_FONT)).
-                    set(Output(dir.join(&format!("summary/{}/violin_plot.svg", sample)))).
                     set(SIZE).
                     set(Title(format!("{}: Violin plot", id))).
                     configure(Axis::BottomX, |a| a.
@@ -861,8 +896,8 @@ pub fn summarize(id: &str) {
                         c.set(DARK_BLUE).set(Opacity(0.25))
                     });
                 }
-
-                f.draw().unwrap()
+                debug_script(&path, &f);
+                f.set(Output(path)).draw().unwrap()
             })
         };
 

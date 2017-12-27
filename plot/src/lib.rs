@@ -579,7 +579,7 @@ impl Figure {
     }
 
     /// Saves the script required to produce the figure to `path`
-    pub fn save(&mut self, path: &Path) -> io::Result<&mut Figure> {
+    pub fn save(&self, path: &Path) -> io::Result<&Figure> {
         use std::io::Write;
 
         try!((try!(File::create(path))).write_all(&self.script()));

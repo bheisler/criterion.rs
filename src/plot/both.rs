@@ -9,7 +9,7 @@ use {ConfidenceInterval, Estimate};
 use estimate::Statistic::Slope;
 use estimate::Estimates;
 use kde;
-use super::scale_time;
+use super::{scale_time, debug_script, wait_on_gnuplot};
 use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
 
 pub fn regression(
@@ -47,9 +47,9 @@ pub fn regression(
         ..
     } = estimates[&Slope];
 
-    let gnuplot = Figure::new().
+    let mut figure = Figure::new();
+    figure.
         set(Font(DEFAULT_FONT)).
-        set(Output(path)).
         set(SIZE).
         set(Title(id.to_owned())).
         configure(Axis::BottomX, |a| a.
@@ -95,12 +95,13 @@ pub fn regression(
             set(DARK_BLUE).
             set(LINEWIDTH).
             set(Label("New sample")).
-            set(LineType::Solid)).
+            set(LineType::Solid));
+    debug_script(&path, &figure);
+    let gnuplot = figure.
+        set(Output(path)).
         draw().unwrap();
 
-    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
-        str::from_utf8(&output.stderr).ok()
-    }))
+    wait_on_gnuplot(vec![gnuplot]);
 }
 
 pub fn pdfs(base_avg_times: &Sample<f64>, avg_times: &Sample<f64>, id: &str) {
@@ -115,9 +116,9 @@ pub fn pdfs(base_avg_times: &Sample<f64>, avg_times: &Sample<f64>, id: &str) {
     let y_scale = x_scale.recip();
     let zeros = iter::repeat(0);
 
-    let gnuplot = Figure::new().
+    let mut figure = Figure::new();
+    figure.
         set(Font(DEFAULT_FONT)).
-        set(Output(path)).
         set(SIZE).
         set(Title(id.to_owned())).
         configure(Axis::BottomX, |a| a.
@@ -147,10 +148,11 @@ pub fn pdfs(base_avg_times: &Sample<f64>, avg_times: &Sample<f64>, id: &str) {
         }, |c| c.
             set(DARK_BLUE).
             set(Label("New PDF")).
-            set(Opacity(0.5))).
+            set(Opacity(0.5)));
+    debug_script(&path, &figure);
+    let gnuplot = figure.
+        set(Output(path)).
         draw().unwrap();
 
-    assert_eq!(Some(""), gnuplot.wait_with_output().ok().as_ref().and_then(|output| {
-        str::from_utf8(&output.stderr).ok()
-    }))
+    wait_on_gnuplot(vec![gnuplot]);
 }

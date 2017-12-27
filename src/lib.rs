@@ -28,6 +28,7 @@ extern crate serde;
 extern crate serde_json;
 extern crate criterion_plot as simplot;
 extern crate criterion_stats as stats;
+extern crate simplelog;
 #[cfg(feature = "real_blackbox")] extern crate test;
 
 #[macro_use]
@@ -63,6 +64,21 @@ use std::io::Read;
 use std::path::Path;
 
 use estimate::{Distributions, Estimates};
+
+fn debug_enabled() -> bool {
+    std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG")
+}
+
+/// Initialize the logging for a Criterion benchmark. This should be called
+/// first before executing Criterion benchmarks, unless the user provides their
+/// own logging infrastructure.
+pub fn init_logging() {
+    use simplelog::*;
+    SimpleLogger::init(
+        if debug_enabled() { LogLevelFilter::max() } else { LogLevelFilter::Warn },
+        Config::default(),
+    ).unwrap();
+}
 
 /// A function that is opaque to the optimizer, used to prevent the compiler from
 /// optimizing away computations in a benchmark.
