@@ -512,6 +512,7 @@ pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str) {
     wait_on_gnuplot(vec![gnuplot]);
 }
 
+//TODO: I don't think this math is correct...
 fn log_ceil(x: f64) -> f64 {
     let t = (10f64).powi(x.log10().floor() as i32);
     (x / t).ceil() * t
@@ -536,11 +537,36 @@ impl<T> Append<T> for Vec<T> {
     }
 }
 
-pub fn summarize(id: &str) {
+fn select_scale(inputs: &Vec<f64>) -> Scale {
     fn diff(s: &[f64]) -> Vec<f64> {
         s.windows(2).map(|w| w[1] - w[0]).collect()
     }
 
+    if inputs.len() < 3 {
+        Scale::Linear
+    }
+    else if inputs.iter().any(|v| *v <= 0.0) {
+        Scale::Linear
+    }
+    else if inputs.iter().any(|v| !v.is_finite()) {
+        Scale::Linear
+    }
+    else {
+        let linear = Sample::new(&diff(&*inputs)).std_dev(None);
+        let log = {
+            let v = inputs.iter().map(|x| x.ln()).collect::<Vec<_>>();
+            Sample::new(&diff(&*v)).std_dev(None)
+        };
+
+        if linear < log {
+            Scale::Linear
+        } else {
+            Scale::Logarithmic
+        }
+    }
+}
+
+pub fn summarize(id: &str) {
     let dir = Path::new(".criterion").join(id);
     let contents: Vec<_> = try_else_return!(fs::ls(&dir)).map(|e| e.unwrap().path()).collect();
 
@@ -603,38 +629,8 @@ pub fn summarize(id: &str) {
                 let (scale, prefix) = scale_time(ubs_.max());
 
                 // XXX Logscale triggering may need tweaking
-                let xscale = if inputs.len() < 3 {
-                    Scale::Linear
-                } else {
-                    let inputs = inputs.iter().map(|&x| x as f64).collect::<Vec<_>>();
-                    let linear = Sample::new(&diff(&*inputs)).std_dev(None);
-                    let log = {
-                        let v = inputs.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        Sample::new(&diff(&*v)).std_dev(None)
-                    };
-
-                    if linear < log {
-                        Scale::Linear
-                    } else {
-                        Scale::Logarithmic
-                    }
-                };
-
-                let yscale = if points.len() < 3 {
-                    Scale::Linear
-                } else {
-                    let linear = Sample::new(&diff(&*points)).std_dev(None);
-                    let log = {
-                        let v = points.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        Sample::new(&diff(&*v)).std_dev(None)
-                    };
-
-                    if linear < log {
-                        Scale::Linear
-                    } else {
-                        Scale::Logarithmic
-                    }
-                };
+                let xscale = select_scale(&inputs.iter().map(|&x| x as f64).collect::<Vec<_>>());
+                let yscale = select_scale(&points);
 
                 let path = dir.join(&format!("summary/{}/{}s.svg", sample, statistic));
                 // TODO Review axis scaling
@@ -722,21 +718,7 @@ pub fn summarize(id: &str) {
 
                 let (scale, prefix) = scale_time(ubs_.max());
 
-                let xscale = if points.len() < 3 {
-                    Scale::Linear
-                } else {
-                    let linear = Sample::new(&diff(&*points)).std_dev(None);
-                    let log = {
-                        let v = points.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        Sample::new(&diff(&*v)).std_dev(None)
-                    };
-
-                    if linear < log {
-                        Scale::Linear
-                    } else {
-                        Scale::Logarithmic
-                    }
-                };
+                let xscale = select_scale(&points);
 
                 let min = *points.last().unwrap();
                 let rel = points.iter().map(|&x| format!("{:.02}", x / min)).collect::<Vec<_>>();
@@ -823,21 +805,7 @@ pub fn summarize(id: &str) {
                 }
                 let (scale, prefix) = scale_time(max);
 
-                let xscale = if medians.len() < 3 {
-                    Scale::Linear
-                } else {
-                    let linear = Sample::new(&diff(&*medians)).std_dev(None);
-                    let log = {
-                        let v = medians.iter().map(|x| x.ln()).collect::<Vec<_>>();
-                        Sample::new(&diff(&*v)).std_dev(None)
-                    };
-
-                    if linear < log {
-                        Scale::Linear
-                    } else {
-                        Scale::Logarithmic
-                    }
-                };
+                let xscale = select_scale(&medians);
 
                 let tics = || { (0..).map(|x| (f64::from(x))+0.5) };
                 let path = dir.join(&format!("summary/{}/violin_plot.svg", sample));
