@@ -6,6 +6,7 @@ use stats::univariate::{mixed, self};
 use estimate::Statistic::{Mean, Median};
 use estimate::{Distributions, Estimates};
 use {Criterion, Estimate, format, fs, plot};
+use error::Result;
 
 // Common comparison procedure
 pub fn common(
@@ -14,21 +15,21 @@ pub fn common(
     avg_times: &Sample<f64>,
     estimates_: &Estimates,
     criterion: &Criterion,
-) {
+) -> Result<(f64, f64, Estimates), > {
     let sample_dir = format!(".criterion/{}/base/sample.json", id);
-    let (iters, times): (Vec<f64>, Vec<f64>) = try_else_return!(fs::load(&sample_dir));
+    let (iters, times): (Vec<f64>, Vec<f64>) = fs::load(&sample_dir)?;
 
     let base_data = Data::new(&iters, &times);
 
     let base_estimates: Estimates =
-        try_else_return!(fs::load(&format!(".criterion/{}/base/estimates.json", id)));
+        fs::load(&format!(".criterion/{}/base/estimates.json", id))?;
 
     let base_avg_times: Vec<f64> = iters.iter().zip(times.iter()).map(|(iters, elapsed)| {
         elapsed / iters
     }).collect();
     let base_avg_times = Sample::new(&base_avg_times);
 
-    log_if_err!(fs::mkdirp(&format!(".criterion/{}/both", id)));
+    fs::mkdirp(&format!(".criterion/{}/both", id))?;
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting both linear regressions",
@@ -46,12 +47,11 @@ pub fn common(
                 id));
     }
 
-    log_if_err!(fs::mkdirp(&format!(".criterion/{}/change", id)));
+    fs::mkdirp(&format!(".criterion/{}/change", id))?;
     let (t_statistic, p_statistic) = t_test(id, avg_times, base_avg_times, criterion);
 
     let estimates = estimates(id, avg_times, base_avg_times, criterion);
-    criterion.report.comparison(id, p_statistic, t_statistic, &estimates,
-        criterion.significance_level, criterion.noise_threshold);
+    Ok((t_statistic, p_statistic, estimates))
 }
 
 // Performs a two sample t-test

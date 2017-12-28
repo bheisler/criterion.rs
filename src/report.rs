@@ -7,20 +7,29 @@ use stats::univariate::Sample;
 use estimate::{Distributions, Estimates, Statistic};
 use Estimate;
 
+pub(crate) struct ComparisonData {
+    pub p_value: f64,
+    pub t_value: f64,
+    pub relative_estimates: Estimates,
+    pub significance_threshold: f64,
+    pub noise_threshold: f64,
+}
+
+pub(crate) struct MeasurementData<'a> {
+    pub iter_counts: &'a Sample<f64>,
+    pub sample_times: &'a Sample<f64>,
+    pub avg_times: LabeledSample<'a, f64>,
+    pub absolute_estimates: Estimates,
+    pub distributions: Distributions,
+    pub comparison: Option<ComparisonData>,
+}
+
 pub(crate) trait Report {
     fn benchmark_start(&self, id: &str);
     fn warmup(&self, id: &str, warmup_ns: f64);
     fn analysis(&self, id: &str);
     fn measurement_start(&self, id: &str, sample_count: u64, estimate_ns: f64, iter_count: u64);
-    fn measurement_complete(&self, id: &str,
-        iter_counts: &Sample<f64>,
-        sample_times: &Sample<f64>,
-        avg_times: &LabeledSample<f64>,
-        absolute_estimates: &Estimates,
-        distributions: &Distributions);
-    fn comparison(&self, id: &str, p_value: f64, t_value: f64,
-        relative_estimates: &Estimates,
-        significance_threshold: f64, noise_threshold: f64);
+    fn measurement_complete(&self, id: &str, measurements: &MeasurementData);
 }
 
 pub(crate) struct CliReport;
@@ -43,58 +52,51 @@ impl Report for CliReport {
             sample_count, format::time(estimate_ns), iter_count);
     }
 
-    fn measurement_complete(&self, _: &str,
-        iter_counts: &Sample<f64>,
-        sample_times: &Sample<f64>,
-        avg_times: &LabeledSample<f64>,
-        absolute_estimates: &Estimates,
-        _: &Distributions) {
-        outliers(avg_times);
+    fn measurement_complete(&self, id: &str, meas: &MeasurementData) {
+        outliers(&meas.avg_times);
         println!("> Performing linear regression");
 
-        let data = Data::new(iter_counts.as_slice(), sample_times.as_slice());
-        let slope_estimate = absolute_estimates.get(&Statistic::Slope).unwrap();
+        let data = Data::new(meas.iter_counts.as_slice(), meas.sample_times.as_slice());
+        let slope_estimate = meas.absolute_estimates.get(&Statistic::Slope).unwrap();
         regression(data,
             (Slope(slope_estimate.confidence_interval.lower_bound),
              Slope(slope_estimate.confidence_interval.upper_bound)));
 
         println!("> Estimating the statistics of the sample");
-        abs(absolute_estimates);
-    }
+        abs(&meas.absolute_estimates);
 
-    fn comparison(&self, id: &str, p_value: f64, _: f64,
-        relative_estimates: &Estimates,
-        significance_threshold: f64, noise_threshold: f64) {
-        println!("{}: Comparing with previous sample", id);
-        println!("> Performing a two-sample t-test");
-        println!("  > H0: Both samples have the same mean");
-        println!("  > p = {}", p_value);
-        let different_mean = p_value < significance_threshold;
-        println!("  > {} reject the null hypothesis",
-             if different_mean { "Strong evidence to" } else { "Can't" });
-        if different_mean {
-            println!("> Estimating relative change of statistics");
-            rel(relative_estimates);
-            let mut regressed = true;
-            for (&statistic, estimate) in relative_estimates {
-                let result = compare_to_threshold(estimate, noise_threshold);
+        if let &Some(ref comp) = &meas.comparison {
+            println!("{}: Comparing with previous sample", id);
+            println!("> Performing a two-sample t-test");
+            println!("  > H0: Both samples have the same mean");
+            println!("  > p = {}", comp.p_value);
+            let different_mean = comp.p_value < comp.significance_threshold;
+            println!("  > {} reject the null hypothesis",
+                if different_mean { "Strong evidence to" } else { "Can't" });
+            if different_mean {
+                println!("> Estimating relative change of statistics");
+                rel(&comp.relative_estimates);
+                let mut regressed = true;
+                for (&statistic, estimate) in comp.relative_estimates.iter() {
+                    let result = compare_to_threshold(estimate, comp.noise_threshold);
 
-                let p = estimate.point_estimate;
-                match result {
-                    ComparisonResult::Improved => {
-                        println!("  > {} has improved by {:.2}%", statistic, -100.0 * p);
-                        regressed = false;
-                    },
-                    ComparisonResult::Regressed => {
-                        println!("  > {} has regressed by {:.2}%", statistic, 100.0 * p);
-                    },
-                    ComparisonResult::NonSignificant => {
-                        regressed = true;
-                    },
+                    let p = estimate.point_estimate;
+                    match result {
+                        ComparisonResult::Improved => {
+                            println!("  > {} has improved by {:.2}%", statistic, -100.0 * p);
+                            regressed = false;
+                        },
+                        ComparisonResult::Regressed => {
+                            println!("  > {} has regressed by {:.2}%", statistic, 100.0 * p);
+                        },
+                        ComparisonResult::NonSignificant => {
+                            regressed = true;
+                        },
+                    }
                 }
-            }
-            if regressed {
-                println!("{} has regressed", id);
+                if regressed {
+                    println!("{} has regressed", id);
+                }
             }
         }
     }

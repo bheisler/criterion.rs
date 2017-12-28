@@ -131,11 +131,6 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
     estimates.insert(Statistic::Slope, slope);
     distributions.insert(Statistic::Slope, distribution);
 
-    criterion.report.measurement_complete(
-        id, &Sample::new(&*iters), &Sample::new(&*times), &labeled_sample,
-        &estimates, &distributions
-    );
-
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting the estimated sample PDF",
@@ -154,9 +149,35 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
     ));
     log_if_err!(fs::save(&estimates, &format!(".criterion/{}/new/estimates.json", id)));
 
-    if base_dir_exists(id) {
-        compare::common(id, data, avg_times, &estimates, criterion);
-    }
+    let compare_data = if base_dir_exists(id) {
+        let result = compare::common(id, data, avg_times, &estimates, criterion);
+        match result {
+            Ok((t_val, p_val, rel_est)) => {
+                Some(::report::ComparisonData {
+                    p_value: p_val,
+                    t_value: t_val,
+                    relative_estimates: rel_est, 
+                    significance_threshold: criterion.significance_level,
+                    noise_threshold: criterion.noise_threshold,
+                })
+            }
+            Err(e) => {
+                ::error::log_error(e);
+                None
+            }
+        }
+    } else { None };
+
+    let measurement_data = ::report::MeasurementData {
+        iter_counts: &Sample::new(&*iters),
+        sample_times: &Sample::new(&*times),
+        avg_times: labeled_sample,
+        absolute_estimates: estimates.clone(),
+        distributions: distributions,
+        comparison: compare_data,
+    };
+
+    criterion.report.measurement_complete(id, &measurement_data);
 }
 
 fn base_dir_exists(id: &str) -> bool {
