@@ -32,12 +32,10 @@ mod compare;
 
 pub fn summarize(id: &str, criterion: &Criterion) {
     if criterion.plotting.is_enabled() {
-        print!("Summarizing results of {}... ", id);
         plot::summarize(id);
-        println!("DONE\n");
-    } else {
-        println!("Plotting disabled, skipping summarization");
     }
+
+    println!();
 }
 
 pub fn function<F>(id: &str, f: F, criterion: &Criterion) where F: FnMut(&mut Bencher) {

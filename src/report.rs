@@ -37,13 +37,15 @@ pub(crate) trait Report {
 
 pub(crate) struct CliReport {
     pub enable_text_overwrite: bool,
+    pub enable_text_coloring: bool,
 
     pub last_line_len: Cell<usize>,
 }
 impl CliReport {
-    pub fn new(enable_text_overwrite: bool) -> CliReport {
+    pub fn new(enable_text_overwrite: bool, enable_text_coloring: bool) -> CliReport {
         CliReport {
             enable_text_overwrite: enable_text_overwrite,
+            enable_text_coloring: enable_text_coloring,
 
             last_line_len: Cell::new(0),            
         }
@@ -68,6 +70,81 @@ impl CliReport {
         else {
             println!("{}", s);
         }
+    }
+
+    fn green(&self, s: String) -> String {
+        if self.enable_text_coloring {
+            format!("\x1B[32m{}\x1B[39m", s)
+        }
+        else {
+            s
+        }
+    }
+
+    fn yellow(&self, s: String) -> String {
+        if self.enable_text_coloring {
+            format!("\x1B[33m{}\x1B[39m", s)
+        }
+        else {
+            s
+        }
+    }
+
+    fn red(&self, s: String) -> String {
+        if self.enable_text_coloring {
+            format!("\x1B[31m{}\x1B[39m", s)
+        }
+        else {
+            s
+        }
+    }
+
+    fn bold(&self, s: String) -> String {
+        if self.enable_text_coloring {
+            format!("\x1B[1m{}\x1B[22m", s)
+        }
+        else {
+            s
+        }
+    }
+
+    fn faint(&self, s: String) -> String {
+        if self.enable_text_coloring {
+            format!("\x1B[2m{}\x1B[22m", s)
+        }
+        else {
+            s
+        }
+    }
+    
+    pub fn outliers(&self, sample: &LabeledSample<f64>) {
+        let (los, lom, _, him, his) = sample.count();
+        let noutliers = los + lom + him + his;
+        let sample_size = sample.as_slice().len();
+
+        if noutliers == 0 {
+            return;
+        }
+
+        let percent = |n: usize| { 100. * n as f64 / sample_size as f64 };
+
+        println!("{}", 
+            self.yellow(
+                format!("Found {} outliers among {} measurements ({:.2}%)",
+                    noutliers,
+                    sample_size,
+                    percent(noutliers))));
+
+        let print = |n, label| {
+            if n != 0 {
+                println!("  {} ({:.2}%) {}", n, percent(n), label);
+            }
+        };
+
+        print(los, "low severe");
+        print(lom, "low mild");
+        print(him, "high mild");
+        print(his, "high severe");
     }
 }
 impl Report for CliReport {
@@ -96,116 +173,94 @@ impl Report for CliReport {
 
     fn measurement_complete(&self, id: &str, meas: &MeasurementData) {
         self.text_overwrite();
-        outliers(&meas.avg_times);
-        println!("> Performing linear regression");
+        
+        let slope_estimate = meas.absolute_estimates.get(&Statistic::Slope).unwrap();
+
+        {
+            let mut id = String::from(id);
+            id.truncate(23);
+            let id_len = id.len();
+            println!("{}{}time:   [{} {} {}]", 
+                self.green(id), 
+                " ".repeat(24 - id_len),
+                self.faint(format::time(slope_estimate.confidence_interval.lower_bound)),
+                self.bold(format::time(slope_estimate.point_estimate)),
+                self.faint(format::time(slope_estimate.confidence_interval.upper_bound))
+            );
+        }
+
+        if let &Some(ref comp) = &meas.comparison {
+            let different_mean = comp.p_value < comp.significance_threshold;
+            let mean_est = comp.relative_estimates.get(&Statistic::Mean).unwrap();
+            let point_estimate = mean_est.point_estimate;
+            let mut point_estimate_str = format::change(point_estimate, true);
+            let explanation_str: String;
+
+            if !different_mean {
+                explanation_str = "No change in performance detected.".to_owned();
+            }
+            else {
+                let comparison = compare_to_threshold(&mean_est, comp.noise_threshold);
+                match comparison {
+                    ComparisonResult::Improved => {
+                        point_estimate_str = self.green(self.bold(point_estimate_str));
+                        explanation_str = format!("Performance has {}.",
+                            self.green("improved".to_owned()));
+                    }
+                    ComparisonResult::Regressed => {
+                        point_estimate_str = self.red(self.bold(point_estimate_str));
+                        explanation_str = format!("Performance has {}.",
+                            self.red("regressed".to_owned()));
+                    }
+                    ComparisonResult::NonSignificant => {
+                        explanation_str = "Change within noise threshold.".to_owned();
+                    }
+                }
+            }
+
+            println!("{}change: [{} {} {}] (p = {:.2} {} {:.2})", 
+                " ".repeat(24),
+                self.faint(format::change(mean_est.confidence_interval.lower_bound, true)),
+                point_estimate_str,
+                self.faint(format::change(mean_est.confidence_interval.upper_bound, true)),
+                comp.p_value,
+                if different_mean {"<"} else {">"},
+                comp.significance_threshold
+            );
+            println!("{}{}", " ".repeat(24), explanation_str);
+        }
+
+        self.outliers(&meas.avg_times);
 
         let data = Data::new(meas.iter_counts.as_slice(), meas.sample_times.as_slice());
         let slope_estimate = meas.absolute_estimates.get(&Statistic::Slope).unwrap();
-        regression(data,
-            (Slope(slope_estimate.confidence_interval.lower_bound),
-             Slope(slope_estimate.confidence_interval.upper_bound)));
 
-        println!("> Estimating the statistics of the sample");
-        abs(&meas.absolute_estimates);
-
-        if let &Some(ref comp) = &meas.comparison {
-            println!("{}: Comparing with previous sample", id);
-            println!("> Performing a two-sample t-test");
-            println!("  > H0: Both samples have the same mean");
-            println!("  > p = {}", comp.p_value);
-            let different_mean = comp.p_value < comp.significance_threshold;
-            println!("  > {} reject the null hypothesis",
-                if different_mean { "Strong evidence to" } else { "Can't" });
-            if different_mean {
-                println!("> Estimating relative change of statistics");
-                rel(&comp.relative_estimates);
-                let mut regressed = true;
-                for (&statistic, estimate) in comp.relative_estimates.iter() {
-                    let result = compare_to_threshold(estimate, comp.noise_threshold);
-
-                    let p = estimate.point_estimate;
-                    match result {
-                        ComparisonResult::Improved => {
-                            println!("  > {} has improved by {:.2}%", statistic, -100.0 * p);
-                            regressed = false;
-                        },
-                        ComparisonResult::Regressed => {
-                            println!("  > {} has regressed by {:.2}%", statistic, 100.0 * p);
-                        },
-                        ComparisonResult::NonSignificant => {
-                            regressed = true;
-                        },
-                    }
-                }
-                if regressed {
-                    println!("{} has regressed", id);
-                }
-            }
+        fn format_short_estimate(estimate: &Estimate) -> String {
+            format!("[{} {}]", 
+                format::time(estimate.confidence_interval.lower_bound),
+                format::time(estimate.confidence_interval.upper_bound))
         }
-    }
-}
 
-pub fn abs(estimates: &Estimates) {
-    for (&statistic, estimate) in estimates.iter() {
-        let ci = estimate.confidence_interval;
-        let lb = format::time(ci.lower_bound);
-        let ub = format::time(ci.upper_bound);
-
-        println!("  > {:>6} [{} {}]", statistic, lb, ub);
-    }
-}
-
-pub fn rel(estimates: &Estimates) {
-    for (&statistic, estimate) in estimates.iter() {
-        let ci = estimate.confidence_interval;
-        let lb = format::change(ci.lower_bound, true);
-        let ub = format::change(ci.upper_bound, true);
-
-        println!("  > {:>6} [{} {}]", statistic, lb, ub);
-    }
-}
-
-pub fn outliers(sample: &LabeledSample<f64>) {
-    let (los, lom, _, him, his) = sample.count();
-    let noutliers = los + lom + him + his;
-    let sample_size = sample.as_slice().len();
-
-    if noutliers == 0 {
-        return;
-    }
-
-    let percent = |n: usize| { 100. * n as f64 / sample_size as f64 };
-
-    println!("> Found {} outliers among {} measurements ({:.2}%)",
-             noutliers,
-             sample_size,
-             percent(noutliers));
-
-    let print = |n, label| {
-        if n != 0 {
-            println!("  > {} ({:.2}%) {}", n, percent(n), label);
-        }
-    };
-
-    print(los, "low severe");
-    print(lom, "low mild");
-    print(him, "high mild");
-    print(his, "high severe");
-}
-
-pub fn regression(data: Data<f64, f64>, (lb, ub): (Slope<f64>, Slope<f64>)) {
-    println!(
-        "  > {:>6} [{} {}]",
-        "slope",
-        format::time(lb.0),
-        format::time(ub.0),
+        println!("{:<7}{} {:<15}[{:0.7} {:0.7}]",
+            "slope",
+            format_short_estimate(slope_estimate),
+            "R^2",
+            Slope(slope_estimate.confidence_interval.lower_bound).r_squared(data),
+            Slope(slope_estimate.confidence_interval.upper_bound).r_squared(data),
         );
-
-    println!(
-         "  > {:>6}  {:0.7} {:0.7}",
-         "R^2",
-         lb.r_squared(data),
-         ub.r_squared(data));
+        println!("{:<7}{} {:<15}{}",
+            "mean",
+            format_short_estimate(&meas.absolute_estimates.get(&Statistic::Mean).unwrap()),
+            "std. dev.",
+            format_short_estimate(&meas.absolute_estimates.get(&Statistic::StdDev).unwrap()),
+        );
+        println!("{:<7}{} {:<15}{}",
+            "median",
+            format_short_estimate(&meas.absolute_estimates.get(&Statistic::Median).unwrap()),
+            "med. abs. dev.",
+            format_short_estimate(&meas.absolute_estimates.get(&Statistic::MedianAbsDev).unwrap()),
+        );
+    }
 }
 
 enum ComparisonResult {

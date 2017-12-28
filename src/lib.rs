@@ -395,6 +395,7 @@ impl Default for Criterion {
         };
 
         let enable_text_overwrite = isatty::stdout_isatty() && !debug_enabled();
+        let enable_text_coloring = cfg!(unix) && isatty::stdout_isatty();
 
         Criterion {
             confidence_level: 0.95,
@@ -406,7 +407,8 @@ impl Default for Criterion {
             significance_level: 0.05,
             warm_up_time: Duration::new(3, 0),
             filter: None,
-            report: Box::new(CliReport::new(enable_text_overwrite)),
+            report: Box::new(CliReport::new(
+                enable_text_overwrite, enable_text_coloring)),
         }
     }
 }
