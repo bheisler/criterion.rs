@@ -13,7 +13,7 @@ use estimate::{Distributions, Estimates, Statistic};
 use program::Program;
 use routine::{Function, Routine};
 use {Bencher, ConfidenceInterval, Criterion, Estimate};
-use {format, fs, plot, report};
+use {format, fs, plot};
 use ::Fun;
 
 macro_rules! elapsed {
@@ -108,9 +108,11 @@ pub fn program_over_inputs<I, F>(
 fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
     R: Routine,
 {
-    println!("Benchmarking {}", id);
+    criterion.report.benchmark_start(id);
 
-    let (iters, times) = routine.sample(criterion);
+    let (iters, times) = routine.sample(id, criterion);
+
+    criterion.report.analysis(id);
 
     rename_new_dir_to_base(id);
 
@@ -123,18 +125,21 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
 
     let data = Data::new(&iters, &times);
     let labeled_sample = outliers(id, avg_times);
-    if criterion.plotting.is_enabled() {
-        elapsed!(
-            "Plotting the estimated sample PDF",
-            plot::pdf(data, labeled_sample, id));
-    }
     let (distribution, slope) = regression(id, data, criterion);
     let (mut distributions, mut estimates) = estimates(avg_times, criterion);
 
     estimates.insert(Statistic::Slope, slope);
     distributions.insert(Statistic::Slope, distribution);
 
+    criterion.report.measurement_complete(
+        id, &Sample::new(&*iters), &Sample::new(&*times), &labeled_sample,
+        &estimates, &distributions
+    );
+
     if criterion.plotting.is_enabled() {
+        elapsed!(
+            "Plotting the estimated sample PDF",
+            plot::pdf(data, labeled_sample, id));
         elapsed!(
             "Plotting the distribution of the absolute statistics",
             plot::abs_distributions(
@@ -166,8 +171,6 @@ fn regression(
 ) -> (Distribution<f64>, Estimate) {
     let cl = criterion.confidence_level;
 
-    println!("> Performing linear regression");
-
     let distribution = elapsed!(
         "Bootstrapped linear regression",
         data.bootstrap(criterion.nresamples, |d| (Slope::fit(d).0,))).0;
@@ -177,8 +180,6 @@ fn regression(
     let se = distribution.std_dev(None);
 
     let (lb_, ub_) = (Slope(lb), Slope(ub));
-
-    report::regression(data, (lb_, ub_));
 
     if criterion.plotting.is_enabled() {
         elapsed!(
@@ -204,10 +205,7 @@ fn regression(
 // Classifies the outliers in the sample
 fn outliers<'a>(id: &str, avg_times: &'a Sample<f64>) -> LabeledSample<'a, f64> {
     let sample = tukey::classify(avg_times);
-
-    report::outliers(sample);
     log_if_err!(fs::save(&sample.fences(), &format!(".criterion/{}/new/tukey.json", id)));
-
     sample
 }
 
@@ -234,7 +232,6 @@ fn estimates(
         [a, b, c, d]
     };
 
-    println!("> Estimating the statistics of the sample");
     let distributions = {
         let (a, b, c, d) = elapsed!(
         "Bootstrapping the absolute statistics",
@@ -251,8 +248,6 @@ fn estimates(
     let distributions: Distributions = statistics.iter().cloned()
         .zip(distributions.into_iter()).collect();
     let estimates = Estimate::new(&distributions, &points, cl);
-
-    report::abs(&estimates);
 
     (distributions, estimates)
 }

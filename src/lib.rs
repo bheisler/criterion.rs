@@ -64,6 +64,7 @@ use std::io::Read;
 use std::path::Path;
 
 use estimate::{Distributions, Estimates};
+use report::{Report, CliReport};
 
 fn debug_enabled() -> bool {
     std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG")
@@ -367,6 +368,7 @@ pub struct Criterion {
     significance_level: f64,
     warm_up_time: Duration,
     filter: Option<String>,
+    report: Box<Report>,
 }
 
 impl Default for Criterion {
@@ -401,6 +403,7 @@ impl Default for Criterion {
             significance_level: 0.05,
             warm_up_time: Duration::new(3, 0),
             filter: None,
+            report: Box::new(CliReport),
         }
     }
 }

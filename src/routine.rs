@@ -1,6 +1,5 @@
 use std::time::{Duration, Instant};
 
-use format;
 use {Bencher, Criterion, DurationExt};
 
 /// PRIVATE
@@ -11,11 +10,11 @@ pub trait Routine {
     fn warm_up(&mut self, how_long: Duration) -> (u64, u64);
 
     /// PRIVATE
-    fn sample(&mut self, criterion: &Criterion) -> (Box<[f64]>, Box<[f64]>) {
+    fn sample(&mut self, id: &str, criterion: &Criterion) -> (Box<[f64]>, Box<[f64]>) {
         let wu = criterion.warm_up_time;
         let m_ns = criterion.measurement_time.to_nanos();
 
-        println!("> Warming up for {}", format::time(wu.to_nanos() as f64));
+        criterion.report.warmup(id, wu.to_nanos() as f64);
 
         let (wu_elapsed, wu_iters) = self.warm_up(wu);
 
@@ -30,7 +29,7 @@ pub trait Routine {
         let m_iters = (1..n as u64).map(|a| a*d).collect::<Vec<u64>>();
 
         let m_ns = total_runs as f64 * d as f64 * met;
-        println!("> Collecting {} samples in estimated {}", n, format::time(m_ns));
+        criterion.report.measurement_start(id, n, m_ns, m_iters.iter().sum());
         let m_elapsed = self.bench(m_iters.iter().cloned());
 
         let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();

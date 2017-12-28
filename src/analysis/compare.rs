@@ -5,8 +5,7 @@ use stats::univariate::{mixed, self};
 
 use estimate::Statistic::{Mean, Median};
 use estimate::{Distributions, Estimates};
-use self::ComparisonResult::*;
-use {Criterion, Estimate, format, fs, plot, report};
+use {Criterion, Estimate, format, fs, plot};
 
 // Common comparison procedure
 pub fn common(
@@ -16,8 +15,6 @@ pub fn common(
     estimates_: &Estimates,
     criterion: &Criterion,
 ) {
-    println!("{}: Comparing with previous sample", id);
-
     let sample_dir = format!(".criterion/{}/base/sample.json", id);
     let (iters, times): (Vec<f64>, Vec<f64>) = try_else_return!(fs::load(&sample_dir));
 
@@ -50,14 +47,11 @@ pub fn common(
     }
 
     log_if_err!(fs::mkdirp(&format!(".criterion/{}/change", id)));
-    let different_mean = t_test(id, avg_times, base_avg_times, criterion);
+    let (t_statistic, p_statistic) = t_test(id, avg_times, base_avg_times, criterion);
 
-    if different_mean {
-        let regressed = estimates(id, avg_times, base_avg_times, criterion);
-        if regressed.into_iter().all(|x| x) {
-            println!("{} has regressed", id);
-        }
-    }
+    let estimates = estimates(id, avg_times, base_avg_times, criterion);
+    criterion.report.comparison(id, p_statistic, t_statistic, &estimates,
+        criterion.significance_level, criterion.noise_threshold);
 }
 
 // Performs a two sample t-test
@@ -66,23 +60,14 @@ fn t_test(
     avg_times: &Sample<f64>,
     base_avg_times: &Sample<f64>,
     criterion: &Criterion,
-) -> bool {
+) -> (f64, f64) {
     let nresamples = criterion.nresamples;
-    let sl = criterion.significance_level;
-
-    println!("> Performing a two-sample t-test");
-    println!("  > H0: Both samples have the same mean");
 
     let t_statistic = avg_times.t(base_avg_times);
     let t_distribution = elapsed!(
         "Bootstrapping the T distribution",
         mixed::bootstrap(avg_times, base_avg_times, nresamples, |a, b| (a.t(b),))).0;
     let p_value = t_distribution.p_value(t_statistic, &Tails::Two);
-    let different_mean = p_value < sl;
-
-    println!("  > p = {}", p_value);
-    println!("  > {} reject the null hypothesis",
-             if different_mean { "Strong evidence to" } else { "Can't" });
 
     if criterion.plotting.is_enabled() {
         elapsed!(
@@ -93,7 +78,7 @@ fn t_test(
                 id));
     }
 
-    different_mean
+    (t_statistic, p_value)
 }
 
 // Estimates the relative change in the statistics of the population
@@ -102,7 +87,7 @@ fn estimates(
     avg_times: &Sample<f64>,
     base_avg_times: &Sample<f64>,
     criterion: &Criterion,
-) -> Vec<bool> {
+) -> Estimates {
     fn stats(a: &Sample<f64>, b: &Sample<f64>) -> (f64, f64) {
         (a.mean() / b.mean() - 1., a.percentiles().median() / b.percentiles().median() - 1.)
     }
@@ -111,7 +96,6 @@ fn estimates(
     let nresamples = criterion.nresamples;
     let threshold = criterion.noise_threshold;
 
-    println!("> Estimating relative change of statistics");
     let distributions = {
         let (a, b) = elapsed!(
             "Bootstrapping the relative statistics",
@@ -129,9 +113,9 @@ fn estimates(
         [Mean, Median].iter().cloned().zip(distributions.into_iter()).collect();
     let estimates = Estimate::new(&distributions, &points, cl);
 
-    report::rel(&estimates);
-
-    log_if_err!(fs::save(&estimates, &format!(".criterion/{}/change/estimates.json", id)));
+    {
+        log_if_err!(fs::save(&estimates, &format!(".criterion/{}/change/estimates.json", id)));
+    }
 
     if criterion.plotting.is_enabled() {
         elapsed!(
@@ -143,45 +127,5 @@ fn estimates(
                 threshold));
     }
 
-    let mut regressed = vec!();
-    for (&statistic, estimate) in &estimates {
-        let result = compare_to_threshold(estimate, threshold);
-
-        let p = estimate.point_estimate;
-        match result {
-            Improved => {
-                println!("  > {} has improved by {:.2}%", statistic, -100.0 * p);
-                regressed.push(false);
-            },
-            Regressed => {
-                println!("  > {} has regressed by {:.2}%", statistic, 100.0 * p);
-                regressed.push(true);
-            },
-            NonSignificant => {
-                regressed.push(false);
-            },
-        }
-    }
-
-    regressed
-}
-
-enum ComparisonResult {
-    Improved,
-    Regressed,
-    NonSignificant,
-}
-
-fn compare_to_threshold(estimate: &Estimate, noise: f64) -> ComparisonResult {
-    let ci = estimate.confidence_interval;
-    let lb = ci.lower_bound;
-    let ub = ci.upper_bound;
-
-    if lb < -noise && ub < -noise {
-        Improved
-    } else if lb > noise && ub > noise {
-        Regressed
-    } else {
-        NonSignificant
-    }
+    estimates
 }
