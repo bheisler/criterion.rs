@@ -6,6 +6,9 @@ use format;
 use stats::univariate::Sample;
 use estimate::{Distributions, Estimates, Statistic};
 use Estimate;
+use std::io::stdout;
+use std::io::Write;
+use std::cell::Cell;
 
 pub(crate) struct ComparisonData {
     pub p_value: f64,
@@ -32,27 +35,67 @@ pub(crate) trait Report {
     fn measurement_complete(&self, id: &str, measurements: &MeasurementData);
 }
 
-pub(crate) struct CliReport;
+pub(crate) struct CliReport {
+    pub enable_text_overwrite: bool,
+
+    pub last_line_len: Cell<usize>,
+}
+impl CliReport {
+    pub fn new(enable_text_overwrite: bool) -> CliReport {
+        CliReport {
+            enable_text_overwrite: enable_text_overwrite,
+
+            last_line_len: Cell::new(0),            
+        }
+    }
+
+    fn text_overwrite(&self) {
+        if self.enable_text_overwrite {
+            print!("\r");
+            for _ in 0..self.last_line_len.get() {
+                print!(" ");
+            }
+            print!("\r");
+        }
+    }
+
+    fn print_overwritable(&self, s: String) {
+        if self.enable_text_overwrite {
+            self.last_line_len.set(s.len());
+            print!("{}", s);
+            stdout().flush().unwrap();
+        }
+        else {
+            println!("{}", s);
+        }
+    }
+}
 impl Report for CliReport {
     fn benchmark_start(&self, id: &str) {
-        println!("Benchmarking {}", id);
+        self.print_overwritable(format!("Benchmarking {}", id));
     }
 
-    fn warmup(&self, _: &str, warmup_ns: f64) {
-        println!("> Warming up for {}", format::time(warmup_ns));
+    fn warmup(&self, id: &str, warmup_ns: f64) {
+        self.text_overwrite();
+        self.print_overwritable(
+            format!("Benchmarking {}: Warming up for {}", id, format::time(warmup_ns)));
     }
 
-    fn analysis(&self, _: &str) {
-        println!("> Analyzing");
+    fn analysis(&self, id: &str) {
+        self.text_overwrite();
+        self.print_overwritable(format!("Benchmarking {}: Analyzing", id));
     }
 
-    fn measurement_start(&self, _: &str, sample_count: u64,
+    fn measurement_start(&self, id: &str, sample_count: u64,
         estimate_ns: f64, iter_count: u64) {
-        println!("> Collecting {} samples in estimated {} ({} iterations)",
-            sample_count, format::time(estimate_ns), iter_count);
+        self.text_overwrite();
+        self.print_overwritable(
+            format!("Benchmarking {}: Collecting {} samples in estimated {} ({} iterations)",
+                id, sample_count, format::time(estimate_ns), iter_count));
     }
 
     fn measurement_complete(&self, id: &str, meas: &MeasurementData) {
+        self.text_overwrite();
         outliers(&meas.avg_times);
         println!("> Performing linear regression");
 

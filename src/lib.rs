@@ -29,6 +29,7 @@ extern crate serde_json;
 extern crate criterion_plot as simplot;
 extern crate criterion_stats as stats;
 extern crate simplelog;
+extern crate isatty;
 #[cfg(feature = "real_blackbox")] extern crate test;
 
 #[macro_use]
@@ -393,6 +394,8 @@ impl Default for Criterion {
             Plotting::NotAvailable
         };
 
+        let enable_text_overwrite = isatty::stdout_isatty() && !debug_enabled();
+
         Criterion {
             confidence_level: 0.95,
             measurement_time: Duration::new(5, 0),
@@ -403,7 +406,7 @@ impl Default for Criterion {
             significance_level: 0.05,
             warm_up_time: Duration::new(3, 0),
             filter: None,
-            report: Box::new(CliReport),
+            report: Box::new(CliReport::new(enable_text_overwrite)),
         }
     }
 }
