@@ -74,8 +74,10 @@ fn debug_enabled() -> bool {
 /// own logging infrastructure.
 pub fn init_logging() {
     use simplelog::*;
+    let filter = if debug_enabled() { LogLevelFilter::max() } else { LogLevelFilter::Warn };
+
     SimpleLogger::init(
-        if debug_enabled() { LogLevelFilter::max() } else { LogLevelFilter::Warn },
+        filter,
         Config::default(),
     ).unwrap();
 }
