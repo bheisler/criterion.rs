@@ -30,6 +30,7 @@ extern crate criterion_plot as simplot;
 extern crate criterion_stats as stats;
 extern crate simplelog;
 extern crate isatty;
+extern crate clap;
 #[cfg(feature = "real_blackbox")] extern crate test;
 
 #[macro_use]
@@ -394,9 +395,6 @@ impl Default for Criterion {
             Plotting::NotAvailable
         };
 
-        let enable_text_overwrite = isatty::stdout_isatty() && !debug_enabled();
-        let enable_text_coloring = cfg!(unix) && isatty::stdout_isatty();
-
         Criterion {
             confidence_level: 0.95,
             measurement_time: Duration::new(5, 0),
@@ -407,8 +405,7 @@ impl Default for Criterion {
             significance_level: 0.05,
             warm_up_time: Duration::new(3, 0),
             filter: None,
-            report: Box::new(CliReport::new(
-                enable_text_overwrite, enable_text_coloring)),
+            report: Box::new(CliReport::new(false, false)),
         }
     }
 }
@@ -564,9 +561,58 @@ impl Criterion {
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
     pub fn configure_from_args(&mut self) {
-        if let Some(arg) = ::std::env::args().skip(1).find(|arg| *arg != "--bench") {
-            self.with_filter(arg);
+        use clap::{Arg, App};
+        let matches = App::new("Criterion Benchmark")
+            .arg(Arg::with_name("FILTER")
+                .help("Skip benchmarks whose names do not contain FILTER.")
+                .index(1))
+            .arg(Arg::with_name("color")
+                .short("c")
+                .long("color")
+                .alias("colour")
+                .takes_value(true)
+                .possible_values(&["auto", "always", "never"])
+                .default_value("auto")
+                .help("Configure coloring of output. always = always colorize output, never = never colorize output, auto = colorize output if output is a tty and compiled for unix."))
+            //Ignored but always passed to benchmark executables
+            .arg(Arg::with_name("bench")
+                .hidden(true)
+                .long("bench"))
+            .arg(Arg::with_name("version")
+                .hidden(true)
+                .short("V")
+                .long("version"))
+            .after_help("
+This executable is a Criterion.rs benchmark.
+See https://github.com/japaric/criterion.rs for more details.
+
+To enable debug output, define the environment variable CRITERION_DEBUG.
+Criterion.rs will output more debug information and will save the gnuplot
+scripts alongside the generated plots.
+")
+            .get_matches();
+
+        if let Some(filter) = matches.value_of("FILTER") {
+            self.with_filter(filter);
         }
+
+        let mut enable_text_overwrite = isatty::stdout_isatty() && !debug_enabled();
+        let enable_text_coloring;
+        match matches.value_of("color") {
+            Some("always") => {
+                enable_text_coloring = true;
+            }
+            Some("never") => {
+                enable_text_coloring = false;
+                enable_text_overwrite = false;
+            }
+            _ => {
+                enable_text_coloring = cfg!(unix) && isatty::stdout_isatty()
+            }
+        }
+
+        self.report = Box::new(CliReport::new(
+            enable_text_overwrite, enable_text_coloring))
     }
 
     fn filter_matches(&self, id: &str) -> bool {

@@ -39,7 +39,7 @@ pub(crate) struct CliReport {
     pub enable_text_overwrite: bool,
     pub enable_text_coloring: bool,
 
-    pub last_line_len: Cell<usize>,
+    last_line_len: Cell<usize>,
 }
 impl CliReport {
     pub fn new(enable_text_overwrite: bool, enable_text_coloring: bool) -> CliReport {
