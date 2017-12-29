@@ -86,28 +86,18 @@ criterion_main!(benches);
 Finally, run this benchmark with `cargo bench`. You should see output similar to the following:
 
 ```
-     Running target\release\deps\criterion_example-c6a3683ae7e18b5a.exe
-
-running 1 test
-Gnuplot not found, disabling plotting
+     Running target/release/deps/example-423eedc43b2b3a93
 Benchmarking fib 20
-> Warming up for 3.0000 s
-> Collecting 100 samples in estimated 5.0726 s
-> Found 11 outliers among 99 measurements (11.11%)
-  > 2 (2.02%) high mild
-  > 9 (9.09%) high severe
-> Performing linear regression
-  >  slope [26.778 us 27.139 us]
-  >    R^2  0.8382863 0.8358049
-> Estimating the statistics of the sample
-  >   mean [26.913 us 27.481 us]
-  > median [26.706 us 26.910 us]
-  >    MAD [276.37 ns 423.53 ns]
-  >     SD [729.17 ns 2.0625 us]
-
-test criterion_benchmark ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+Benchmarking fib 20: Warming up for 3.0000 s
+Benchmarking fib 20: Collecting 100 samples in estimated 5.0658 s (188100 iterations)
+Benchmarking fib 20: Analyzing
+fib 20                  time:   [26.029 us 26.251 us 26.505 us]
+Found 11 outliers among 99 measurements (11.11%)
+  6 (6.06%) high mild
+  5 (5.05%) high severe
+slope  [26.029 us 26.505 us] R^2            [0.8745662 0.8728027]
+mean   [26.106 us 26.561 us] std. dev.      [808.98 ns 1.4722 us]
+median [25.733 us 25.988 us] med. abs. dev. [234.09 ns 544.07 ns]
 ```
 
 See the [Getting Started](https://japaric.github.io/criterion.rs/book/getting_started.html) guide for more details.

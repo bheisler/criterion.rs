@@ -50,28 +50,18 @@ To run this benchmark, use the following command:
 You should see output similar to this:
 
 ```
-     Running target\release\deps\criterion_example-c6a3683ae7e18b5a.exe
-
-running 1 test
-Gnuplot not found, disabling plotting
+     Running target/release/deps/example-423eedc43b2b3a93
 Benchmarking fib 20
-> Warming up for 3.0000 s
-> Collecting 100 samples in estimated 5.0726 s
-> Found 11 outliers among 99 measurements (11.11%)
-  > 2 (2.02%) high mild
-  > 9 (9.09%) high severe
-> Performing linear regression
-  >  slope [26.778 us 27.139 us]
-  >    R^2  0.8382863 0.8358049
-> Estimating the statistics of the sample
-  >   mean [26.913 us 27.481 us]
-  > median [26.706 us 26.910 us]
-  >    MAD [276.37 ns 423.53 ns]
-  >     SD [729.17 ns 2.0625 us]
-
-test criterion_benchmark ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+Benchmarking fib 20: Warming up for 3.0000 s
+Benchmarking fib 20: Collecting 100 samples in estimated 5.0658 s (188100 iterations)
+Benchmarking fib 20: Analyzing
+fib 20                  time:   [26.029 us 26.251 us 26.505 us]
+Found 11 outliers among 99 measurements (11.11%)
+  6 (6.06%) high mild
+  5 (5.05%) high severe
+slope  [26.029 us 26.505 us] R^2            [0.8745662 0.8728027]
+mean   [26.106 us 26.561 us] std. dev.      [808.98 ns 1.4722 us]
+median [25.733 us 25.988 us] med. abs. dev. [234.09 ns 544.07 ns]
 ```
 
 ### Details ###
@@ -145,38 +135,20 @@ fn fibonacci(n: u64) -> u64 {
 Running the benchmark now produces output like this:
 
 ```
-     Running target\release\deps\criterion_example-c6a3683ae7e18b5a.exe
-
-running 1 test
-Gnuplot not found, disabling plotting
+     Running target/release/deps/example-423eedc43b2b3a93
 Benchmarking fib 20
-> Warming up for 3.0000 s
-> Collecting 100 samples in estimated 5.0000 s
-> Found 9 outliers among 99 measurements (9.09%)
-  > 5 (5.05%) high mild
-  > 4 (4.04%) high severe
-> Performing linear regression
-  >  slope [428.43 ps 456.05 ps]
-  >    R^2  0.2214335 0.2189765
-> Estimating the statistics of the sample
-  >   mean [431.59 ps 461.16 ps]
-  > median [403.16 ps 419.31 ps]
-  >    MAD [6.6660 ps 28.954 ps]
-  >     SD [53.404 ps 94.558 ps]
-fib 20: Comparing with previous sample
-> Performing a two-sample t-test
-  > H0: Both samples have the same mean
-  > p = 0
-  > Strong evidence to reject the null hypothesis
-> Estimating relative change of statistics
-  >   mean [-99.998% -99.998%]
-  > median [-99.998% -99.998%]
-  > mean has improved by 100.00%
-  > median has improved by 100.00%
-
-test criterion_benchmark ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+Benchmarking fib 20: Warming up for 3.0000 s
+Benchmarking fib 20: Collecting 100 samples in estimated 5.0000 s (13548862800 iterations)
+Benchmarking fib 20: Analyzing
+fib 20                  time:   [353.59 ps 356.19 ps 359.07 ps]
+                        change: [-99.999% -99.999% -99.999%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 6 outliers among 99 measurements (6.06%)
+  4 (4.04%) high mild
+  2 (2.02%) high severe
+slope  [353.59 ps 359.07 ps] R^2            [0.8734356 0.8722124]
+mean   [356.57 ps 362.74 ps] std. dev.      [10.672 ps 20.419 ps]
+median [351.57 ps 355.85 ps] med. abs. dev. [4.6479 ps 10.059 ps]
 ```
 
 As you can see, Criterion is statistically confident that our optimization has made an improvement. If we introduce a performance regression, Criterion will instead print a message indicating this.

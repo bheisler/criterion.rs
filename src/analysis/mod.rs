@@ -13,7 +13,7 @@ use estimate::{Distributions, Estimates, Statistic};
 use program::Program;
 use routine::{Function, Routine};
 use {Bencher, ConfidenceInterval, Criterion, Estimate};
-use {format, fs, plot, report};
+use {format, fs, plot};
 use ::Fun;
 
 macro_rules! elapsed {
@@ -32,12 +32,10 @@ mod compare;
 
 pub fn summarize(id: &str, criterion: &Criterion) {
     if criterion.plotting.is_enabled() {
-        print!("Summarizing results of {}... ", id);
         plot::summarize(id);
-        println!("DONE\n");
-    } else {
-        println!("Plotting disabled, skipping summarization");
     }
+
+    println!();
 }
 
 pub fn function<F>(id: &str, f: F, criterion: &Criterion) where F: FnMut(&mut Bencher) {
@@ -108,9 +106,11 @@ pub fn program_over_inputs<I, F>(
 fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
     R: Routine,
 {
-    println!("Benchmarking {}", id);
+    criterion.report.benchmark_start(id);
 
-    let (iters, times) = routine.sample(criterion);
+    let (iters, times) = routine.sample(id, criterion);
+
+    criterion.report.analysis(id);
 
     rename_new_dir_to_base(id);
 
@@ -123,11 +123,6 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
 
     let data = Data::new(&iters, &times);
     let labeled_sample = outliers(id, avg_times);
-    if criterion.plotting.is_enabled() {
-        elapsed!(
-            "Plotting the estimated sample PDF",
-            plot::pdf(data, labeled_sample, id));
-    }
     let (distribution, slope) = regression(id, data, criterion);
     let (mut distributions, mut estimates) = estimates(avg_times, criterion);
 
@@ -135,6 +130,9 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
     distributions.insert(Statistic::Slope, distribution);
 
     if criterion.plotting.is_enabled() {
+        elapsed!(
+            "Plotting the estimated sample PDF",
+            plot::pdf(data, labeled_sample, id));
         elapsed!(
             "Plotting the distribution of the absolute statistics",
             plot::abs_distributions(
@@ -149,9 +147,35 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
     ));
     log_if_err!(fs::save(&estimates, &format!(".criterion/{}/new/estimates.json", id)));
 
-    if base_dir_exists(id) {
-        compare::common(id, data, avg_times, &estimates, criterion);
-    }
+    let compare_data = if base_dir_exists(id) {
+        let result = compare::common(id, data, avg_times, &estimates, criterion);
+        match result {
+            Ok((t_val, p_val, rel_est)) => {
+                Some(::report::ComparisonData {
+                    p_value: p_val,
+                    t_value: t_val,
+                    relative_estimates: rel_est, 
+                    significance_threshold: criterion.significance_level,
+                    noise_threshold: criterion.noise_threshold,
+                })
+            }
+            Err(e) => {
+                ::error::log_error(e);
+                None
+            }
+        }
+    } else { None };
+
+    let measurement_data = ::report::MeasurementData {
+        iter_counts: &Sample::new(&*iters),
+        sample_times: &Sample::new(&*times),
+        avg_times: labeled_sample,
+        absolute_estimates: estimates.clone(),
+        distributions: distributions,
+        comparison: compare_data,
+    };
+
+    criterion.report.measurement_complete(id, &measurement_data);
 }
 
 fn base_dir_exists(id: &str) -> bool {
@@ -166,8 +190,6 @@ fn regression(
 ) -> (Distribution<f64>, Estimate) {
     let cl = criterion.confidence_level;
 
-    println!("> Performing linear regression");
-
     let distribution = elapsed!(
         "Bootstrapped linear regression",
         data.bootstrap(criterion.nresamples, |d| (Slope::fit(d).0,))).0;
@@ -177,8 +199,6 @@ fn regression(
     let se = distribution.std_dev(None);
 
     let (lb_, ub_) = (Slope(lb), Slope(ub));
-
-    report::regression(data, (lb_, ub_));
 
     if criterion.plotting.is_enabled() {
         elapsed!(
@@ -204,10 +224,7 @@ fn regression(
 // Classifies the outliers in the sample
 fn outliers<'a>(id: &str, avg_times: &'a Sample<f64>) -> LabeledSample<'a, f64> {
     let sample = tukey::classify(avg_times);
-
-    report::outliers(sample);
     log_if_err!(fs::save(&sample.fences(), &format!(".criterion/{}/new/tukey.json", id)));
-
     sample
 }
 
@@ -234,7 +251,6 @@ fn estimates(
         [a, b, c, d]
     };
 
-    println!("> Estimating the statistics of the sample");
     let distributions = {
         let (a, b, c, d) = elapsed!(
         "Bootstrapping the absolute statistics",
@@ -251,8 +267,6 @@ fn estimates(
     let distributions: Distributions = statistics.iter().cloned()
         .zip(distributions.into_iter()).collect();
     let estimates = Estimate::new(&distributions, &points, cl);
-
-    report::abs(&estimates);
 
     (distributions, estimates)
 }
