@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   previously weren't and may have to be updated.
 - Criterion.rs now uses `serde` to save results. Existing results files will
   be automatically removed when benchmarks are run.
+- Redesigned the command-line output to highlight the important information
+  and reduce noise.
 
 ### Added
 - Running benchmarks with the variable "CRITERION_DEBUG" in the environment will
