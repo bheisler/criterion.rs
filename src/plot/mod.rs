@@ -512,17 +512,6 @@ pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str) {
     wait_on_gnuplot(vec![gnuplot]);
 }
 
-//TODO: I don't think this math is correct...
-fn log_ceil(x: f64) -> f64 {
-    let t = (10f64).powi(x.log10().floor() as i32);
-    (x / t).ceil() * t
-}
-
-fn log_floor(x: f64) -> f64 {
-    let t = (10f64).powi(x.log10().floor() as i32);
-    (x / t).floor() * t
-}
-
 /// Private
 trait Append<T> {
     /// Private
@@ -534,35 +523,6 @@ impl<T> Append<T> for Vec<T> {
     fn append_(mut self, item: T) -> Vec<T> {
         self.push(item);
         self
-    }
-}
-
-fn select_scale(inputs: &Vec<f64>) -> Scale {
-    fn diff(s: &[f64]) -> Vec<f64> {
-        s.windows(2).map(|w| w[1] - w[0]).collect()
-    }
-
-    if inputs.len() < 3 {
-        Scale::Linear
-    }
-    else if inputs.iter().any(|v| *v <= 0.0) {
-        Scale::Linear
-    }
-    else if inputs.iter().any(|v| !v.is_finite()) {
-        Scale::Linear
-    }
-    else {
-        let linear = Sample::new(&diff(&*inputs)).std_dev(None);
-        let log = {
-            let v = inputs.iter().map(|x| x.ln()).collect::<Vec<_>>();
-            Sample::new(&diff(&*v)).std_dev(None)
-        };
-
-        if linear < log {
-            Scale::Linear
-        } else {
-            Scale::Logarithmic
-        }
     }
 }
 
@@ -621,16 +581,11 @@ pub fn summarize(id: &str) {
                 let ubs = benches.iter().map(|&(_, _, ref estimates, _)| {
                     estimates[&statistic].confidence_interval.upper_bound
                 }).collect::<Vec<_>>();
-                let lbs_ = Sample::new(&lbs);
                 let ubs_ = Sample::new(&ubs);
 
                 // XXX scale inputs?
                 let inputs = benches.iter().map(|&(_, input, _, _)| input).collect::<Vec<_>>();
                 let (scale, prefix) = scale_time(ubs_.max());
-
-                // XXX Logscale triggering may need tweaking
-                let xscale = select_scale(&inputs.iter().map(|&x| x as f64).collect::<Vec<_>>());
-                let yscale = select_scale(&points);
 
                 let path = dir.join(&format!("summary/{}/{}s.svg", sample, statistic));
                 // TODO Review axis scaling
@@ -640,42 +595,16 @@ pub fn summarize(id: &str) {
                     set(SIZE).
                     set(Title(id.to_owned())).
                     configure(Axis::BottomX, |a| a.
-                        configure(Grid::Major, |g| g.
-                            show()).
-                        configure(Grid::Minor, |g| match xscale {
-                            Scale::Linear => g.hide(),
-                            Scale::Logarithmic => g.show(),
-                        }).
+                        configure(Grid::Major, |g| g.show()).
+                        configure(Grid::Minor, |g| g.hide()).
                         set(Label("Input")).
-                        set(xscale)).
-                    configure(Axis::BottomX, |a| match xscale {
-                        Scale::Linear => a,
-                        Scale::Logarithmic => {
-                            let start = inputs[0] as f64;
-                            let end = *inputs.last().unwrap() as f64;
-
-                            a.set(Range::Limits(log_floor(start), log_ceil(end)))
-                        },
-                    }).
+                        set(Scale::Linear)).
                     configure(Axis::LeftY, |a| a.
-                        configure(Grid::Major, |g| g.
-                            show()).
-                        configure(Grid::Minor, |g| match xscale {
-                            Scale::Linear => g.hide(),
-                            Scale::Logarithmic => g.show(),
-                        }).
+                        configure(Grid::Major, |g| g.show()).
+                        configure(Grid::Minor, |g| g.hide()).
                         set(Label(format!("Average time ({}s)", prefix))).
-                        set(yscale).
+                        set(Scale::Linear).
                         set(ScaleFactor(scale))).
-                    configure(Axis::LeftY, |a| match yscale {
-                        Scale::Linear => a,
-                        Scale::Logarithmic => {
-                            let start = lbs_.min() * scale;
-                            let end = ubs_.max() * scale;
-
-                            a.set(Range::Limits(log_floor(start), log_ceil(end)))
-                        },
-                    }).
                     configure(Key, |k| k.
                         set(Justification::Left).
                         set(Order::SampleText).
@@ -713,19 +642,15 @@ pub fn summarize(id: &str) {
                 let ubs = benches.iter().map(|&(_, _, ref estimates, _)| {
                     estimates[&statistic].confidence_interval.upper_bound
                 }).collect::<Vec<_>>();
-                let lbs_ = Sample::new(&lbs);
                 let ubs_ = Sample::new(&ubs);
 
                 let (scale, prefix) = scale_time(ubs_.max());
-
-                let xscale = select_scale(&points);
 
                 let min = *points.last().unwrap();
                 let rel = points.iter().map(|&x| format!("{:.02}", x / min)).collect::<Vec<_>>();
 
                 let tics = || { (0..).map(|x| (f64::from(x))+0.5) };
                 let path = dir.join(&format!("summary/{}/{}s.svg", sample, statistic));
-                // TODO Review axis scaling
                 let mut figure = Figure::new();
                 figure.
                     set(Font(DEFAULT_FONT)).
@@ -734,22 +659,11 @@ pub fn summarize(id: &str) {
                     configure(Axis::BottomX, |a| a.
                         configure(Grid::Major, |g| g.
                             show()).
-                        configure(Grid::Minor, |g| match xscale {
-                            Scale::Linear => g.hide(),
-                            Scale::Logarithmic => g.show(),
-                        }).
+                        configure(Grid::Minor, |g| g.hide()).
                         set(Label(format!("Average time ({}s)", prefix))).
-                        set(xscale).
+                        set(Scale::Linear).
                         set(ScaleFactor(scale))).
-                    configure(Axis::BottomX, |a| match xscale {
-                        Scale::Linear => a,
-                        Scale::Logarithmic => {
-                            let start = lbs_.min() * scale;
-                            let end = ubs_.max() * scale;
-
-                            a.set(Range::Limits(log_floor(start), log_ceil(end)))
-                        },
-                    }).
+                    configure(Axis::BottomX, |a| a).
                     configure(Axis::LeftY, |a| a.
                         set(Label("Input")).
                         set(Range::Limits(0., benches.len() as f64)).
@@ -805,8 +719,6 @@ pub fn summarize(id: &str) {
                 }
                 let (scale, prefix) = scale_time(max);
 
-                let xscale = select_scale(&medians);
-
                 let tics = || { (0..).map(|x| (f64::from(x))+0.5) };
                 let path = dir.join(&format!("summary/{}/violin_plot.svg", sample));
                 let mut f = Figure::new();
@@ -817,19 +729,11 @@ pub fn summarize(id: &str) {
                     configure(Axis::BottomX, |a| a.
                         configure(Grid::Major, |g| g.
                             show()).
-                        configure(Grid::Minor, |g| match xscale {
-                            Scale::Linear => g.hide(),
-                            Scale::Logarithmic => g.show(),
-                        }).
+                        configure(Grid::Minor, |g| g.hide()).
                         set(Label(format!("Average time ({}s)", prefix))).
-                        set(xscale).
+                        set(Scale::Linear).
                         set(ScaleFactor(scale))).
-                    configure(Axis::BottomX, |a| match xscale {
-                        Scale::Linear => a,
-                        Scale::Logarithmic => {
-                            a.set(Range::Limits(log_floor(min * scale), log_ceil(max * scale)))
-                        },
-                    }).
+                    configure(Axis::BottomX, |a| a).
                     configure(Axis::LeftY, |a| a.
                         set(Label("Input")).
                         set(Range::Limits(0., benches.len() as f64)).
