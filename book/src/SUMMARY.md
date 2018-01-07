@@ -9,3 +9,4 @@
     - [Comparing Functions](./user_guide/comparing_functions.md)
     - [Benchmarking External Programs](./user_guide/external_programs.md)
 - [Analysis Process](./analysis.md)
+- [Frequently Asked Questions](./faq.md)
