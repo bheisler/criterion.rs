@@ -38,14 +38,16 @@ pub(crate) trait Report {
 pub(crate) struct CliReport {
     pub enable_text_overwrite: bool,
     pub enable_text_coloring: bool,
+    pub verbose: bool,
 
     last_line_len: Cell<usize>,
 }
 impl CliReport {
-    pub fn new(enable_text_overwrite: bool, enable_text_coloring: bool) -> CliReport {
+    pub fn new(enable_text_overwrite: bool, enable_text_coloring: bool, verbose: bool) -> CliReport {
         CliReport {
             enable_text_overwrite: enable_text_overwrite,
             enable_text_coloring: enable_text_coloring,
+            verbose: verbose,
 
             last_line_len: Cell::new(0),            
         }
@@ -232,34 +234,36 @@ impl Report for CliReport {
 
         self.outliers(&meas.avg_times);
 
-        let data = Data::new(meas.iter_counts.as_slice(), meas.sample_times.as_slice());
-        let slope_estimate = meas.absolute_estimates.get(&Statistic::Slope).unwrap();
+        if self.verbose {
+            let data = Data::new(meas.iter_counts.as_slice(), meas.sample_times.as_slice());
+            let slope_estimate = meas.absolute_estimates.get(&Statistic::Slope).unwrap();
 
-        fn format_short_estimate(estimate: &Estimate) -> String {
-            format!("[{} {}]", 
-                format::time(estimate.confidence_interval.lower_bound),
-                format::time(estimate.confidence_interval.upper_bound))
+            fn format_short_estimate(estimate: &Estimate) -> String {
+                format!("[{} {}]", 
+                    format::time(estimate.confidence_interval.lower_bound),
+                    format::time(estimate.confidence_interval.upper_bound))
+            }
+
+            println!("{:<7}{} {:<15}[{:0.7} {:0.7}]",
+                "slope",
+                format_short_estimate(slope_estimate),
+                "R^2",
+                Slope(slope_estimate.confidence_interval.lower_bound).r_squared(data),
+                Slope(slope_estimate.confidence_interval.upper_bound).r_squared(data),
+            );
+            println!("{:<7}{} {:<15}{}",
+                "mean",
+                format_short_estimate(&meas.absolute_estimates.get(&Statistic::Mean).unwrap()),
+                "std. dev.",
+                format_short_estimate(&meas.absolute_estimates.get(&Statistic::StdDev).unwrap()),
+            );
+            println!("{:<7}{} {:<15}{}",
+                "median",
+                format_short_estimate(&meas.absolute_estimates.get(&Statistic::Median).unwrap()),
+                "med. abs. dev.",
+                format_short_estimate(&meas.absolute_estimates.get(&Statistic::MedianAbsDev).unwrap()),
+            );
         }
-
-        println!("{:<7}{} {:<15}[{:0.7} {:0.7}]",
-            "slope",
-            format_short_estimate(slope_estimate),
-            "R^2",
-            Slope(slope_estimate.confidence_interval.lower_bound).r_squared(data),
-            Slope(slope_estimate.confidence_interval.upper_bound).r_squared(data),
-        );
-        println!("{:<7}{} {:<15}{}",
-            "mean",
-            format_short_estimate(&meas.absolute_estimates.get(&Statistic::Mean).unwrap()),
-            "std. dev.",
-            format_short_estimate(&meas.absolute_estimates.get(&Statistic::StdDev).unwrap()),
-        );
-        println!("{:<7}{} {:<15}{}",
-            "median",
-            format_short_estimate(&meas.absolute_estimates.get(&Statistic::Median).unwrap()),
-            "med. abs. dev.",
-            format_short_estimate(&meas.absolute_estimates.get(&Statistic::MedianAbsDev).unwrap()),
-        );
     }
 }
 

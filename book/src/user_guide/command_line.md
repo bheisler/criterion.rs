@@ -1,5 +1,8 @@
 # Command-Line Output
 
+The output for this page was produced by running `cargo bench -- --verbose`.
+`cargo bench` omits some of this information.
+
 Every Criterion.rs benchmark calculates statistics from the measured iterations and produces a report like this:
 
 ```

@@ -41,3 +41,6 @@ real_blackbox = []
 [[bench]]
 name = "bench_main"
 harness = false
+
+[lib]
+bench = false

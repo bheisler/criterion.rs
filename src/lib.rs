@@ -405,7 +405,7 @@ impl Default for Criterion {
             significance_level: 0.05,
             warm_up_time: Duration::new(3, 0),
             filter: None,
-            report: Box::new(CliReport::new(false, false)),
+            report: Box::new(CliReport::new(false, false, false)),
         }
     }
 }
@@ -574,6 +574,10 @@ impl Criterion {
                 .possible_values(&["auto", "always", "never"])
                 .default_value("auto")
                 .help("Configure coloring of output. always = always colorize output, never = never colorize output, auto = colorize output if output is a tty and compiled for unix."))
+            .arg(Arg::with_name("verbose")
+                .short("v")
+                .long("verbose")
+                .help("Print additional statistical information."))
             //Ignored but always passed to benchmark executables
             .arg(Arg::with_name("bench")
                 .hidden(true)
@@ -596,7 +600,9 @@ scripts alongside the generated plots.
             self.with_filter(filter);
         }
 
-        let mut enable_text_overwrite = isatty::stdout_isatty() && !debug_enabled();
+        let verbose = matches.is_present("verbose");
+        let mut enable_text_overwrite = 
+            isatty::stdout_isatty() && !verbose && !debug_enabled();
         let enable_text_coloring;
         match matches.value_of("color") {
             Some("always") => {
@@ -612,7 +618,7 @@ scripts alongside the generated plots.
         }
 
         self.report = Box::new(CliReport::new(
-            enable_text_overwrite, enable_text_coloring))
+            enable_text_overwrite, enable_text_coloring, verbose))
     }
 
     fn filter_matches(&self, id: &str) -> bool {

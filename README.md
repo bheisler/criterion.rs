@@ -87,17 +87,10 @@ Finally, run this benchmark with `cargo bench`. You should see output similar to
 
 ```
      Running target/release/deps/example-423eedc43b2b3a93
-Benchmarking fib 20
-Benchmarking fib 20: Warming up for 3.0000 s
-Benchmarking fib 20: Collecting 100 samples in estimated 5.0658 s (188100 iterations)
-Benchmarking fib 20: Analyzing
 fib 20                  time:   [26.029 us 26.251 us 26.505 us]
 Found 11 outliers among 99 measurements (11.11%)
   6 (6.06%) high mild
   5 (5.05%) high severe
-slope  [26.029 us 26.505 us] R^2            [0.8745662 0.8728027]
-mean   [26.106 us 26.561 us] std. dev.      [808.98 ns 1.4722 us]
-median [25.733 us 25.988 us] med. abs. dev. [234.09 ns 544.07 ns]
 ```
 
 See the [Getting Started](https://japaric.github.io/criterion.rs/book/getting_started.html) guide for more details.
