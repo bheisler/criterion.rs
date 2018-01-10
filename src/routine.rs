@@ -26,7 +26,7 @@ pub trait Routine {
         let total_runs = n * (n + 1) / 2;
         let d = (m_ns as f64 / met / total_runs as f64).ceil() as u64;
 
-        let m_iters = (1..n as u64).map(|a| a*d).collect::<Vec<u64>>();
+        let m_iters = (1..(n+1) as u64).map(|a| a*d).collect::<Vec<u64>>();
 
         let m_ns = total_runs as f64 * d as f64 * met;
         criterion.report.measurement_start(id, n, m_ns, m_iters.iter().sum());
