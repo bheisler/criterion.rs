@@ -48,7 +48,7 @@ Criterion.<span></span>rs helps you write fast code by detecting and measuring p
 
 Criterion.<span></span>rs currently requires a nightly version of Rust. Additionally, in order to generate plots, you must have [gnuplot](http://www.gnuplot.info/) installed. See the gnuplot website for installation instructions.
 
-To start with Criterion.<span></span>rs, add the following to your `cargo.toml` file:
+To start with Criterion.<span></span>rs, add the following to your `Cargo.toml` file:
 
 ```toml
     [dev-dependencies]
