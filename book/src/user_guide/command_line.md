@@ -105,3 +105,14 @@ The median/med. abs. dev. line is similar to the mean/std. dev. line, except tha
 ## A Note Of Caution
 
 Criterion.rs is designed to produce robust statistics when possible, but it can't account for everything. For example, the performance improvements and regressions listed in the above examples were created just by switching my laptop between battery power and wall power rather than changing the code under test. Care must be taken to ensure that benchmarks are performed under similar conditions in order to produce meaningful results.
+
+# Command Line Options
+
+This is a list of the most common options. Run `cargo bench -- -h` to see a
+full list.
+
+* To filter benchmarks, use "cargo bench -- $FILTER" where $FILTER is a
+substring of the benchmark ID. For example, running `cargo bench -- fib_20`
+would only run benchmarks whose ID contains the string `fib_20`
+* To print more detailed output, use `cargo bench -- --verbose`
+* To disable colored output, use `cargo bench -- --color never`

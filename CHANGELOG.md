@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Don't panic on IO errors or gnuplot failures
 - Fix generation of invalid gnuplot scripts when benchmarking over inputs and inputs include values <= 0.
+- Bug where benchmarks would run one sample fewer than was configured.
+
+### Removed
+- Generated plots will no longer use log-scale.
 
 ## [0.1.1]
 ### Added
@@ -31,6 +35,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added macro rules to generate a test harness for use with `cargo bench`.
   Benchmarks defined without these macros should continue to work.
 - New contribution guidelines
+- Criterion.rs can selectively run benchmarks. See the Command-line page for
+more details
 
 ## 0.1.0 - 2017-12-02
 ### Added
