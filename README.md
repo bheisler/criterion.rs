@@ -41,12 +41,12 @@ Criterion.<span></span>rs helps you write fast code by detecting and measuring p
 
 - __Statistics__: Statistical analysis detects if, and by how much, performance has changed since the last benchmark run
 - __Charts__: Uses [gnuplot](http://www.gnuplot.info/) to generate detailed graphs of benchmark results.
-- __Stable-compatible__: Benchmark your code without installing Nightly Rust.
+- __Stable-compatible__: Benchmark your code without installing nightly Rust.
 - Benchmark external programs written in any language.
 
 ### Quickstart
 
-Criterion.<span></span>rs currently requires a nightly version of Rust. Additionally, in order to generate plots, you must have [gnuplot](http://www.gnuplot.info/) installed. See the gnuplot website for installation instructions.
+In order to generate plots, you must have [gnuplot](http://www.gnuplot.info/) installed. See the gnuplot website for installation instructions.
 
 To start with Criterion.<span></span>rs, add the following to your `Cargo.toml` file:
 
