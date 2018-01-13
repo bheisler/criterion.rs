@@ -1,7 +1,7 @@
 [package]
-authors = ["Jorge Aparicio <japaricious@gmail.com>", "Brook Heisler"]
+authors = ["Jorge Aparicio <japaricious@gmail.com>", "Brook Heisler <brookheisler@gmail.com>"]
 name = "criterion-stats"
-version = "0.1.2"
+version = "0.1.3"
 
 description = "Criterion's statistics library"
 repository = "https://github.com/japaric/criterion.rs"

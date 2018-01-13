@@ -6,7 +6,7 @@ To enable Criterion.rs benchmarks, add the following to your `cargo.toml` file:
 
 ```toml
 [dev-dependencies]
-criterion = "0.1.1"
+criterion = "0.1.2"
 
 [[bench]]
 name = "my_benchmark"

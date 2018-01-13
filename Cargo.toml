@@ -1,7 +1,7 @@
 [package]
-authors = ["Jorge Aparicio <japaricious@gmail.com>", "Brook Heisler"]
+authors = ["Jorge Aparicio <japaricious@gmail.com>", "Brook Heisler <brookheisler@gmail.com>"]
 name = "criterion"
-version = "0.1.1"
+version = "0.1.2"
 
 description = "Statistics-driven micro-benchmarking library"
 homepage = "https://japaric.github.io/criterion.rs/book/index.html"
@@ -12,8 +12,8 @@ categories = ["development-tools::profiling"]
 license = "Apache-2.0/MIT"
 
 [dependencies]
-criterion-plot = { path="plot", version="0.1.2" }
-criterion-stats = { path="stats", version="0.1.2" }
+criterion-plot = { path="plot", version="0.1.3" }
+criterion-stats = { path="stats", version="0.1.3" }
 failure = "0.1.1"
 failure_derive = "0.1.1"
 itertools = "0.4.7"
