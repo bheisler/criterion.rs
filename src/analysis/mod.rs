@@ -160,15 +160,15 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
                 })
             }
             Err(e) => {
-                ::error::log_error(e);
+                ::error::log_error(&e);
                 None
             }
         }
     } else { None };
 
     let measurement_data = ::report::MeasurementData {
-        iter_counts: &Sample::new(&*iters),
-        sample_times: &Sample::new(&*times),
+        iter_counts: Sample::new(&*iters),
+        sample_times: Sample::new(&*times),
         avg_times: labeled_sample,
         absolute_estimates: estimates.clone(),
         distributions: distributions,

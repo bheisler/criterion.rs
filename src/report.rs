@@ -63,6 +63,8 @@ impl CliReport {
         }
     }
 
+    //Passing a String is the common case here.
+    #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
     fn print_overwritable(&self, s: String) {
         if self.enable_text_overwrite {
             self.last_line_len.set(s.len());
@@ -176,7 +178,7 @@ impl Report for CliReport {
     fn measurement_complete(&self, id: &str, meas: &MeasurementData) {
         self.text_overwrite();
         
-        let slope_estimate = meas.absolute_estimates.get(&Statistic::Slope).unwrap();
+        let slope_estimate = meas.absolute_estimates[&Statistic::Slope];
 
         {
             let mut id = String::from(id);
@@ -191,9 +193,9 @@ impl Report for CliReport {
             );
         }
 
-        if let &Some(ref comp) = &meas.comparison {
+        if let Some(ref comp) = meas.comparison {
             let different_mean = comp.p_value < comp.significance_threshold;
-            let mean_est = comp.relative_estimates.get(&Statistic::Mean).unwrap();
+            let mean_est = comp.relative_estimates[&Statistic::Mean];
             let point_estimate = mean_est.point_estimate;
             let mut point_estimate_str = format::change(point_estimate, true);
             let explanation_str: String;
@@ -236,7 +238,7 @@ impl Report for CliReport {
 
         if self.verbose {
             let data = Data::new(meas.iter_counts.as_slice(), meas.sample_times.as_slice());
-            let slope_estimate = meas.absolute_estimates.get(&Statistic::Slope).unwrap();
+            let slope_estimate = &meas.absolute_estimates[&Statistic::Slope];
 
             fn format_short_estimate(estimate: &Estimate) -> String {
                 format!("[{} {}]", 
@@ -253,15 +255,15 @@ impl Report for CliReport {
             );
             println!("{:<7}{} {:<15}{}",
                 "mean",
-                format_short_estimate(&meas.absolute_estimates.get(&Statistic::Mean).unwrap()),
+                format_short_estimate(&meas.absolute_estimates[&Statistic::Mean]),
                 "std. dev.",
-                format_short_estimate(&meas.absolute_estimates.get(&Statistic::StdDev).unwrap()),
+                format_short_estimate(&meas.absolute_estimates[&Statistic::StdDev]),
             );
             println!("{:<7}{} {:<15}{}",
                 "median",
-                format_short_estimate(&meas.absolute_estimates.get(&Statistic::Median).unwrap()),
+                format_short_estimate(&meas.absolute_estimates[&Statistic::Median]),
                 "med. abs. dev.",
-                format_short_estimate(&meas.absolute_estimates.get(&Statistic::MedianAbsDev).unwrap()),
+                format_short_estimate(&meas.absolute_estimates[&Statistic::MedianAbsDev]),
             );
         }
     }

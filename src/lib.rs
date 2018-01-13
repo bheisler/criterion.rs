@@ -622,9 +622,9 @@ scripts alongside the generated plots.
     }
 
     fn filter_matches(&self, id: &str) -> bool {
-        match &self.filter {
-            &Some(ref string) => id.contains(string),
-            &None => true,
+        match self.filter {
+            Some(ref string) => id.contains(string),
+            None => true,
         }
     }
 

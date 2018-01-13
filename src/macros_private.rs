@@ -20,7 +20,7 @@ macro_rules! try_else_return {
         match $x {
             Ok(x) => x,
             Err(e) => {
-                ::error::log_error(e);
+                ::error::log_error(&e);
                 let closure = $el;
                 return closure();
             },

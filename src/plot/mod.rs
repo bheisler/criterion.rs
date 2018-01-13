@@ -57,9 +57,8 @@ fn debug_script(path: &PathBuf, figure: &Figure) {
         script_path.set_extension("gnuplot");
         println!("Writing gnuplot script to {:?}", script_path);
         let result = figure.save(script_path.as_path());
-        match result {
-            Err(e) => error!("Failed to write debug output: {}", e),
-            Ok(_) => (),
+        if let Err(e) = result {
+            error!("Failed to write debug output: {}", e);
         }
     }
 }
