@@ -37,6 +37,13 @@ name = "example"
 harness = false
 ```
 
+We also need to add Criterion.rs to the `dev-dependencies` section of `Cargo.toml`:
+
+```toml
+[dev-dependencies]
+criterion = "0.1.2"
+```
+
 The next step is to update the imports:
 
 ```rust
@@ -59,8 +66,8 @@ Finally, we need to invoke some macros to generate a main function, since we
 no longer have libtest to provide one:
 
 ```rust
-criterion_group(benches, bench_fib);
-criterion_main(benches);
+criterion_group!(benches, bench_fib);
+criterion_main!(benches);
 ```
 
 And that's it! The complete migrated benchmark code is below:
