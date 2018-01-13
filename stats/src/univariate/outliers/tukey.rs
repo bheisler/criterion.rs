@@ -66,7 +66,7 @@ impl<'a, A> LabeledSample<'a, A> where A: Float {
     /// Returns the number of data points per label
     ///
     /// - Time: `O(length)`
-    #[cfg_attr(clippy, allow(similar_names))]
+    #[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
     pub fn count(&self) -> (usize, usize, usize, usize, usize) {
         let (mut los, mut lom, mut noa, mut him, mut his) = (0, 0, 0, 0, 0);
 
@@ -119,7 +119,7 @@ impl<'a, A> Deref for LabeledSample<'a, A> where A: Float {
 impl<'a, A> Index<usize> for LabeledSample<'a, A> where A: Float {
     type Output = Label;
 
-    #[cfg_attr(clippy, allow(similar_names))]
+    #[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
     fn index(&self, i: usize) -> &Label {
         static LOW_SEVERE: Label = LowSevere;
         static LOW_MILD: Label = LowMild;
@@ -162,7 +162,7 @@ pub struct Iter<'a, A> where A: 'a + Float {
 impl<'a, A> Iterator for Iter<'a, A> where A: Float {
     type Item = (A, Label);
 
-    #[cfg_attr(clippy, allow(similar_names))]
+    #[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
     fn next(&mut self) -> Option<(A, Label)> {
         self.iter.next().map(|&x| {
             let (lost, lomt, himt, hist) = self.fences;

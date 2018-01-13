@@ -7,7 +7,7 @@
 
 #![deny(missing_docs)]
 #![deny(warnings)]
-#![cfg_attr(clippy, allow(used_underscore_binding))]
+#![cfg_attr(feature = "cargo-clippy", allow(used_underscore_binding))]
 
 extern crate cast;
 extern crate num_traits;

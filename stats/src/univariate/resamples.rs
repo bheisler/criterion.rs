@@ -13,7 +13,7 @@ pub struct Resamples<'a, A> where A: 'a + Float {
     stage: Option<Vec<A>>,
 }
 
-#[cfg_attr(clippy, allow(should_implement_trait))]
+#[cfg_attr(feature = "cargo-clippy", allow(should_implement_trait))]
 impl <'a, A> Resamples<'a, A> where A: 'a + Float {
     pub fn new(sample: &'a Sample<A>) -> Resamples<'a, A> {
         let slice = sample.as_slice();

@@ -392,9 +392,9 @@
 #![deny(warnings)]
 // This lint has lots of false positives ATM, see
 // https://github.com/Manishearth/rust-clippy/issues/761
-#![cfg_attr(clippy, allow(new_without_default))]
+#![cfg_attr(feature = "cargo-clippy", allow(new_without_default))]
 // False positives with images
-#![cfg_attr(clippy, allow(doc_markdown))]
+#![cfg_attr(feature = "cargo-clippy", allow(doc_markdown))]
 
 extern crate byteorder;
 extern crate cast;

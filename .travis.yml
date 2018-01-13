@@ -63,7 +63,7 @@ install:
 
 script:
   - if [ "$CLIPPY" = "yes" ]; then
-      cargo clippy --all -- --cfg clippy || exit 1;
+      cargo clippy --all || exit 1;
     elif [ "$DOCS" = "yes" ]; then
       cargo clean;
       cargo doc --all --no-deps || exit 1;
