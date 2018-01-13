@@ -62,22 +62,7 @@ install:
   - sh ci/install.sh
 
 script:
-  - if [ "$CLIPPY" = "yes" ]; then
-      cargo clippy --all || exit 1;
-    elif [ "$DOCS" = "yes" ]; then
-      cargo clean;
-      cargo doc --all --no-deps || exit 1;
-      cd book;
-      mdbook build;
-      cd ..;
-      cp -r book/book/ target/doc/book/;
-      travis-cargo doc-upload || true;
-    else
-      cargo build --release || exit 1;
-      cargo test --all --release || exit 1;
-      cargo build --benches --all --release || exit 1;
-      cargo bench;
-    fi
+  - sh ci/script.sh
   
 env:
   global:
