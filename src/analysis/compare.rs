@@ -9,7 +9,7 @@ use {Criterion, Estimate, format, fs, plot};
 use error::Result;
 
 // Common comparison procedure
-pub fn common(
+pub(crate) fn common(
     id: &str,
     data: Data<f64, f64>,
     avg_times: &Sample<f64>,

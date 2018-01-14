@@ -831,25 +831,21 @@ impl DurationExt for Duration {
     }
 }
 
-// TODO make private again
-#[doc(hidden)]
 #[derive(Clone, Copy, PartialEq, Deserialize, Serialize)]
-pub struct ConfidenceInterval {
+struct ConfidenceInterval {
     confidence_level: f64,
     lower_bound: f64,
     upper_bound: f64,
 }
 
-// TODO make private again
-#[doc(hidden)]
 #[derive(Clone, Copy, PartialEq, Deserialize, Serialize)]
-pub struct Estimate {
+struct Estimate {
     /// The confidence interval for this estimate
-    pub confidence_interval: ConfidenceInterval,
+    confidence_interval: ConfidenceInterval,
     ///
-    pub point_estimate: f64,
+    point_estimate: f64,
     /// The standard error of this estimate
-    pub standard_error: f64,
+    standard_error: f64,
 }
 
 impl Estimate {

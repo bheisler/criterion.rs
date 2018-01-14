@@ -26,6 +26,6 @@ impl fmt::Display for Statistic {
     }
 }
 
-pub type Estimates = BTreeMap<Statistic, Estimate>;
+pub(crate) type Estimates = BTreeMap<Statistic, Estimate>;
 
-pub type Distributions = BTreeMap<Statistic, Distribution<f64>>;
+pub(crate) type Distributions = BTreeMap<Statistic, Distribution<f64>>;
