@@ -5,6 +5,7 @@ use stats::univariate::{mixed, self};
 
 use estimate::Statistic::{Mean, Median};
 use estimate::{Distributions, Estimates};
+use benchmark::BenchmarkConfig;
 use {Criterion, Estimate, format, fs, plot};
 use error::Result;
 
@@ -14,6 +15,7 @@ pub(crate) fn common(
     data: Data<f64, f64>,
     avg_times: &Sample<f64>,
     estimates_: &Estimates,
+    config: &BenchmarkConfig,
     criterion: &Criterion,
 ) -> Result<(f64, f64, Estimates), > {
     let sample_dir = format!(".criterion/{}/base/sample.json", id);
@@ -48,9 +50,9 @@ pub(crate) fn common(
     }
 
     fs::mkdirp(&format!(".criterion/{}/change", id))?;
-    let (t_statistic, p_statistic) = t_test(id, avg_times, base_avg_times, criterion);
+    let (t_statistic, p_statistic) = t_test(id, avg_times, base_avg_times, config, criterion);
 
-    let estimates = estimates(id, avg_times, base_avg_times, criterion);
+    let estimates = estimates(id, avg_times, base_avg_times, config, criterion);
     Ok((t_statistic, p_statistic, estimates))
 }
 
@@ -59,9 +61,10 @@ fn t_test(
     id: &str,
     avg_times: &Sample<f64>,
     base_avg_times: &Sample<f64>,
+    config: &BenchmarkConfig,
     criterion: &Criterion,
 ) -> (f64, f64) {
-    let nresamples = criterion.nresamples;
+    let nresamples = config.nresamples;
 
     let t_statistic = avg_times.t(base_avg_times);
     let t_distribution = elapsed!(
@@ -86,15 +89,16 @@ fn estimates(
     id: &str,
     avg_times: &Sample<f64>,
     base_avg_times: &Sample<f64>,
+    config: &BenchmarkConfig,
     criterion: &Criterion,
 ) -> Estimates {
     fn stats(a: &Sample<f64>, b: &Sample<f64>) -> (f64, f64) {
         (a.mean() / b.mean() - 1., a.percentiles().median() / b.percentiles().median() - 1.)
     }
 
-    let cl = criterion.confidence_level;
-    let nresamples = criterion.nresamples;
-    let threshold = criterion.noise_threshold;
+    let cl = config.confidence_level;
+    let nresamples = config.nresamples;
+    let threshold = config.noise_threshold;
 
     let distributions = {
         let (a, b) = elapsed!(

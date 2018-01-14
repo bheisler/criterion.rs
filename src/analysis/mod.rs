@@ -12,6 +12,7 @@ use stats::univariate::outliers::tukey::{LabeledSample, self};
 use estimate::{Distributions, Estimates, Statistic};
 use program::Program;
 use routine::{Function, Routine};
+use benchmark::BenchmarkConfig;
 use {Bencher, ConfidenceInterval, Criterion, Estimate};
 use {format, fs, plot};
 use ::Fun;
@@ -38,12 +39,6 @@ pub fn summarize(id: &str, criterion: &Criterion) {
     println!();
 }
 
-pub fn function<F>(id: &str, f: F, criterion: &Criterion) where F: FnMut(&mut Bencher) {
-    common(id, &mut Function(f), criterion);
-
-    println!();
-}
-
 pub fn functions<I>(id: &str,
     funs: Vec<Fun<I>>,
     input: &I,
@@ -53,7 +48,7 @@ pub fn functions<I>(id: &str,
     for fun in funs {
         let id = format!("{}/{}", id, fun.n);
         let mut f = fun.f;
-        common(&id, &mut Function(|b| f(b, input)), criterion);
+        common(&id, &mut Function(|b| f(b, input)), &criterion.config, criterion);
     }
     summarize(id, criterion);
 }
@@ -71,14 +66,14 @@ pub fn function_over_inputs<I, F>(
     for input in inputs {
         let id = format!("{}/{}", id, input);
 
-        common(&id, &mut Function(|b| f(b, &input)), criterion);
+        common(&id, &mut Function(|b| f(b, &input)), &criterion.config, criterion);
     }
 
     summarize(id, criterion);
 }
 
 pub fn program(id: &str, prog: &mut Command, criterion: &Criterion) {
-    common(id, &mut Program::spawn(prog), criterion);
+    common(id, &mut Program::spawn(prog), &criterion.config, criterion);
 
     println!();
 }
@@ -103,12 +98,11 @@ pub fn program_over_inputs<I, F>(
 }
 
 // Common analysis procedure
-fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
-    R: Routine,
+pub(crate) fn common(id: &str, routine: &mut Routine, config: &BenchmarkConfig, criterion: &Criterion)
 {
     criterion.report.benchmark_start(id);
 
-    let (iters, times) = routine.sample(id, criterion);
+    let (iters, times) = routine.sample(id, config, criterion);
 
     criterion.report.analysis(id);
 
@@ -123,8 +117,8 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
 
     let data = Data::new(&iters, &times);
     let labeled_sample = outliers(id, avg_times);
-    let (distribution, slope) = regression(id, data, criterion);
-    let (mut distributions, mut estimates) = estimates(avg_times, criterion);
+    let (distribution, slope) = regression(id, data, config, criterion);
+    let (mut distributions, mut estimates) = estimates(avg_times, config);
 
     estimates.insert(Statistic::Slope, slope);
     distributions.insert(Statistic::Slope, distribution);
@@ -148,15 +142,15 @@ fn common<R>(id: &str, routine: &mut R, criterion: &Criterion) where
     log_if_err!(fs::save(&estimates, &format!(".criterion/{}/new/estimates.json", id)));
 
     let compare_data = if base_dir_exists(id) {
-        let result = compare::common(id, data, avg_times, &estimates, criterion);
+        let result = compare::common(id, data, avg_times, &estimates, config, criterion);
         match result {
             Ok((t_val, p_val, rel_est)) => {
                 Some(::report::ComparisonData {
                     p_value: p_val,
                     t_value: t_val,
                     relative_estimates: rel_est, 
-                    significance_threshold: criterion.significance_level,
-                    noise_threshold: criterion.noise_threshold,
+                    significance_threshold: config.significance_level,
+                    noise_threshold: config.noise_threshold,
                 })
             }
             Err(e) => {
@@ -186,16 +180,17 @@ fn base_dir_exists(id: &str) -> bool {
 fn regression(
     id: &str,
     data: Data<f64, f64>,
+    config: &BenchmarkConfig,
     criterion: &Criterion,
 ) -> (Distribution<f64>, Estimate) {
-    let cl = criterion.confidence_level;
+    let cl = config.confidence_level;
 
     let distribution = elapsed!(
         "Bootstrapped linear regression",
-        data.bootstrap(criterion.nresamples, |d| (Slope::fit(d).0,))).0;
+        data.bootstrap(config.nresamples, |d| (Slope::fit(d).0,))).0;
 
     let point = Slope::fit(data);
-    let (lb, ub) =  distribution.confidence_interval(criterion.confidence_level);
+    let (lb, ub) =  distribution.confidence_interval(config.confidence_level);
     let se = distribution.std_dev(None);
 
     let (lb_, ub_) = (Slope(lb), Slope(ub));
@@ -231,7 +226,7 @@ fn outliers<'a>(id: &str, avg_times: &'a Sample<f64>) -> LabeledSample<'a, f64> 
 // Estimates the statistics of the population from the sample
 fn estimates(
     avg_times: &Sample<f64>,
-    criterion: &Criterion,
+    config: &BenchmarkConfig,
 ) -> (Distributions, Estimates) {
     fn stats(sample: &Sample<f64>) -> (f64, f64, f64, f64) {
         let mean = sample.mean();
@@ -242,8 +237,8 @@ fn estimates(
         (mean, median, mad, std_dev)
     }
 
-    let cl = criterion.confidence_level;
-    let nresamples = criterion.nresamples;
+    let cl = config.confidence_level;
+    let nresamples = config.nresamples;
 
     let points = {
         let (a, b, c, d) = stats(avg_times);

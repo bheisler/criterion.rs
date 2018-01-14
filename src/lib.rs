@@ -44,6 +44,7 @@ extern crate serde_derive;
 mod macros_private;
 
 mod analysis;
+mod benchmark;
 mod error;
 mod estimate;
 mod format;
@@ -67,6 +68,9 @@ use std::path::Path;
 
 use estimate::{Distributions, Estimates};
 use report::{Report, CliReport};
+use benchmark::BenchmarkConfig;
+
+pub use benchmark::{Benchmark};
 
 fn debug_enabled() -> bool {
     std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG")
@@ -361,14 +365,8 @@ impl Bencher {
 /// - **Comparison**: The current sample is compared with the sample obtained in the previous
 /// benchmark.
 pub struct Criterion {
-    confidence_level: f64,
-    measurement_time: Duration,
-    noise_threshold: f64,
-    nresamples: usize,
+    config: BenchmarkConfig,
     plotting: Plotting,
-    sample_size: usize,
-    significance_level: f64,
-    warm_up_time: Duration,
     filter: Option<String>,
     report: Box<Report>,
 }
@@ -396,14 +394,16 @@ impl Default for Criterion {
         };
 
         Criterion {
-            confidence_level: 0.95,
-            measurement_time: Duration::new(5, 0),
-            noise_threshold: 0.01,
-            nresamples: 100_000,
-            sample_size: 100,
+            config: BenchmarkConfig {
+                confidence_level: 0.95,
+                measurement_time: Duration::new(5, 0),
+                noise_threshold: 0.01,
+                nresamples: 100_000,
+                sample_size: 100,
+                significance_level: 0.05,
+                warm_up_time: Duration::new(3, 0),
+            },
             plotting: plotting,
-            significance_level: 0.05,
-            warm_up_time: Duration::new(3, 0),
             filter: None,
             report: Box::new(CliReport::new(false, false, false)),
         }
@@ -412,7 +412,7 @@ impl Default for Criterion {
 
 impl Criterion {
 
-    /// Changes the size of the sample
+    /// Changes the default size of the sample for benchmarks run with this runner.
     ///
     /// A bigger sample should yield more accurate results, if paired with a "sufficiently" large
     /// measurement time, on the other hand, it also increases the analysis time
@@ -423,11 +423,11 @@ impl Criterion {
     pub fn sample_size(mut self, n: usize) -> Criterion {
         assert!(n > 0);
 
-        self.sample_size = n;
+        self.config.sample_size = n;
         self
     }
 
-    /// Changes the warm up time
+    /// Changes the default warm up time for benchmarks run with this runner.
     ///
     /// # Panics
     ///
@@ -435,11 +435,11 @@ impl Criterion {
     pub fn warm_up_time(mut self, dur: Duration) -> Criterion {
         assert!(dur.to_nanos() > 0);
 
-        self.warm_up_time = dur;
+        self.config.warm_up_time = dur;
         self
     }
 
-    /// Changes the measurement time
+    /// Changes the default measurement time for benchmarks run with this runner.
     ///
     /// With a longer time, the measurement will become more resilient to transitory peak loads
     /// caused by external programs
@@ -452,11 +452,11 @@ impl Criterion {
     pub fn measurement_time(mut self, dur: Duration) -> Criterion {
         assert!(dur.to_nanos() > 0);
 
-        self.measurement_time = dur;
+        self.config.measurement_time = dur;
         self
     }
 
-    /// Changes the number of resamples
+    /// Changes the default number of resamples for benchmarks run with this runner.
     ///
     /// Number of resamples to use for the
     /// [bootstrap](http://en.wikipedia.org/wiki/Bootstrapping_(statistics)#Case_resampling)
@@ -470,11 +470,11 @@ impl Criterion {
     pub fn nresamples(mut self, n: usize) -> Criterion {
         assert!(n > 0);
 
-        self.nresamples = n;
+        self.config.nresamples = n;
         self
     }
 
-    /// Changes the noise threshold
+    /// Changes the default noise threshold for benchmarks run with this runner.
     ///
     /// This threshold is used to decide if an increase of `X%` in the execution time is considered
     /// significant or should be flagged as noise
@@ -487,11 +487,11 @@ impl Criterion {
     pub fn noise_threshold(mut self, threshold: f64) -> Criterion {
         assert!(threshold >= 0.0);
 
-        self.noise_threshold = threshold;
+        self.config.noise_threshold = threshold;
         self
     }
 
-    /// Changes the confidence level
+    /// Changes the default confidence level for benchmarks run with this runner
     ///
     /// The confidence level is used to calculate the
     /// [confidence intervals](https://en.wikipedia.org/wiki/Confidence_interval) of the estimated
@@ -503,11 +503,12 @@ impl Criterion {
     pub fn confidence_level(mut self, cl: f64) -> Criterion {
         assert!(cl > 0.0 && cl < 1.0);
 
-        self.confidence_level = cl;
+        self.config.confidence_level = cl;
         self
     }
 
-    /// Changes the [significance level](https://en.wikipedia.org/wiki/Statistical_significance)
+    /// Changes the default [significance level](https://en.wikipedia.org/wiki/Statistical_significance)
+    /// for benchmarks run with this runner
     ///
     /// The significance level is used for
     /// [hypothesis testing](https://en.wikipedia.org/wiki/Statistical_hypothesis_testing)
@@ -518,7 +519,7 @@ impl Criterion {
     pub fn significance_level(mut self, sl: f64) -> Criterion {
         assert!(sl > 0.0 && sl < 1.0);
 
-        self.significance_level = sl;
+        self.config.significance_level = sl;
         self
     }
 
@@ -649,13 +650,9 @@ scripts alongside the generated plots.
     /// Criterion::default().bench_function("routine", routine);
     /// ```
     pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion where
-        F: FnMut(&mut Bencher),
+        F: FnMut(&mut Bencher) + 'static,
     {
-        if self.filter_matches(id) {
-            analysis::function(id, f, self);
-        }
-
-        self
+        self.bench(Benchmark::new(id, f))
     }
 
     /// Benchmarks multiple functions
@@ -719,7 +716,7 @@ scripts alongside the generated plots.
     ) -> &mut Criterion where
         I: IntoIterator,
         I::Item: fmt::Display,
-        F: FnMut(&mut Bencher, &I::Item),
+        F: FnMut(&mut Bencher, &I::Item) + 'static,
     {
         if self.filter_matches(id) {
             analysis::function_over_inputs(id, f, inputs, self);
@@ -794,13 +791,31 @@ scripts alongside the generated plots.
         self
     }
 
-    /// Summarize the results stored under the `.criterion/${id}` folder
+    /// Executes the given benchmark. Use this variant to execute benchmarks
+    /// with complex configuration.
+    /// 
+    /// ```rust,no_run
+    /// use self::criterion::{Bencher, Criterion};
     ///
-    /// *Note:* The `bench_with_inputs` and `bench_program_with_inputs` functions internally call
-    /// the `summarize` method
-    pub fn summarize(&mut self, id: &str) -> &mut Criterion {
-        analysis::summarize(id, self);
-
+    /// fn routine(b: &mut Bencher) {
+    ///     // Setup (construct data, allocate memory, etc)
+    ///
+    ///     b.iter(|| {
+    ///         // Code to benchmark goes here
+    ///     })
+    ///
+    ///     // Teardown (free resources)
+    /// }
+    ///
+    /// Criterion::default()
+    ///     .bench(Benchmark::new("routine", routine)
+    ///         .sample_size(50));
+    /// ```
+    pub fn bench(
+        &mut self,
+        benchmark: Benchmark
+    ) -> &mut Criterion {
+        benchmark.run(self);
         self
     }
 }

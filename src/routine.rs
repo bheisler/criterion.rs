@@ -1,18 +1,19 @@
 use std::time::{Duration, Instant};
+use benchmark::BenchmarkConfig;
 
 use {Bencher, Criterion, DurationExt};
 
 /// PRIVATE
 pub trait Routine {
     /// PRIVATE
-    fn bench<I: Iterator<Item=u64>>(&mut self, iters: I) -> Vec<f64>;
+    fn bench(&mut self, iters: &Vec<u64>) -> Vec<f64>;
     /// PRIVATE
     fn warm_up(&mut self, how_long: Duration) -> (u64, u64);
 
     /// PRIVATE
-    fn sample(&mut self, id: &str, criterion: &Criterion) -> (Box<[f64]>, Box<[f64]>) {
-        let wu = criterion.warm_up_time;
-        let m_ns = criterion.measurement_time.to_nanos();
+    fn sample(&mut self, id: &str, config: &BenchmarkConfig, criterion: &Criterion) -> (Box<[f64]>, Box<[f64]>) {
+        let wu = config.warm_up_time;
+        let m_ns = config.measurement_time.to_nanos();
 
         criterion.report.warmup(id, wu.to_nanos() as f64);
 
@@ -21,7 +22,7 @@ pub trait Routine {
         // Initial guess for the mean execution time
         let met = wu_elapsed as f64 / wu_iters as f64;
 
-        let n = criterion.sample_size as u64;
+        let n = config.sample_size as u64;
         // Solve: [d + 2*d + 3*d + ... + n*d] * met = m_ns
         let total_runs = n * (n + 1) / 2;
         let d = (m_ns as f64 / met / total_runs as f64).ceil() as u64;
@@ -30,7 +31,7 @@ pub trait Routine {
 
         let m_ns = total_runs as f64 * d as f64 * met;
         criterion.report.measurement_start(id, n, m_ns, m_iters.iter().sum());
-        let m_elapsed = self.bench(m_iters.iter().cloned());
+        let m_elapsed = self.bench(&m_iters);
 
         let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();
 
@@ -41,13 +42,13 @@ pub trait Routine {
 pub struct Function<F>(pub F) where F: FnMut(&mut Bencher);
 
 impl<F> Routine for Function<F> where F: FnMut(&mut Bencher) {
-    fn bench<I: Iterator<Item=u64>>(&mut self, iters: I) -> Vec<f64> {
+    fn bench(&mut self, iters: &Vec<u64>) -> Vec<f64> {
         let Function(ref mut f) = *self;
 
         let mut b = Bencher { iters: 0, elapsed: Duration::from_secs(0) };
 
-        iters.map(|iters| {
-            b.iters = iters;
+        iters.iter().map(|iters| {
+            b.iters = *iters;
             (*f)(&mut b);
             b.elapsed.to_nanos() as f64
         }).collect()

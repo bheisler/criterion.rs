@@ -73,7 +73,7 @@ impl Program {
 }
 
 impl Routine for Program {
-    fn bench<I>(&mut self, iters: I) -> Vec<f64> where I: Iterator<Item=u64> {
+    fn bench(&mut self, iters: &Vec<u64>) -> Vec<f64> {
         let mut n = 0;
         for iters in iters {
             self.send(iters);
