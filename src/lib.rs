@@ -3,12 +3,12 @@
 //! This crate is a microbenchmarking library which aims to provide strong
 //! statistical confidence in detecting and estimating the size of performance
 //! improvements and regressions, whle also being easy to use.
-//! 
+//!
 //! See
 //! [the user guide](https://japaric.github.io/criterion.rs/book/index.html)
 //! for examples as well as details on the measurement and analysis process,
 //! and the output.
-//! 
+//!
 //! ## Features:
 //! * Benchmark Rust code as well as external programs
 //! * Collects detailed statistics, providing strong confidence that changes
@@ -87,7 +87,7 @@ pub fn init_logging() {
 
 /// A function that is opaque to the optimizer, used to prevent the compiler from
 /// optimizing away computations in a benchmark.
-/// 
+///
 /// This variant is backed by the (unstable) test::black_box function.
 #[cfg(feature = "real_blackbox")]
 pub fn black_box<T>(dummy: T) -> T {
@@ -96,7 +96,7 @@ pub fn black_box<T>(dummy: T) -> T {
 
 /// A function that is opaque to the optimizer, used to prevent the compiler from
 /// optimizing away computations in a benchmark.
-/// 
+///
 /// This variant is stable-compatible, but it may cause some performance overhead
 /// or fail to prevent code from being eliminated.
 #[cfg(not(feature = "real_blackbox"))]
@@ -132,8 +132,8 @@ impl<I> Fun<I> where I: fmt::Display {
 ///
 /// This struct provides different timing loops as methods. Each timing loop provides a different
 /// way to time a routine and each has advantages and disadvantages.
-/// 
-/// * If your routine returns a value with an expensive `drop` method, use 
+///
+/// * If your routine returns a value with an expensive `drop` method, use
 ///   `iter_with_large_drop`.
 /// * If your routine requires some per-iteration setup that shouldn't be timed,
 ///   use `iter_with_setup` or (if the setup is expensive) use `iter_with_large_setup`
@@ -420,7 +420,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if set to zero
-    pub fn sample_size(&mut self, n: usize) -> &mut Criterion {
+    pub fn sample_size(mut self, n: usize) -> Criterion {
         assert!(n > 0);
 
         self.sample_size = n;
@@ -432,7 +432,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the input duration is zero
-    pub fn warm_up_time(&mut self, dur: Duration) -> &mut Criterion {
+    pub fn warm_up_time(mut self, dur: Duration) -> Criterion {
         assert!(dur.to_nanos() > 0);
 
         self.warm_up_time = dur;
@@ -449,7 +449,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the input duration in zero
-    pub fn measurement_time(&mut self, dur: Duration) -> &mut Criterion {
+    pub fn measurement_time(mut self, dur: Duration) -> Criterion {
         assert!(dur.to_nanos() > 0);
 
         self.measurement_time = dur;
@@ -467,7 +467,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the number of resamples is set to zero
-    pub fn nresamples(&mut self, n: usize) -> &mut Criterion {
+    pub fn nresamples(mut self, n: usize) -> Criterion {
         assert!(n > 0);
 
         self.nresamples = n;
@@ -484,7 +484,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics is the threshold is set to a negative value
-    pub fn noise_threshold(&mut self, threshold: f64) -> &mut Criterion {
+    pub fn noise_threshold(mut self, threshold: f64) -> Criterion {
         assert!(threshold >= 0.0);
 
         self.noise_threshold = threshold;
@@ -500,7 +500,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the confidence level is set to a value outside the `(0, 1)` range
-    pub fn confidence_level(&mut self, cl: f64) -> &mut Criterion {
+    pub fn confidence_level(mut self, cl: f64) -> Criterion {
         assert!(cl > 0.0 && cl < 1.0);
 
         self.confidence_level = cl;
@@ -515,7 +515,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the significance level is set to a value outside the `(0, 1)` range
-    pub fn significance_level(&mut self, sl: f64) -> &mut Criterion {
+    pub fn significance_level(mut self, sl: f64) -> Criterion {
         assert!(sl > 0.0 && sl < 1.0);
 
         self.significance_level = sl;
@@ -523,7 +523,7 @@ impl Criterion {
     }
 
     /// Enables plotting
-    pub fn with_plots(&mut self) -> &mut Criterion {
+    pub fn with_plots(mut self) -> Criterion {
         match self.plotting {
             Plotting::NotAvailable => {},
             _ => self.plotting = Plotting::Enabled,
@@ -533,7 +533,7 @@ impl Criterion {
     }
 
     /// Disabled plotting
-    pub fn without_plots(&mut self) -> &mut Criterion {
+    pub fn without_plots(mut self) -> Criterion {
         match self.plotting {
             Plotting::NotAvailable => {},
             _ => self.plotting = Plotting::Disabled,
@@ -552,7 +552,7 @@ impl Criterion {
 
     /// Filters the benchmarks. Only benchmarks with names that contain the
     /// given string will be executed.
-    pub fn with_filter<S: Into<String>>(&mut self, filter: S) -> &mut Criterion {
+    pub fn with_filter<S: Into<String>>(mut self, filter: S) -> Criterion {
         self.filter = Some(filter.into());
 
         self
@@ -560,7 +560,7 @@ impl Criterion {
 
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
-    pub fn configure_from_args(&mut self) {
+    pub fn configure_from_args(mut self) -> Criterion {
         use clap::{Arg, App};
         let matches = App::new("Criterion Benchmark")
             .arg(Arg::with_name("FILTER")
@@ -597,11 +597,11 @@ scripts alongside the generated plots.
             .get_matches();
 
         if let Some(filter) = matches.value_of("FILTER") {
-            self.with_filter(filter);
+            self = self.with_filter(filter);
         }
 
         let verbose = matches.is_present("verbose");
-        let mut enable_text_overwrite = 
+        let mut enable_text_overwrite =
             isatty::stdout_isatty() && !verbose && !debug_enabled();
         let enable_text_coloring;
         match matches.value_of("color") {
@@ -618,7 +618,8 @@ scripts alongside the generated plots.
         }
 
         self.report = Box::new(CliReport::new(
-            enable_text_overwrite, enable_text_coloring, verbose))
+            enable_text_overwrite, enable_text_coloring, verbose));
+        self
     }
 
     fn filter_matches(&self, id: &str) -> bool {

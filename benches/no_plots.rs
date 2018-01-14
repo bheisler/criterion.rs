@@ -2,9 +2,8 @@ use criterion::Criterion;
 use walkdir::WalkDir;
 
 fn config() -> Criterion {
-    let mut c = Criterion::default();
-    c.without_plots();
-    c
+    Criterion::default()
+        .without_plots()
 }
 
 fn no_plots(c: &mut Criterion) {

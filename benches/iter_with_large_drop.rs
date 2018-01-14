@@ -10,9 +10,8 @@ fn alloc(c: &mut Criterion) {
 }
 
 fn short_warmup() -> Criterion {
-    let mut c = Criterion::default();
-    c.warm_up_time(Duration::new(1, 0));
-    c
+    Criterion::default()
+        .warm_up_time(Duration::new(1, 0))
 }
 
 criterion_group!{
