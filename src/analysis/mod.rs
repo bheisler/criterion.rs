@@ -72,8 +72,8 @@ pub fn function_over_inputs<I, F>(
     summarize(id, criterion);
 }
 
-pub fn program(id: &str, prog: &mut Command, criterion: &Criterion) {
-    common(id, &mut Program::spawn(prog), &criterion.config, criterion);
+pub fn program(id: &str, mut prog: Command, criterion: &Criterion) {
+    common(id, &mut prog, &criterion.config, criterion);
 
     println!();
 }
@@ -91,7 +91,10 @@ pub fn program_over_inputs<I, F>(
     for input in inputs {
         let id = format!("{}/{}", id, input);
 
-        program(&id, prog().arg(&format!("{}", input)), criterion);
+        let mut command = prog();
+        command.arg(&format!("{}", input));
+
+        program(&id, command, criterion);
     }
 
     summarize(id, criterion);
@@ -148,7 +151,7 @@ pub(crate) fn common(id: &str, routine: &mut Routine, config: &BenchmarkConfig, 
                 Some(::report::ComparisonData {
                     p_value: p_val,
                     t_value: t_val,
-                    relative_estimates: rel_est, 
+                    relative_estimates: rel_est,
                     significance_threshold: config.significance_level,
                     noise_threshold: config.noise_threshold,
                 })

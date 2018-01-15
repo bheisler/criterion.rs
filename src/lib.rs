@@ -762,9 +762,9 @@ scripts alongside the generated plots.
     ///     }
     /// }
     /// ```
-    pub fn bench_program(&mut self, id: &str, mut program: Command) -> &mut Criterion {
+    pub fn bench_program(&mut self, id: &str, program: Command) -> &mut Criterion {
         if self.filter_matches(id) {
-            analysis::program(id, &mut program, self);
+            analysis::program(id, program, self);
         }
 
         self

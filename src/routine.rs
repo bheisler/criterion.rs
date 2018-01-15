@@ -2,13 +2,16 @@ use std::time::{Duration, Instant};
 use benchmark::BenchmarkConfig;
 
 use {Bencher, Criterion, DurationExt};
+use program::Program;
 
 /// PRIVATE
 pub trait Routine {
+    fn start(&mut self) -> Option<Program>;
+
     /// PRIVATE
-    fn bench(&mut self, iters: &Vec<u64>) -> Vec<f64>;
+    fn bench(&mut self, m: &mut Option<Program>, iters: &Vec<u64>) -> Vec<f64>;
     /// PRIVATE
-    fn warm_up(&mut self, how_long: Duration) -> (u64, u64);
+    fn warm_up(&mut self, m: &mut Option<Program>, how_long: Duration) -> (u64, u64);
 
     /// PRIVATE
     fn sample(&mut self, id: &str, config: &BenchmarkConfig, criterion: &Criterion) -> (Box<[f64]>, Box<[f64]>) {
@@ -17,7 +20,9 @@ pub trait Routine {
 
         criterion.report.warmup(id, wu.to_nanos() as f64);
 
-        let (wu_elapsed, wu_iters) = self.warm_up(wu);
+        let mut m = self.start();
+
+        let (wu_elapsed, wu_iters) = self.warm_up(&mut m, wu);
 
         // Initial guess for the mean execution time
         let met = wu_elapsed as f64 / wu_iters as f64;
@@ -31,7 +36,7 @@ pub trait Routine {
 
         let m_ns = total_runs as f64 * d as f64 * met;
         criterion.report.measurement_start(id, n, m_ns, m_iters.iter().sum());
-        let m_elapsed = self.bench(&m_iters);
+        let m_elapsed = self.bench(&mut m, &m_iters);
 
         let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();
 
@@ -42,7 +47,11 @@ pub trait Routine {
 pub struct Function<F>(pub F) where F: FnMut(&mut Bencher);
 
 impl<F> Routine for Function<F> where F: FnMut(&mut Bencher) {
-    fn bench(&mut self, iters: &Vec<u64>) -> Vec<f64> {
+    fn start(&mut self) -> Option<Program> {
+        None
+    }
+
+    fn bench(&mut self, _: &mut Option<Program>, iters: &Vec<u64>) -> Vec<f64> {
         let Function(ref mut f) = *self;
 
         let mut b = Bencher { iters: 0, elapsed: Duration::from_secs(0) };
@@ -54,7 +63,7 @@ impl<F> Routine for Function<F> where F: FnMut(&mut Bencher) {
         }).collect()
     }
 
-    fn warm_up(&mut self, how_long: Duration) -> (u64, u64) {
+    fn warm_up(&mut self, _: &mut Option<Program>, how_long: Duration) -> (u64, u64) {
         let Function(ref mut f) = *self;
         let mut b = Bencher { iters: 1, elapsed: Duration::from_secs(0) };
 

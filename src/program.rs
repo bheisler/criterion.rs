@@ -72,16 +72,21 @@ impl Program {
     }
 }
 
-impl Routine for Program {
-    fn bench(&mut self, iters: &Vec<u64>) -> Vec<f64> {
+impl Routine for Command {
+    fn start(&mut self) -> Option<Program> {
+        Some(Program::spawn(self))
+    }
+
+    fn bench(&mut self, program: &mut Option<Program>, iters: &Vec<u64>) -> Vec<f64> {
+        let program = program.as_mut().unwrap();
         let mut n = 0;
         for iters in iters {
-            self.send(iters);
+            program.send(iters);
             n += 1;
         }
 
         (0..n).map(|_| {
-            let msg = self.recv();
+            let msg = program.recv();
             let msg = msg.trim();
 
             let elapsed: u64 = msg.parse().expect("Couldn't parse program output");
@@ -89,13 +94,14 @@ impl Routine for Program {
         }).collect()
     }
 
-    fn warm_up(&mut self, how_long_ns: Duration) -> (u64, u64) {
+    fn warm_up(&mut self, program: &mut Option<Program>, how_long_ns: Duration) -> (u64, u64) {
+        let program = program.as_mut().unwrap();
         let mut iters = 1;
 
         let mut total_iters = 0;
         let start = Instant::now();
         loop {
-            self.send(iters).recv();
+            program.send(iters).recv();
 
             total_iters += iters;
             let elapsed = start.elapsed();
