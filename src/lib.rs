@@ -652,7 +652,7 @@ scripts alongside the generated plots.
     pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion where
         F: FnMut(&mut Bencher) + 'static,
     {
-        self.bench(Benchmark::new(id, f))
+        self.bench(id, Benchmark::new(id, f))
     }
 
     /// Benchmarks multiple functions
@@ -793,7 +793,7 @@ scripts alongside the generated plots.
 
     /// Executes the given benchmark. Use this variant to execute benchmarks
     /// with complex configuration.
-    /// 
+    ///
     /// ```rust,no_run
     /// use self::criterion::{Bencher, Criterion};
     ///
@@ -808,14 +808,15 @@ scripts alongside the generated plots.
     /// }
     ///
     /// Criterion::default()
-    ///     .bench(Benchmark::new("routine", routine)
+    ///     .bench("routine", Benchmark::new("routine", routine)
     ///         .sample_size(50));
     /// ```
     pub fn bench(
         &mut self,
+        group_id: &str,
         benchmark: Benchmark
     ) -> &mut Criterion {
-        benchmark.run(self);
+        benchmark.run(group_id, self);
         self
     }
 }

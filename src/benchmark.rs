@@ -54,6 +54,11 @@ impl PartialBenchmarkConfig {
     }
 }
 
+struct NamedRoutine {
+    id: String,
+    f: Box<RefCell<Routine>>,
+}
+
 /*pub struct ParameterizedBenchmark<T> {
     id: String,
     config: PartialBenchmarkConfig,
@@ -63,9 +68,8 @@ impl PartialBenchmarkConfig {
 /// Structure representing a benchmark (or group of benchmarks)
 /// which takes no parameters.
 pub struct Benchmark {
-    id: String,
     config: PartialBenchmarkConfig,
-    f: Box<RefCell<Routine>>,
+    routines: Vec<NamedRoutine>
 }
 
 
@@ -205,24 +209,54 @@ impl Benchmark {
     /// }
     ///
     /// Criterion::default()
-    ///     .bench(Benchmark::new("routine", routine));
+    ///     .bench("routine", Benchmark::new("routine", routine));
     /// ```
     pub fn new<S, F>(id: S, f: F) -> Benchmark
         where S: Into<String>, F: FnMut(&mut Bencher) + 'static {
+
         Benchmark {
-            id: id.into(),
             config: Default::default(),
-            f: Box::new(RefCell::new(Function(f))),
-        }
+            routines: vec!(),
+        }.with_function(id, f)
     }
 
-    pub(crate) fn run(&self, c: &Criterion) {
+    /// Add another function to this benchmark group.
+    pub fn with_function<S, F>(mut self, id: S, f: F) -> Benchmark
+        where S: Into<String>, F: FnMut(&mut Bencher) + 'static {
+
+        let routine = NamedRoutine {
+            id: id.into(),
+            f: Box::new(RefCell::new(Function(f)))
+        };
+        self.routines.push(routine);
+        self
+    }
+
+    pub(crate) fn run(self, group_id: &str, c: &Criterion) {
         let config = self.config.to_complete(&c.config);
+        let num_routines = self.routines.len();
+        let mut any_matched = false;
 
-        if c.filter_matches(&self.id) {
-            analysis::common(&self.id, &mut *self.f.borrow_mut(), &config, c);
+        for routine in self.routines {
+            let id = if num_routines == 1 && group_id == routine.id {
+                routine.id
+            }
+            else {
+                format!("{}/{}", group_id, routine.id)
+            };
 
+            if c.filter_matches(&id) {
+                any_matched = true;
+                analysis::common(&id, &mut *routine.f.borrow_mut(), &config, c);
+            }
+        }
+
+        if any_matched {
             println!();
+
+            if num_routines > 1 {
+                analysis::summarize(group_id, c);
+            }
         }
     }
 }
