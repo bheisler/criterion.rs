@@ -24,6 +24,7 @@
 extern crate log;
 extern crate failure;
 extern crate itertools;
+extern crate itertools_num;
 extern crate serde;
 extern crate serde_json;
 extern crate criterion_plot as simplot;

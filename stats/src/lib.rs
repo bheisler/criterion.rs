@@ -17,7 +17,6 @@ extern crate thread_scoped;
 
 #[cfg(test)] #[macro_use] extern crate approx;
 #[cfg(test)] #[macro_use] extern crate quickcheck;
-#[cfg(test)] extern crate itertools;
 
 #[cfg(test)] mod test;
 

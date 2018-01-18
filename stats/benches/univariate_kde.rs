@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate criterion;
 extern crate criterion_stats as stats;
-extern crate itertools;
+extern crate itertools_num;
 extern crate rand;
 
 mod common_bench;
@@ -30,7 +30,7 @@ macro_rules! bench {
             fn map(c: &mut Criterion) {
                 let data = ::common_bench::vec_sized(SAMPLE_SIZE).unwrap();
                 let kde = Kde::new(Sample::new(&data), Gaussian, Bandwidth::Silverman);
-                let xs: Vec<_> = ::itertools::linspace::<$ty>(0., 1., KDE_POINTS).collect();
+                let xs: Vec<_> = ::itertools_num::linspace::<$ty>(0., 1., KDE_POINTS).collect();
 
                 c.bench_function(&format!("univariate_kde_map_{}", stringify!($ty)), |b| b.iter(|| {
                     kde.map(&xs)
