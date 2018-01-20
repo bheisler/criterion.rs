@@ -10,7 +10,7 @@ pub trait Routine<T> {
     fn start(&mut self, parameter: &T) -> Option<Program>;
 
     /// PRIVATE
-    fn bench(&mut self, m: &mut Option<Program>, iters: &Vec<u64>, parameter: &T) -> Vec<f64>;
+    fn bench(&mut self, m: &mut Option<Program>, iters: &[u64], parameter: &T) -> Vec<f64>;
     /// PRIVATE
     fn warm_up(&mut self, m: &mut Option<Program>, how_long: Duration, parameter: &T) -> (u64, u64);
 
@@ -63,7 +63,7 @@ impl<F, T> Routine<T> for Function<F, T> where F: FnMut(&mut Bencher, &T) {
         None
     }
 
-    fn bench(&mut self, _: &mut Option<Program>, iters: &Vec<u64>, parameter: &T) -> Vec<f64> {
+    fn bench(&mut self, _: &mut Option<Program>, iters: &[u64], parameter: &T) -> Vec<f64> {
         let f = &mut self.f;
 
         let mut b = Bencher { iters: 0, elapsed: Duration::from_secs(0) };

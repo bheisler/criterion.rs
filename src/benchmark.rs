@@ -78,7 +78,7 @@ pub struct Benchmark {
     routines: Vec<NamedRoutine<()>>
 }
 
-/// Common trait for Benchmark and ParameterizedBenchmark. Not inteded to be
+/// Common trait for `Benchmark` and `ParameterizedBenchmark`. Not inteded to be
 /// used outside of Criterion.rs.
 pub trait BenchmarkDefinition: Sized {
     #[doc(hidden)]
@@ -443,7 +443,7 @@ impl<T> ParameterizedBenchmark<T> where T: Debug + 'static {
     /// Add a function to the benchmark group.
     ///
     /// ```
-    /// # use criterion::Benchmark;
+    /// # use criterion::ParameterizedBenchmark;
     /// ParameterizedBenchmark::new("times 10", |b, i| b.iter(|| i * 10), vec![1, 2, 3])
     ///     .with_function("times 20", |b, i| b.iter(|| i * 20));
     /// ```
@@ -461,11 +461,14 @@ impl<T> ParameterizedBenchmark<T> where T: Debug + 'static {
     /// Add an external program to the benchmark group.
     ///
     /// ```
-    /// # use criterion::Benchmark;
+    /// # use criterion::ParameterizedBenchmark;
     /// # use std::process::Command;
     /// ParameterizedBenchmark::new("internal", |b, i| b.iter(|| i * 10), vec![1, 2, 3])
-    ///     .with_program("external", |i| Command::new("my_external_benchmark")
-    ///         .arg(format!("{}", i)));
+    ///     .with_program("external", |i| {
+    ///         let mut command = Command::new("my_external_benchmark");
+    ///         command.arg(format!("{:?}", i));
+    ///         command
+    ///     });
     /// ```
     pub fn with_program<S, F>(mut self, id: S, program: F) -> ParameterizedBenchmark<T>
         where S: Into<String>, F: FnMut(&T) -> Command + 'static {

@@ -72,7 +72,7 @@ impl Program {
         }
     }
 
-    fn bench(&mut self, iters: &Vec<u64>) -> Vec<f64> {
+    fn bench(&mut self, iters: &[u64]) -> Vec<f64> {
         let mut n = 0;
         for iters in iters {
             self.send(iters);
@@ -112,7 +112,7 @@ impl Routine<()> for Command {
         Some(Program::spawn(self))
     }
 
-    fn bench(&mut self, program: &mut Option<Program>, iters: &Vec<u64>, _: &()) -> Vec<f64> {
+    fn bench(&mut self, program: &mut Option<Program>, iters: &[u64], _: &()) -> Vec<f64> {
         let program = program.as_mut().unwrap();
         program.bench(iters)
     }
@@ -142,7 +142,7 @@ impl<F, T> Routine<T> for CommandFactory<F, T> where F: FnMut(&T) -> Command + '
         Some(Program::spawn(&mut command))
     }
 
-    fn bench(&mut self, program: &mut Option<Program>, iters: &Vec<u64>, _: &T) -> Vec<f64> {
+    fn bench(&mut self, program: &mut Option<Program>, iters: &[u64], _: &T) -> Vec<f64> {
         let program = program.as_mut().unwrap();
         program.bench(iters)
     }
