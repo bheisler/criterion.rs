@@ -6,9 +6,9 @@ use criterion::Criterion;
 fn from_elem(c: &mut Criterion) {
     static KB: usize = 1024;
 
-    let can_plot = c.bench_function_over_inputs("from_elem", |b, &&size| {
+    let can_plot = c.bench_function_over_inputs("from_elem", |b, &size| {
         b.iter(|| iter::repeat(0u8).take(size).collect::<Vec<_>>());
-    }, &[KB, 2 * KB, 4 * KB, 8 * KB, 16 * KB]).can_plot();
+    }, vec![KB, 2 * KB, 4 * KB, 8 * KB, 16 * KB]).can_plot();
 
     if can_plot {
         // Check that the summary plots have been generated

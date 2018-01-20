@@ -2,6 +2,7 @@ use std::fmt;
 use std::io::BufReader;
 use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, Stdio};
 use std::time::{Duration, Instant};
+use std::marker::PhantomData;
 
 use DurationExt;
 use routine::Routine;
@@ -70,23 +71,16 @@ impl Program {
             Ok(_) => &self.buffer,
         }
     }
-}
 
-impl Routine<()> for Command {
-    fn start(&mut self) -> Option<Program> {
-        Some(Program::spawn(self))
-    }
-
-    fn bench(&mut self, program: &mut Option<Program>, iters: &Vec<u64>, _: &()) -> Vec<f64> {
-        let program = program.as_mut().unwrap();
+    fn bench(&mut self, iters: &Vec<u64>) -> Vec<f64> {
         let mut n = 0;
         for iters in iters {
-            program.send(iters);
+            self.send(iters);
             n += 1;
         }
 
         (0..n).map(|_| {
-            let msg = program.recv();
+            let msg = self.recv();
             let msg = msg.trim();
 
             let elapsed: u64 = msg.parse().expect("Couldn't parse program output");
@@ -94,14 +88,13 @@ impl Routine<()> for Command {
         }).collect()
     }
 
-    fn warm_up(&mut self, program: &mut Option<Program>, how_long_ns: Duration, _: &()) -> (u64, u64) {
-        let program = program.as_mut().unwrap();
+    fn warm_up(&mut self, how_long_ns: Duration) -> (u64, u64) {
         let mut iters = 1;
 
         let mut total_iters = 0;
         let start = Instant::now();
         loop {
-            program.send(iters).recv();
+            self.send(iters).recv();
 
             total_iters += iters;
             let elapsed = start.elapsed();
@@ -111,5 +104,51 @@ impl Routine<()> for Command {
 
             iters *= 2;
         }
+    }
+}
+
+impl Routine<()> for Command {
+    fn start(&mut self, _: &()) -> Option<Program> {
+        Some(Program::spawn(self))
+    }
+
+    fn bench(&mut self, program: &mut Option<Program>, iters: &Vec<u64>, _: &()) -> Vec<f64> {
+        let program = program.as_mut().unwrap();
+        program.bench(iters)
+    }
+
+    fn warm_up(&mut self, program: &mut Option<Program>, how_long_ns: Duration, _: &()) -> (u64, u64) {
+        let program = program.as_mut().unwrap();
+        program.warm_up(how_long_ns)
+    }
+}
+
+pub struct CommandFactory<F, T> where F: FnMut(&T) -> Command + 'static {
+    f: F,
+    _phantom: PhantomData<T>,
+}
+impl<F, T> CommandFactory<F, T> where F: FnMut(&T) -> Command + 'static {
+    pub fn new(f: F) -> CommandFactory<F, T> {
+        CommandFactory {
+            f: f,
+            _phantom: PhantomData
+        }
+    }
+}
+
+impl<F, T> Routine<T> for CommandFactory<F, T> where F: FnMut(&T) -> Command + 'static {
+    fn start(&mut self, parameter: &T) -> Option<Program> {
+        let mut command = (self.f)(parameter);
+        Some(Program::spawn(&mut command))
+    }
+
+    fn bench(&mut self, program: &mut Option<Program>, iters: &Vec<u64>, _: &T) -> Vec<f64> {
+        let program = program.as_mut().unwrap();
+        program.bench(iters)
+    }
+
+    fn warm_up(&mut self, program: &mut Option<Program>, how_long_ns: Duration, _: &T) -> (u64, u64) {
+        let program = program.as_mut().unwrap();
+        program.warm_up(how_long_ns)
     }
 }

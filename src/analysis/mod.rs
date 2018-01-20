@@ -1,7 +1,5 @@
-use std::fmt;
 use std::iter::IntoIterator;
 use std::path::Path;
-use std::process::Command;
 
 use stats::Distribution;
 use stats::bivariate::Data;
@@ -10,9 +8,9 @@ use stats::univariate::Sample;
 use stats::univariate::outliers::tukey::{LabeledSample, self};
 
 use estimate::{Distributions, Estimates, Statistic};
-use routine::{Function, Routine};
+use routine::Routine;
 use benchmark::BenchmarkConfig;
-use {Bencher, ConfidenceInterval, Criterion, Estimate};
+use {ConfidenceInterval, Criterion, Estimate};
 use {format, fs, plot};
 
 macro_rules! elapsed {
@@ -35,54 +33,6 @@ pub fn summarize(id: &str, criterion: &Criterion) {
     }
 
     println!();
-}
-
-pub fn function_over_inputs<I, F>(
-    id: &str,
-    f: F,
-    inputs: I,
-    criterion: &Criterion,
-) where
-    F: FnMut(&mut Bencher, &I::Item),
-    I: IntoIterator,
-    I::Item: fmt::Display,
-{
-    let mut function = Function::new(f);
-    for input in inputs {
-        let id = format!("{}/{}", id, input);
-
-        common(&id, &mut function, &criterion.config, criterion, &input);
-    }
-
-    summarize(id, criterion);
-}
-
-pub fn program(id: &str, mut prog: Command, criterion: &Criterion) {
-    common(id, &mut prog, &criterion.config, criterion, &());
-
-    println!();
-}
-
-pub fn program_over_inputs<I, F>(
-    id: &str,
-    mut prog: F,
-    inputs: I,
-    criterion: &Criterion,
-) where
-    F: FnMut() -> Command,
-    I: IntoIterator,
-    I::Item: fmt::Display,
-{
-    for input in inputs {
-        let id = format!("{}/{}", id, input);
-
-        let mut command = prog();
-        command.arg(&format!("{}", input));
-
-        program(&id, command, criterion);
-    }
-
-    summarize(id, criterion);
 }
 
 // Common analysis procedure

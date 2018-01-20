@@ -6,6 +6,7 @@ use std::cell::RefCell;
 use std::process::Command;
 use std::marker::Sized;
 use std::fmt::Display;
+use ::program::CommandFactory;
 
 /// Struct containing all of the configuration options for a benchmark.
 pub struct BenchmarkConfig {
@@ -380,6 +381,57 @@ impl<T> ParameterizedBenchmark<T> where T: Display + 'static {
         }.with_function(id, f)
     }
 
+    /// Create a new parameterized benchmark group and add the given program to it.
+    /// The program under test must implement the following protocol:
+    ///
+    /// * Read the number of iterations from stdin
+    /// * Execute the routine to benchmark that many times
+    /// * Print the elapsed time (in nanoseconds) to stdout
+    ///
+    /// You can pass the argument to the program  in any way you choose.
+    ///
+    /// ```rust,no_run
+    /// # use std::io::{self, BufRead};
+    /// # use std::time::Instant;
+    /// # use std::time::Duration;
+    /// # trait DurationExt { fn to_nanos(&self) -> u64 { 0 } }
+    /// # impl DurationExt for Duration {}
+    ///
+    /// fn main() {
+    ///     let stdin = io::stdin();
+    ///     let ref mut stdin = stdin.lock();
+    ///
+    ///     // For each line in stdin
+    ///     for line in stdin.lines() {
+    ///         // Parse line as the number of iterations
+    ///         let iters: u64 = line.unwrap().trim().parse().unwrap();
+    ///
+    ///         // Setup
+    ///
+    ///         // Benchmark
+    ///         let start = Instant::now();
+    ///         // Execute the routine "iters" times
+    ///         for _ in 0..iters {
+    ///             // Code to benchmark goes here
+    ///         }
+    ///         let elapsed = start.elapsed();
+    ///
+    ///         // Teardown
+    ///
+    ///         // Report elapsed time in nanoseconds to stdout
+    ///         println!("{}", elapsed.to_nanos());
+    ///     }
+    /// }
+    /// ```
+    pub fn new_external<S, F, I>(id: S, program: F, parameters: I) -> ParameterizedBenchmark<T>
+        where S: Into<String>, F: FnMut(&T) -> Command + 'static, I: IntoIterator<Item=T> {
+        ParameterizedBenchmark {
+            config: Default::default(),
+            routines: vec!(),
+            values: parameters.into_iter().collect(),
+        }.with_program(id, program)
+    }
+
     pub(crate) fn with_functions(functions: Vec<NamedRoutine<T>>, parameters: Vec<T>) -> ParameterizedBenchmark<T> {
         ParameterizedBenchmark {
             config: Default::default(),
@@ -393,7 +445,7 @@ impl<T> ParameterizedBenchmark<T> where T: Display + 'static {
     /// ```
     /// # use criterion::Benchmark;
     /// ParameterizedBenchmark::new("times 10", |b, i| b.iter(|| i * 10), vec![1, 2, 3])
-    ///     .with_function("return 20", |b| b.iter(|| 20));
+    ///     .with_function("times 20", |b, i| b.iter(|| i * 20));
     /// ```
     pub fn with_function<S, F>(mut self, id: S, f: F) -> ParameterizedBenchmark<T>
         where S: Into<String>, F: FnMut(&mut Bencher, &T) + 'static {
@@ -401,6 +453,26 @@ impl<T> ParameterizedBenchmark<T> where T: Display + 'static {
         let routine = NamedRoutine {
             id: id.into(),
             f: Box::new(RefCell::new(Function::new(f)))
+        };
+        self.routines.push(routine);
+        self
+    }
+
+    /// Add an external program to the benchmark group.
+    ///
+    /// ```
+    /// # use criterion::Benchmark;
+    /// # use std::process::Command;
+    /// ParameterizedBenchmark::new("internal", |b, i| b.iter(|| i * 10), vec![1, 2, 3])
+    ///     .with_program("external", |i| Command::new("my_external_benchmark")
+    ///         .arg(format!("{}", i)));
+    /// ```
+    pub fn with_program<S, F>(mut self, id: S, program: F) -> ParameterizedBenchmark<T>
+        where S: Into<String>, F: FnMut(&T) -> Command + 'static {
+        let factory = CommandFactory::new(program);
+        let routine = NamedRoutine {
+            id: id.into(),
+            f: Box::new(RefCell::new(factory))
         };
         self.routines.push(routine);
         self

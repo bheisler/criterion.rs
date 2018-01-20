@@ -7,7 +7,7 @@ use std::marker::PhantomData;
 
 /// PRIVATE
 pub trait Routine<T> {
-    fn start(&mut self) -> Option<Program>;
+    fn start(&mut self, parameter: &T) -> Option<Program>;
 
     /// PRIVATE
     fn bench(&mut self, m: &mut Option<Program>, iters: &Vec<u64>, parameter: &T) -> Vec<f64>;
@@ -21,7 +21,7 @@ pub trait Routine<T> {
 
         criterion.report.warmup(id, wu.to_nanos() as f64);
 
-        let mut m = self.start();
+        let mut m = self.start(parameter);
 
         let (wu_elapsed, wu_iters) = self.warm_up(&mut m, wu, parameter);
 
@@ -59,7 +59,7 @@ impl<F, T> Function<F, T> where F: FnMut(&mut Bencher, &T) {
 }
 
 impl<F, T> Routine<T> for Function<F, T> where F: FnMut(&mut Bencher, &T) {
-    fn start(&mut self) -> Option<Program> {
+    fn start(&mut self, _: &T) -> Option<Program> {
         None
     }
 

@@ -776,18 +776,20 @@ scripts alongside the generated plots.
     pub fn bench_program_over_inputs<I, F>(
         &mut self,
         id: &str,
-        program: F,
+        mut program: F,
         inputs: I,
     ) -> &mut Criterion where
-        F: FnMut() -> Command,
+        F: FnMut() -> Command + 'static,
         I: IntoIterator,
-        I::Item: fmt::Display,
+        I::Item: fmt::Display + 'static,
     {
-        if self.filter_matches(id) {
-            analysis::program_over_inputs(id, program, inputs, self);
-        }
-
-        self
+        self.bench(id, ParameterizedBenchmark::new_external(id,
+            move |i| {
+                let mut command = program();
+                command.arg(format!("{}", i));
+                command
+            },
+            inputs))
     }
 
     /// Executes the given benchmark. Use this variant to execute benchmarks

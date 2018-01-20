@@ -5,14 +5,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added `Criterion.bench` function, which accepts either a `Benchmark` or
+  `ParameterizedBenchmark`. These new structures allow for custom per-benchmark
+  configuration as well as more complex benchmark grouping (eg. comparing a Rust
+  function against an external program over a range of inputs) which was not
+  possible previously.
+
 ### Changed
 - The builder methods on the Criterion struct now take and return self by value
   for easier chaining. Functions which configure a Criterion structure will need
   to be updated accordingly, or will need to be changed to work with the
   `Benchmark` or `ParameterizedBenchmark` types to do per-benchmark configuration
   instead.
-- The functions taken by `Criterion.bench_function` and
-  `Criterion.bench_function_over_inputs` must now have a `'static` lifetime.
+- The closures taken by `Criterion.bench_*` must now have a `'static` lifetime.
   This means that you may need to change your closures from `|bencher| {...}`
   to `move |bencher| {...}`.
 - `Criterion.bench_functions` now takes `I` as an input parameter, not `&I`.
