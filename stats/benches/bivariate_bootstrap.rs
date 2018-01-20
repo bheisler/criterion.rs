@@ -20,27 +20,29 @@ macro_rules! bench {
             pub fn straight_line(c: &mut Criterion) {
                 let x = ::common_bench::vec_sized::<f64>(SAMPLE_SIZE).unwrap();
                 let y = ::common_bench::vec_sized::<f64>(SAMPLE_SIZE).unwrap();
-                let data = Data::new(&x, &y);
 
                 c.bench_function(
                     &format!("bivariate_bootstrap_straight_line_{}", stringify!($ty)),
-                    |b| b.iter(|| {
-                        data.bootstrap(NRESAMPLES, |d| (StraightLine::fit(d),))
-                    })
-                );
+                    move |b| {
+                        let data = Data::new(&x, &y);
+                        b.iter(|| {
+                            data.bootstrap(NRESAMPLES, |d| (StraightLine::fit(d),))
+                        })
+                    });
             }
 
             pub fn slope(c: &mut Criterion) {
                 let x = ::common_bench::vec_sized::<f64>(SAMPLE_SIZE).unwrap();
                 let y = ::common_bench::vec_sized::<f64>(SAMPLE_SIZE).unwrap();
-                let data = Data::new(&x, &y);
 
                 c.bench_function(
                     &format!("bivariate_bootstrap_slope_{}", stringify!($ty)),
-                    |b| b.iter(|| {
-                        data.bootstrap(NRESAMPLES, |d| (Slope::fit(d),))
-                    })
-                );
+                    move |b| {
+                        let data = Data::new(&x, &y);
+                        b.iter(|| {
+                            data.bootstrap(NRESAMPLES, |d| (Slope::fit(d),))
+                        })
+                    });
             }
         }
     }

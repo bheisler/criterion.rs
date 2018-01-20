@@ -11,11 +11,13 @@ macro_rules! stat {
         $(
             fn $stat(c: &mut Criterion) {
                 let v = ::common_bench::vec::<$ty>();
-                let s = ::stats::univariate::Sample::new(&v);
 
                 c.bench_function(
                     &format!("stat_{}_{}", stringify!($ty), stringify!($stat)),
-                    |b| b.iter(|| s.$stat()));
+                    move |b| {
+                        let s = ::stats::univariate::Sample::new(&v);
+                        b.iter(|| s.$stat())
+                    });
             }
         )+
     }
@@ -26,11 +28,13 @@ macro_rules! stat_none {
         $(
             fn $stat(c: &mut Criterion) {
                 let v = ::common_bench::vec::<$ty>();
-                let s = ::stats::univariate::Sample::new(&v);
 
                 c.bench_function(
                     &format!("stat_none_{}_{}", stringify!($ty), stringify!($stat)),
-                    |b| b.iter(|| s.$stat(None)));
+                    move |b| {
+                        let s = ::stats::univariate::Sample::new(&v);
+                        b.iter(|| s.$stat(None))
+                    });
             }
         )+
     }
@@ -41,12 +45,14 @@ macro_rules! fast_stat {
         $(
             fn $stat(c: &mut Criterion) {
                 let v = ::common_bench::vec::<$ty>();
-                let s = ::stats::univariate::Sample::new(&v);
-                let aux = Some(s.$aux_stat());
 
                 c.bench_function(
                     &format!("fast_stat_{}_{}", stringify!($ty), stringify!($stat)),
-                    |b| b.iter(|| s.$stat(aux)));
+                    move |b| {
+                        let s = ::stats::univariate::Sample::new(&v);
+                        let aux = Some(s.$aux_stat());
+                        b.iter(|| s.$stat(aux))
+                    });
             }
         )+
     }
@@ -82,11 +88,11 @@ macro_rules! bench {
 
             stat!($ty <- iqr, max, mean, median, median_abs_dev_pct, min, std_dev_pct, sum);
             stat_none!($ty <- median_abs_dev, std_dev, var);
-            
+
             criterion_group!(
                 name = benches;
                 config = ::common_bench::reduced_samples();
-                targets = iqr, max, mean, median, median_abs_dev_pct, min, 
+                targets = iqr, max, mean, median, median_abs_dev_pct, min,
                             std_dev_pct, sum, median_abs_dev, std_dev, var);
 
             pub mod fast {

@@ -17,28 +17,30 @@ macro_rules! bench {
             pub fn slope(c: &mut Criterion) {
                 let x = ::common_bench::vec::<$ty>();
                 let y = ::common_bench::vec();
-                let data = Data::new(&x, &y);
 
                 c.bench_function(
                     &format!("bivariate_regression_slope_{}", stringify!($ty)),
-                    |b| b.iter(|| {
-                        Slope::fit(data)
-                    })
-                );
-                
+                    move |b|
+                    {
+                        let data = Data::new(&x, &y);
+                        b.iter(|| {
+                            Slope::fit(data)
+                        })
+                    });
             }
 
             pub fn straight_line(c: &mut Criterion) {
                 let x = ::common_bench::vec::<$ty>();
                 let y = ::common_bench::vec();
-                let data = Data::new(&x, &y);
 
                 c.bench_function(
                     &format!("bivariate_regression_straight_line_{}", stringify!($ty)),
-                    |b| b.iter(|| {
-                        StraightLine::fit(data)
-                    })
-                );
+                    move |b| {
+                        let data = Data::new(&x, &y);
+                        b.iter(|| {
+                            StraightLine::fit(data)
+                        })
+                    });
             }
         }
     }

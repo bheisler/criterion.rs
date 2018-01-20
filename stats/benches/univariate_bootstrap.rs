@@ -18,14 +18,15 @@ macro_rules! bench {
 
             pub fn mean(c: &mut Criterion) {
                 let v = ::common_bench::vec_sized::<$ty>(SAMPLE_SIZE).unwrap();
-                let sample = Sample::new(&v);
 
                 c.bench_function(
                     &format!("univariate_bootstrap_mean_{}", stringify!($ty)),
-                    |b| b.iter(|| {
-                        sample.bootstrap(NRESAMPLES, |s| (s.mean(),))
-                    })
-                );
+                    move |b| {
+                        let sample = Sample::new(&v);
+                        b.iter(|| {
+                            sample.bootstrap(NRESAMPLES, |s| (s.mean(),))
+                        })
+                    });
             }
         }
     }

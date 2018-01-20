@@ -15,7 +15,6 @@ pub fn vec_sized<T>(size: usize) -> Option<Vec<T>> where T: Rand {
 }
 
 pub fn reduced_samples() -> Criterion {
-    let mut c = Criterion::default();
-    c.sample_size(20);
-    c
+    Criterion::default()
+        .sample_size(20)
 }

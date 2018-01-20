@@ -19,22 +19,26 @@ macro_rules! bench {
 
             fn call(c: &mut Criterion) {
                 let data = ::common_bench::vec::<$ty>();
-                let kde = Kde::new(Sample::new(&data), Gaussian, Bandwidth::Silverman);
-                let x = Sample::new(&data).mean();
 
-                c.bench_function(&format!("univariate_kde_call_{}", stringify!($ty)), |b| b.iter(|| {
-                    kde.estimate(x)
-                }));
+                c.bench_function(&format!("univariate_kde_call_{}", stringify!($ty)), move |b| {
+                    let kde = Kde::new(Sample::new(&data), Gaussian, Bandwidth::Silverman);
+                    let x = Sample::new(&data).mean();
+                    b.iter(|| {
+                        kde.estimate(x)
+                    })
+                });
             }
 
             fn map(c: &mut Criterion) {
                 let data = ::common_bench::vec_sized(SAMPLE_SIZE).unwrap();
-                let kde = Kde::new(Sample::new(&data), Gaussian, Bandwidth::Silverman);
                 let xs: Vec<_> = ::itertools_num::linspace::<$ty>(0., 1., KDE_POINTS).collect();
 
-                c.bench_function(&format!("univariate_kde_map_{}", stringify!($ty)), |b| b.iter(|| {
-                    kde.map(&xs)
-                }));
+                c.bench_function(&format!("univariate_kde_map_{}", stringify!($ty)), move |b| {
+                    let kde = Kde::new(Sample::new(&data), Gaussian, Bandwidth::Silverman);
+                    b.iter(|| {
+                        kde.map(&xs)
+                    })
+                });
             }
 
             criterion_group!(
