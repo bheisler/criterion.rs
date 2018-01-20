@@ -11,9 +11,9 @@ categories = ["visualization"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-byteorder = "1.0"
-cast = "0.1.0"
-itertools = "0.5"
+byteorder = "1"
+cast = "0.2"
+itertools = "0.7"
 
 [dev-dependencies]
 itertools-num = "0.1"

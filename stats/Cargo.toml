@@ -10,17 +10,17 @@ keywords = ["statistics", "stats", "criterion"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-cast = "0.1.0"
+cast = "0.2"
 num-traits = "0.1.41"
-num_cpus = "0.2.10"
+num_cpus = "1"
 rand = "0.3.13"
 thread-scoped = "1.0.1"
 
 [dev-dependencies]
 approx = "0.1.0"
-itertools = "0.4.7"
-quickcheck = "0.4.1"
-criterion = { path="..", version="0.1.1" }
+itertools-num = "0.1"
+quickcheck = "0.6"
+criterion = { path="..", version="0.1.2" }
 
 [badges]
 travis-ci = { repository = "japaric/criterion.rs" }
