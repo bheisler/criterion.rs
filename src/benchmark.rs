@@ -3,6 +3,7 @@ use ::{DurationExt, Criterion, Bencher};
 use routine::{Routine, Function};
 use ::analysis;
 use std::cell::RefCell;
+use std::process::Command;
 
 /// Struct containing all of the configuration options for a benchmark.
 pub struct BenchmarkConfig {
@@ -192,11 +193,11 @@ macro_rules! benchmark_config {
 impl Benchmark {
     benchmark_config!(Benchmark);
 
-    /// Create a new Benchmark object given a benchmark ID and a function.
+    /// Create a new benchmark group and adds the given function to it.
     /// The function under test must follow the setup - bench - teardown pattern:
     ///
     /// ```rust,no_run
-    /// use self::criterion::{Bencher, Criterion};
+    /// use self::criterion::{Bencher, Criterion, Benchmark};
     ///
     /// fn routine(b: &mut Bencher) {
     ///     // Setup (construct data, allocate memory, etc)
@@ -220,13 +221,84 @@ impl Benchmark {
         }.with_function(id, f)
     }
 
-    /// Add another function to this benchmark group.
+    /// Create a new benchmark group and add the given program to it.
+    /// The program under test must implement the following protocol:
+    /// 
+    /// * Read the number of iterations from stdin
+    /// * Execute the routine to benchmark that many times
+    /// * Print the elapsed time (in nanoseconds) to stdout
+    ///
+    /// ```rust,no_run
+    /// # use std::io::{self, BufRead};
+    /// # use std::time::Instant;
+    /// # use std::time::Duration;
+    /// # trait DurationExt { fn to_nanos(&self) -> u64 { 0 } }
+    /// # impl DurationExt for Duration {}
+    ///
+    /// fn main() {
+    ///     let stdin = io::stdin();
+    ///     let ref mut stdin = stdin.lock();
+    ///
+    ///     // For each line in stdin
+    ///     for line in stdin.lines() {
+    ///         // Parse line as the number of iterations
+    ///         let iters: u64 = line.unwrap().trim().parse().unwrap();
+    ///
+    ///         // Setup
+    ///
+    ///         // Benchmark
+    ///         let start = Instant::now();
+    ///         // Execute the routine "iters" times
+    ///         for _ in 0..iters {
+    ///             // Code to benchmark goes here
+    ///         }
+    ///         let elapsed = start.elapsed();
+    ///
+    ///         // Teardown
+    ///
+    ///         // Report elapsed time in nanoseconds to stdout
+    ///         println!("{}", elapsed.to_nanos());
+    ///     }
+    /// }
+    pub fn new_external<S>(id: S, program: Command) -> Benchmark
+        where S: Into<String> {
+        Benchmark {
+            config: Default::default(),
+            routines: vec!(),
+        }.with_program(id, program)
+    }
+
+    /// Add a function to the benchmark group.
+    ///
+    /// ```
+    /// # use criterion::Benchmark;
+    /// Benchmark::new("return 10", |b| b.iter(|| 10))
+    ///     .with_function("return 20", |b| b.iter(|| 20));
+    /// ```
     pub fn with_function<S, F>(mut self, id: S, f: F) -> Benchmark
         where S: Into<String>, F: FnMut(&mut Bencher) + 'static {
 
         let routine = NamedRoutine {
             id: id.into(),
             f: Box::new(RefCell::new(Function(f)))
+        };
+        self.routines.push(routine);
+        self
+    }
+
+    /// Add an external program to the benchmark group.
+    ///
+    /// ```
+    /// # use criterion::Benchmark;
+    /// # use std::process::Command;
+    /// Benchmark::new("internal", |b| b.iter(|| 10))
+    ///     .with_program("external", Command::new("my_external_benchmark"));
+    /// ```
+    pub fn with_program<S>(mut self, id: S, program: Command) -> Benchmark
+        where S: Into<String> {
+        let routine = NamedRoutine {
+            id: id.into(),
+            f: Box::new(RefCell::new(program))
         };
         self.routines.push(routine);
         self

@@ -763,11 +763,7 @@ scripts alongside the generated plots.
     /// }
     /// ```
     pub fn bench_program(&mut self, id: &str, program: Command) -> &mut Criterion {
-        if self.filter_matches(id) {
-            analysis::program(id, program, self);
-        }
-
-        self
+        self.bench(id, Benchmark::new_external(id, program))
     }
 
     /// Benchmarks an external program under various inputs
@@ -795,7 +791,7 @@ scripts alongside the generated plots.
     /// with complex configuration.
     ///
     /// ```rust,no_run
-    /// use self::criterion::{Bencher, Criterion};
+    /// use self::criterion::{Bencher, Criterion, Benchmark};
     ///
     /// fn routine(b: &mut Bencher) {
     ///     // Setup (construct data, allocate memory, etc)

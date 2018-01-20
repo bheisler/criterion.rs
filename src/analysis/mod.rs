@@ -10,7 +10,6 @@ use stats::univariate::Sample;
 use stats::univariate::outliers::tukey::{LabeledSample, self};
 
 use estimate::{Distributions, Estimates, Statistic};
-use program::Program;
 use routine::{Function, Routine};
 use benchmark::BenchmarkConfig;
 use {Bencher, ConfidenceInterval, Criterion, Estimate};
