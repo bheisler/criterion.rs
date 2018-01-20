@@ -12,3 +12,7 @@ if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$GNUPLOT" = "yes" ]; then
     brew update
     brew install gnuplot
 fi
+
+if [ "$COVERAGE" = "yes" ]; then
+    curl https://raw.githubusercontent.com/xd009642/tarpaulin/master/travis-install.sh | bash
+fi
