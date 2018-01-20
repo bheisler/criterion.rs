@@ -41,10 +41,11 @@ matrix:
       rust: nightly-2018-01-12
     - os: linux
       env: COVERAGE=yes
-      rust: stable
       sudo: required
     - os: linux
       env: DOCS=yes
+    - os: linux
+      env: BENCHMARK=yes
     - os: osx
       env: GNUPLOT=no
     - os: osx

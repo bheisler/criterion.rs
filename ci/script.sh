@@ -12,9 +12,10 @@ elif [ "$DOCS" = "yes" ]; then
     travis-cargo doc-upload || true
 elif [ "$COVERAGE" = "yes" ]; then
     cargo tarpaulin --all --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
+elif [ "$BENCHMARK" = "yes" ]; then
+    cargo bench --all
 else
-    cargo build --release
-    cargo test --all --release
-    cargo build --benches --all --release
-    cargo bench
+    cargo build
+    cargo test --all
+    cargo build --benches --all
 fi
