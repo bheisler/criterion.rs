@@ -12,7 +12,7 @@ use kde;
 use super::{scale_time, debug_script, wait_on_gnuplot};
 use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
 
-pub fn regression(
+pub(crate) fn regression(
     base_data: Data<f64, f64>,
     base_estimates: &Estimates,
     data: Data<f64, f64>,

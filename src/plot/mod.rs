@@ -287,7 +287,7 @@ pub fn regression(
     wait_on_gnuplot(vec![gnuplot]);
 }
 
-pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, id: &str) {
+pub(crate) fn abs_distributions(distributions: &Distributions, estimates: &Estimates, id: &str) {
     let gnuplots = distributions.iter().map(|(&statistic, distribution)| {
         let path = PathBuf::from(format!(".criterion/{}/new/{}.svg", id, statistic));
         let estimate = estimates[&statistic];
@@ -365,7 +365,7 @@ pub fn abs_distributions(distributions: &Distributions, estimates: &Estimates, i
 }
 
 // TODO DRY: This is very similar to the `abs_distributions` method
-pub fn rel_distributions(
+pub(crate) fn rel_distributions(
     distributions: &Distributions,
     estimates: &Estimates,
     id: &str,
