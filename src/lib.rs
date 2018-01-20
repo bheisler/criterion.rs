@@ -119,11 +119,11 @@ pub fn black_box<T>(dummy: T) -> T {
 /// Representing a function to benchmark together with a name of that function.
 /// Used together with `bench_functions` to represent one out of multiple functions
 /// under benchmark.
-pub struct Fun<I: fmt::Display> {
+pub struct Fun<I: fmt::Debug> {
     f: NamedRoutine<I>,
 }
 
-impl<I> Fun<I> where I: fmt::Display + 'static {
+impl<I> Fun<I> where I: fmt::Debug + 'static {
     /// Create a new `Fun` given a name and a closure
     pub fn new<F>(name: &str, f: F) -> Fun<I>
         where F: FnMut(&mut Bencher, &I) + 'static
@@ -694,7 +694,7 @@ scripts alongside the generated plots.
         id: &str,
         funs: Vec<Fun<I>>,
         input: I) -> &mut Criterion
-        where I: fmt::Display + 'static
+        where I: fmt::Debug + 'static
     {
         let benchmark = ParameterizedBenchmark::with_functions(
             funs.into_iter().map(|fun| fun.f).collect(),
@@ -723,7 +723,7 @@ scripts alongside the generated plots.
         inputs: I,
     ) -> &mut Criterion where
         I: IntoIterator,
-        I::Item: fmt::Display + 'static,
+        I::Item: fmt::Debug + 'static,
         F: FnMut(&mut Bencher, &I::Item) + 'static,
     {
         self.bench(id, ParameterizedBenchmark::new(id, f, inputs))
@@ -782,12 +782,12 @@ scripts alongside the generated plots.
     ) -> &mut Criterion where
         F: FnMut() -> Command + 'static,
         I: IntoIterator,
-        I::Item: fmt::Display + 'static,
+        I::Item: fmt::Debug + 'static,
     {
         self.bench(id, ParameterizedBenchmark::new_external(id,
             move |i| {
                 let mut command = program();
-                command.arg(format!("{}", i));
+                command.arg(format!("{:?}", i));
                 command
             },
             inputs))

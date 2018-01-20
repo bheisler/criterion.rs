@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   This means that you may need to change your closures from `|bencher| {...}`
   to `move |bencher| {...}`.
 - `Criterion.bench_functions` now takes `I` as an input parameter, not `&I`.
+- Input values must now implement `Debug` rather than `Display`.
 
 ### Removed
 - The hidden `criterion::ConfidenceInterval` and`criterion::Estimate` types are

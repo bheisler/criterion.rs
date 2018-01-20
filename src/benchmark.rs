@@ -5,7 +5,7 @@ use ::analysis;
 use std::cell::RefCell;
 use std::process::Command;
 use std::marker::Sized;
-use std::fmt::Display;
+use std::fmt::Debug;
 use ::program::CommandFactory;
 
 /// Struct containing all of the configuration options for a benchmark.
@@ -65,7 +65,7 @@ pub struct NamedRoutine<T> {
 
 /// Structure representing a benchmark (or group of benchmarks)
 /// which take one parameter.
-pub struct ParameterizedBenchmark<T: Display> {
+pub struct ParameterizedBenchmark<T: Debug> {
     config: PartialBenchmarkConfig,
     values: Vec<T>,
     routines: Vec<NamedRoutine<T>>,
@@ -346,7 +346,7 @@ impl BenchmarkDefinition for Benchmark {
         }
     }
 }
-impl<T> ParameterizedBenchmark<T> where T: Display + 'static {
+impl<T> ParameterizedBenchmark<T> where T: Debug + 'static {
     benchmark_config!(ParameterizedBenchmark);
 
     /// Create a new parameterized benchmark group and adds the given function
@@ -478,7 +478,7 @@ impl<T> ParameterizedBenchmark<T> where T: Display + 'static {
         self
     }
 }
-impl<T> BenchmarkDefinition for ParameterizedBenchmark<T> where T: Display + 'static {
+impl<T> BenchmarkDefinition for ParameterizedBenchmark<T> where T: Debug + 'static {
     fn run(self, group_id: &str, c: &Criterion) {
         let config = self.config.to_complete(&c.config);
         let num_parameters = self.values.len();
@@ -498,7 +498,7 @@ impl<T> BenchmarkDefinition for ParameterizedBenchmark<T> where T: Display + 'st
                     id
                 }
                 else {
-                    format!("{}/{}", id, value)
+                    format!("{}/{:?}", id, value)
                 };
 
                 if c.filter_matches(&id) {
