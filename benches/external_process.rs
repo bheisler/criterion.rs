@@ -4,7 +4,8 @@ use std::process::Stdio;
 
 fn create_command() -> Command {
     let mut command = Command::new("python3");
-    command.arg("benches/external_process.py");
+    command.arg("tests/external_process.py")
+        .arg("10");
     command
 }
 

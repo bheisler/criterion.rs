@@ -712,9 +712,9 @@ scripts alongside the generated plots.
     /// use self::criterion::{Bencher, Criterion};
     ///
     /// Criterion::default()
-    ///     .bench_function_over_inputs("from_elem", |b: &mut Bencher, &&size: &&usize| {
-    ///         b.iter(|| vec![0u8; size]);
-    ///     }, &[1024, 2048, 4096]);
+    ///     .bench_function_over_inputs("from_elem", |b: &mut Bencher, size: &usize| {
+    ///         b.iter(|| vec![0u8; *size]);
+    ///     }, vec![1024, 2048, 4096]);
     /// ```
     pub fn bench_function_over_inputs<I, F>(
         &mut self,
