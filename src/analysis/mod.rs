@@ -14,7 +14,6 @@ use routine::{Function, Routine};
 use benchmark::BenchmarkConfig;
 use {Bencher, ConfidenceInterval, Criterion, Estimate};
 use {format, fs, plot};
-use ::Fun;
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => ({
@@ -36,20 +35,6 @@ pub fn summarize(id: &str, criterion: &Criterion) {
     }
 
     println!();
-}
-
-pub fn functions<I>(id: &str,
-    funs: Vec<Fun<I>>,
-    input: &I,
-    criterion: &Criterion)
-    where I: fmt::Display
-{
-    for fun in funs {
-        let id = format!("{}/{}", id, fun.n);
-        let mut f = fun.f;
-        common(&id, &mut Function::new(|b, i| f(b, i)), &criterion.config, criterion, input);
-    }
-    summarize(id, criterion);
 }
 
 pub fn function_over_inputs<I, F>(

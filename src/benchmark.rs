@@ -4,6 +4,8 @@ use routine::{Routine, Function};
 use ::analysis;
 use std::cell::RefCell;
 use std::process::Command;
+use std::marker::Sized;
+use std::fmt::Display;
 
 /// Struct containing all of the configuration options for a benchmark.
 pub struct BenchmarkConfig {
@@ -55,22 +57,31 @@ impl PartialBenchmarkConfig {
     }
 }
 
-struct NamedRoutine<T> {
-    id: String,
-    f: Box<RefCell<Routine<T>>>,
+pub struct NamedRoutine<T> {
+    pub id: String,
+    pub f: Box<RefCell<Routine<T>>>,
 }
 
-/*pub struct ParameterizedBenchmark<T> {
-    id: String,
+/// Structure representing a benchmark (or group of benchmarks)
+/// which take one parameter.
+pub struct ParameterizedBenchmark<T: Display> {
     config: PartialBenchmarkConfig,
     values: Vec<T>,
-}*/
+    routines: Vec<NamedRoutine<T>>,
+}
 
 /// Structure representing a benchmark (or group of benchmarks)
 /// which takes no parameters.
 pub struct Benchmark {
     config: PartialBenchmarkConfig,
     routines: Vec<NamedRoutine<()>>
+}
+
+/// Common trait for Benchmark and ParameterizedBenchmark. Not inteded to be
+/// used outside of Criterion.rs.
+pub trait BenchmarkDefinition: Sized {
+    #[doc(hidden)]
+    fn run(self, group_id: &str, c: &Criterion);
 }
 
 
@@ -303,8 +314,10 @@ impl Benchmark {
         self.routines.push(routine);
         self
     }
+}
 
-    pub(crate) fn run(self, group_id: &str, c: &Criterion) {
+impl BenchmarkDefinition for Benchmark {
+    fn run(self, group_id: &str, c: &Criterion) {
         let config = self.config.to_complete(&c.config);
         let num_routines = self.routines.len();
         let mut any_matched = false;
@@ -332,6 +345,103 @@ impl Benchmark {
         }
     }
 }
-/*impl<T> ParameterizedBenchmark<T> {
+impl<T> ParameterizedBenchmark<T> where T: Display + 'static {
     benchmark_config!(ParameterizedBenchmark);
-}*/
+
+    /// Create a new parameterized benchmark group and adds the given function
+    /// to it.
+    /// The function under test must follow the setup - bench - teardown pattern:
+    ///
+    /// ```rust,no_run
+    /// use self::criterion::{Bencher, Criterion, ParameterizedBenchmark};
+    ///
+    /// fn routine(b: &mut Bencher, parameter: &u64) {
+    ///     // Setup (construct data, allocate memory, etc)
+    ///
+    ///     b.iter(|| {
+    ///         // Code to benchmark goes here
+    ///     })
+    ///
+    ///     // Teardown (free resources)
+    /// }
+    ///
+    /// let parameters: Vec<u64> = vec![1, 2, 3];
+    /// Criterion::default()
+    ///     .bench("routine", ParameterizedBenchmark::new("routine", routine, parameters));
+    /// ```
+    pub fn new<S, F, I>(id: S, f: F, parameters: I) -> ParameterizedBenchmark<T>
+        where S: Into<String>, F: FnMut(&mut Bencher, &T) + 'static,
+            I: IntoIterator<Item=T> {
+
+        ParameterizedBenchmark {
+            config: Default::default(),
+            values: parameters.into_iter().collect(),
+            routines: vec!(),
+        }.with_function(id, f)
+    }
+
+    pub(crate) fn with_functions(functions: Vec<NamedRoutine<T>>, parameters: Vec<T>) -> ParameterizedBenchmark<T> {
+        ParameterizedBenchmark {
+            config: Default::default(),
+            values: parameters,
+            routines: functions,
+        }
+    }
+
+    /// Add a function to the benchmark group.
+    ///
+    /// ```
+    /// # use criterion::Benchmark;
+    /// ParameterizedBenchmark::new("times 10", |b, i| b.iter(|| i * 10), vec![1, 2, 3])
+    ///     .with_function("return 20", |b| b.iter(|| 20));
+    /// ```
+    pub fn with_function<S, F>(mut self, id: S, f: F) -> ParameterizedBenchmark<T>
+        where S: Into<String>, F: FnMut(&mut Bencher, &T) + 'static {
+
+        let routine = NamedRoutine {
+            id: id.into(),
+            f: Box::new(RefCell::new(Function::new(f)))
+        };
+        self.routines.push(routine);
+        self
+    }
+}
+impl<T> BenchmarkDefinition for ParameterizedBenchmark<T> where T: Display + 'static {
+    fn run(self, group_id: &str, c: &Criterion) {
+        let config = self.config.to_complete(&c.config);
+        let num_parameters = self.values.len();
+        let num_routines = self.routines.len();
+        let mut any_matched = false;
+
+        for routine in self.routines {
+            for value in &self.values {
+                let id = if num_routines == 1 && group_id == routine.id {
+                    routine.id.clone()
+                }
+                else {
+                    format!("{}/{}", group_id, routine.id)
+                };
+
+                let id = if num_parameters == 1 {
+                    id
+                }
+                else {
+                    format!("{}/{}", id, value)
+                };
+
+                if c.filter_matches(&id) {
+                    any_matched = true;
+                    analysis::common(&id, &mut *routine.f.borrow_mut(), &config, c, value);
+                }
+            }
+        }
+
+        if any_matched {
+            println!();
+
+            if num_routines > 1 {
+                analysis::summarize(group_id, c);
+            }
+        }
+    }
+}

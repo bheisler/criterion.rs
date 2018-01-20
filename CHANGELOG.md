@@ -11,10 +11,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   to be updated accordingly, or will need to be changed to work with the
   `Benchmark` or `ParameterizedBenchmark` types to do per-benchmark configuration
   instead.
-- The functions taken by `Criterion.bench_function` and 
+- The functions taken by `Criterion.bench_function` and
   `Criterion.bench_function_over_inputs` must now have a `'static` lifetime.
-  This means that you may need to change your closures from `|bencher| {...}` 
+  This means that you may need to change your closures from `|bencher| {...}`
   to `move |bencher| {...}`.
+- `Criterion.bench_functions` now takes `I` as an input parameter, not `&I`.
 
 ### Removed
 - The hidden `criterion::ConfidenceInterval` and`criterion::Estimate` types are

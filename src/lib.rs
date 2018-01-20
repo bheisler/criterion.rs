@@ -61,6 +61,7 @@ use std::iter::IntoIterator;
 use std::process::Command;
 use std::time::{Duration, Instant};
 use std::{fmt, mem};
+use std::cell::RefCell;
 
 use std::fs::File;
 use std::io::Read;
@@ -69,8 +70,10 @@ use std::path::Path;
 use estimate::{Distributions, Estimates};
 use report::{Report, CliReport};
 use benchmark::BenchmarkConfig;
+use benchmark::NamedRoutine;
+use routine::Function;
 
-pub use benchmark::{Benchmark};
+pub use benchmark::{Benchmark, ParameterizedBenchmark, BenchmarkDefinition};
 
 fn debug_enabled() -> bool {
     std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG")
@@ -116,18 +119,21 @@ pub fn black_box<T>(dummy: T) -> T {
 /// Used together with `bench_functions` to represent one out of multiple functions
 /// under benchmark.
 pub struct Fun<I: fmt::Display> {
-    n: String,
-    f: Box<FnMut(&mut Bencher, &I)>,
+    f: NamedRoutine<I>,
 }
 
-impl<I> Fun<I> where I: fmt::Display {
+impl<I> Fun<I> where I: fmt::Display + 'static {
     /// Create a new `Fun` given a name and a closure
     pub fn new<F>(name: &str, f: F) -> Fun<I>
         where F: FnMut(&mut Bencher, &I) + 'static
     {
+        let routine = NamedRoutine {
+            id: name.to_owned(),
+            f: Box::new(RefCell::new(Function::new(f)))
+        };
+
         Fun {
-            n: name.to_owned(),
-            f: Box::new(f),
+            f: routine,
         }
     }
 }
@@ -681,18 +687,19 @@ scripts alongside the generated plots.
     /// let parallel_fib = Fun::new("Parallel", bench_par_fib);
     /// let funs = vec![sequential_fib, parallel_fib];
     ///
-    /// Criterion::default().bench_functions("Fibonacci", funs, &14);
+    /// Criterion::default().bench_functions("Fibonacci", funs, 14);
     /// ```
     pub fn bench_functions<I>(&mut self,
         id: &str,
         funs: Vec<Fun<I>>,
-        input: &I) -> &mut Criterion
-        where I: fmt::Display
+        input: I) -> &mut Criterion
+        where I: fmt::Display + 'static
     {
-        if self.filter_matches(id) {
-            analysis::functions(id, funs, input, self);
-        }
-        self
+        let benchmark = ParameterizedBenchmark::with_functions(
+            funs.into_iter().map(|fun| fun.f).collect(),
+            vec!(input));
+
+        self.bench(id, benchmark)
     }
 
     /// Benchmarks a function under various inputs
@@ -715,14 +722,10 @@ scripts alongside the generated plots.
         inputs: I,
     ) -> &mut Criterion where
         I: IntoIterator,
-        I::Item: fmt::Display,
+        I::Item: fmt::Display + 'static,
         F: FnMut(&mut Bencher, &I::Item) + 'static,
     {
-        if self.filter_matches(id) {
-            analysis::function_over_inputs(id, f, inputs, self);
-        }
-
-        self
+        self.bench(id, ParameterizedBenchmark::new(id, f, inputs))
     }
 
     /// Benchmarks an external program
@@ -807,10 +810,10 @@ scripts alongside the generated plots.
     ///     .bench("routine", Benchmark::new("routine", routine)
     ///         .sample_size(50));
     /// ```
-    pub fn bench(
+    pub fn bench<B: BenchmarkDefinition>(
         &mut self,
         group_id: &str,
-        benchmark: Benchmark
+        benchmark: B
     ) -> &mut Criterion {
         benchmark.run(group_id, self);
         self
