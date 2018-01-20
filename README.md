@@ -17,7 +17,7 @@
     	<img src="https://travis-ci.org/japaric/criterion.rs.svg?branch=master" alt="Travis-CI">
     </a>
     |
-    <a href="https://ci.appveyor.com/project/bheisler/criterion-rs-vt9fl">
+    <a href="https://ci.appveyor.com/project/japaric/criterion-rs-vt9fl">
     	<img src="https://ci.appveyor.com/api/projects/status/4255ads9ctpupcl2?svg=true" alt="Appveyor">
     </a>
     |
@@ -25,8 +25,8 @@
         <img src="https://img.shields.io/crates/v/criterion.svg" alt="Crates.io">
     </a>
     |
-    <a href="https://coveralls.io/github/bheisler/criterion.rs?branch=master">
-        <img src="https://coveralls.io/repos/github/bheisler/criterion.rs/badge.svg?branch=master" alt="Coverage Status">
+    <a href="https://coveralls.io/github/japaric/criterion.rs?branch=master">
+        <img src="https://coveralls.io/repos/github/japaric/criterion.rs/badge.svg?branch=master" alt="Coverage Status">
     </a>
 </div>
 
