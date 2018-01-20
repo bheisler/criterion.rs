@@ -55,9 +55,9 @@ impl PartialBenchmarkConfig {
     }
 }
 
-struct NamedRoutine {
+struct NamedRoutine<T> {
     id: String,
-    f: Box<RefCell<Routine>>,
+    f: Box<RefCell<Routine<T>>>,
 }
 
 /*pub struct ParameterizedBenchmark<T> {
@@ -70,7 +70,7 @@ struct NamedRoutine {
 /// which takes no parameters.
 pub struct Benchmark {
     config: PartialBenchmarkConfig,
-    routines: Vec<NamedRoutine>
+    routines: Vec<NamedRoutine<()>>
 }
 
 
@@ -223,7 +223,7 @@ impl Benchmark {
 
     /// Create a new benchmark group and add the given program to it.
     /// The program under test must implement the following protocol:
-    /// 
+    ///
     /// * Read the number of iterations from stdin
     /// * Execute the routine to benchmark that many times
     /// * Print the elapsed time (in nanoseconds) to stdout
@@ -275,12 +275,12 @@ impl Benchmark {
     /// Benchmark::new("return 10", |b| b.iter(|| 10))
     ///     .with_function("return 20", |b| b.iter(|| 20));
     /// ```
-    pub fn with_function<S, F>(mut self, id: S, f: F) -> Benchmark
+    pub fn with_function<S, F>(mut self, id: S, mut f: F) -> Benchmark
         where S: Into<String>, F: FnMut(&mut Bencher) + 'static {
 
         let routine = NamedRoutine {
             id: id.into(),
-            f: Box::new(RefCell::new(Function(f)))
+            f: Box::new(RefCell::new(Function::new(move |b, _| f(b))))
         };
         self.routines.push(routine);
         self
@@ -319,7 +319,7 @@ impl Benchmark {
 
             if c.filter_matches(&id) {
                 any_matched = true;
-                analysis::common(&id, &mut *routine.f.borrow_mut(), &config, c);
+                analysis::common(&id, &mut *routine.f.borrow_mut(), &config, c, &());
             }
         }
 

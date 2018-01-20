@@ -72,12 +72,12 @@ impl Program {
     }
 }
 
-impl Routine for Command {
+impl Routine<()> for Command {
     fn start(&mut self) -> Option<Program> {
         Some(Program::spawn(self))
     }
 
-    fn bench(&mut self, program: &mut Option<Program>, iters: &Vec<u64>) -> Vec<f64> {
+    fn bench(&mut self, program: &mut Option<Program>, iters: &Vec<u64>, _: &()) -> Vec<f64> {
         let program = program.as_mut().unwrap();
         let mut n = 0;
         for iters in iters {
@@ -94,7 +94,7 @@ impl Routine for Command {
         }).collect()
     }
 
-    fn warm_up(&mut self, program: &mut Option<Program>, how_long_ns: Duration) -> (u64, u64) {
+    fn warm_up(&mut self, program: &mut Option<Program>, how_long_ns: Duration, _: &()) -> (u64, u64) {
         let program = program.as_mut().unwrap();
         let mut iters = 1;
 

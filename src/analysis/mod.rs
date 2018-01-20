@@ -47,14 +47,14 @@ pub fn functions<I>(id: &str,
     for fun in funs {
         let id = format!("{}/{}", id, fun.n);
         let mut f = fun.f;
-        common(&id, &mut Function(|b| f(b, input)), &criterion.config, criterion);
+        common(&id, &mut Function::new(|b, i| f(b, i)), &criterion.config, criterion, input);
     }
     summarize(id, criterion);
 }
 
 pub fn function_over_inputs<I, F>(
     id: &str,
-    mut f: F,
+    f: F,
     inputs: I,
     criterion: &Criterion,
 ) where
@@ -62,17 +62,18 @@ pub fn function_over_inputs<I, F>(
     I: IntoIterator,
     I::Item: fmt::Display,
 {
+    let mut function = Function::new(f);
     for input in inputs {
         let id = format!("{}/{}", id, input);
 
-        common(&id, &mut Function(|b| f(b, &input)), &criterion.config, criterion);
+        common(&id, &mut function, &criterion.config, criterion, &input);
     }
 
     summarize(id, criterion);
 }
 
 pub fn program(id: &str, mut prog: Command, criterion: &Criterion) {
-    common(id, &mut prog, &criterion.config, criterion);
+    common(id, &mut prog, &criterion.config, criterion, &());
 
     println!();
 }
@@ -100,11 +101,11 @@ pub fn program_over_inputs<I, F>(
 }
 
 // Common analysis procedure
-pub(crate) fn common(id: &str, routine: &mut Routine, config: &BenchmarkConfig, criterion: &Criterion)
+pub(crate) fn common<T>(id: &str, routine: &mut Routine<T>, config: &BenchmarkConfig, criterion: &Criterion, parameter: &T)
 {
     criterion.report.benchmark_start(id);
 
-    let (iters, times) = routine.sample(id, config, criterion);
+    let (iters, times) = routine.sample(id, config, criterion, parameter);
 
     criterion.report.analysis(id);
 
