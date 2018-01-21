@@ -3,8 +3,8 @@
 use std::borrow::Cow;
 use std::iter::IntoIterator;
 
-use {Axes, Color, CurveDefault, Display, Figure, Label, LineType, LineWidth, Plot, PointType,
-     PointSize, Script};
+use {Axes, Color, CurveDefault, Display, Figure, Label, LineType, LineWidth, Plot, PointSize,
+     PointType, Script};
 use data::Matrix;
 use traits::{self, Data, Set};
 
@@ -233,15 +233,17 @@ impl Display<&'static str> for Style {
 }
 
 impl<X, Y> traits::Plot<Curve<X, Y>> for Figure
-    where X: IntoIterator,
-          X::Item: Data,
-          Y: IntoIterator,
-          Y::Item: Data
+where
+    X: IntoIterator,
+    X::Item: Data,
+    Y: IntoIterator,
+    Y::Item: Data,
 {
     type Properties = Properties;
 
     fn plot<F>(&mut self, curve: Curve<X, Y>, configure: F) -> &mut Figure
-        where F: FnOnce(&mut Properties) -> &mut Properties
+    where
+        F: FnOnce(&mut Properties) -> &mut Properties,
     {
         let style = curve.style();
         let (x, y) = match curve {
@@ -256,8 +258,8 @@ impl<X, Y> traits::Plot<Curve<X, Y>> for Figure
         let mut props = CurveDefault::default(style);
         configure(&mut props);
 
-        let (x_factor, y_factor) = ::scale_factor(&self.axes,
-                                                  props.axes.unwrap_or(::Axes::BottomXLeftY));
+        let (x_factor, y_factor) =
+            ::scale_factor(&self.axes, props.axes.unwrap_or(::Axes::BottomXLeftY));
 
         let data = Matrix::new(izip!(x, y), (x_factor, y_factor));
         self.plots.push(Plot::new(data, &props));

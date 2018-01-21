@@ -10,15 +10,20 @@
 #![cfg_attr(feature = "cargo-clippy", allow(used_underscore_binding))]
 
 extern crate cast;
-extern crate num_traits;
 extern crate num_cpus;
+extern crate num_traits;
 extern crate rand;
 extern crate thread_scoped;
 
-#[cfg(test)] #[macro_use] extern crate approx;
-#[cfg(test)] #[macro_use] extern crate quickcheck;
+#[cfg(test)]
+#[macro_use]
+extern crate approx;
+#[cfg(test)]
+#[macro_use]
+extern crate quickcheck;
 
-#[cfg(test)] mod test;
+#[cfg(test)]
+mod test;
 
 pub mod bivariate;
 pub mod tuple;
@@ -35,14 +40,18 @@ use univariate::Sample;
 /// The bootstrap distribution of some parameter
 pub struct Distribution<A>(Box<[A]>);
 
-impl<A> Distribution<A> where A: Float {
+impl<A> Distribution<A>
+where
+    A: Float,
+{
     /// Computes the confidence interval of the population parameter using percentiles
     ///
     /// # Panics
     ///
     /// Panics if the `confidence_level` is not in the `(0, 1)` range.
     pub fn confidence_interval(&self, confidence_level: A) -> (A, A)
-        where usize: cast::From<A, Output=Result<usize, cast::Error>>,
+    where
+        usize: cast::From<A, Output = Result<usize, cast::Error>>,
     {
         let _0 = A::cast(0);
         let _1 = A::cast(1);
@@ -82,9 +91,7 @@ impl<A> Deref for Distribution<A> {
     fn deref(&self) -> &Sample<A> {
         let slice: &[_] = &self.0;
 
-        unsafe {
-            mem::transmute(slice)
-        }
+        unsafe { mem::transmute(slice) }
     }
 }
 
@@ -97,13 +104,17 @@ pub enum Tails {
 }
 
 fn dot<A>(xs: &[A], ys: &[A]) -> A
-    where A: Float
+where
+    A: Float,
 {
-    xs.iter().zip(ys).fold(A::cast(0), |acc, (&x, &y)| acc + x * y)
+    xs.iter()
+        .zip(ys)
+        .fold(A::cast(0), |acc, (&x, &y)| acc + x * y)
 }
 
 fn sum<A>(xs: &[A]) -> A
-    where A: Float
+where
+    A: Float,
 {
     use std::ops::Add;
 

@@ -8,7 +8,8 @@ macro_rules! test {
             use bivariate::regression::Slope;
 
             quickcheck!{
-                fn means(size: usize, start: usize, offset: usize, nresamples: usize) -> TestResult {
+                fn means(size: usize, start: usize,
+                         offset: usize, nresamples: usize) -> TestResult {
                     if let Some(x) = ::test::vec::<$ty>(size, start) {
                         let y = ::test::vec::<$ty>(size + offset, start + offset).unwrap();
                         let data = Data::new(&x[start..], &y[start+offset..]);
@@ -46,7 +47,8 @@ macro_rules! test {
 
 
             quickcheck!{
-                fn slope(size: usize, start: usize, offset: usize, nresamples: usize) -> TestResult {
+                fn slope(size: usize, start: usize,
+                         offset: usize, nresamples: usize) -> TestResult {
                     if let Some(x) = ::test::vec::<$ty>(size, start) {
                         let y = ::test::vec::<$ty>(size + offset, start + offset).unwrap();
                         let data = Data::new(&x[start..], &y[start+offset..]);
@@ -72,7 +74,6 @@ macro_rules! test {
         }
     }
 }
-
 
 #[cfg(test)]
 mod test {

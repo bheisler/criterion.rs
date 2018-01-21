@@ -1,8 +1,8 @@
+extern crate cast;
 #[macro_use]
 extern crate criterion;
 extern crate criterion_stats as stats;
 extern crate rand;
-extern crate cast;
 
 mod common_bench;
 
@@ -111,7 +111,4 @@ macro_rules! bench {
 
 bench!(f64);
 
-criterion_main!(
-    f64::benches,
-    f64::fast::benches
-);
+criterion_main!(f64::benches, f64::fast::benches);

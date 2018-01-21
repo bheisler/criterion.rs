@@ -42,7 +42,7 @@ use std::ops::{Deref, Index};
 use std::slice;
 
 use cast;
-use ::float::Float;
+use float::Float;
 
 use univariate::Sample;
 
@@ -57,12 +57,18 @@ use self::Label::*;
 /// `IndexGet` trait lands in stdlib, the indexing operation will return a `(data_point, label)`
 /// pair.
 #[derive(Clone, Copy)]
-pub struct LabeledSample<'a, A> where A: 'a + Float {
+pub struct LabeledSample<'a, A>
+where
+    A: 'a + Float,
+{
     fences: (A, A, A, A),
     sample: &'a Sample<A>,
 }
 
-impl<'a, A> LabeledSample<'a, A> where A: Float {
+impl<'a, A> LabeledSample<'a, A>
+where
+    A: Float,
+{
     /// Returns the number of data points per label
     ///
     /// - Time: `O(length)`
@@ -74,16 +80,16 @@ impl<'a, A> LabeledSample<'a, A> where A: Float {
             match label {
                 LowSevere => {
                     los += 1;
-                },
+                }
                 LowMild => {
                     lom += 1;
-                },
+                }
                 NotAnOutlier => {
                     noa += 1;
-                },
+                }
                 HighMild => {
                     him += 1;
-                },
+                }
                 HighSevere => {
                     his += 1;
                 }
@@ -107,7 +113,10 @@ impl<'a, A> LabeledSample<'a, A> where A: Float {
     }
 }
 
-impl<'a, A> Deref for LabeledSample<'a, A> where A: Float {
+impl<'a, A> Deref for LabeledSample<'a, A>
+where
+    A: Float,
+{
     type Target = Sample<A>;
 
     fn deref(&self) -> &Sample<A> {
@@ -116,7 +125,10 @@ impl<'a, A> Deref for LabeledSample<'a, A> where A: Float {
 }
 
 // FIXME Use the `IndexGet` trait
-impl<'a, A> Index<usize> for LabeledSample<'a, A> where A: Float {
+impl<'a, A> Index<usize> for LabeledSample<'a, A>
+where
+    A: Float,
+{
     type Output = Label;
 
     #[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
@@ -144,7 +156,10 @@ impl<'a, A> Index<usize> for LabeledSample<'a, A> where A: Float {
     }
 }
 
-impl<'a, 'b, A> IntoIterator for &'b LabeledSample<'a, A> where A: Float {
+impl<'a, 'b, A> IntoIterator for &'b LabeledSample<'a, A>
+where
+    A: Float,
+{
     type Item = (A, Label);
     type IntoIter = Iter<'a, A>;
 
@@ -154,12 +169,18 @@ impl<'a, 'b, A> IntoIterator for &'b LabeledSample<'a, A> where A: Float {
 }
 
 /// Iterator over the labeled data
-pub struct Iter<'a, A> where A: 'a + Float {
+pub struct Iter<'a, A>
+where
+    A: 'a + Float,
+{
     fences: (A, A, A, A),
     iter: slice::Iter<'a, A>,
 }
 
-impl<'a, A> Iterator for Iter<'a, A> where A: Float {
+impl<'a, A> Iterator for Iter<'a, A>
+where
+    A: Float,
+{
     type Item = (A, Label);
 
     #[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
@@ -247,9 +268,10 @@ impl Label {
 /// Classifies the sample, and returns a labeled sample.
 ///
 /// - Time: `O(N log N) where N = length`
-pub fn classify<A>(sample: &Sample<A>) -> LabeledSample<A> where
+pub fn classify<A>(sample: &Sample<A>) -> LabeledSample<A>
+where
     A: Float,
-    usize: cast::From<A, Output=Result<usize, cast::Error>>,
+    usize: cast::From<A, Output = Result<usize, cast::Error>>,
 {
     let (q1, _, q3) = sample.percentiles().quartiles();
     let iqr = q3 - q1;
@@ -260,7 +282,12 @@ pub fn classify<A>(sample: &Sample<A>) -> LabeledSample<A> where
     let k_s = A::cast(3);
 
     LabeledSample {
-        fences: (q1 - k_s * iqr, q1 - k_m * iqr, q3 + k_m * iqr, q3 + k_s * iqr),
+        fences: (
+            q1 - k_s * iqr,
+            q1 - k_m * iqr,
+            q3 + k_m * iqr,
+            q3 + k_s * iqr,
+        ),
         sample: sample,
     }
 }

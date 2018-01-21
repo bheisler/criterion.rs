@@ -1,7 +1,7 @@
 extern crate criterion;
 extern crate walkdir;
 
-use criterion::{Criterion, Benchmark, ParameterizedBenchmark, Fun};
+use criterion::{Benchmark, Criterion, Fun, ParameterizedBenchmark};
 use std::time::Duration;
 use std::path::Path;
 use walkdir::WalkDir;
@@ -25,7 +25,7 @@ fn short_benchmark() -> Criterion {
 
 #[derive(Clone)]
 struct Counter {
-    counter: Rc<RefCell<usize>>
+    counter: Rc<RefCell<usize>>,
 }
 impl Counter {
     fn count(&self) {
@@ -39,14 +39,15 @@ impl Counter {
 impl Default for Counter {
     fn default() -> Counter {
         Counter {
-            counter: Rc::new(RefCell::new(0))
+            counter: Rc::new(RefCell::new(0)),
         }
     }
 }
 
 fn create_command(depth: usize) -> Command {
     let mut command = Command::new("python3");
-    command.arg("tests/external_process.py")
+    command
+        .arg("tests/external_process.py")
         .arg(format!("{}", depth));
     command
 }
@@ -62,13 +63,13 @@ fn has_python3() -> bool {
         .arg("--version")
         .stdout(Stdio::null())
         .stderr(Stdio::null())
-        .output().is_ok()
+        .output()
+        .is_ok()
 }
 
 #[test]
 fn test_creates_directory() {
-    short_benchmark()
-        .bench_function("test_creates_directory", |b| b.iter(|| 10));
+    short_benchmark().bench_function("test_creates_directory", |b| b.iter(|| 10));
     assert!(Path::new(".criterion/test_creates_directory").is_dir());
 }
 
@@ -80,14 +81,17 @@ fn test_without_plots() {
 
     for entry in WalkDir::new(".criterion/test_without_plots") {
         let entry = entry.ok();
-        let is_svg = entry.as_ref()
+        let is_svg = entry
+            .as_ref()
             .and_then(|entry| entry.path().extension())
             .and_then(|ext| ext.to_str())
             .map(|ext| ext == "svg")
             .unwrap_or(false);
-        assert!(!is_svg,
+        assert!(
+            !is_svg,
             "Found SVG file ({:?}) in output directory with plots disabled",
-            entry.unwrap().file_name());
+            entry.unwrap().file_name()
+        );
     }
 }
 
@@ -139,25 +143,20 @@ fn test_measurement_time() {
     let clone = counter1.clone();
     short_benchmark()
         .measurement_time(Duration::from_millis(100))
-        .bench_function("test_meas_time_1", move |b| {
-            b.iter(|| clone.count())
-        });
+        .bench_function("test_meas_time_1", move |b| b.iter(|| clone.count()));
 
     let counter2 = Counter::default();
     let clone = counter2.clone();
     short_benchmark()
         .measurement_time(Duration::from_millis(1000))
-        .bench_function("test_meas_time_2", move |b| {
-            b.iter(|| clone.count())
-        });
+        .bench_function("test_meas_time_2", move |b| b.iter(|| clone.count()));
 
     assert!(counter1.read() < counter2.read());
 }
 
 #[test]
 fn test_bench_function() {
-    short_benchmark()
-        .bench_function("test_bench_function", move |b| b.iter(|| 10));
+    short_benchmark().bench_function("test_bench_function", move |b| b.iter(|| 10));
 }
 
 #[test]
@@ -165,18 +164,18 @@ fn test_bench_functions() {
     let function_1 = Fun::new("times 10", |b, i| b.iter(|| *i * 10));
     let function_2 = Fun::new("times 20", |b, i| b.iter(|| *i * 20));
 
-    let functions = vec!(function_1, function_2);
+    let functions = vec![function_1, function_2];
 
-    short_benchmark()
-        .bench_functions("test_bench_functions", functions, 20);
+    short_benchmark().bench_functions("test_bench_functions", functions, 20);
 }
 
 #[test]
 fn test_bench_function_over_inputs() {
-    short_benchmark()
-        .bench_function_over_inputs("test_bench_function_over_inputs",
-            |b, i| b.iter(|| *i * 10),
-            vec![100, 1000]);
+    short_benchmark().bench_function_over_inputs(
+        "test_bench_function_over_inputs",
+        |b, i| b.iter(|| *i * 10),
+        vec![100, 1000],
+    );
 }
 
 #[test]
@@ -185,8 +184,7 @@ fn test_bench_program() {
         return;
     }
 
-    short_benchmark()
-        .bench_program("test_bench_program", create_command(10));
+    short_benchmark().bench_program("test_bench_program", create_command(10));
 }
 
 #[test]
@@ -197,10 +195,11 @@ fn test_bench_program_over_inputs() {
 
     // Note that bench_program_over_inputs automatically passes the input
     // as the first command-line parameter.
-    short_benchmark()
-        .bench_program_over_inputs("test_bench_program_over_inputs",
-            create_command_without_arg,
-            vec![10, 20]);
+    short_benchmark().bench_program_over_inputs(
+        "test_bench_program_over_inputs",
+        create_command_without_arg,
+        vec![10, 20],
+    );
 }
 
 #[test]
@@ -212,15 +211,15 @@ fn test_bench_unparameterized() {
         benchmark = benchmark.with_program("external", create_command(10));
     }
 
-    short_benchmark()
-        .bench("test_bench_unparam", benchmark);
+    short_benchmark().bench("test_bench_unparam", benchmark);
 }
 
 #[test]
 fn test_bench_parameterized() {
     let parameters = vec![5, 10];
-    let mut benchmark = ParameterizedBenchmark::new("times 10", |b, i| b.iter(|| *i * 10), parameters)
-        .with_function("times 20", |b, i| b.iter(|| *i * 20));
+    let mut benchmark =
+        ParameterizedBenchmark::new("times 10", |b, i| b.iter(|| *i * 10), parameters)
+            .with_function("times 20", |b, i| b.iter(|| *i * 20));
 
     if has_python3() {
         // Unlike bench_program_over_inputs, the parameter is provided as a
@@ -228,8 +227,7 @@ fn test_bench_parameterized() {
         benchmark = benchmark.with_program("external", |i| create_command(*i));
     }
 
-    short_benchmark()
-        .bench("test_bench_param", benchmark);
+    short_benchmark().bench("test_bench_param", benchmark);
 }
 
 #[test]
@@ -247,23 +245,17 @@ fn test_filtering() {
 
 #[test]
 fn test_timing_loops() {
-    short_benchmark()
-        .bench("test_timing_loops",
-            Benchmark::new("iter", |b| b.iter(|| 10))
-                .with_function("iter_with_setup", |b| {
-                    b.iter_with_setup(
-                        || vec![10],
-                        |v| v[0])
-                })
-                .with_function("iter_with_large_setup", |b| {
-                    b.iter_with_large_setup(
-                        || vec![10],
-                        ::std::mem::drop)
-                })
-                .with_function("iter_with_large_drop", |b| {
-                    b.iter_with_large_drop(
-                        || vec![10; 100]
-                    )
-                })
-        );
+    short_benchmark().bench(
+        "test_timing_loops",
+        Benchmark::new("iter", |b| b.iter(|| 10))
+            .with_function("iter_with_setup", |b| {
+                b.iter_with_setup(|| vec![10], |v| v[0])
+            })
+            .with_function("iter_with_large_setup", |b| {
+                b.iter_with_large_setup(|| vec![10], ::std::mem::drop)
+            })
+            .with_function("iter_with_large_drop", |b| {
+                b.iter_with_large_drop(|| vec![10; 100])
+            }),
+    );
 }

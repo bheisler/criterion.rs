@@ -36,8 +36,9 @@ pub struct Matrix {
 
 impl Matrix {
     pub fn new<I>(rows: I, scale: <I::Item as Row>::Scale) -> Matrix
-        where I: Iterator,
-              I::Item: Row
+    where
+        I: Iterator,
+        I::Item: Row,
     {
         let ncols = I::Item::ncols();
         let bytes_per_row = ncols * mem::size_of::<f64>();
@@ -81,8 +82,9 @@ pub trait Row {
 }
 
 impl<A, B> Row for (A, B)
-    where A: Data,
-          B: Data
+where
+    A: Data,
+    B: Data,
 {
     type Scale = (f64, f64);
 
@@ -99,9 +101,10 @@ impl<A, B> Row for (A, B)
 }
 
 impl<A, B, C> Row for (A, B, C)
-    where A: Data,
-          B: Data,
-          C: Data
+where
+    A: Data,
+    B: Data,
+    C: Data,
 {
     type Scale = (f64, f64, f64);
 
@@ -119,10 +122,11 @@ impl<A, B, C> Row for (A, B, C)
 }
 
 impl<A, B, C, D> Row for (A, B, C, D)
-    where A: Data,
-          B: Data,
-          C: Data,
-          D: Data
+where
+    A: Data,
+    B: Data,
+    C: Data,
+    D: Data,
 {
     type Scale = (f64, f64, f64, f64);
 
@@ -141,11 +145,12 @@ impl<A, B, C, D> Row for (A, B, C, D)
 }
 
 impl<A, B, C, D, E> Row for (A, B, C, D, E)
-    where A: Data,
-          B: Data,
-          C: Data,
-          D: Data,
-          E: Data
+where
+    A: Data,
+    B: Data,
+    C: Data,
+    D: Data,
+    E: Data,
 {
     type Scale = (f64, f64, f64, f64, f64);
 

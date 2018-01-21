@@ -1,11 +1,17 @@
 use cast::{self, usize};
-use ::float::Float;
+use float::Float;
 
 /// A "view" into the percentiles of a sample
-pub struct Percentiles<A>(Box<[A]>) where A: Float;
+pub struct Percentiles<A>(Box<[A]>)
+where
+    A: Float;
 
 // TODO(rust-lang/rfcs#735) move this `impl` into a private percentiles module
-impl<A> Percentiles<A> where A: Float, usize: cast::From<A, Output=Result<usize, cast::Error>> {
+impl<A> Percentiles<A>
+where
+    A: Float,
+    usize: cast::From<A, Output = Result<usize, cast::Error>>,
+{
     /// Returns the percentile at `p`%
     ///
     /// Safety:
@@ -40,9 +46,7 @@ impl<A> Percentiles<A> where A: Float, usize: cast::From<A, Output=Result<usize,
 
         assert!(p >= _0 && p <= _100);
 
-        unsafe {
-            self.at_unchecked(p)
-        }
+        unsafe { self.at_unchecked(p) }
     }
 
     /// Returns the interquartile range
@@ -57,9 +61,7 @@ impl<A> Percentiles<A> where A: Float, usize: cast::From<A, Output=Result<usize,
 
     /// Returns the 50th percentile
     pub fn median(&self) -> A {
-        unsafe {
-            self.at_unchecked(A::cast(50))
-        }
+        unsafe { self.at_unchecked(A::cast(50)) }
     }
 
     /// Returns the 25th, 50th and 75th percentiles

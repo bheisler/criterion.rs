@@ -4,7 +4,7 @@ pub mod kernel;
 
 use std::ptr;
 
-use ::float::Float;
+use float::Float;
 use num_cpus;
 use thread_scoped as thread;
 
@@ -13,13 +13,21 @@ use univariate::Sample;
 use self::kernel::Kernel;
 
 /// Univariate kernel density estimator
-pub struct Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
+pub struct Kde<'a, A, K>
+where
+    A: 'a + Float,
+    K: Kernel<A>,
+{
     bandwidth: A,
     kernel: K,
     sample: &'a Sample<A>,
 }
 
-impl<'a, A, K> Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
+impl<'a, A, K> Kde<'a, A, K>
+where
+    A: 'a + Float,
+    K: Kernel<A>,
+{
     /// Creates a new kernel density estimator from the `sample`, using a kernel `k` and estimating
     /// the bandwidth using the method `bw`
     pub fn new(sample: &'a Sample<A>, k: K, bw: Bandwidth<A>) -> Kde<'a, A, K> {
@@ -51,21 +59,27 @@ impl<'a, A, K> Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
                 ys.set_len(n);
 
                 {
-                    let _ = ys.chunks_mut(granularity).enumerate().map(|(i, ys)| {
-                        let offset = i * granularity;
+                    let _ = ys.chunks_mut(granularity)
+                        .enumerate()
+                        .map(|(i, ys)| {
+                            let offset = i * granularity;
 
-                        thread::scoped(move || {
-                            for (i, y) in ys.iter_mut().enumerate() {
-                                ptr::write(y, self.estimate(*xs.get_unchecked(offset + i)))
-                            }
+                            thread::scoped(move || {
+                                for (i, y) in ys.iter_mut().enumerate() {
+                                    ptr::write(y, self.estimate(*xs.get_unchecked(offset + i)))
+                                }
+                            })
                         })
-                    }).collect::<Vec<_>>();
+                        .collect::<Vec<_>>();
                 }
 
                 ys.into_boxed_slice()
             }
         } else {
-            xs.iter().map(|&x| self.estimate(x)).collect::<Vec<_>>().into_boxed_slice()
+            xs.iter()
+                .map(|&x| self.estimate(x))
+                .collect::<Vec<_>>()
+                .into_boxed_slice()
         }
     }
 
@@ -76,21 +90,29 @@ impl<'a, A, K> Kde<'a, A, K> where A: 'a + Float, K: Kernel<A> {
         let h = self.bandwidth;
         let n = A::cast(slice.len());
 
-        let sum = slice.iter().fold(_0, |acc, &x_i| acc + self.kernel.evaluate((x - x_i) / h));
+        let sum = slice
+            .iter()
+            .fold(_0, |acc, &x_i| acc + self.kernel.evaluate((x - x_i) / h));
 
         sum / h / n
     }
 }
 
 /// Method to estimate the bandwidth
-pub enum Bandwidth<A> where A: Float {
+pub enum Bandwidth<A>
+where
+    A: Float,
+{
     /// Use this value as the bandwidth
     Manual(A),
     /// Use Silverman's rule of thumb to estimate the bandwidth from the sample
     Silverman,
 }
 
-impl<A> Bandwidth<A> where A: Float {
+impl<A> Bandwidth<A>
+where
+    A: Float,
+{
     fn estimate(self, sample: &Sample<A>) -> A {
         match self {
             Bandwidth::Silverman => {
@@ -100,7 +122,7 @@ impl<A> Bandwidth<A> where A: Float {
                 let sigma = sample.std_dev(None);
 
                 sigma * (factor / n).powf(exponent)
-            },
+            }
             Bandwidth::Manual(bw) => bw,
         }
     }

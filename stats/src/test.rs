@@ -1,6 +1,9 @@
-use rand::{Rand, Rng, XorShiftRng, self};
+use rand::{self, Rand, Rng, XorShiftRng};
 
-pub fn vec<T>(size: usize, start: usize) -> Option<Vec<T>> where T: Rand {
+pub fn vec<T>(size: usize, start: usize) -> Option<Vec<T>>
+where
+    T: Rand,
+{
     if size > start + 2 {
         let mut rng: XorShiftRng = rand::thread_rng().gen();
 

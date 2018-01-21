@@ -43,13 +43,17 @@ pub(crate) struct CliReport {
     last_line_len: Cell<usize>,
 }
 impl CliReport {
-    pub fn new(enable_text_overwrite: bool, enable_text_coloring: bool, verbose: bool) -> CliReport {
+    pub fn new(
+        enable_text_overwrite: bool,
+        enable_text_coloring: bool,
+        verbose: bool,
+    ) -> CliReport {
         CliReport {
             enable_text_overwrite: enable_text_overwrite,
             enable_text_coloring: enable_text_coloring,
             verbose: verbose,
 
-            last_line_len: Cell::new(0),            
+            last_line_len: Cell::new(0),
         }
     }
 
@@ -70,8 +74,7 @@ impl CliReport {
             self.last_line_len.set(s.len());
             print!("{}", s);
             stdout().flush().unwrap();
-        }
-        else {
+        } else {
             println!("{}", s);
         }
     }
@@ -79,8 +82,7 @@ impl CliReport {
     fn green(&self, s: String) -> String {
         if self.enable_text_coloring {
             format!("\x1B[32m{}\x1B[39m", s)
-        }
-        else {
+        } else {
             s
         }
     }
@@ -88,8 +90,7 @@ impl CliReport {
     fn yellow(&self, s: String) -> String {
         if self.enable_text_coloring {
             format!("\x1B[33m{}\x1B[39m", s)
-        }
-        else {
+        } else {
             s
         }
     }
@@ -97,8 +98,7 @@ impl CliReport {
     fn red(&self, s: String) -> String {
         if self.enable_text_coloring {
             format!("\x1B[31m{}\x1B[39m", s)
-        }
-        else {
+        } else {
             s
         }
     }
@@ -106,8 +106,7 @@ impl CliReport {
     fn bold(&self, s: String) -> String {
         if self.enable_text_coloring {
             format!("\x1B[1m{}\x1B[22m", s)
-        }
-        else {
+        } else {
             s
         }
     }
@@ -115,12 +114,11 @@ impl CliReport {
     fn faint(&self, s: String) -> String {
         if self.enable_text_coloring {
             format!("\x1B[2m{}\x1B[22m", s)
-        }
-        else {
+        } else {
             s
         }
     }
-    
+
     pub fn outliers(&self, sample: &LabeledSample<f64>) {
         let (los, lom, _, him, his) = sample.count();
         let noutliers = los + lom + him + his;
@@ -130,14 +128,17 @@ impl CliReport {
             return;
         }
 
-        let percent = |n: usize| { 100. * n as f64 / sample_size as f64 };
+        let percent = |n: usize| 100. * n as f64 / sample_size as f64;
 
-        println!("{}", 
-            self.yellow(
-                format!("Found {} outliers among {} measurements ({:.2}%)",
-                    noutliers,
-                    sample_size,
-                    percent(noutliers))));
+        println!(
+            "{}",
+            self.yellow(format!(
+                "Found {} outliers among {} measurements ({:.2}%)",
+                noutliers,
+                sample_size,
+                percent(noutliers)
+            ))
+        );
 
         let print = |n, label| {
             if n != 0 {
@@ -158,8 +159,11 @@ impl Report for CliReport {
 
     fn warmup(&self, id: &str, warmup_ns: f64) {
         self.text_overwrite();
-        self.print_overwritable(
-            format!("Benchmarking {}: Warming up for {}", id, format::time(warmup_ns)));
+        self.print_overwritable(format!(
+            "Benchmarking {}: Warming up for {}",
+            id,
+            format::time(warmup_ns)
+        ));
     }
 
     fn analysis(&self, id: &str) {
@@ -167,25 +171,29 @@ impl Report for CliReport {
         self.print_overwritable(format!("Benchmarking {}: Analyzing", id));
     }
 
-    fn measurement_start(&self, id: &str, sample_count: u64,
-        estimate_ns: f64, iter_count: u64) {
+    fn measurement_start(&self, id: &str, sample_count: u64, estimate_ns: f64, iter_count: u64) {
         self.text_overwrite();
-        self.print_overwritable(
-            format!("Benchmarking {}: Collecting {} samples in estimated {} ({} iterations)",
-                id, sample_count, format::time(estimate_ns), iter_count));
+        self.print_overwritable(format!(
+            "Benchmarking {}: Collecting {} samples in estimated {} ({} iterations)",
+            id,
+            sample_count,
+            format::time(estimate_ns),
+            iter_count
+        ));
     }
 
     fn measurement_complete(&self, id: &str, meas: &MeasurementData) {
         self.text_overwrite();
-        
+
         let slope_estimate = meas.absolute_estimates[&Statistic::Slope];
 
         {
             let mut id = String::from(id);
             id.truncate(23);
             let id_len = id.len();
-            println!("{}{}time:   [{} {} {}]", 
-                self.green(id), 
+            println!(
+                "{}{}time:   [{} {} {}]",
+                self.green(id),
                 " ".repeat(24 - id_len),
                 self.faint(format::time(slope_estimate.confidence_interval.lower_bound)),
                 self.bold(format::time(slope_estimate.point_estimate)),
@@ -202,19 +210,18 @@ impl Report for CliReport {
 
             if !different_mean {
                 explanation_str = "No change in performance detected.".to_owned();
-            }
-            else {
+            } else {
                 let comparison = compare_to_threshold(&mean_est, comp.noise_threshold);
                 match comparison {
                     ComparisonResult::Improved => {
                         point_estimate_str = self.green(self.bold(point_estimate_str));
-                        explanation_str = format!("Performance has {}.",
-                            self.green("improved".to_owned()));
+                        explanation_str =
+                            format!("Performance has {}.", self.green("improved".to_owned()));
                     }
                     ComparisonResult::Regressed => {
                         point_estimate_str = self.red(self.bold(point_estimate_str));
-                        explanation_str = format!("Performance has {}.",
-                            self.red("regressed".to_owned()));
+                        explanation_str =
+                            format!("Performance has {}.", self.red("regressed".to_owned()));
                     }
                     ComparisonResult::NonSignificant => {
                         explanation_str = "Change within noise threshold.".to_owned();
@@ -222,13 +229,20 @@ impl Report for CliReport {
                 }
             }
 
-            println!("{}change: [{} {} {}] (p = {:.2} {} {:.2})", 
+            println!(
+                "{}change: [{} {} {}] (p = {:.2} {} {:.2})",
                 " ".repeat(24),
-                self.faint(format::change(mean_est.confidence_interval.lower_bound, true)),
+                self.faint(format::change(
+                    mean_est.confidence_interval.lower_bound,
+                    true
+                )),
                 point_estimate_str,
-                self.faint(format::change(mean_est.confidence_interval.upper_bound, true)),
+                self.faint(format::change(
+                    mean_est.confidence_interval.upper_bound,
+                    true
+                )),
                 comp.p_value,
-                if different_mean {"<"} else {">"},
+                if different_mean { "<" } else { ">" },
                 comp.significance_threshold
             );
             println!("{}{}", " ".repeat(24), explanation_str);
@@ -241,25 +255,30 @@ impl Report for CliReport {
             let slope_estimate = &meas.absolute_estimates[&Statistic::Slope];
 
             fn format_short_estimate(estimate: &Estimate) -> String {
-                format!("[{} {}]", 
+                format!(
+                    "[{} {}]",
                     format::time(estimate.confidence_interval.lower_bound),
-                    format::time(estimate.confidence_interval.upper_bound))
+                    format::time(estimate.confidence_interval.upper_bound)
+                )
             }
 
-            println!("{:<7}{} {:<15}[{:0.7} {:0.7}]",
+            println!(
+                "{:<7}{} {:<15}[{:0.7} {:0.7}]",
                 "slope",
                 format_short_estimate(slope_estimate),
                 "R^2",
                 Slope(slope_estimate.confidence_interval.lower_bound).r_squared(data),
                 Slope(slope_estimate.confidence_interval.upper_bound).r_squared(data),
             );
-            println!("{:<7}{} {:<15}{}",
+            println!(
+                "{:<7}{} {:<15}{}",
                 "mean",
                 format_short_estimate(&meas.absolute_estimates[&Statistic::Mean]),
                 "std. dev.",
                 format_short_estimate(&meas.absolute_estimates[&Statistic::StdDev]),
             );
-            println!("{:<7}{} {:<15}{}",
+            println!(
+                "{:<7}{} {:<15}{}",
                 "median",
                 format_short_estimate(&meas.absolute_estimates[&Statistic::Median]),
                 "med. abs. dev.",

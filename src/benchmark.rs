@@ -1,12 +1,12 @@
 use std::time::Duration;
-use ::{DurationExt, Criterion, Bencher};
-use routine::{Routine, Function};
-use ::analysis;
+use {Bencher, Criterion, DurationExt};
+use routine::{Function, Routine};
+use analysis;
 use std::cell::RefCell;
 use std::process::Command;
 use std::marker::Sized;
 use std::fmt::Debug;
-use ::program::CommandFactory;
+use program::CommandFactory;
 
 /// Struct containing all of the configuration options for a benchmark.
 pub struct BenchmarkConfig {
@@ -39,7 +39,7 @@ impl Default for PartialBenchmarkConfig {
             nresamples: None,
             sample_size: None,
             significance_level: None,
-            warm_up_time: None
+            warm_up_time: None,
         }
     }
 }
@@ -52,7 +52,8 @@ impl PartialBenchmarkConfig {
             noise_threshold: self.noise_threshold.unwrap_or(defaults.noise_threshold),
             nresamples: self.nresamples.unwrap_or(defaults.nresamples),
             sample_size: self.sample_size.unwrap_or(defaults.sample_size),
-            significance_level: self.significance_level.unwrap_or(defaults.significance_level),
+            significance_level: self.significance_level
+                .unwrap_or(defaults.significance_level),
             warm_up_time: self.warm_up_time.unwrap_or(defaults.warm_up_time),
         }
     }
@@ -75,7 +76,7 @@ pub struct ParameterizedBenchmark<T: Debug> {
 /// which takes no parameters.
 pub struct Benchmark {
     config: PartialBenchmarkConfig,
-    routines: Vec<NamedRoutine<()>>
+    routines: Vec<NamedRoutine<()>>,
 }
 
 /// Common trait for `Benchmark` and `ParameterizedBenchmark`. Not inteded to be
@@ -84,7 +85,6 @@ pub trait BenchmarkDefinition: Sized {
     #[doc(hidden)]
     fn run(self, group_id: &str, c: &Criterion);
 }
-
 
 macro_rules! benchmark_config {
     ($type:tt) => {
@@ -225,11 +225,13 @@ impl Benchmark {
     ///     .bench("routine", Benchmark::new("routine", routine));
     /// ```
     pub fn new<S, F>(id: S, f: F) -> Benchmark
-        where S: Into<String>, F: FnMut(&mut Bencher) + 'static {
-
+    where
+        S: Into<String>,
+        F: FnMut(&mut Bencher) + 'static,
+    {
         Benchmark {
             config: Default::default(),
-            routines: vec!(),
+            routines: vec![],
         }.with_function(id, f)
     }
 
@@ -273,10 +275,12 @@ impl Benchmark {
     ///     }
     /// }
     pub fn new_external<S>(id: S, program: Command) -> Benchmark
-        where S: Into<String> {
+    where
+        S: Into<String>,
+    {
         Benchmark {
             config: Default::default(),
-            routines: vec!(),
+            routines: vec![],
         }.with_program(id, program)
     }
 
@@ -288,11 +292,13 @@ impl Benchmark {
     ///     .with_function("return 20", |b| b.iter(|| 20));
     /// ```
     pub fn with_function<S, F>(mut self, id: S, mut f: F) -> Benchmark
-        where S: Into<String>, F: FnMut(&mut Bencher) + 'static {
-
+    where
+        S: Into<String>,
+        F: FnMut(&mut Bencher) + 'static,
+    {
         let routine = NamedRoutine {
             id: id.into(),
-            f: Box::new(RefCell::new(Function::new(move |b, _| f(b))))
+            f: Box::new(RefCell::new(Function::new(move |b, _| f(b)))),
         };
         self.routines.push(routine);
         self
@@ -307,10 +313,12 @@ impl Benchmark {
     ///     .with_program("external", Command::new("my_external_benchmark"));
     /// ```
     pub fn with_program<S>(mut self, id: S, program: Command) -> Benchmark
-        where S: Into<String> {
+    where
+        S: Into<String>,
+    {
         let routine = NamedRoutine {
             id: id.into(),
-            f: Box::new(RefCell::new(program))
+            f: Box::new(RefCell::new(program)),
         };
         self.routines.push(routine);
         self
@@ -326,8 +334,7 @@ impl BenchmarkDefinition for Benchmark {
         for routine in self.routines {
             let id = if num_routines == 1 && group_id == routine.id {
                 routine.id
-            }
-            else {
+            } else {
                 format!("{}/{}", group_id, routine.id)
             };
 
@@ -346,7 +353,10 @@ impl BenchmarkDefinition for Benchmark {
         }
     }
 }
-impl<T> ParameterizedBenchmark<T> where T: Debug + 'static {
+impl<T> ParameterizedBenchmark<T>
+where
+    T: Debug + 'static,
+{
     benchmark_config!(ParameterizedBenchmark);
 
     /// Create a new parameterized benchmark group and adds the given function
@@ -371,13 +381,15 @@ impl<T> ParameterizedBenchmark<T> where T: Debug + 'static {
     ///     .bench("routine", ParameterizedBenchmark::new("routine", routine, parameters));
     /// ```
     pub fn new<S, F, I>(id: S, f: F, parameters: I) -> ParameterizedBenchmark<T>
-        where S: Into<String>, F: FnMut(&mut Bencher, &T) + 'static,
-            I: IntoIterator<Item=T> {
-
+    where
+        S: Into<String>,
+        F: FnMut(&mut Bencher, &T) + 'static,
+        I: IntoIterator<Item = T>,
+    {
         ParameterizedBenchmark {
             config: Default::default(),
             values: parameters.into_iter().collect(),
-            routines: vec!(),
+            routines: vec![],
         }.with_function(id, f)
     }
 
@@ -424,15 +436,22 @@ impl<T> ParameterizedBenchmark<T> where T: Debug + 'static {
     /// }
     /// ```
     pub fn new_external<S, F, I>(id: S, program: F, parameters: I) -> ParameterizedBenchmark<T>
-        where S: Into<String>, F: FnMut(&T) -> Command + 'static, I: IntoIterator<Item=T> {
+    where
+        S: Into<String>,
+        F: FnMut(&T) -> Command + 'static,
+        I: IntoIterator<Item = T>,
+    {
         ParameterizedBenchmark {
             config: Default::default(),
-            routines: vec!(),
+            routines: vec![],
             values: parameters.into_iter().collect(),
         }.with_program(id, program)
     }
 
-    pub(crate) fn with_functions(functions: Vec<NamedRoutine<T>>, parameters: Vec<T>) -> ParameterizedBenchmark<T> {
+    pub(crate) fn with_functions(
+        functions: Vec<NamedRoutine<T>>,
+        parameters: Vec<T>,
+    ) -> ParameterizedBenchmark<T> {
         ParameterizedBenchmark {
             config: Default::default(),
             values: parameters,
@@ -448,11 +467,13 @@ impl<T> ParameterizedBenchmark<T> where T: Debug + 'static {
     ///     .with_function("times 20", |b, i| b.iter(|| i * 20));
     /// ```
     pub fn with_function<S, F>(mut self, id: S, f: F) -> ParameterizedBenchmark<T>
-        where S: Into<String>, F: FnMut(&mut Bencher, &T) + 'static {
-
+    where
+        S: Into<String>,
+        F: FnMut(&mut Bencher, &T) + 'static,
+    {
         let routine = NamedRoutine {
             id: id.into(),
-            f: Box::new(RefCell::new(Function::new(f)))
+            f: Box::new(RefCell::new(Function::new(f))),
         };
         self.routines.push(routine);
         self
@@ -471,17 +492,23 @@ impl<T> ParameterizedBenchmark<T> where T: Debug + 'static {
     ///     });
     /// ```
     pub fn with_program<S, F>(mut self, id: S, program: F) -> ParameterizedBenchmark<T>
-        where S: Into<String>, F: FnMut(&T) -> Command + 'static {
+    where
+        S: Into<String>,
+        F: FnMut(&T) -> Command + 'static,
+    {
         let factory = CommandFactory::new(program);
         let routine = NamedRoutine {
             id: id.into(),
-            f: Box::new(RefCell::new(factory))
+            f: Box::new(RefCell::new(factory)),
         };
         self.routines.push(routine);
         self
     }
 }
-impl<T> BenchmarkDefinition for ParameterizedBenchmark<T> where T: Debug + 'static {
+impl<T> BenchmarkDefinition for ParameterizedBenchmark<T>
+where
+    T: Debug + 'static,
+{
     fn run(self, group_id: &str, c: &Criterion) {
         let config = self.config.to_complete(&c.config);
         let num_parameters = self.values.len();
@@ -492,15 +519,13 @@ impl<T> BenchmarkDefinition for ParameterizedBenchmark<T> where T: Debug + 'stat
             for value in &self.values {
                 let id = if num_routines == 1 && group_id == routine.id {
                     routine.id.clone()
-                }
-                else {
+                } else {
                     format!("{}/{}", group_id, routine.id)
                 };
 
                 let id = if num_parameters == 1 {
                     id
-                }
-                else {
+                } else {
                     format!("{}/{:?}", id, value)
                 };
 

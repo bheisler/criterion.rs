@@ -1,14 +1,19 @@
 //! Regression analysis
 
-use ::float::Float;
+use float::Float;
 
 use bivariate::Data;
 
 /// A straight line that passes through the origin `y = m * x`
 #[derive(Clone, Copy)]
-pub struct Slope<A>(pub A) where A: Float;
+pub struct Slope<A>(pub A)
+where
+    A: Float;
 
-impl<A> Slope<A> where A: Float {
+impl<A> Slope<A>
+where
+    A: Float,
+{
     /// Fits the data to a straight line that passes through the origin using ordinary least
     /// squares
     ///
@@ -50,14 +55,20 @@ impl<A> Slope<A> where A: Float {
 
 /// A straight line `y = m * x + b`
 #[derive(Clone, Copy)]
-pub struct StraightLine<A> where A: Float {
+pub struct StraightLine<A>
+where
+    A: Float,
+{
     /// The y-intercept of the line
     pub intercept: A,
     /// The slope of the line
     pub slope: A,
 }
 
-impl<A> StraightLine<A> where A: Float {
+impl<A> StraightLine<A>
+where
+    A: Float,
+{
     /// Fits the data to a straight line using ordinary least squares
     ///
     /// - Time: `O(length)`

@@ -1,9 +1,12 @@
 //! Kernels
 
-use ::float::Float;
+use float::Float;
 
 /// Kernel function
-pub trait Kernel<A>: Copy + Sync where A: Float {
+pub trait Kernel<A>: Copy + Sync
+where
+    A: Float,
+{
     /// Apply the kernel function to the given x-value.
     fn evaluate(&self, x: A) -> A;
 }
@@ -12,7 +15,10 @@ pub trait Kernel<A>: Copy + Sync where A: Float {
 #[derive(Clone, Copy)]
 pub struct Gaussian;
 
-impl<A> Kernel<A> for Gaussian where A: Float {
+impl<A> Kernel<A> for Gaussian
+where
+    A: Float,
+{
     fn evaluate(&self, x: A) -> A {
         use std::f32::consts::PI;
 
@@ -57,7 +63,8 @@ macro_rules! test {
                             }
 
                             TestResult::from_bool(
-                                (acc > 0. || relative_eq!(acc, 0.)) && (acc < 1. || relative_eq!(acc, 1.)))
+                                (acc > 0. || relative_eq!(acc, 0.)) &&
+                                (acc < 1. || relative_eq!(acc, 1.)))
                         }
                     }
                 }

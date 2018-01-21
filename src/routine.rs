@@ -12,10 +12,17 @@ pub trait Routine<T> {
     /// PRIVATE
     fn bench(&mut self, m: &mut Option<Program>, iters: &[u64], parameter: &T) -> Vec<f64>;
     /// PRIVATE
-    fn warm_up(&mut self, m: &mut Option<Program>, how_long: Duration, parameter: &T) -> (u64, u64);
+    fn warm_up(&mut self, m: &mut Option<Program>, how_long: Duration, parameter: &T)
+        -> (u64, u64);
 
     /// PRIVATE
-    fn sample(&mut self, id: &str, config: &BenchmarkConfig, criterion: &Criterion, parameter: &T) -> (Box<[f64]>, Box<[f64]>) {
+    fn sample(
+        &mut self,
+        id: &str,
+        config: &BenchmarkConfig,
+        criterion: &Criterion,
+        parameter: &T,
+    ) -> (Box<[f64]>, Box<[f64]>) {
         let wu = config.warm_up_time;
         let m_ns = config.measurement_time.to_nanos();
 
@@ -33,10 +40,12 @@ pub trait Routine<T> {
         let total_runs = n * (n + 1) / 2;
         let d = (m_ns as f64 / met / total_runs as f64).ceil() as u64;
 
-        let m_iters = (1..(n+1) as u64).map(|a| a*d).collect::<Vec<u64>>();
+        let m_iters = (1..(n + 1) as u64).map(|a| a * d).collect::<Vec<u64>>();
 
         let m_ns = total_runs as f64 * d as f64 * met;
-        criterion.report.measurement_start(id, n, m_ns, m_iters.iter().sum());
+        criterion
+            .report
+            .measurement_start(id, n, m_ns, m_iters.iter().sum());
         let m_elapsed = self.bench(&mut m, &m_iters, parameter);
 
         let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();
@@ -45,20 +54,29 @@ pub trait Routine<T> {
     }
 }
 
-pub struct Function<F, T> where F: FnMut(&mut Bencher, &T) {
+pub struct Function<F, T>
+where
+    F: FnMut(&mut Bencher, &T),
+{
     f: F,
-    _phantom: PhantomData<T>
+    _phantom: PhantomData<T>,
 }
-impl<F, T> Function<F, T> where F: FnMut(&mut Bencher, &T) {
+impl<F, T> Function<F, T>
+where
+    F: FnMut(&mut Bencher, &T),
+{
     pub fn new(f: F) -> Function<F, T> {
         Function {
             f: f,
-            _phantom: PhantomData
+            _phantom: PhantomData,
         }
     }
 }
 
-impl<F, T> Routine<T> for Function<F, T> where F: FnMut(&mut Bencher, &T) {
+impl<F, T> Routine<T> for Function<F, T>
+where
+    F: FnMut(&mut Bencher, &T),
+{
     fn start(&mut self, _: &T) -> Option<Program> {
         None
     }
@@ -66,18 +84,32 @@ impl<F, T> Routine<T> for Function<F, T> where F: FnMut(&mut Bencher, &T) {
     fn bench(&mut self, _: &mut Option<Program>, iters: &[u64], parameter: &T) -> Vec<f64> {
         let f = &mut self.f;
 
-        let mut b = Bencher { iters: 0, elapsed: Duration::from_secs(0) };
+        let mut b = Bencher {
+            iters: 0,
+            elapsed: Duration::from_secs(0),
+        };
 
-        iters.iter().map(|iters| {
-            b.iters = *iters;
-            (*f)(&mut b, parameter);
-            b.elapsed.to_nanos() as f64
-        }).collect()
+        iters
+            .iter()
+            .map(|iters| {
+                b.iters = *iters;
+                (*f)(&mut b, parameter);
+                b.elapsed.to_nanos() as f64
+            })
+            .collect()
     }
 
-    fn warm_up(&mut self, _: &mut Option<Program>, how_long: Duration, parameter: &T) -> (u64, u64) {
+    fn warm_up(
+        &mut self,
+        _: &mut Option<Program>,
+        how_long: Duration,
+        parameter: &T,
+    ) -> (u64, u64) {
         let f = &mut self.f;
-        let mut b = Bencher { iters: 1, elapsed: Duration::from_secs(0) };
+        let mut b = Bencher {
+            iters: 1,
+            elapsed: Duration::from_secs(0),
+        };
 
         let mut total_iters = 0;
         let start = Instant::now();

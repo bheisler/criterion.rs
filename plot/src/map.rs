@@ -6,7 +6,8 @@ pub mod axis {
     const LENGTH: usize = 4;
 
     pub struct Items<'a, T>
-        where T: 'a
+    where
+        T: 'a,
     {
         map: &'a Map<T>,
         state: Option<Axis>,
@@ -71,10 +72,16 @@ pub mod axis {
     }
 
     impl<T> Clone for Map<T>
-        where T: Clone
+    where
+        T: Clone,
     {
         fn clone(&self) -> Map<T> {
-            Map([self.0[0].clone(), self.0[1].clone(), self.0[2].clone(), self.0[3].clone()])
+            Map([
+                self.0[0].clone(),
+                self.0[1].clone(),
+                self.0[2].clone(),
+                self.0[3].clone(),
+            ])
         }
     }
 }
@@ -85,7 +92,8 @@ pub mod grid {
     const LENGTH: usize = 2;
 
     pub struct Items<'a, T>
-        where T: 'a
+    where
+        T: 'a,
     {
         map: &'a Map<T>,
         state: Option<Grid>,
@@ -144,7 +152,8 @@ pub mod grid {
     }
 
     impl<T> Clone for Map<T>
-        where T: Clone
+    where
+        T: Clone,
     {
         fn clone(&self) -> Map<T> {
             Map([self.0[0].clone(), self.0[1].clone()])

@@ -17,22 +17,22 @@
 //!   performance behavior.
 
 #![deny(missing_docs)]
-
 #![cfg_attr(feature = "real_blackbox", feature(test))]
 
-#[macro_use]
-extern crate log;
-extern crate failure;
-extern crate itertools;
-extern crate itertools_num;
-extern crate serde;
-extern crate serde_json;
+extern crate clap;
 extern crate criterion_plot as simplot;
 extern crate criterion_stats as stats;
-extern crate simplelog;
+extern crate failure;
 extern crate isatty;
-extern crate clap;
-#[cfg(feature = "real_blackbox")] extern crate test;
+extern crate itertools;
+extern crate itertools_num;
+#[macro_use]
+extern crate log;
+extern crate serde;
+extern crate serde_json;
+extern crate simplelog;
+#[cfg(feature = "real_blackbox")]
+extern crate test;
 
 #[macro_use]
 extern crate failure_derive;
@@ -70,12 +70,12 @@ use std::io::Read;
 use std::path::Path;
 
 use estimate::{Distributions, Estimates, Statistic};
-use report::{Report, CliReport};
+use report::{CliReport, Report};
 use benchmark::BenchmarkConfig;
 use benchmark::NamedRoutine;
 use routine::Function;
 
-pub use benchmark::{Benchmark, ParameterizedBenchmark, BenchmarkDefinition};
+pub use benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
 
 fn debug_enabled() -> bool {
     std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG")
@@ -86,12 +86,13 @@ fn debug_enabled() -> bool {
 /// own logging infrastructure.
 pub fn init_logging() {
     use simplelog::*;
-    let filter = if debug_enabled() { LogLevelFilter::max() } else { LogLevelFilter::Warn };
+    let filter = if debug_enabled() {
+        LogLevelFilter::max()
+    } else {
+        LogLevelFilter::Warn
+    };
 
-    SimpleLogger::init(
-        filter,
-        Config::default(),
-    ).unwrap();
+    SimpleLogger::init(filter, Config::default()).unwrap();
 }
 
 /// A function that is opaque to the optimizer, used to prevent the compiler from
@@ -124,19 +125,21 @@ pub struct Fun<I: fmt::Debug> {
     f: NamedRoutine<I>,
 }
 
-impl<I> Fun<I> where I: fmt::Debug + 'static {
+impl<I> Fun<I>
+where
+    I: fmt::Debug + 'static,
+{
     /// Create a new `Fun` given a name and a closure
     pub fn new<F>(name: &str, f: F) -> Fun<I>
-        where F: FnMut(&mut Bencher, &I) + 'static
+    where
+        F: FnMut(&mut Bencher, &I) + 'static,
     {
         let routine = NamedRoutine {
             id: name.to_owned(),
-            f: Box::new(RefCell::new(Function::new(f)))
+            f: Box::new(RefCell::new(Function::new(f))),
         };
 
-        Fun {
-            f: routine,
-        }
+        Fun { f: routine }
     }
 }
 
@@ -185,7 +188,8 @@ impl Bencher {
     /// elapsed = Instant::now + iters * (routine + mem::drop(O) + Range::next)
     /// ```
     ///
-    pub fn iter<O, R>(&mut self, mut routine: R) where
+    pub fn iter<O, R>(&mut self, mut routine: R)
+    where
         R: FnMut() -> O,
     {
         let start = Instant::now();
@@ -254,8 +258,9 @@ impl Bencher {
     /// elapsed = iters * (Instant::now + routine)
     /// ```
     pub fn iter_with_setup<I, O, S, R>(&mut self, mut setup: S, mut routine: R)
-        where S: FnMut() -> I,
-              R: FnMut(I) -> O
+    where
+        S: FnMut() -> I,
+        R: FnMut(I) -> O,
     {
         self.elapsed = Duration::from_secs(0);
         for _ in 0..self.iters {
@@ -302,7 +307,8 @@ impl Bencher {
     /// ```
     ///
     pub fn iter_with_large_drop<O, R>(&mut self, mut routine: R)
-        where R: FnMut() -> O
+    where
+        R: FnMut() -> O,
     {
         let mut outputs = Vec::with_capacity(self.iters as usize);
 
@@ -345,8 +351,9 @@ impl Bencher {
     /// elapsed = Instant::now + iters * (routine + vec::IntoIter::next)
     /// ```
     pub fn iter_with_large_setup<I, S, R>(&mut self, mut setup: S, mut routine: R)
-        where S: FnMut() -> I,
-              R: FnMut(I)
+    where
+        S: FnMut() -> I,
+        R: FnMut(I),
     {
         let inputs = (0..self.iters).map(|_| setup()).collect::<Vec<_>>();
 
@@ -380,7 +387,6 @@ pub struct Criterion {
 }
 
 impl Default for Criterion {
-
     /// Creates a benchmark manager with the following default settings:
     ///
     /// - Sample size: 100 measurements
@@ -419,7 +425,6 @@ impl Default for Criterion {
 }
 
 impl Criterion {
-
     /// Changes the default size of the sample for benchmarks run with this runner.
     ///
     /// A bigger sample should yield more accurate results, if paired with a "sufficiently" large
@@ -534,7 +539,7 @@ impl Criterion {
     /// Enables plotting
     pub fn with_plots(mut self) -> Criterion {
         match self.plotting {
-            Plotting::NotAvailable => {},
+            Plotting::NotAvailable => {}
             _ => self.plotting = Plotting::Enabled,
         }
 
@@ -544,7 +549,7 @@ impl Criterion {
     /// Disabled plotting
     pub fn without_plots(mut self) -> Criterion {
         match self.plotting {
-            Plotting::NotAvailable => {},
+            Plotting::NotAvailable => {}
             _ => self.plotting = Plotting::Disabled,
         }
 
@@ -570,7 +575,7 @@ impl Criterion {
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
     pub fn configure_from_args(mut self) -> Criterion {
-        use clap::{Arg, App};
+        use clap::{App, Arg};
         let matches = App::new("Criterion Benchmark")
             .arg(Arg::with_name("FILTER")
                 .help("Skip benchmarks whose names do not contain FILTER.")
@@ -610,8 +615,7 @@ scripts alongside the generated plots.
         }
 
         let verbose = matches.is_present("verbose");
-        let mut enable_text_overwrite =
-            isatty::stdout_isatty() && !verbose && !debug_enabled();
+        let mut enable_text_overwrite = isatty::stdout_isatty() && !verbose && !debug_enabled();
         let enable_text_coloring;
         match matches.value_of("color") {
             Some("always") => {
@@ -621,13 +625,14 @@ scripts alongside the generated plots.
                 enable_text_coloring = false;
                 enable_text_overwrite = false;
             }
-            _ => {
-                enable_text_coloring = cfg!(unix) && isatty::stdout_isatty()
-            }
+            _ => enable_text_coloring = cfg!(unix) && isatty::stdout_isatty(),
         }
 
         self.report = Box::new(CliReport::new(
-            enable_text_overwrite, enable_text_coloring, verbose));
+            enable_text_overwrite,
+            enable_text_coloring,
+            verbose,
+        ));
         self
     }
 
@@ -657,7 +662,8 @@ scripts alongside the generated plots.
     ///
     /// Criterion::default().bench_function("routine", routine);
     /// ```
-    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion where
+    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion
+    where
         F: FnMut(&mut Bencher) + 'static,
     {
         self.bench(id, Benchmark::new(id, f))
@@ -691,15 +697,14 @@ scripts alongside the generated plots.
     ///
     /// Criterion::default().bench_functions("Fibonacci", funs, 14);
     /// ```
-    pub fn bench_functions<I>(&mut self,
-        id: &str,
-        funs: Vec<Fun<I>>,
-        input: I) -> &mut Criterion
-        where I: fmt::Debug + 'static
+    pub fn bench_functions<I>(&mut self, id: &str, funs: Vec<Fun<I>>, input: I) -> &mut Criterion
+    where
+        I: fmt::Debug + 'static,
     {
         let benchmark = ParameterizedBenchmark::with_functions(
             funs.into_iter().map(|fun| fun.f).collect(),
-            vec!(input));
+            vec![input],
+        );
 
         self.bench(id, benchmark)
     }
@@ -717,12 +722,8 @@ scripts alongside the generated plots.
     ///         b.iter(|| vec![0u8; *size]);
     ///     }, vec![1024, 2048, 4096]);
     /// ```
-    pub fn bench_function_over_inputs<I, F>(
-        &mut self,
-        id: &str,
-        f: F,
-        inputs: I,
-    ) -> &mut Criterion where
+    pub fn bench_function_over_inputs<I, F>(&mut self, id: &str, f: F, inputs: I) -> &mut Criterion
+    where
         I: IntoIterator,
         I::Item: fmt::Debug + 'static,
         F: FnMut(&mut Bencher, &I::Item) + 'static,
@@ -780,18 +781,24 @@ scripts alongside the generated plots.
         id: &str,
         mut program: F,
         inputs: I,
-    ) -> &mut Criterion where
+    ) -> &mut Criterion
+    where
         F: FnMut() -> Command + 'static,
         I: IntoIterator,
         I::Item: fmt::Debug + 'static,
     {
-        self.bench(id, ParameterizedBenchmark::new_external(id,
-            move |i| {
-                let mut command = program();
-                command.arg(format!("{:?}", i));
-                command
-            },
-            inputs))
+        self.bench(
+            id,
+            ParameterizedBenchmark::new_external(
+                id,
+                move |i| {
+                    let mut command = program();
+                    command.arg(format!("{:?}", i));
+                    command
+                },
+                inputs,
+            ),
+        )
     }
 
     /// Executes the given benchmark. Use this variant to execute benchmarks
@@ -817,7 +824,7 @@ scripts alongside the generated plots.
     pub fn bench<B: BenchmarkDefinition>(
         &mut self,
         group_id: &str,
-        benchmark: B
+        benchmark: B,
     ) -> &mut Criterion {
         benchmark.run(group_id, self);
         self
@@ -869,20 +876,26 @@ struct Estimate {
 
 impl Estimate {
     fn new(distributions: &Distributions, points: &BTreeMap<Statistic, f64>, cl: f64) -> Estimates {
-        distributions.iter().map(|(&statistic, distribution)| {
-            let point_estimate = points[&statistic];
-            let (lb, ub) = distribution.confidence_interval(cl);
+        distributions
+            .iter()
+            .map(|(&statistic, distribution)| {
+                let point_estimate = points[&statistic];
+                let (lb, ub) = distribution.confidence_interval(cl);
 
-            (statistic, Estimate {
-                confidence_interval: ConfidenceInterval {
-                    confidence_level: cl,
-                    lower_bound: lb,
-                    upper_bound: ub,
-                },
-                point_estimate: point_estimate,
-                standard_error: distribution.std_dev(None),
+                (
+                    statistic,
+                    Estimate {
+                        confidence_interval: ConfidenceInterval {
+                            confidence_level: cl,
+                            lower_bound: lb,
+                            upper_bound: ub,
+                        },
+                        point_estimate: point_estimate,
+                        standard_error: distribution.std_dev(None),
+                    },
+                )
             })
-        }).collect()
+            .collect()
     }
 
     fn load(path: &Path) -> Option<Estimates> {
@@ -896,7 +909,7 @@ impl Estimate {
                     Err(_) => None,
                     Ok(estimates) => Some(estimates),
                 },
-            }
+            },
         }
     }
 }

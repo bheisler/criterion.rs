@@ -37,7 +37,8 @@ impl Program {
         }
     }
 
-    pub fn send<T>(&mut self, line: T) -> &mut Program where
+    pub fn send<T>(&mut self, line: T) -> &mut Program
+    where
         T: fmt::Display,
     {
         use std::io::Write;
@@ -60,14 +61,14 @@ impl Program {
                 match self.stderr.read_to_string(&mut self.buffer) {
                     Err(e) => {
                         panic!("`read from child stderr`: {}", e);
-                    },
+                    }
                     Ok(_) => {
                         println!("stderr:\n{}", self.buffer);
                     }
                 }
 
                 panic!("`read from child stdout`: {}", e);
-            },
+            }
             Ok(_) => &self.buffer,
         }
     }
@@ -79,13 +80,15 @@ impl Program {
             n += 1;
         }
 
-        (0..n).map(|_| {
-            let msg = self.recv();
-            let msg = msg.trim();
+        (0..n)
+            .map(|_| {
+                let msg = self.recv();
+                let msg = msg.trim();
 
-            let elapsed: u64 = msg.parse().expect("Couldn't parse program output");
-            elapsed as f64
-        }).collect()
+                let elapsed: u64 = msg.parse().expect("Couldn't parse program output");
+                elapsed as f64
+            })
+            .collect()
     }
 
     fn warm_up(&mut self, how_long_ns: Duration) -> (u64, u64) {
@@ -117,26 +120,40 @@ impl Routine<()> for Command {
         program.bench(iters)
     }
 
-    fn warm_up(&mut self, program: &mut Option<Program>, how_long_ns: Duration, _: &()) -> (u64, u64) {
+    fn warm_up(
+        &mut self,
+        program: &mut Option<Program>,
+        how_long_ns: Duration,
+        _: &(),
+    ) -> (u64, u64) {
         let program = program.as_mut().unwrap();
         program.warm_up(how_long_ns)
     }
 }
 
-pub struct CommandFactory<F, T> where F: FnMut(&T) -> Command + 'static {
+pub struct CommandFactory<F, T>
+where
+    F: FnMut(&T) -> Command + 'static,
+{
     f: F,
     _phantom: PhantomData<T>,
 }
-impl<F, T> CommandFactory<F, T> where F: FnMut(&T) -> Command + 'static {
+impl<F, T> CommandFactory<F, T>
+where
+    F: FnMut(&T) -> Command + 'static,
+{
     pub fn new(f: F) -> CommandFactory<F, T> {
         CommandFactory {
             f: f,
-            _phantom: PhantomData
+            _phantom: PhantomData,
         }
     }
 }
 
-impl<F, T> Routine<T> for CommandFactory<F, T> where F: FnMut(&T) -> Command + 'static {
+impl<F, T> Routine<T> for CommandFactory<F, T>
+where
+    F: FnMut(&T) -> Command + 'static,
+{
     fn start(&mut self, parameter: &T) -> Option<Program> {
         let mut command = (self.f)(parameter);
         Some(Program::spawn(&mut command))
@@ -147,7 +164,12 @@ impl<F, T> Routine<T> for CommandFactory<F, T> where F: FnMut(&T) -> Command + '
         program.bench(iters)
     }
 
-    fn warm_up(&mut self, program: &mut Option<Program>, how_long_ns: Duration, _: &T) -> (u64, u64) {
+    fn warm_up(
+        &mut self,
+        program: &mut Option<Program>,
+        how_long_ns: Duration,
+        _: &T,
+    ) -> (u64, u64) {
         let program = program.as_mut().unwrap();
         program.warm_up(how_long_ns)
     }

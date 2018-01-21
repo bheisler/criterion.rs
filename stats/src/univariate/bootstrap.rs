@@ -138,7 +138,7 @@ macro_rules! test {
                             println!("A: {:?} (len={})", a.as_slice(), a.as_slice().len());
                             println!("B: {:?} (len={})", b.as_slice(), b.as_slice().len());
                             println!("Dist: {:?} (len={})", distribution.as_slice(), distribution.as_slice().len());
-                            println!("Min: {}, Max: {}, nresamples: {}", 
+                            println!("Min: {}, Max: {}, nresamples: {}",
                                 min, max, nresamples);
                         }
 

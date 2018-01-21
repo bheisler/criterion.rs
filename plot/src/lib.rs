@@ -523,8 +523,10 @@ impl Figure {
                 s.push_str(", ");
             }
 
-            s.push_str(&format!("'-' binary endian=little record={} format='%float64' using ",
-                                data.nrows()));
+            s.push_str(&format!(
+                "'-' binary endian=little record={} format='%float64' using ",
+                data.nrows()
+            ));
 
             let mut is_first_col = true;
             for col in 0..data.ncols() {
@@ -572,7 +574,8 @@ impl Figure {
 
     /// Dumps the script required to produce the figure into `sink`
     pub fn dump<W>(&mut self, sink: &mut W) -> io::Result<&mut Figure>
-        where W: io::Write
+    where
+        W: io::Write,
     {
         try!(sink.write_all(&self.script()));
         Ok(self)
@@ -592,7 +595,8 @@ impl Configure<Axis> for Figure {
 
     /// Configures an axis
     fn configure<F>(&mut self, axis: Axis, configure: F) -> &mut Figure
-        where F: FnOnce(&mut axis::Properties) -> &mut axis::Properties
+    where
+        F: FnOnce(&mut axis::Properties) -> &mut axis::Properties,
     {
         if self.axes.contains_key(axis) {
             configure(self.axes.get_mut(axis).unwrap());
@@ -610,7 +614,8 @@ impl Configure<Key> for Figure {
 
     /// Configures the key (legend)
     fn configure<F>(&mut self, _: Key, configure: F) -> &mut Figure
-        where F: FnOnce(&mut key::Properties) -> &mut key::Properties
+    where
+        F: FnOnce(&mut key::Properties) -> &mut key::Properties,
     {
         if self.key.is_some() {
             configure(self.key.as_mut().unwrap());
@@ -927,7 +932,8 @@ struct Plot {
 
 impl Plot {
     fn new<S>(data: Matrix, script: &S) -> Plot
-        where S: Script
+    where
+        S: Script,
     {
         Plot {
             data: data,
@@ -961,22 +967,22 @@ fn scale_factor(map: &map::axis::Map<axis::Properties>, axes: Axes) -> (f64, f64
     use Axis::*;
 
     match axes {
-        BottomXLeftY => {
-            (map.get(BottomX).map_or(1., |props| props.scale_factor()),
-             map.get(LeftY).map_or(1., |props| props.scale_factor()))
-        }
-        BottomXRightY => {
-            (map.get(BottomX).map_or(1., |props| props.scale_factor()),
-             map.get(RightY).map_or(1., |props| props.scale_factor()))
-        }
-        TopXLeftY => {
-            (map.get(TopX).map_or(1., |props| props.scale_factor()),
-             map.get(LeftY).map_or(1., |props| props.scale_factor()))
-        }
-        TopXRightY => {
-            (map.get(TopX).map_or(1., |props| props.scale_factor()),
-             map.get(RightY).map_or(1., |props| props.scale_factor()))
-        }
+        BottomXLeftY => (
+            map.get(BottomX).map_or(1., |props| props.scale_factor()),
+            map.get(LeftY).map_or(1., |props| props.scale_factor()),
+        ),
+        BottomXRightY => (
+            map.get(BottomX).map_or(1., |props| props.scale_factor()),
+            map.get(RightY).map_or(1., |props| props.scale_factor()),
+        ),
+        TopXLeftY => (
+            map.get(TopX).map_or(1., |props| props.scale_factor()),
+            map.get(LeftY).map_or(1., |props| props.scale_factor()),
+        ),
+        TopXRightY => (
+            map.get(TopX).map_or(1., |props| props.scale_factor()),
+            map.get(RightY).map_or(1., |props| props.scale_factor()),
+        ),
     }
 }
 
@@ -994,8 +1000,7 @@ mod test {
         if let Ok(version) = super::version() {
             let (major, _, _) = version;
             assert!(major >= 4);
-        }
-        else {
+        } else {
             println!("Gnuplot not installed.");
         }
     }

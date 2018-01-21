@@ -7,19 +7,29 @@ pub fn change(pct: f64, signed: bool) -> String {
 }
 
 fn short(n: f64) -> String {
-    if n < 10.0 { format!("{:.4}", n) }
-    else if n < 100.0 { format!("{:.3}", n) }
-    else if n < 1000.0 { format!("{:.2}", n) }
-    else { format!("{}", n) }
+    if n < 10.0 {
+        format!("{:.4}", n)
+    } else if n < 100.0 {
+        format!("{:.3}", n)
+    } else if n < 1000.0 {
+        format!("{:.2}", n)
+    } else {
+        format!("{}", n)
+    }
 }
 
 fn signed_short(n: f64) -> String {
     let n_abs = n.abs();
 
-    if n_abs < 10.0 { format!("{:+.4}", n) }
-    else if n_abs < 100.0 { format!("{:+.3}", n) }
-    else if n_abs < 1000.0 { format!("{:+.2}", n) }
-    else { format!("{:+}", n) }
+    if n_abs < 10.0 {
+        format!("{:+.4}", n)
+    } else if n_abs < 100.0 {
+        format!("{:+.3}", n)
+    } else if n_abs < 1000.0 {
+        format!("{:+.2}", n)
+    } else {
+        format!("{:+}", n)
+    }
 }
 
 pub fn time(ns: f64) -> String {
@@ -35,4 +45,3 @@ pub fn time(ns: f64) -> String {
         format!("{:>6} s", short(ns / 1e9))
     }
 }
-

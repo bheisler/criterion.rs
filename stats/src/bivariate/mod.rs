@@ -7,7 +7,7 @@ pub mod regression;
 
 use std::{cmp, mem};
 
-use ::float::Float;
+use float::Float;
 use num_cpus;
 use thread_scoped as thread;
 
@@ -21,7 +21,10 @@ use univariate::Sample;
 ///
 /// - No `NaN`s in the data
 /// - At least two data points in the set
-pub struct Data<'a, X, Y>(&'a [X], &'a [Y]) where X: 'a, Y: 'a;
+pub struct Data<'a, X, Y>(&'a [X], &'a [Y])
+where
+    X: 'a,
+    Y: 'a;
 
 impl<'a, X, Y> Copy for Data<'a, X, Y> {}
 
@@ -52,14 +55,16 @@ impl<'a, X, Y> Data<'a, X, Y> {
     }
 }
 
-impl<'a, X, Y> Data<'a, X, Y> where X: Float, Y: Float {
+impl<'a, X, Y> Data<'a, X, Y>
+where
+    X: Float,
+    Y: Float,
+{
     /// Creates a new data set from two existing slices
     pub fn new(xs: &'a [X], ys: &'a [Y]) -> Data<'a, X, Y> {
         assert!(
-            xs.len() == ys.len() &&
-            xs.len() > 1 &&
-            xs.iter().all(|x| !x.is_nan()) &&
-            ys.iter().all(|y| !y.is_nan())
+            xs.len() == ys.len() && xs.len() > 1 && xs.iter().all(|x| !x.is_nan())
+                && ys.iter().all(|y| !y.is_nan())
         );
 
         Data(xs, ys)
@@ -71,7 +76,8 @@ impl<'a, X, Y> Data<'a, X, Y> where X: Float, Y: Float {
     /// - Multi-threaded
     /// - Time: `O(nresamples)`
     /// - Memory: `O(nresamples)`
-    pub fn bootstrap<T, S>(&self, nresamples: usize, statistic: S) -> T::Distributions where
+    pub fn bootstrap<T, S>(&self, nresamples: usize, statistic: S) -> T::Distributions
+    where
         S: Fn(Data<X, Y>) -> T,
         S: Sync,
         T: Tuple,
@@ -86,29 +92,29 @@ impl<'a, X, Y> Data<'a, X, Y> where X: Float, Y: Float {
                 let granularity = nresamples / ncpus + 1;
                 let statistic = &statistic;
 
-                let chunks = (0..ncpus).map(|i| {
-                    let mut sub_distributions: T::Builder =
-                        TupledDistributionsBuilder::new(granularity);
-                    let mut resamples = Resamples::new(*self);
-                    let offset = i * granularity;
+                let chunks = (0..ncpus)
+                    .map(|i| {
+                        let mut sub_distributions: T::Builder =
+                            TupledDistributionsBuilder::new(granularity);
+                        let mut resamples = Resamples::new(*self);
+                        let offset = i * granularity;
 
-                    thread::scoped(move || {
-                        for _ in offset..cmp::min(offset + granularity, nresamples) {
-                            sub_distributions.push(statistic(resamples.next()))
-                        }
-                        sub_distributions
+                        thread::scoped(move || {
+                            for _ in offset..cmp::min(offset + granularity, nresamples) {
+                                sub_distributions.push(statistic(resamples.next()))
+                            }
+                            sub_distributions
+                        })
                     })
-                }).collect::<Vec<_>>();
+                    .collect::<Vec<_>>();
 
-                let mut builder: T::Builder =
-                    TupledDistributionsBuilder::new(nresamples);
+                let mut builder: T::Builder = TupledDistributionsBuilder::new(nresamples);
                 for chunk in chunks {
                     builder.extend(&mut (chunk.join()));
                 }
                 builder.complete()
             } else {
-                let mut distributions: T::Builder =
-                    TupledDistributionsBuilder::new(nresamples);
+                let mut distributions: T::Builder = TupledDistributionsBuilder::new(nresamples);
                 let mut resamples = Resamples::new(*self);
 
                 for _ in 0..nresamples {
@@ -122,16 +128,12 @@ impl<'a, X, Y> Data<'a, X, Y> where X: Float, Y: Float {
 
     /// Returns a view into the `X` data
     pub fn x(&self) -> &'a Sample<X> {
-        unsafe {
-            mem::transmute(self.0)
-        }
+        unsafe { mem::transmute(self.0) }
     }
 
     /// Returns a view into the `Y` data
     pub fn y(&self) -> &'a Sample<Y> {
-        unsafe {
-            mem::transmute(self.1)
-        }
+        unsafe { mem::transmute(self.1) }
     }
 }
 
@@ -149,12 +151,7 @@ impl<'a, X, Y> Iterator for Pairs<'a, X, Y> {
             let i = self.state;
             self.state += 1;
 
-            unsafe {
-                Some((
-                    self.data.0.get_unchecked(i),
-                    self.data.1.get_unchecked(i),
-                ))
-            }
+            unsafe { Some((self.data.0.get_unchecked(i), self.data.1.get_unchecked(i))) }
         } else {
             None
         }

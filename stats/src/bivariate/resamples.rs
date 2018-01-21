@@ -1,10 +1,14 @@
 use rand::distributions::{IndependentSample, Range};
 use rand::{Rng, XorShiftRng};
-use ::float::Float;
+use float::Float;
 
 use bivariate::Data;
 
-pub struct Resamples<'a, X, Y> where X: 'a + Float, Y: 'a + Float {
+pub struct Resamples<'a, X, Y>
+where
+    X: 'a + Float,
+    Y: 'a + Float,
+{
     range: Range<usize>,
     rng: XorShiftRng,
     data: (&'a [X], &'a [Y]),
@@ -12,7 +16,11 @@ pub struct Resamples<'a, X, Y> where X: 'a + Float, Y: 'a + Float {
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(should_implement_trait))]
-impl<'a, X, Y> Resamples<'a, X, Y> where X: 'a + Float, Y: 'a + Float {
+impl<'a, X, Y> Resamples<'a, X, Y>
+where
+    X: 'a + Float,
+    Y: 'a + Float,
+{
     pub fn new(data: Data<'a, X, Y>) -> Resamples<'a, X, Y> {
         Resamples {
             range: Range::new(0, data.0.len()),
@@ -38,14 +46,12 @@ impl<'a, X, Y> Resamples<'a, X, Y> where X: 'a + Float, Y: 'a + Float {
                 }
 
                 self.stage = Some(stage);
-            },
-            Some(ref mut stage) => {
-                for i in 0..n {
-                    let j = self.range.ind_sample(rng);
+            }
+            Some(ref mut stage) => for i in 0..n {
+                let j = self.range.ind_sample(rng);
 
-                    stage.0[i] = self.data.0[j];
-                    stage.1[i] = self.data.1[j];
-                }
+                stage.0[i] = self.data.0[j];
+                stage.1[i] = self.data.1[j];
             },
         }
 

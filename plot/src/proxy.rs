@@ -9,7 +9,8 @@ use std::path::Path;
 #[cfg_attr(feature = "cargo-clippy", allow(inline_always))]
 #[inline(always)]
 pub fn Font<S>(string: S) -> ::Font
-    where S: Into<Cow<'static, str>>
+where
+    S: Into<Cow<'static, str>>,
 {
     ::Font(string.into())
 }
@@ -18,7 +19,8 @@ pub fn Font<S>(string: S) -> ::Font
 #[cfg_attr(feature = "cargo-clippy", allow(inline_always))]
 #[inline(always)]
 pub fn Label<S>(string: S) -> ::Label
-    where S: Into<Cow<'static, str>>
+where
+    S: Into<Cow<'static, str>>,
 {
     ::Label(string.into())
 }
@@ -27,7 +29,8 @@ pub fn Label<S>(string: S) -> ::Label
 #[cfg_attr(feature = "cargo-clippy", allow(inline_always))]
 #[inline(always)]
 pub fn Title<S>(string: S) -> ::Title
-    where S: Into<Cow<'static, str>>
+where
+    S: Into<Cow<'static, str>>,
 {
     ::Title(string.into())
 }
@@ -36,7 +39,8 @@ pub fn Title<S>(string: S) -> ::Title
 #[cfg_attr(feature = "cargo-clippy", allow(inline_always))]
 #[inline(always)]
 pub fn Output<P>(path: P) -> ::Output
-    where P: Into<Cow<'static, Path>>
+where
+    P: Into<Cow<'static, Path>>,
 {
     ::Output(path.into())
 }

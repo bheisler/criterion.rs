@@ -70,7 +70,6 @@ impl Script for Properties {
 impl Set<Color> for Properties {
     /// Changes the color of the error bars
     fn set(&mut self, color: Color) -> &mut Properties {
-
         self.color = Some(color);
         self
     }
@@ -213,31 +212,56 @@ impl<X, Y, L, H> ErrorBar<X, Y, L, H> {
 }
 
 impl<X, Y, L, H> traits::Plot<ErrorBar<X, Y, L, H>> for Figure
-    where H: IntoIterator,
-          H::Item: Data,
-          L: IntoIterator,
-          L::Item: Data,
-          X: IntoIterator,
-          X::Item: Data,
-          Y: IntoIterator,
-          Y::Item: Data
+where
+    H: IntoIterator,
+    H::Item: Data,
+    L: IntoIterator,
+    L::Item: Data,
+    X: IntoIterator,
+    X::Item: Data,
+    Y: IntoIterator,
+    Y::Item: Data,
 {
     type Properties = Properties;
 
     fn plot<F>(&mut self, e: ErrorBar<X, Y, L, H>, configure: F) -> &mut Figure
-        where F: FnOnce(&mut Properties) -> &mut Properties
+    where
+        F: FnOnce(&mut Properties) -> &mut Properties,
     {
         let (x_factor, y_factor) = ::scale_factor(&self.axes, ::Axes::BottomXLeftY);
 
         let style = e.style();
         let (x, y, l, h, e_factor) = match e {
-            ErrorBar::XErrorBars { x, y, x_low, x_high }
-            | ErrorBar::XErrorLines { x, y, x_low, x_high } => (x, y, x_low, x_high, x_factor),
-            ErrorBar::YErrorBars { x, y, y_low, y_high }
-            | ErrorBar::YErrorLines { x, y, y_low, y_high } => (x, y, y_low, y_high, y_factor),
+            ErrorBar::XErrorBars {
+                x,
+                y,
+                x_low,
+                x_high,
+            }
+            | ErrorBar::XErrorLines {
+                x,
+                y,
+                x_low,
+                x_high,
+            } => (x, y, x_low, x_high, x_factor),
+            ErrorBar::YErrorBars {
+                x,
+                y,
+                y_low,
+                y_high,
+            }
+            | ErrorBar::YErrorLines {
+                x,
+                y,
+                y_low,
+                y_high,
+            } => (x, y, y_low, y_high, y_factor),
         };
         let data = Matrix::new(izip!(x, y, l, h), (x_factor, y_factor, e_factor, e_factor));
-        self.plots.push(Plot::new(data, configure(&mut ErrorBarDefault::default(style))));
+        self.plots.push(Plot::new(
+            data,
+            configure(&mut ErrorBarDefault::default(style)),
+        ));
         self
     }
 }
