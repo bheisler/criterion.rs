@@ -16,3 +16,7 @@ fi
 if [ "$COVERAGE" = "yes" ]; then
     curl https://raw.githubusercontent.com/xd009642/tarpaulin/master/travis-install.sh | bash
 fi
+
+if [ "$RUSTFMT" = "yes" ]; then
+    rustup component add rustfmt-preview
+fi

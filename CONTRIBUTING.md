@@ -30,8 +30,15 @@ cargo bench
 It's a good idea to run clippy and fix any warnings as well:
 
 ```
-cargo install clippy
-cargo clippy --all
+cargo +nightly install clippy
+cargo +nightly clippy --all
+```
+
+Finally, run Rustfmt to maintain a common code style:
+
+```
+rustup component add rustfmt-preview --toolchain=nightly
+cargo +nightly fmt
 ```
 
 Don't forget to update the CHANGELOG.md file and any appropriate documentation. Once you're finished, push to your fork and submit a pull request. We try to respond to new issues and pull requests quickly, so if there hasn't been any response for more than a few days feel free to ping @bheisler.

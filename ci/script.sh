@@ -14,6 +14,8 @@ elif [ "$COVERAGE" = "yes" ]; then
     cargo tarpaulin --all --no-count --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
 elif [ "$BENCHMARK" = "yes" ]; then
     cargo bench --all
+elif [ "$RUSTFMT" = "yes" ]; then
+    cargo fmt -- --write-mode diff
 else
     cargo build
     cargo test --all
