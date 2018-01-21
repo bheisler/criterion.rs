@@ -1,9 +1,11 @@
+use std::collections::BTreeMap;
+
 use stats::Tails;
 use stats::bivariate::Data;
 use stats::univariate::Sample;
 use stats::univariate::{mixed, self};
 
-use estimate::Statistic::{Mean, Median};
+use estimate::Statistic;
 use estimate::{Distributions, Estimates};
 use benchmark::BenchmarkConfig;
 use {Criterion, Estimate, format, fs, plot};
@@ -100,22 +102,21 @@ fn estimates(
     let nresamples = config.nresamples;
     let threshold = config.noise_threshold;
 
-    let distributions = {
-        let (a, b) = elapsed!(
-            "Bootstrapping the relative statistics",
-            univariate::bootstrap(avg_times, base_avg_times, nresamples, stats)
-        );
+    let (dist_mean, dist_median) = elapsed!(
+        "Bootstrapping the relative statistics",
+        univariate::bootstrap(avg_times, base_avg_times, nresamples, stats)
+    );
 
-        vec![a, b]
-    };
+    let mut distributions = Distributions::new();
+    distributions.insert(Statistic::Mean, dist_mean);
+    distributions.insert(Statistic::Median, dist_median);
 
-    let points = {
-        let (a, b) = stats(avg_times, base_avg_times);
-        [a, b]
-    };
-    let distributions: Distributions =
-        [Mean, Median].iter().cloned().zip(distributions.into_iter()).collect();
-    let estimates = Estimate::new(&distributions, &points, cl);
+    let (mean, median) = stats(avg_times, base_avg_times);
+    let mut point_estimates = BTreeMap::new();
+    point_estimates.insert(Statistic::Mean, mean);
+    point_estimates.insert(Statistic::Median, median);
+
+    let estimates = Estimate::new(&distributions, &point_estimates, cl);
 
     {
         log_if_err!(fs::save(&estimates, &format!(".criterion/{}/change/estimates.json", id)));

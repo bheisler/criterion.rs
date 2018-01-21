@@ -63,12 +63,13 @@ use std::process::Command;
 use std::time::{Duration, Instant};
 use std::{fmt, mem};
 use std::cell::RefCell;
+use std::collections::BTreeMap;
 
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-use estimate::{Distributions, Estimates};
+use estimate::{Distributions, Estimates, Statistic};
 use report::{Report, CliReport};
 use benchmark::BenchmarkConfig;
 use benchmark::NamedRoutine;
@@ -849,14 +850,14 @@ impl DurationExt for Duration {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Copy, PartialEq, Deserialize, Serialize, Debug)]
 struct ConfidenceInterval {
     confidence_level: f64,
     lower_bound: f64,
     upper_bound: f64,
 }
 
-#[derive(Clone, Copy, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Copy, PartialEq, Deserialize, Serialize, Debug)]
 struct Estimate {
     /// The confidence interval for this estimate
     confidence_interval: ConfidenceInterval,
@@ -867,8 +868,9 @@ struct Estimate {
 }
 
 impl Estimate {
-    fn new(distributions: &Distributions, points: &[f64], cl: f64) -> Estimates {
-        distributions.iter().zip(points.iter()).map(|((&statistic, distribution), &point)| {
+    fn new(distributions: &Distributions, points: &BTreeMap<Statistic, f64>, cl: f64) -> Estimates {
+        distributions.iter().map(|(&statistic, distribution)| {
+            let point_estimate = points[&statistic];
             let (lb, ub) = distribution.confidence_interval(cl);
 
             (statistic, Estimate {
@@ -877,7 +879,7 @@ impl Estimate {
                     lower_bound: lb,
                     upper_bound: ub,
                 },
-                point_estimate: point,
+                point_estimate: point_estimate,
                 standard_error: distribution.std_dev(None),
             })
         }).collect()

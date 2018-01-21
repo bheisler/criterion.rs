@@ -1,5 +1,5 @@
-use std::iter::IntoIterator;
 use std::path::Path;
+use std::collections::BTreeMap;
 
 use stats::Distribution;
 use stats::bivariate::Data;
@@ -172,34 +172,31 @@ fn estimates(
         let median = sample.percentiles().median();
         let mad = sample.median_abs_dev(Some(median));
 
-        (mean, median, mad, std_dev)
+        (mean, std_dev, median, mad)
     }
 
     let cl = config.confidence_level;
     let nresamples = config.nresamples;
 
-    let points = {
-        let (a, b, c, d) = stats(avg_times);
+    let (mean, std_dev, median, mad) = stats(avg_times);
+    let mut point_estimates = BTreeMap::new();
+    point_estimates.insert(Statistic::Mean, mean);
+    point_estimates.insert(Statistic::StdDev, std_dev);
+    point_estimates.insert(Statistic::Median, median);
+    point_estimates.insert(Statistic::MedianAbsDev, mad);
 
-        [a, b, c, d]
-    };
+    let (dist_mean, dist_stddev, dist_median, dist_mad) = elapsed!(
+        "Bootstrapping the absolute statistics.",
+        avg_times.bootstrap(nresamples, stats)
+    );
 
-    let distributions = {
-        let (a, b, c, d) = elapsed!(
-        "Bootstrapping the absolute statistics",
-        avg_times.bootstrap(nresamples, stats));
+    let mut distributions = Distributions::new();
+    distributions.insert(Statistic::Mean, dist_mean);
+    distributions.insert(Statistic::StdDev, dist_stddev);
+    distributions.insert(Statistic::Median, dist_median);
+    distributions.insert(Statistic::MedianAbsDev, dist_mad);
 
-        vec![a, b, c, d]
-    };
-    let statistics = [
-        Statistic::Mean,
-        Statistic::Median,
-        Statistic::MedianAbsDev,
-        Statistic::StdDev,
-    ];
-    let distributions: Distributions = statistics.iter().cloned()
-        .zip(distributions.into_iter()).collect();
-    let estimates = Estimate::new(&distributions, &points, cl);
+    let estimates = Estimate::new(&distributions, &point_estimates, cl);
 
     (distributions, estimates)
 }
