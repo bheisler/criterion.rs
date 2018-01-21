@@ -11,7 +11,7 @@ elif [ "$DOCS" = "yes" ]; then
     cp -r book/book/ target/doc/book/
     travis-cargo doc-upload || true
 elif [ "$COVERAGE" = "yes" ]; then
-    cargo tarpaulin --all --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
+    cargo tarpaulin --all --no-count --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
 elif [ "$BENCHMARK" = "yes" ]; then
     cargo bench --all
 else
