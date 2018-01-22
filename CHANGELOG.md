@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   configuration as well as more complex benchmark grouping (eg. comparing a Rust
   function against an external program over a range of inputs) which was not
   possible previously.
+- Criterion.rs can now report the throughput of the benchmarked code in units of
+  bytes or elements per second. See the `Benchmark.throughput` and
+  `ParameterizedBenchmark.throughput` functions for further details.
 
 ### Changed
 - The builder methods on the Criterion struct now take and return self by value
