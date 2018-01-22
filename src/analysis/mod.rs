@@ -10,7 +10,7 @@ use stats::univariate::outliers::tukey::{self, LabeledSample};
 use estimate::{Distributions, Estimates, Statistic};
 use routine::Routine;
 use benchmark::BenchmarkConfig;
-use {ConfidenceInterval, Criterion, Estimate};
+use {ConfidenceInterval, Criterion, Estimate, Throughput};
 use {format, fs, plot};
 
 macro_rules! elapsed {
@@ -42,6 +42,7 @@ pub(crate) fn common<T>(
     config: &BenchmarkConfig,
     criterion: &Criterion,
     parameter: &T,
+    throughput: Option<Throughput>,
 ) {
     criterion.report.benchmark_start(id);
 
@@ -114,6 +115,7 @@ pub(crate) fn common<T>(
         absolute_estimates: estimates.clone(),
         distributions: distributions,
         comparison: compare_data,
+        throughput: throughput,
     };
 
     criterion.report.measurement_complete(id, &measurement_data);

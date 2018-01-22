@@ -8,17 +8,18 @@ Every Criterion.rs benchmark calculates statistics from the measured iterations 
 ```
 Benchmarking alloc
 Benchmarking alloc: Warming up for 1.0000 s
-Benchmarking alloc: Collecting 100 samples in estimated 9.8358 s (9900 iterations)
+Benchmarking alloc: Collecting 100 samples in estimated 13.354 s (5050 iterations)
 Benchmarking alloc: Analyzing
-alloc                   time:   [858.09 us 865.57 us 873.66 us]
-                        change: [-12.136% -9.0821% -6.0108%] (p = 0.00 < 0.05)
+alloc                   time:   [2.5094 ms 2.5306 ms 2.5553 ms]
+                        thrpt:  [391.34 MiB/s 395.17 MiB/s 398.51 MiB/s]
+                        change: [-38.292% -37.342% -36.524%] (p = 0.00 < 0.05)
                         Performance has improved.
-Found 6 outliers among 99 measurements (6.06%)
-  4 (4.04%) high mild
-  2 (2.02%) high severe
-slope  [858.09 us 873.66 us] R^2            [0.8194613 0.8182567]
-mean   [869.79 us 900.69 us] std. dev.      [40.794 us 112.68 us]
-median [856.23 us 873.03 us] med. abs. dev. [29.124 us 52.521 us]
+Found 8 outliers among 100 measurements (8.00%)
+  4 (4.00%) high mild
+  4 (4.00%) high severe
+slope  [2.5094 ms 2.5553 ms] R^2            [0.8660614 0.8640630]
+mean   [2.5142 ms 2.5557 ms] std. dev.      [62.868 us 149.50 us]
+median [2.5023 ms 2.5262 ms] med. abs. dev. [40.034 us 73.259 us]
 ```
 
 ## Warmup
@@ -31,7 +32,8 @@ Criterion iterates the function to be benchmarked with a varying number of itera
 
 ## Time
 ```
-time:   [858.09 us 865.57 us 873.66 us]
+time:   [2.5094 ms 2.5306 ms 2.5553 ms]
+thrpt:  [391.34 MiB/s 395.17 MiB/s 398.51 MiB/s]
 ```
 
 This shows a confidence interval over the measured per-iteration time for this benchmark. The left and right values show the lower and upper bounds of the confidence interval respectively, while the center value shows Criterion.rs' best estimate of the time taken for each iteration of the benchmarked routine.
@@ -40,13 +42,15 @@ The confidence level is configurable. A greater confidence level (eg. 99%) will 
 
 Criterion.rs performs [bootstrap resampling](https://en.wikipedia.org/wiki/Bootstrapping_(statistics)) to generate these confidence intervals. The number of bootstrap samples is configurable, and defaults to 100,000.
 
+Optionally, Criterion.rs can also report the throughput of the benchmarked code in units of bytes or elements per second.
+
 ## Change
 
 When a Criterion.rs benchmark is run, it saves statistical information in the `.criterion` directory. Subsequent executions of the benchmark will load this data and compare it with the current sample to show the effects of changes in the code.
 
 
 ```
-change: [-12.136% -9.0821% -6.0108%] (p = 0.00 < 0.05)
+change: [-38.292% -37.342% -36.524%] (p = 0.00 < 0.05)
 Performance has improved.
 ```
 
@@ -77,9 +81,9 @@ benchmark               time:   [442.92 ps 453.66 ps 464.78 ps]
 ## Detecting Outliers
 
 ```
-Found 6 outliers among 99 measurements (6.06%)
-  4 (4.04%) high mild
-  2 (2.02%) high severe
+Found 8 outliers among 100 measurements (8.00%)
+  4 (4.00%) high mild
+  4 (4.00%) high severe
 ```
 
 Criterion.rs attempts to detect unusually high or low samples and reports them as outliers. A large number of outliers suggests that the benchmark results are noisy and should be viewed with appropriate skepticism. In this case, you can see that there are some samples which took much longer than normal. This might be caused by unpredictable load on the computer running the benchmarks, thread or process scheduling, or irregularities in the time taken by the code being benchmarked.
@@ -89,9 +93,9 @@ In order to ensure reliable results, benchmarks should be run on a quiet compute
 ## Additional Statistics
 
 ```
-slope  [858.09 us 873.66 us] R^2            [0.8194613 0.8182567]
-mean   [869.79 us 900.69 us] std. dev.      [40.794 us 112.68 us]
-median [856.23 us 873.03 us] med. abs. dev. [29.124 us 52.521 us]
+slope  [2.5094 ms 2.5553 ms] R^2            [0.8660614 0.8640630]
+mean   [2.5142 ms 2.5557 ms] std. dev.      [62.868 us 149.50 us]
+median [2.5023 ms 2.5262 ms] med. abs. dev. [40.034 us 73.259 us]
 ```
 
 This shows additional confidence intervals based on other statistics.
