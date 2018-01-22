@@ -9,6 +9,7 @@ use Estimate;
 use std::io::stdout;
 use std::io::Write;
 use std::cell::Cell;
+use Throughput;
 
 pub(crate) struct ComparisonData {
     pub p_value: f64,
@@ -25,6 +26,7 @@ pub(crate) struct MeasurementData<'a> {
     pub absolute_estimates: Estimates,
     pub distributions: Distributions,
     pub comparison: Option<ComparisonData>,
+    pub throughput: Option<Throughput>,
 }
 
 pub(crate) trait Report {
@@ -199,6 +201,25 @@ impl Report for CliReport {
                 self.bold(format::time(slope_estimate.point_estimate)),
                 self.faint(format::time(slope_estimate.confidence_interval.upper_bound))
             );
+        }
+
+        if let Some(ref throughput) = meas.throughput {
+            println!(
+                "{}thrpt:  [{} {} {}]",
+                " ".repeat(24),
+                self.faint(format::throughput(
+                    throughput,
+                    slope_estimate.confidence_interval.upper_bound
+                )),
+                self.bold(format::throughput(
+                    throughput,
+                    slope_estimate.point_estimate
+                )),
+                self.faint(format::throughput(
+                    throughput,
+                    slope_estimate.confidence_interval.lower_bound
+                )),
+            )
         }
 
         if let Some(ref comp) = meas.comparison {

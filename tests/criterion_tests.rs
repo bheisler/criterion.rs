@@ -1,7 +1,7 @@
 extern crate criterion;
 extern crate walkdir;
 
-use criterion::{Benchmark, Criterion, Fun, ParameterizedBenchmark};
+use criterion::{Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
 use std::time::Duration;
 use std::path::Path;
 use walkdir::WalkDir;
@@ -257,5 +257,21 @@ fn test_timing_loops() {
             .with_function("iter_with_large_drop", |b| {
                 b.iter_with_large_drop(|| vec![10; 100])
             }),
+    );
+}
+
+#[test]
+fn test_throughput() {
+    short_benchmark().bench(
+        "test_throughput_bytes",
+        Benchmark::new("strlen", |b| b.iter(|| "foo".len())).throughput(Throughput::Bytes(3)),
+    );
+    short_benchmark().bench(
+        "test_throughput_elems",
+        ParameterizedBenchmark::new(
+            "veclen",
+            |b, v| b.iter(|| v.len()),
+            vec![vec![1], vec![1, 2, 3]],
+        ).throughput(|v| Throughput::Elements(v.len() as u32)),
     );
 }

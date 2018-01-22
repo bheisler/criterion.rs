@@ -1,5 +1,5 @@
 use std::time::Duration;
-use {Bencher, Criterion, DurationExt};
+use {Bencher, Criterion, DurationExt, Throughput};
 use routine::{Function, Routine};
 use analysis;
 use std::cell::RefCell;
@@ -70,6 +70,7 @@ pub struct ParameterizedBenchmark<T: Debug> {
     config: PartialBenchmarkConfig,
     values: Vec<T>,
     routines: Vec<NamedRoutine<T>>,
+    throughput: Option<Box<Fn(&T) -> Throughput>>,
 }
 
 /// Structure representing a benchmark (or group of benchmarks)
@@ -77,6 +78,7 @@ pub struct ParameterizedBenchmark<T: Debug> {
 pub struct Benchmark {
     config: PartialBenchmarkConfig,
     routines: Vec<NamedRoutine<()>>,
+    throughput: Option<Throughput>,
 }
 
 /// Common trait for `Benchmark` and `ParameterizedBenchmark`. Not inteded to be
@@ -232,6 +234,7 @@ impl Benchmark {
         Benchmark {
             config: Default::default(),
             routines: vec![],
+            throughput: None,
         }.with_function(id, f)
     }
 
@@ -281,6 +284,7 @@ impl Benchmark {
         Benchmark {
             config: Default::default(),
             routines: vec![],
+            throughput: None,
         }.with_program(id, program)
     }
 
@@ -323,6 +327,19 @@ impl Benchmark {
         self.routines.push(routine);
         self
     }
+
+    /// Set the input size for this benchmark group.
+    ///
+    /// ```
+    /// # use criterion::{Benchmark, Throughput};
+    /// # use std::process::Command;
+    /// Benchmark::new("strlen", |b| b.iter(|| "foo".len()))
+    ///     .throughput(Throughput::Bytes(3));
+    /// ```
+    pub fn throughput(mut self, throughput: Throughput) -> Benchmark {
+        self.throughput = Some(throughput);
+        self
+    }
 }
 
 impl BenchmarkDefinition for Benchmark {
@@ -340,7 +357,14 @@ impl BenchmarkDefinition for Benchmark {
 
             if c.filter_matches(&id) {
                 any_matched = true;
-                analysis::common(&id, &mut *routine.f.borrow_mut(), &config, c, &());
+                analysis::common(
+                    &id,
+                    &mut *routine.f.borrow_mut(),
+                    &config,
+                    c,
+                    &(),
+                    self.throughput.clone(),
+                );
             }
         }
 
@@ -390,6 +414,7 @@ where
             config: Default::default(),
             values: parameters.into_iter().collect(),
             routines: vec![],
+            throughput: None,
         }.with_function(id, f)
     }
 
@@ -445,6 +470,7 @@ where
             config: Default::default(),
             routines: vec![],
             values: parameters.into_iter().collect(),
+            throughput: None,
         }.with_program(id, program)
     }
 
@@ -456,6 +482,7 @@ where
             config: Default::default(),
             values: parameters,
             routines: functions,
+            throughput: None,
         }
     }
 
@@ -504,6 +531,22 @@ where
         self.routines.push(routine);
         self
     }
+
+    /// Use the given function to calculate the input size for a given input.
+    ///
+    /// ```
+    /// # use criterion::{ParameterizedBenchmark, Throughput};
+    /// # use std::process::Command;
+    /// ParameterizedBenchmark::new("strlen", |b, s| b.iter(|| s.len()), vec!["foo", "lorem ipsum"])
+    ///     .throughput(|s| Throughput::Bytes(s.len() as u32));
+    /// ```
+    pub fn throughput<F>(mut self, throughput: F) -> ParameterizedBenchmark<T>
+    where
+        F: Fn(&T) -> Throughput + 'static,
+    {
+        self.throughput = Some(Box::new(throughput));
+        self
+    }
 }
 impl<T> BenchmarkDefinition for ParameterizedBenchmark<T>
 where
@@ -529,9 +572,18 @@ where
                     format!("{}/{:?}", id, value)
                 };
 
+                let throughput = self.throughput.as_ref().map(|func| func(value));
+
                 if c.filter_matches(&id) {
                     any_matched = true;
-                    analysis::common(&id, &mut *routine.f.borrow_mut(), &config, c, value);
+                    analysis::common(
+                        &id,
+                        &mut *routine.f.borrow_mut(),
+                        &config,
+                        c,
+                        value,
+                        throughput,
+                    );
                 }
             }
         }
