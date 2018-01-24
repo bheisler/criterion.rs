@@ -191,8 +191,17 @@ impl Report for CliReport {
 
         {
             let mut id = String::from(id);
-            id.truncate(23);
+
+            if id.len() > 23 {
+                if id.len() > 80 {
+                    id.truncate(77);
+                    id.push_str("...");
+                }
+                println!("{}", id);
+                id.clear();
+            }
             let id_len = id.len();
+
             println!(
                 "{}{}time:   [{} {} {}]",
                 self.green(id),
