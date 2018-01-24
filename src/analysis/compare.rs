@@ -20,12 +20,15 @@ pub(crate) fn common(
     config: &BenchmarkConfig,
     criterion: &Criterion,
 ) -> Result<(f64, f64, Estimates)> {
-    let sample_dir = format!(".criterion/{}/base/sample.json", id);
+    let sample_dir = format!("{}/{}/base/sample.json", criterion.output_directory, id);
     let (iters, times): (Vec<f64>, Vec<f64>) = fs::load(&sample_dir)?;
 
     let base_data = Data::new(&iters, &times);
 
-    let base_estimates: Estimates = fs::load(&format!(".criterion/{}/base/estimates.json", id))?;
+    let base_estimates: Estimates = fs::load(&format!(
+        "{}/{}/base/estimates.json",
+        criterion.output_directory, id
+    ))?;
 
     let base_avg_times: Vec<f64> = iters
         .iter()
@@ -34,19 +37,26 @@ pub(crate) fn common(
         .collect();
     let base_avg_times = Sample::new(&base_avg_times);
 
-    fs::mkdirp(&format!(".criterion/{}/both", id))?;
+    fs::mkdirp(&format!("{}/{}/both", criterion.output_directory, id))?;
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting both linear regressions",
-            plot::both::regression(base_data, &base_estimates, data, estimates_, id)
+            plot::both::regression(
+                base_data,
+                &base_estimates,
+                data,
+                estimates_,
+                id,
+                &criterion.output_directory
+            )
         );
         elapsed!(
             "Plotting both estimated PDFs",
-            plot::both::pdfs(base_avg_times, avg_times, id)
+            plot::both::pdfs(base_avg_times, avg_times, id, &criterion.output_directory)
         );
     }
 
-    fs::mkdirp(&format!(".criterion/{}/change", id))?;
+    fs::mkdirp(&format!("{}/{}/change", criterion.output_directory, id))?;
     let (t_statistic, p_statistic) = t_test(id, avg_times, base_avg_times, config, criterion);
 
     let estimates = estimates(id, avg_times, base_avg_times, config, criterion);
@@ -73,7 +83,12 @@ fn t_test(
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting the T test",
-            plot::t_test(t_statistic, &t_distribution, id)
+            plot::t_test(
+                t_statistic,
+                &t_distribution,
+                id,
+                &criterion.output_directory
+            )
         );
     }
 
@@ -118,14 +133,23 @@ fn estimates(
     {
         log_if_err!(fs::save(
             &estimates,
-            &format!(".criterion/{}/change/estimates.json", id)
+            &format!(
+                "{}/{}/change/estimates.json",
+                criterion.output_directory, id
+            )
         ));
     }
 
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting the distribution of the relative statistics",
-            plot::rel_distributions(&distributions, &estimates, id, threshold)
+            plot::rel_distributions(
+                &distributions,
+                &estimates,
+                id,
+                &criterion.output_directory,
+                threshold
+            )
         );
     }
 

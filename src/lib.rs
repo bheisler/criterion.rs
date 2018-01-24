@@ -384,6 +384,7 @@ pub struct Criterion {
     plotting: Plotting,
     filter: Option<String>,
     report: Box<Report>,
+    output_directory: String,
 }
 
 impl Default for Criterion {
@@ -420,6 +421,7 @@ impl Default for Criterion {
             plotting: plotting,
             filter: None,
             report: Box::new(CliReport::new(false, false, false)),
+            output_directory: "target/criterion".to_owned(),
         }
     }
 }

@@ -29,7 +29,7 @@ mod compare;
 
 pub fn summarize(id: &str, criterion: &Criterion) {
     if criterion.plotting.is_enabled() {
-        plot::summarize(id);
+        plot::summarize(id, &criterion.output_directory);
     }
 
     println!();
@@ -50,7 +50,7 @@ pub(crate) fn common<T>(
 
     criterion.report.analysis(id);
 
-    rename_new_dir_to_base(id);
+    rename_new_dir_to_base(id, &criterion.output_directory);
 
     let avg_times = iters
         .iter()
@@ -59,10 +59,13 @@ pub(crate) fn common<T>(
         .collect::<Vec<f64>>();
     let avg_times = Sample::new(&avg_times);
 
-    log_if_err!(fs::mkdirp(&format!(".criterion/{}/new", id)));
+    log_if_err!(fs::mkdirp(&format!(
+        "{}/{}/new",
+        criterion.output_directory, id
+    )));
 
     let data = Data::new(&iters, &times);
-    let labeled_sample = outliers(id, avg_times);
+    let labeled_sample = outliers(id, &criterion.output_directory, avg_times);
     let (distribution, slope) = regression(id, data, config, criterion);
     let (mut distributions, mut estimates) = estimates(avg_times, config);
 
@@ -72,24 +75,24 @@ pub(crate) fn common<T>(
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting the estimated sample PDF",
-            plot::pdf(data, labeled_sample, id)
+            plot::pdf(data, labeled_sample, id, &criterion.output_directory)
         );
         elapsed!(
             "Plotting the distribution of the absolute statistics",
-            plot::abs_distributions(&distributions, &estimates, id)
+            plot::abs_distributions(&distributions, &estimates, id, &criterion.output_directory)
         );
     }
 
     log_if_err!(fs::save(
         &(data.x().as_slice(), data.y().as_slice()),
-        &format!(".criterion/{}/new/sample.json", id),
+        &format!("{}/{}/new/sample.json", criterion.output_directory, id),
     ));
     log_if_err!(fs::save(
         &estimates,
-        &format!(".criterion/{}/new/estimates.json", id)
+        &format!("{}/{}/new/estimates.json", criterion.output_directory, id)
     ));
 
-    let compare_data = if base_dir_exists(id) {
+    let compare_data = if base_dir_exists(id, &criterion.output_directory) {
         let result = compare::common(id, data, avg_times, &estimates, config, criterion);
         match result {
             Ok((t_val, p_val, rel_est)) => Some(::report::ComparisonData {
@@ -121,8 +124,8 @@ pub(crate) fn common<T>(
     criterion.report.measurement_complete(id, &measurement_data);
 }
 
-fn base_dir_exists(id: &str) -> bool {
-    Path::new(&format!(".criterion/{}/base", id)).exists()
+fn base_dir_exists(id: &str, output_directory: &str) -> bool {
+    Path::new(&format!("{}/{}/base", output_directory, id)).exists()
 }
 
 // Performs a simple linear regression on the sample
@@ -148,7 +151,7 @@ fn regression(
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting linear regression",
-            plot::regression(data, &point, (lb_, ub_), id)
+            plot::regression(data, &point, (lb_, ub_), id, &criterion.output_directory)
         );
     }
 
@@ -167,11 +170,15 @@ fn regression(
 }
 
 // Classifies the outliers in the sample
-fn outliers<'a>(id: &str, avg_times: &'a Sample<f64>) -> LabeledSample<'a, f64> {
+fn outliers<'a>(
+    id: &str,
+    output_directory: &str,
+    avg_times: &'a Sample<f64>,
+) -> LabeledSample<'a, f64> {
     let sample = tukey::classify(avg_times);
     log_if_err!(fs::save(
         &sample.fences(),
-        &format!(".criterion/{}/new/tukey.json", id)
+        &format!("{}/{}/new/tukey.json", output_directory, id)
     ));
     sample
 }
@@ -213,8 +220,8 @@ fn estimates(avg_times: &Sample<f64>, config: &BenchmarkConfig) -> (Distribution
     (distributions, estimates)
 }
 
-fn rename_new_dir_to_base(id: &str) {
-    let root_dir = Path::new(".criterion").join(id);
+fn rename_new_dir_to_base(id: &str, output_directory: &str) {
+    let root_dir = Path::new(output_directory).join(id);
     let base_dir = root_dir.join("base");
     let new_dir = root_dir.join("new");
 

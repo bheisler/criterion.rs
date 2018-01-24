@@ -70,7 +70,7 @@ fn has_python3() -> bool {
 #[test]
 fn test_creates_directory() {
     short_benchmark().bench_function("test_creates_directory", |b| b.iter(|| 10));
-    assert!(Path::new(".criterion/test_creates_directory").is_dir());
+    assert!(Path::new("target/criterion/test_creates_directory").is_dir());
 }
 
 #[test]
@@ -79,7 +79,7 @@ fn test_without_plots() {
         .without_plots()
         .bench_function("test_without_plots", |b| b.iter(|| 10));
 
-    for entry in WalkDir::new(".criterion/test_without_plots") {
+    for entry in WalkDir::new("target/criterion/test_without_plots") {
         let entry = entry.ok();
         let is_svg = entry
             .as_ref()
@@ -240,7 +240,7 @@ fn test_filtering() {
         .bench_function("test_filtering", move |b| b.iter(|| clone.count()));
 
     assert_eq!(counter.read(), 0);
-    assert!(!Path::new(".criterion/test_filtering").is_dir());
+    assert!(!Path::new("target/criterion/test_filtering").is_dir());
 }
 
 #[test]

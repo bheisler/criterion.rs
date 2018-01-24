@@ -4,7 +4,7 @@ If [gnuplot](http://www.gnuplot.info/) is installed, Criterion.rs can generate a
 
 ## File Structure
 
-The plots and saved data are stored under `.criterion/$BENCHMARK_NAME/`. Here's an example of the folder structure:
+The plots and saved data are stored under `target/criterion/$BENCHMARK_NAME/`. Here's an example of the folder structure:
 
 ```
 $BENCHMARK/

@@ -48,13 +48,22 @@ fn compare_looped(c: &mut Criterion) {
 
     c.bench(
         "small",
-        ParameterizedBenchmark::new("unlooped", |b, i| b.iter(|| i + 10), vec![10])
-            .with_function("looped", |b, i| b.iter(|| {
-                for _ in 0..10000 {
-                    black_box(i + 10);
-                }
-            }))
+        ParameterizedBenchmark::new("unlooped", |b, i| b.iter(|| i + 10), vec![10]).with_function(
+            "looped",
+            |b, i| {
+                b.iter(|| {
+                    for _ in 0..10_000 {
+                        black_box(i + 10);
+                    }
+                })
+            },
+        ),
     );
 }
 
-criterion_group!(fibonaccis, compare_fibonaccis, compare_fibonaccis_builder, compare_looped);
+criterion_group!(
+    fibonaccis,
+    compare_fibonaccis,
+    compare_fibonaccis_builder,
+    compare_looped
+);

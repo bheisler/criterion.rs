@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   to `move |bencher| {...}`.
 - `Criterion.bench_functions` now takes `I` as an input parameter, not `&I`.
 - Input values must now implement `Debug` rather than `Display`.
+- The generated plots are stored in `target/criterion` rather than `.criterion`.
 
 ### Removed
 - The hidden `criterion::ConfidenceInterval` and`criterion::Estimate` types are

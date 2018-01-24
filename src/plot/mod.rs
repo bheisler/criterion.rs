@@ -62,8 +62,13 @@ fn debug_script(path: &PathBuf, figure: &Figure) {
     }
 }
 
-pub fn pdf(data: Data<f64, f64>, labeled_sample: LabeledSample<f64>, id: &str) {
-    let path = PathBuf::from(format!(".criterion/{}/new/pdf.svg", id));
+pub fn pdf(
+    data: Data<f64, f64>,
+    labeled_sample: LabeledSample<f64>,
+    id: &str,
+    output_directory: &str,
+) {
+    let path = PathBuf::from(format!("{}/{}/new/pdf.svg", output_directory, id));
 
     let (x_scale, prefix) = scale_time(labeled_sample.max());
 
@@ -253,8 +258,9 @@ pub fn regression(
     point: &Slope<f64>,
     (lb, ub): (Slope<f64>, Slope<f64>),
     id: &str,
+    output_directory: &str,
 ) {
-    let path = PathBuf::from(format!(".criterion/{}/new/regression.svg", id));
+    let path = PathBuf::from(format!("{}/{}/new/regression.svg", output_directory, id));
 
     let (max_iters, max_elapsed) = (data.x().max(), data.y().max());
 
@@ -336,11 +342,16 @@ pub fn regression(
     wait_on_gnuplot(vec![gnuplot]);
 }
 
-pub(crate) fn abs_distributions(distributions: &Distributions, estimates: &Estimates, id: &str) {
+pub(crate) fn abs_distributions(
+    distributions: &Distributions,
+    estimates: &Estimates,
+    id: &str,
+    output_directory: &str,
+) {
     let gnuplots = distributions
         .iter()
         .map(|(&statistic, distribution)| {
-            let path = PathBuf::from(format!(".criterion/{}/new/{}.svg", id, statistic));
+            let path = PathBuf::from(format!("{}/{}/new/{}.svg", output_directory, id, statistic));
             let estimate = estimates[&statistic];
 
             let ci = estimate.confidence_interval;
@@ -432,6 +443,7 @@ pub(crate) fn rel_distributions(
     distributions: &Distributions,
     estimates: &Estimates,
     id: &str,
+    output_directory: &str,
     nt: f64,
 ) {
     let mut figure = Figure::new();
@@ -449,7 +461,10 @@ pub(crate) fn rel_distributions(
     let gnuplots = distributions
         .iter()
         .map(|(&statistic, distribution)| {
-            let path = PathBuf::from(format!(".criterion/{}/change/{}.svg", id, statistic));
+            let path = PathBuf::from(format!(
+                "{}/{}/change/{}.svg",
+                output_directory, id, statistic
+            ));
 
             let estimate = estimates[&statistic];
             let ci = estimate.confidence_interval;
@@ -551,8 +566,8 @@ pub(crate) fn rel_distributions(
     wait_on_gnuplot(gnuplots);
 }
 
-pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str) {
-    let path = PathBuf::from(format!(".criterion/{}/change/t-test.svg", id));
+pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str, output_directory: &str) {
+    let path = PathBuf::from(format!("{}/{}/change/t-test.svg", output_directory, id));
 
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, None);
     let zero = iter::repeat(0);
@@ -614,8 +629,8 @@ impl<T> Append<T> for Vec<T> {
     }
 }
 
-pub fn summarize(id: &str) {
-    let dir = Path::new(".criterion").join(id);
+pub fn summarize(id: &str, output_directory: &str) {
+    let dir = Path::new(output_directory).join(id);
     let contents: Vec<_> = try_else_return!(fs::ls(&dir))
         .map(|e| e.unwrap().path())
         .collect();

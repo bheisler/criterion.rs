@@ -46,7 +46,7 @@ Optionally, Criterion.rs can also report the throughput of the benchmarked code 
 
 ## Change
 
-When a Criterion.rs benchmark is run, it saves statistical information in the `.criterion` directory. Subsequent executions of the benchmark will load this data and compare it with the current sample to show the effects of changes in the code.
+When a Criterion.rs benchmark is run, it saves statistical information in the `target/criterion` directory. Subsequent executions of the benchmark will load this data and compare it with the current sample to show the effects of changes in the code.
 
 
 ```

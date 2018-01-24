@@ -18,8 +18,9 @@ pub(crate) fn regression(
     data: Data<f64, f64>,
     estimates: &Estimates,
     id: &str,
+    output_directory: &str,
 ) {
-    let path = PathBuf::from(format!(".criterion/{}/both/regression.svg", id));
+    let path = PathBuf::from(format!("{}/{}/both/regression.svg", output_directory, id));
 
     let max_iters = base_data.x().max().max(data.x().max());
     let max_elapsed = base_data.y().max().max(data.y().max());
@@ -123,8 +124,13 @@ pub(crate) fn regression(
     wait_on_gnuplot(vec![gnuplot]);
 }
 
-pub fn pdfs(base_avg_times: &Sample<f64>, avg_times: &Sample<f64>, id: &str) {
-    let path = PathBuf::from(format!(".criterion/{}/both/pdf.svg", id));
+pub fn pdfs(
+    base_avg_times: &Sample<f64>,
+    avg_times: &Sample<f64>,
+    id: &str,
+    output_directory: &str,
+) {
+    let path = PathBuf::from(format!("{}/{}/both/pdf.svg", output_directory, id));
 
     let (base_xs, base_ys) = kde::sweep(base_avg_times, KDE_POINTS, None);
     let (xs, ys) = kde::sweep(avg_times, KDE_POINTS, None);
