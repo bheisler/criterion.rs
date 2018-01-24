@@ -26,7 +26,7 @@ pub trait Routine<T> {
         let wu = config.warm_up_time;
         let m_ns = config.measurement_time.to_nanos();
 
-        criterion.report.warmup(id, wu.to_nanos() as f64);
+        criterion.report.warmup(id, criterion, wu.to_nanos() as f64);
 
         let mut m = self.start(parameter);
 
@@ -45,7 +45,7 @@ pub trait Routine<T> {
         let m_ns = total_runs as f64 * d as f64 * met;
         criterion
             .report
-            .measurement_start(id, n, m_ns, m_iters.iter().sum());
+            .measurement_start(id, criterion, n, m_ns, m_iters.iter().sum());
         let m_elapsed = self.bench(&mut m, &m_iters, parameter);
 
         let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();

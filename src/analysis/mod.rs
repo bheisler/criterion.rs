@@ -44,11 +44,11 @@ pub(crate) fn common<T>(
     parameter: &T,
     throughput: Option<Throughput>,
 ) {
-    criterion.report.benchmark_start(id);
+    criterion.report.benchmark_start(id, criterion);
 
     let (iters, times) = routine.sample(id, config, criterion, parameter);
 
-    criterion.report.analysis(id);
+    criterion.report.analysis(id, criterion);
 
     rename_new_dir_to_base(id, &criterion.output_directory);
 
@@ -121,7 +121,7 @@ pub(crate) fn common<T>(
         throughput: throughput,
     };
 
-    criterion.report.measurement_complete(id, &measurement_data);
+    criterion.report.measurement_complete(id, criterion, &measurement_data);
 }
 
 fn base_dir_exists(id: &str, output_directory: &str) -> bool {
