@@ -43,7 +43,7 @@ extern crate serde_derive;
 // in order to be usable there.
 #[macro_use]
 mod macros_private;
-
+#[macro_use]
 mod analysis;
 mod benchmark;
 mod error;
@@ -70,7 +70,7 @@ use std::io::Read;
 use std::path::Path;
 
 use estimate::{Distributions, Estimates, Statistic};
-use report::{CliReport, Report};
+use report::{CliReport, Report, Reports};
 use benchmark::BenchmarkConfig;
 use benchmark::NamedRoutine;
 use routine::Function;
@@ -420,7 +420,8 @@ impl Default for Criterion {
             },
             plotting: plotting,
             filter: None,
-            report: Box::new(CliReport::new(false, false, false)),
+            report: Box::new(Reports::new(
+                vec![Box::new(CliReport::new(false, false, false))])),
             output_directory: "target/criterion".to_owned(),
         }
     }
@@ -630,11 +631,15 @@ scripts alongside the generated plots.
             _ => enable_text_coloring = cfg!(unix) && isatty::stdout_isatty(),
         }
 
-        self.report = Box::new(CliReport::new(
+        let cli_report = Box::new(CliReport::new(
             enable_text_overwrite,
             enable_text_coloring,
             verbose,
         ));
+
+        self.report=Box::new(Reports::new(
+                vec![cli_report]));
+
         self
     }
 

@@ -9,7 +9,7 @@ use Estimate;
 use std::io::stdout;
 use std::io::Write;
 use std::cell::Cell;
-use Throughput;
+use {Throughput, Criterion};
 
 pub(crate) struct ComparisonData {
     pub p_value: f64,
@@ -30,11 +30,50 @@ pub(crate) struct MeasurementData<'a> {
 }
 
 pub(crate) trait Report {
-    fn benchmark_start(&self, id: &str);
-    fn warmup(&self, id: &str, warmup_ns: f64);
-    fn analysis(&self, id: &str);
-    fn measurement_start(&self, id: &str, sample_count: u64, estimate_ns: f64, iter_count: u64);
-    fn measurement_complete(&self, id: &str, measurements: &MeasurementData);
+    fn benchmark_start(&self, id: &str, criterion: &Criterion);
+    fn warmup(&self, id: &str, criterion: &Criterion, warmup_ns: f64);
+    fn analysis(&self, id: &str, criterion: &Criterion);
+    fn measurement_start(&self, id: &str, criterion: &Criterion, sample_count: u64, estimate_ns: f64, iter_count: u64);
+    fn measurement_complete(&self, id: &str, criterion: &Criterion, measurements: &MeasurementData);
+}
+
+pub(crate) struct Reports {
+    reports: Vec<Box<Report>>
+}
+impl Reports {
+    pub fn new(reports: Vec<Box<Report>>) -> Reports {
+        Reports{ reports }
+    }
+}
+impl Report for Reports {
+    fn benchmark_start(&self, id: &str, criterion: &Criterion) {
+        for report in self.reports.iter() {
+            report.benchmark_start(id, criterion);
+        }
+    }
+
+    fn warmup(&self, id: &str, criterion: &Criterion, warmup_ns: f64) {
+        for report in self.reports.iter() {
+            report.warmup(id, criterion, warmup_ns);
+        }
+    }
+
+    fn analysis(&self, id: &str, criterion: &Criterion) {
+        for report in self.reports.iter() {
+            report.analysis(id, criterion);
+        }
+    }
+
+    fn measurement_start(&self, id: &str, criterion: &Criterion, sample_count: u64, estimate_ns: f64, iter_count: u64) {
+        for report in self.reports.iter() {
+            report.measurement_start(id, criterion, sample_count, estimate_ns, iter_count);
+        }
+    }
+    fn measurement_complete(&self, id: &str, criterion: &Criterion, measurements: &MeasurementData) {
+        for report in self.reports.iter() {
+            report.measurement_complete(id, criterion, measurements);
+        }
+    }
 }
 
 pub(crate) struct CliReport {
@@ -155,11 +194,11 @@ impl CliReport {
     }
 }
 impl Report for CliReport {
-    fn benchmark_start(&self, id: &str) {
+    fn benchmark_start(&self, id: &str, _: &Criterion) {
         self.print_overwritable(format!("Benchmarking {}", id));
     }
 
-    fn warmup(&self, id: &str, warmup_ns: f64) {
+    fn warmup(&self, id: &str, _: &Criterion, warmup_ns: f64) {
         self.text_overwrite();
         self.print_overwritable(format!(
             "Benchmarking {}: Warming up for {}",
@@ -168,12 +207,12 @@ impl Report for CliReport {
         ));
     }
 
-    fn analysis(&self, id: &str) {
+    fn analysis(&self, id: &str, _: &Criterion) {
         self.text_overwrite();
         self.print_overwritable(format!("Benchmarking {}: Analyzing", id));
     }
 
-    fn measurement_start(&self, id: &str, sample_count: u64, estimate_ns: f64, iter_count: u64) {
+    fn measurement_start(&self, id: &str, _: &Criterion, sample_count: u64, estimate_ns: f64, iter_count: u64) {
         self.text_overwrite();
         self.print_overwritable(format!(
             "Benchmarking {}: Collecting {} samples in estimated {} ({} iterations)",
@@ -184,7 +223,7 @@ impl Report for CliReport {
         ));
     }
 
-    fn measurement_complete(&self, id: &str, meas: &MeasurementData) {
+    fn measurement_complete(&self, id: &str, _: &Criterion, meas: &MeasurementData) {
         self.text_overwrite();
 
         let slope_estimate = meas.absolute_estimates[&Statistic::Slope];
@@ -197,7 +236,7 @@ impl Report for CliReport {
                     id.truncate(77);
                     id.push_str("...");
                 }
-                println!("{}", id);
+                println!("{}", self.green(id.clone()));
                 id.clear();
             }
             let id_len = id.len();
