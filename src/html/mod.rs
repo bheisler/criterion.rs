@@ -182,7 +182,7 @@ impl Report for Html {
 
         let text = self.handlebars.render("report", &context).unwrap();
         fs::save_string(
-            text,
+            &text,
             &format!("{}/{}/new/index.html", criterion.output_directory, id),
         ).unwrap();
     }

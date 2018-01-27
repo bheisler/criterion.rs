@@ -58,19 +58,19 @@ impl Reports {
 }
 impl Report for Reports {
     fn benchmark_start(&self, id: &str, criterion: &Criterion) {
-        for report in self.reports.iter() {
+        for report in &self.reports {
             report.benchmark_start(id, criterion);
         }
     }
 
     fn warmup(&self, id: &str, criterion: &Criterion, warmup_ns: f64) {
-        for report in self.reports.iter() {
+        for report in &self.reports {
             report.warmup(id, criterion, warmup_ns);
         }
     }
 
     fn analysis(&self, id: &str, criterion: &Criterion) {
-        for report in self.reports.iter() {
+        for report in &self.reports {
             report.analysis(id, criterion);
         }
     }
@@ -83,7 +83,7 @@ impl Report for Reports {
         estimate_ns: f64,
         iter_count: u64,
     ) {
-        for report in self.reports.iter() {
+        for report in &self.reports {
             report.measurement_start(id, criterion, sample_count, estimate_ns, iter_count);
         }
     }
@@ -93,7 +93,7 @@ impl Report for Reports {
         criterion: &Criterion,
         measurements: &MeasurementData,
     ) {
-        for report in self.reports.iter() {
+        for report in &self.reports {
             report.measurement_complete(id, criterion, measurements);
         }
     }

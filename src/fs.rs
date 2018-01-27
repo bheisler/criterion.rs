@@ -50,10 +50,10 @@ where
     P: AsRef<Path>,
 {
     let buf = serde_json::to_string(&data)?;
-    save_string(buf, path)
+    save_string(&buf, path)
 }
 
-pub fn save_string<P>(data: String, path: &P) -> Result<()>
+pub fn save_string<P>(data: &str, path: &P) -> Result<()>
 where
     P: AsRef<Path>,
 {

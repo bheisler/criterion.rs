@@ -12,6 +12,7 @@ use kde;
 use super::{debug_script, scale_time, wait_on_gnuplot};
 use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
 
+#[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
 pub(crate) fn regression(
     base_data: Data<f64, f64>,
     base_estimates: &Estimates,

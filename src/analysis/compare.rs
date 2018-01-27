@@ -12,6 +12,7 @@ use {format, fs, plot, Criterion, Estimate};
 use error::Result;
 
 // Common comparison procedure
+#[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
 pub(crate) fn common(
     id: &str,
     data: Data<f64, f64>,
