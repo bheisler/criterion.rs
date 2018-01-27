@@ -9,7 +9,7 @@ use Estimate;
 use std::io::stdout;
 use std::io::Write;
 use std::cell::Cell;
-use {Throughput, Criterion};
+use {Criterion, Throughput};
 
 pub(crate) struct ComparisonData {
     pub p_value: f64,
@@ -37,16 +37,23 @@ pub(crate) trait Report {
     fn benchmark_start(&self, id: &str, criterion: &Criterion);
     fn warmup(&self, id: &str, criterion: &Criterion, warmup_ns: f64);
     fn analysis(&self, id: &str, criterion: &Criterion);
-    fn measurement_start(&self, id: &str, criterion: &Criterion, sample_count: u64, estimate_ns: f64, iter_count: u64);
+    fn measurement_start(
+        &self,
+        id: &str,
+        criterion: &Criterion,
+        sample_count: u64,
+        estimate_ns: f64,
+        iter_count: u64,
+    );
     fn measurement_complete(&self, id: &str, criterion: &Criterion, measurements: &MeasurementData);
 }
 
 pub(crate) struct Reports {
-    reports: Vec<Box<Report>>
+    reports: Vec<Box<Report>>,
 }
 impl Reports {
     pub fn new(reports: Vec<Box<Report>>) -> Reports {
-        Reports{ reports }
+        Reports { reports }
     }
 }
 impl Report for Reports {
@@ -68,12 +75,24 @@ impl Report for Reports {
         }
     }
 
-    fn measurement_start(&self, id: &str, criterion: &Criterion, sample_count: u64, estimate_ns: f64, iter_count: u64) {
+    fn measurement_start(
+        &self,
+        id: &str,
+        criterion: &Criterion,
+        sample_count: u64,
+        estimate_ns: f64,
+        iter_count: u64,
+    ) {
         for report in self.reports.iter() {
             report.measurement_start(id, criterion, sample_count, estimate_ns, iter_count);
         }
     }
-    fn measurement_complete(&self, id: &str, criterion: &Criterion, measurements: &MeasurementData) {
+    fn measurement_complete(
+        &self,
+        id: &str,
+        criterion: &Criterion,
+        measurements: &MeasurementData,
+    ) {
         for report in self.reports.iter() {
             report.measurement_complete(id, criterion, measurements);
         }
@@ -216,7 +235,14 @@ impl Report for CliReport {
         self.print_overwritable(format!("Benchmarking {}: Analyzing", id));
     }
 
-    fn measurement_start(&self, id: &str, _: &Criterion, sample_count: u64, estimate_ns: f64, iter_count: u64) {
+    fn measurement_start(
+        &self,
+        id: &str,
+        _: &Criterion,
+        sample_count: u64,
+        estimate_ns: f64,
+        iter_count: u64,
+    ) {
         self.text_overwrite();
         self.print_overwritable(format!(
             "Benchmarking {}: Collecting {} samples in estimated {} ({} iterations)",

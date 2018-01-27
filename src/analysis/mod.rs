@@ -75,9 +75,14 @@ pub(crate) fn common<T>(
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting the estimated sample PDF",
-            plot::pdf(data, labeled_sample, id,
+            plot::pdf(
+                data,
+                labeled_sample,
+                id,
                 format!("{}/{}/new/pdf.svg", criterion.output_directory, id),
-                None, false)
+                None,
+                false
+            )
         );
         elapsed!(
             "Plotting the distribution of the absolute statistics",
@@ -97,17 +102,19 @@ pub(crate) fn common<T>(
     let compare_data = if base_dir_exists(id, &criterion.output_directory) {
         let result = compare::common(id, data, avg_times, &estimates, config, criterion);
         match result {
-            Ok((t_val, p_val, rel_est, base_iters, base_times, base_avg, base_estimates)) => Some(::report::ComparisonData {
-                p_value: p_val,
-                t_value: t_val,
-                relative_estimates: rel_est,
-                significance_threshold: config.significance_level,
-                noise_threshold: config.noise_threshold,
-                base_iter_counts: base_iters,
-                base_sample_times: base_times,
-                base_avg_times: base_avg,
-                base_estimates: base_estimates,
-            }),
+            Ok((t_val, p_val, rel_est, base_iters, base_times, base_avg, base_estimates)) => {
+                Some(::report::ComparisonData {
+                    p_value: p_val,
+                    t_value: t_val,
+                    relative_estimates: rel_est,
+                    significance_threshold: config.significance_level,
+                    noise_threshold: config.noise_threshold,
+                    base_iter_counts: base_iters,
+                    base_sample_times: base_times,
+                    base_avg_times: base_avg,
+                    base_estimates: base_estimates,
+                })
+            }
             Err(e) => {
                 ::error::log_error(&e);
                 None
@@ -127,7 +134,9 @@ pub(crate) fn common<T>(
         throughput: throughput,
     };
 
-    criterion.report.measurement_complete(id, criterion, &measurement_data);
+    criterion
+        .report
+        .measurement_complete(id, criterion, &measurement_data);
 }
 
 fn base_dir_exists(id: &str, output_directory: &str) -> bool {
@@ -157,9 +166,15 @@ fn regression(
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting linear regression",
-            plot::regression(data, &point, (lb_, ub_), id,
+            plot::regression(
+                data,
+                &point,
+                (lb_, ub_),
+                id,
                 format!("{}/{}/new/regression.svg", criterion.output_directory, id),
-                None, false)
+                None,
+                false
+            )
         );
     }
 

@@ -272,7 +272,7 @@ pub fn regression(
     id: &str,
     path: String,
     size: Option<Size>,
-    thumbnail_mode: bool
+    thumbnail_mode: bool,
 ) {
     let path = PathBuf::from(path);
 

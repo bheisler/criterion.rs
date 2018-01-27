@@ -52,9 +52,14 @@ pub(crate) fn common(
         );
         elapsed!(
             "Plotting both estimated PDFs",
-            plot::both::pdfs(base_avg_time_sample, avg_times, id, 
+            plot::both::pdfs(
+                base_avg_time_sample,
+                avg_times,
+                id,
                 format!("{}/{}/both/pdf.svg", criterion.output_directory, id),
-                None, false)
+                None,
+                false
+            )
         );
     }
 
@@ -62,7 +67,15 @@ pub(crate) fn common(
     let (t_statistic, p_statistic) = t_test(id, avg_times, base_avg_time_sample, config, criterion);
 
     let estimates = estimates(id, avg_times, base_avg_time_sample, config, criterion);
-    Ok((t_statistic, p_statistic, estimates, iters, times, base_avg_times.clone(), base_estimates))
+    Ok((
+        t_statistic,
+        p_statistic,
+        estimates,
+        iters,
+        times,
+        base_avg_times.clone(),
+        base_estimates,
+    ))
 }
 
 // Performs a two sample t-test

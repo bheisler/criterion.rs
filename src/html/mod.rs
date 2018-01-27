@@ -1,6 +1,6 @@
 use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
-use report::{Report, MeasurementData};
+use report::{MeasurementData, Report};
 use Criterion;
 
 use handlebars::Handlebars;
@@ -12,7 +12,7 @@ use plot;
 use simplot::Size;
 use stats::univariate::Sample;
 
-const THUMBNAIL_SIZE : Size = Size(450, 300);
+const THUMBNAIL_SIZE: Size = Size(450, 300);
 
 #[derive(Serialize)]
 struct Context {
@@ -73,8 +73,10 @@ pub struct Html {
 impl Html {
     pub fn new() -> Html {
         let mut handlebars = Handlebars::new();
-        handlebars.register_template_string("report", include_str!("benchmark_report.html.handlebars")).unwrap();
-        Html{ handlebars }
+        handlebars
+            .register_template_string("report", include_str!("benchmark_report.html.handlebars"))
+            .unwrap();
+        Html { handlebars }
     }
 }
 impl Report for Html {
@@ -82,48 +84,61 @@ impl Report for Html {
     fn warmup(&self, _: &str, _: &Criterion, _: f64) {}
     fn analysis(&self, _: &str, _: &Criterion) {}
     fn measurement_start(&self, _: &str, _: &Criterion, _: u64, _: f64, _: u64) {}
-    fn measurement_complete(&self, id: &str, criterion: &Criterion, measurements: &MeasurementData) {
+    fn measurement_complete(
+        &self,
+        id: &str,
+        criterion: &Criterion,
+        measurements: &MeasurementData,
+    ) {
         let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
 
         fn time_interval(est: &Estimate) -> ConfidenceInterval {
             ConfidenceInterval {
                 lower: format::time(est.confidence_interval.lower_bound),
                 point: format::time(est.point_estimate),
-                upper: format::time(est.confidence_interval.upper_bound)
+                upper: format::time(est.confidence_interval.upper_bound),
             }
         }
 
-        let data = Data::new(measurements.iter_counts.as_slice(), measurements.sample_times.as_slice());
+        let data = Data::new(
+            measurements.iter_counts.as_slice(),
+            measurements.sample_times.as_slice(),
+        );
         let point = Slope::fit(data);
         let slope_dist = &measurements.distributions[&Statistic::Slope];
-        let (lb, ub) = slope_dist.confidence_interval(slope_estimate.confidence_interval.confidence_level);
+        let (lb, ub) =
+            slope_dist.confidence_interval(slope_estimate.confidence_interval.confidence_level);
         let (lb_, ub_) = (Slope(lb), Slope(ub));
 
-        plot::pdf(data, measurements.avg_times, id,
+        plot::pdf(
+            data,
+            measurements.avg_times,
+            id,
             format!("{}/{}/new/pdf_small.svg", criterion.output_directory, id),
-            Some(THUMBNAIL_SIZE), true);
-        plot::regression(data, &point, (lb_, ub_), id,
-            format!("{}/{}/new/regression_small.svg", criterion.output_directory, id),
-            Some(THUMBNAIL_SIZE), true);
+            Some(THUMBNAIL_SIZE),
+            true,
+        );
+        plot::regression(
+            data,
+            &point,
+            (lb_, ub_),
+            id,
+            format!(
+                "{}/{}/new/regression_small.svg",
+                criterion.output_directory, id
+            ),
+            Some(THUMBNAIL_SIZE),
+            true,
+        );
 
-        let throughput = measurements.throughput.as_ref()
-            .map(|thr| {
-                ConfidenceInterval{
-                    lower: format::throughput(
-                        thr,
-                        slope_estimate.confidence_interval.upper_bound
-                    ),
-                    upper: format::throughput(
-                        thr,
-                        slope_estimate.confidence_interval.lower_bound
-                    ),
-                    point: format::throughput(
-                        thr,
-                        slope_estimate.point_estimate
-                    )
-                }
+        let throughput = measurements
+            .throughput
+            .as_ref()
+            .map(|thr| ConfidenceInterval {
+                lower: format::throughput(thr, slope_estimate.confidence_interval.upper_bound),
+                upper: format::throughput(thr, slope_estimate.confidence_interval.lower_bound),
+                point: format::throughput(thr, slope_estimate.point_estimate),
             });
-
 
         let context = Context {
             title: id.to_owned(),
@@ -140,12 +155,18 @@ impl Report for Html {
             throughput: throughput,
 
             r2: ConfidenceInterval {
-                lower: format!("{:0.7}",
-                    Slope(slope_estimate.confidence_interval.lower_bound).r_squared(data)),
-                upper: format!("{:0.7}",
-                    Slope(slope_estimate.confidence_interval.upper_bound).r_squared(data)),
-                point: format!("{:0.7}",
-                    Slope(slope_estimate.point_estimate).r_squared(data)),
+                lower: format!(
+                    "{:0.7}",
+                    Slope(slope_estimate.confidence_interval.lower_bound).r_squared(data)
+                ),
+                upper: format!(
+                    "{:0.7}",
+                    Slope(slope_estimate.confidence_interval.upper_bound).r_squared(data)
+                ),
+                point: format!(
+                    "{:0.7}",
+                    Slope(slope_estimate.point_estimate).r_squared(data)
+                ),
             },
 
             additional_plots: vec![
@@ -160,13 +181,20 @@ impl Report for Html {
         };
 
         let text = self.handlebars.render("report", &context).unwrap();
-        fs::save_string(text,
-            &format!("{}/{}/new/index.html", criterion.output_directory, id)).unwrap();
+        fs::save_string(
+            text,
+            &format!("{}/{}/new/index.html", criterion.output_directory, id),
+        ).unwrap();
     }
 }
 impl Html {
-    fn comparison(&self, id: &str, criterion: &Criterion, measurements: &MeasurementData,
-                    data: Data<f64, f64>) -> Option<Comparison> {
+    fn comparison(
+        &self,
+        id: &str,
+        criterion: &Criterion,
+        measurements: &MeasurementData,
+        data: Data<f64, f64>,
+    ) -> Option<Comparison> {
         if let Some(ref comp) = measurements.comparison {
             let different_mean = comp.p_value < comp.significance_threshold;
             let mean_est = comp.relative_estimates[&Statistic::Mean];
@@ -197,39 +225,45 @@ impl Html {
                 data,
                 &measurements.absolute_estimates,
                 id,
-                format!("{}/{}/new/relative_regression_small.svg", criterion.output_directory, id),
+                format!(
+                    "{}/{}/new/relative_regression_small.svg",
+                    criterion.output_directory, id
+                ),
                 Some(THUMBNAIL_SIZE),
-                true
+                true,
             );
             plot::both::pdfs(
                 Sample::new(&comp.base_avg_times),
                 &*measurements.avg_times,
                 id,
-                format!("{}/{}/new/relative_pdf_small.svg", criterion.output_directory, id),
+                format!(
+                    "{}/{}/new/relative_pdf_small.svg",
+                    criterion.output_directory, id
+                ),
                 Some(THUMBNAIL_SIZE),
-                true);
+                true,
+            );
 
             let comp = Comparison {
-                    p_value: format!("{:.2}", comp.p_value),
-                    inequality: (if different_mean { "<" } else { ">" }).to_owned(),
-                    significance_level: format!("{:.2}", comp.significance_threshold),
-                    explanation: explanation_str,
+                p_value: format!("{:.2}", comp.p_value),
+                inequality: (if different_mean { "<" } else { ">" }).to_owned(),
+                significance_level: format!("{:.2}", comp.significance_threshold),
+                explanation: explanation_str,
 
-                    change: ConfidenceInterval {
-                        point: format::change(mean_est.point_estimate, true),
-                        lower: format::change(mean_est.confidence_interval.lower_bound, true),
-                        upper: format::change(mean_est.confidence_interval.upper_bound, true),
-                    },
+                change: ConfidenceInterval {
+                    point: format::change(mean_est.point_estimate, true),
+                    lower: format::change(mean_est.confidence_interval.lower_bound, true),
+                    upper: format::change(mean_est.confidence_interval.upper_bound, true),
+                },
 
-                    additional_plots: vec![
-                        Plot::new("Change in mean", "../change/mean.svg"),
-                        Plot::new("Change in median", "../change/median.svg"),
-                        Plot::new("T-Test", "../change/t-test.svg"),
-                    ]
+                additional_plots: vec![
+                    Plot::new("Change in mean", "../change/mean.svg"),
+                    Plot::new("Change in median", "../change/median.svg"),
+                    Plot::new("T-Test", "../change/t-test.svg"),
+                ],
             };
             Some(comp)
-        }
-        else {
+        } else {
             None
         }
     }

@@ -23,6 +23,7 @@ extern crate clap;
 extern crate criterion_plot as simplot;
 extern crate criterion_stats as stats;
 extern crate failure;
+extern crate handlebars;
 extern crate isatty;
 extern crate itertools;
 extern crate itertools_num;
@@ -31,7 +32,6 @@ extern crate log;
 extern crate serde;
 extern crate serde_json;
 extern crate simplelog;
-extern crate handlebars;
 #[cfg(feature = "real_blackbox")]
 extern crate test;
 
@@ -423,9 +423,10 @@ impl Default for Criterion {
             },
             plotting: plotting,
             filter: None,
-            report: Box::new(Reports::new(
-                vec![Box::new(CliReport::new(false, false, false)),
-                    Box::new(Html::new())])),
+            report: Box::new(Reports::new(vec![
+                Box::new(CliReport::new(false, false, false)),
+                Box::new(Html::new()),
+            ])),
             output_directory: "target/criterion".to_owned(),
         }
     }
@@ -641,8 +642,7 @@ scripts alongside the generated plots.
             verbose,
         ));
 
-        self.report=Box::new(Reports::new(
-                vec![cli_report, Box::new(Html::new())]));
+        self.report = Box::new(Reports::new(vec![cli_report, Box::new(Html::new())]));
 
         self
     }
