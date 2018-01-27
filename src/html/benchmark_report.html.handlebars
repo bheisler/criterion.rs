@@ -1,3 +1,91 @@
-Hello, this will be a Criterion.rs benchmark report!
+<!DOCTYPE html>
+<html>
 
-{{test}}
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>{{title}} - Criterion.rs report</title>
+    {{!-- TODO: Make it look nice --}}
+    <style type="text/css">
+    </style>
+</head>
+
+<body>
+<h2>{{title}}</h2>
+<table width="100%">
+    <tbody>
+        <tr>
+            <td><a href="pdf.svg"><img src="pdf_small.svg" alt="PDF of Slope" height="300" width="400"/></a></td>
+            <td><a href="regression.svg"><img src="regression_small.svg" alt="Regression" height="300" width="400"/></a></td>
+        </tr>
+    </tbody>
+</table>
+<div class="additional_stats">
+    <h4>Additional Statistics:</h4>
+    <table>
+        <thead>
+            <th></th>
+            <th title="{{confidence}} confidence level">Lower bound</th>
+            <th>Estimate</th>
+            <th title="{{confidence}} confidence level">Upper bound</th>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Slope</td>
+                <td>{{slope.lower}}</td>
+                <td>{{slope.point}}</td>
+                <td>{{slope.upper}}</td>
+            </tr>
+            {{#if throughput}}
+            <tr>
+                <td >Throughput</td>
+                <td>{{throughput.lower}}</td>
+                <td>{{throughput.point}}</td>
+                <td>{{throughput.upper}}</td>
+            </tr>
+            {{/if}}
+            <tr>
+                <td>R^2</td>
+                <td>{{r2.lower}}</td>
+                <td>{{r2.point}}</td>
+                <td>{{r2.upper}}</td>
+            </tr>
+            <tr>
+                <td>Mean</td>
+                <td>{{mean.lower}}</td>
+                <td>{{mean.point}}</td>
+                <td>{{mean.upper}}</td>
+            </tr>
+            <tr>
+                <td title="Standard Deviation">Std. Dev.</td>
+                <td>{{std_dev.lower}}</td>
+                <td>{{std_dev.point}}</td>
+                <td>{{std_dev.upper}}</td>
+            </tr>
+            <tr>
+                <td>Median</td>
+                <td>{{median.lower}}</td>
+                <td>{{median.point}}</td>
+                <td>{{median.upper}}</td>
+            </tr>
+            <tr>
+                <td title="Median Absolute Deviation">MAD</td>
+                <td>{{mad.lower}}</td>
+                <td>{{mad.point}}</td>
+                <td>{{mad.upper}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{{#if additional_plots}}
+<div class="additional_plots">
+    <h4>Additional Plots:</h4>
+    <ul>
+    {{#each additional_plots}}
+        <li><a href="{{this.url}}">{{this.name}}</a></li>
+    {{/each}}
+    </ul>
+</div>
+{{/if}}
+</body>
+{{!-- Add change-from-last-run information --}}
+</html>

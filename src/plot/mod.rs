@@ -66,10 +66,11 @@ pub fn pdf(
     data: Data<f64, f64>,
     labeled_sample: LabeledSample<f64>,
     id: &str,
-    output_directory: &str,
+    path: String,
+    size: Option<Size>,
+    thumbnail_mode: bool,
 ) {
-    let path = PathBuf::from(format!("{}/{}/new/pdf.svg", output_directory, id));
-
+    let path = PathBuf::from(path);
     let (x_scale, prefix) = scale_time(labeled_sample.max());
 
     let &max_iters = data.x()
@@ -97,8 +98,7 @@ pub fn pdf(
     let mut figure = Figure::new();
     figure
         .set(Font(DEFAULT_FONT))
-        .set(SIZE)
-        .set(Title(id.to_owned()))
+        .set(size.unwrap_or(SIZE))
         .configure(Axis::BottomX, |a| {
             a.set(Label(format!("Average time ({}s)", prefix)))
                 .set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale))
@@ -109,8 +109,16 @@ pub fn pdf(
                 .set(Range::Limits(0., max_iters * y_scale))
                 .set(ScaleFactor(y_scale))
         })
-        .configure(Axis::RightY, |a| a.set(Label("Density (a.u.)")))
+        .configure(Axis::RightY, |a| {
+            if thumbnail_mode {
+                a.hide();
+            }
+            a.set(Label("Density (a.u.)"))
+        })
         .configure(Key, |k| {
+            if thumbnail_mode {
+                k.hide();
+            }
             k.set(Justification::Left)
                 .set(Order::SampleText)
                 .set(Position::Outside(Vertical::Top, Horizontal::Right))
@@ -247,6 +255,10 @@ pub fn pdf(
             },
             |c| c.set(DARK_RED).set(LINEWIDTH).set(LineType::Dash),
         );
+    if !thumbnail_mode {
+        figure.set(Title(id.to_owned()));
+    }
+
     debug_script(&path, &figure);
     let gnuplot = figure.set(Output(path)).draw().unwrap();
 
@@ -258,9 +270,11 @@ pub fn regression(
     point: &Slope<f64>,
     (lb, ub): (Slope<f64>, Slope<f64>),
     id: &str,
-    output_directory: &str,
+    path: String,
+    size: Option<Size>,
+    thumbnail_mode: bool
 ) {
-    let path = PathBuf::from(format!("{}/{}/new/regression.svg", output_directory, id));
+    let path = PathBuf::from(path);
 
     let (max_iters, max_elapsed) = (data.x().max(), data.y().max());
 
@@ -283,9 +297,11 @@ pub fn regression(
     let mut figure = Figure::new();
     figure
         .set(Font(DEFAULT_FONT))
-        .set(SIZE)
-        .set(Title(id.to_owned()))
+        .set(size.unwrap_or(SIZE))
         .configure(Key, |k| {
+            if thumbnail_mode {
+                k.hide();
+            }
             k.set(Justification::Left)
                 .set(Order::SampleText)
                 .set(Position::Inside(Vertical::Top, Horizontal::Left))
@@ -336,6 +352,10 @@ pub fn regression(
                     .set(Opacity(0.25))
             },
         );
+    if !thumbnail_mode {
+        figure.set(Title(id.to_owned()));
+    }
+
     debug_script(&path, &figure);
     let gnuplot = figure.set(Output(path)).draw().unwrap();
 

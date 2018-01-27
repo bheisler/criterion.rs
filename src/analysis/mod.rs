@@ -75,7 +75,9 @@ pub(crate) fn common<T>(
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting the estimated sample PDF",
-            plot::pdf(data, labeled_sample, id, &criterion.output_directory)
+            plot::pdf(data, labeled_sample, id,
+                format!("{}/{}/new/pdf.svg", criterion.output_directory, id),
+                None, false)
         );
         elapsed!(
             "Plotting the distribution of the absolute statistics",
@@ -151,7 +153,9 @@ fn regression(
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting linear regression",
-            plot::regression(data, &point, (lb_, ub_), id, &criterion.output_directory)
+            plot::regression(data, &point, (lb_, ub_), id,
+                format!("{}/{}/new/regression.svg", criterion.output_directory, id),
+                None, false)
         );
     }
 
