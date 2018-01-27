@@ -663,7 +663,7 @@ pub fn summarize(id: &str, output_directory: &str) {
             })
             .collect::<Vec<_>>();
 
-        if benches.is_empty() {
+        if benches.len() < 2 {
             continue;
         }
 

@@ -591,7 +591,7 @@ where
         if any_matched {
             println!();
 
-            if num_routines > 1 {
+            if num_routines > 1 || num_parameters > 1 {
                 analysis::summarize(group_id, c);
             }
         }
