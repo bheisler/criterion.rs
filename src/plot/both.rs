@@ -79,9 +79,6 @@ pub(crate) fn regression(
                 .set(ScaleFactor(y_scale))
         })
         .configure(Key, |k| {
-            if thumbnail_mode {
-                k.hide();
-            }
             k.set(Justification::Left)
                 .set(Order::SampleText)
                 .set(Position::Inside(Vertical::Top, Horizontal::Left))
