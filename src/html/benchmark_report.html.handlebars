@@ -4,14 +4,67 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>{{title}} - Criterion.rs</title>
-    {{!-- TODO: Make it look nice --}}
     <style type="text/css">
+body {
+    font: 14px Helvetica Neue;
+    text-rendering: optimizelegibility;
+}
+
+.body {
+    width: 960px;
+    margin: auto;
+}
+
+th {
+    font-weight: 200
+}
+
+th, td {
+    padding-right: 3px;
+    padding-bottom: 3px;
+}
+
+a:link {
+    color: #1F78B4;
+    text-decoration: none;
+}
+
+th.ci-bound {
+    opacity: 0.5
+}
+
+td.ci-bound {
+    opacity: 0.4
+}
+
+.stats {
+    width: 80%;
+    margin: auto;
+    display: flex;
+}
+.additional_stats {
+    flex: 0 0 60%
+}
+.additional_plots {
+    flex: 1
+}
+
+h2 {
+    font-size: 36px;
+    font-weight: 300;
+}
+h3 {
+    font-size: 24px;
+    font-weight: 300;
+}
     </style>
 </head>
 
 <body>
+<div class="body">
 <h2>{{title}}</h2>
 <div class="absolute">
+<section class="plots">
 <table width="100%">
     <tbody>
         <tr>
@@ -20,59 +73,61 @@
         </tr>
     </tbody>
 </table>
+</section>
+<section class="stats">
 <div class="additional_stats">
     <h4>Additional Statistics:</h4>
     <table>
         <thead>
             <th></th>
-            <th title="{{confidence}} confidence level">Lower bound</th>
+            <th title="{{confidence}} confidence level" class="ci-bound">Lower bound</th>
             <th>Estimate</th>
-            <th title="{{confidence}} confidence level">Upper bound</th>
+            <th title="{{confidence}} confidence level"class="ci-bound">Upper bound</th>
         </thead>
         <tbody>
             <tr>
                 <td>Slope</td>
-                <td>{{slope.lower}}</td>
+                <td class="ci-bound">{{slope.lower}}</td>
                 <td>{{slope.point}}</td>
-                <td>{{slope.upper}}</td>
+                <td class="ci-bound">{{slope.upper}}</td>
             </tr>
             {{#if throughput}}
             <tr>
                 <td >Throughput</td>
-                <td>{{throughput.lower}}</td>
+                <td class="ci-bound">{{throughput.lower}}</td>
                 <td>{{throughput.point}}</td>
-                <td>{{throughput.upper}}</td>
+                <td class="ci-bound">{{throughput.upper}}</td>
             </tr>
             {{/if}}
             <tr>
-                <td>R^2</td>
-                <td>{{r2.lower}}</td>
+                <td>R&#xb2;</td>
+                <td class="ci-bound">{{r2.lower}}</td>
                 <td>{{r2.point}}</td>
-                <td>{{r2.upper}}</td>
+                <td class="ci-bound">{{r2.upper}}</td>
             </tr>
             <tr>
                 <td>Mean</td>
-                <td>{{mean.lower}}</td>
+                <td class="ci-bound">{{mean.lower}}</td>
                 <td>{{mean.point}}</td>
-                <td>{{mean.upper}}</td>
+                <td class="ci-bound">{{mean.upper}}</td>
             </tr>
             <tr>
                 <td title="Standard Deviation">Std. Dev.</td>
-                <td>{{std_dev.lower}}</td>
+                <td class="ci-bound">{{std_dev.lower}}</td>
                 <td>{{std_dev.point}}</td>
-                <td>{{std_dev.upper}}</td>
+                <td class="ci-bound">{{std_dev.upper}}</td>
             </tr>
             <tr>
                 <td>Median</td>
-                <td>{{median.lower}}</td>
+                <td class="ci-bound">{{median.lower}}</td>
                 <td>{{median.point}}</td>
-                <td>{{median.upper}}</td>
+                <td class="ci-bound">{{median.upper}}</td>
             </tr>
             <tr>
                 <td title="Median Absolute Deviation">MAD</td>
-                <td>{{mad.lower}}</td>
+                <td class="ci-bound">{{mad.lower}}</td>
                 <td>{{mad.point}}</td>
-                <td>{{mad.upper}}</td>
+                <td class="ci-bound">{{mad.upper}}</td>
             </tr>
         </tbody>
     </table>
@@ -88,7 +143,9 @@
 </div>
 {{/if}}
 </div>
+</section>
 {{#if comparison}}
+<section class="plots">
 <h3>Change Since Previous Benchmark</h3>
 <div class="relative">
 <table width="100%">
@@ -99,22 +156,24 @@
         </tr>
     </tbody>
 </table>
+</section>
+<section class="stats">
 <div class="additional_stats">
     <h4>Additional Statistics:</h4>
     <table>
         <thead>
             <th></th>
-            <th title="{{confidence}} confidence level">Lower bound</th>
+            <th title="{{confidence}} confidence level" class="ci-bound">Lower bound</th>
             <th>Estimate</th>
-            <th title="{{confidence}} confidence level">Upper bound</th>
+            <th title="{{confidence}} confidence level" class="ci-bound">Upper bound</th>
             <th></th>
         </thead>
         <tbody>
             <tr>
                 <td>Change</td>
-                <td>{{comparison.change.lower}}</td>
+                <td class="ci-bound">{{comparison.change.lower}}</td>
                 <td>{{comparison.change.point}}</td>
-                <td>{{comparison.change.upper}}</td>
+                <td class="ci-bound">{{comparison.change.upper}}</td>
                 <td>(p = {{comparison.p_value}} {{comparison.inequality}} {{comparison.significance_level}})</td>
             </tr>
         </tbody>
@@ -132,7 +191,9 @@
 </div>
 {{/if}}
 </div>
+</section>
 {{/if}}
-</body>
+</div>
 {{!-- TODO Add footer --}}
+</body>
 </html>
