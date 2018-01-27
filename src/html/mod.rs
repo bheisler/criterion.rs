@@ -6,16 +6,21 @@ use Criterion;
 use handlebars::Handlebars;
 use fs;
 use format;
-use estimate::{Distributions, Estimates, Statistic};
+use estimate::Statistic;
 use Estimate;
-use std::path::Path;
 use plot;
 use simplot::Size;
+use stats::univariate::Sample;
+
+const THUMBNAIL_SIZE : Size = Size(450, 300);
 
 #[derive(Serialize)]
 struct Context {
     title: String,
     confidence: String,
+
+    thumbnail_width: usize,
+    thumbnail_height: usize,
 
     slope: ConfidenceInterval,
     r2: ConfidenceInterval,
@@ -26,6 +31,8 @@ struct Context {
     throughput: Option<ConfidenceInterval>,
 
     additional_plots: Vec<Plot>,
+
+    comparison: Option<Comparison>,
 }
 
 #[derive(Serialize)]
@@ -39,6 +46,25 @@ struct ConfidenceInterval {
 struct Plot {
     name: String,
     url: String,
+}
+impl Plot {
+    fn new(name: &str, url: &str) -> Plot {
+        Plot {
+            name: name.to_owned(),
+            url: url.to_owned(),
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct Comparison {
+    p_value: String,
+    inequality: String,
+    significance_level: String,
+    explanation: String,
+
+    change: ConfidenceInterval,
+    additional_plots: Vec<Plot>,
 }
 
 pub struct Html {
@@ -75,31 +101,10 @@ impl Report for Html {
 
         plot::pdf(data, measurements.avg_times, id,
             format!("{}/{}/new/pdf_small.svg", criterion.output_directory, id),
-            Some(Size(550, 400)), true);
+            Some(THUMBNAIL_SIZE), true);
         plot::regression(data, &point, (lb_, ub_), id,
             format!("{}/{}/new/regression_small.svg", criterion.output_directory, id),
-            Some(Size(550, 400)), true);
-
-        let mut additional_plots = vec![];
-        {
-            let mut plot = |name: &str, file_name: &str| {
-                let file_path = format!("{}/{}/new/{}", criterion.output_directory, id, file_name);
-                if !Path::new(&file_path).exists() {
-                    return;
-                }
-
-                let plot_struct = Plot {
-                    name: name.to_owned(),
-                    url: file_name.to_owned(),
-                };
-                additional_plots.push(plot_struct);
-            };
-            plot("Slope", "slope.svg");
-            plot("Mean", "mean.svg");
-            plot("Std. Dev.", "SD.svg");
-            plot("Median", "median.svg");
-            plot("MAD", "MAD.svg");
-        }
+            Some(THUMBNAIL_SIZE), true);
 
         let throughput = measurements.throughput.as_ref()
             .map(|thr| {
@@ -124,6 +129,9 @@ impl Report for Html {
             title: id.to_owned(),
             confidence: format!("{:.2}", slope_estimate.confidence_interval.confidence_level),
 
+            thumbnail_width: THUMBNAIL_SIZE.0,
+            thumbnail_height: THUMBNAIL_SIZE.1,
+
             slope: time_interval(slope_estimate),
             mean: time_interval(&measurements.absolute_estimates[&Statistic::Mean]),
             median: time_interval(&measurements.absolute_estimates[&Statistic::Median]),
@@ -140,11 +148,109 @@ impl Report for Html {
                     Slope(slope_estimate.point_estimate).r_squared(data)),
             },
 
-            additional_plots: additional_plots
+            additional_plots: vec![
+                Plot::new("Slope", "slope.svg"),
+                Plot::new("Mean", "mean.svg"),
+                Plot::new("Std. Dev.", "SD.svg"),
+                Plot::new("Median", "median.svg"),
+                Plot::new("MAD", "MAD.svg"),
+            ],
+
+            comparison: self.comparison(id, criterion, measurements, data),
         };
 
         let text = self.handlebars.render("report", &context).unwrap();
         fs::save_string(text,
             &format!("{}/{}/new/index.html", criterion.output_directory, id)).unwrap();
+    }
+}
+impl Html {
+    fn comparison(&self, id: &str, criterion: &Criterion, measurements: &MeasurementData,
+                    data: Data<f64, f64>) -> Option<Comparison> {
+        if let Some(ref comp) = measurements.comparison {
+            let different_mean = comp.p_value < comp.significance_threshold;
+            let mean_est = comp.relative_estimates[&Statistic::Mean];
+            let explanation_str: String;
+
+            if !different_mean {
+                explanation_str = "No change in performance detected.".to_owned();
+            } else {
+                let comparison = compare_to_threshold(&mean_est, comp.noise_threshold);
+                match comparison {
+                    ComparisonResult::Improved => {
+                        explanation_str = "Performance has improved.".to_owned();
+                    }
+                    ComparisonResult::Regressed => {
+                        explanation_str = "Performance has regressed.".to_owned();
+                    }
+                    ComparisonResult::NonSignificant => {
+                        explanation_str = "Change within noise threshold.".to_owned();
+                    }
+                }
+            }
+
+            let base_data = Data::new(&comp.base_iter_counts, &comp.base_sample_times);
+
+            plot::both::regression(
+                base_data,
+                &comp.base_estimates,
+                data,
+                &measurements.absolute_estimates,
+                id,
+                format!("{}/{}/new/relative_regression_small.svg", criterion.output_directory, id),
+                Some(THUMBNAIL_SIZE),
+                true
+            );
+            plot::both::pdfs(
+                Sample::new(&comp.base_avg_times),
+                &*measurements.avg_times,
+                id,
+                format!("{}/{}/new/relative_pdf_small.svg", criterion.output_directory, id),
+                Some(THUMBNAIL_SIZE),
+                true);
+
+            let comp = Comparison {
+                    p_value: format!("{:.2}", comp.p_value),
+                    inequality: (if different_mean { "<" } else { ">" }).to_owned(),
+                    significance_level: format!("{:.2}", comp.significance_threshold),
+                    explanation: explanation_str,
+
+                    change: ConfidenceInterval {
+                        point: format::change(mean_est.point_estimate, true),
+                        lower: format::change(mean_est.confidence_interval.lower_bound, true),
+                        upper: format::change(mean_est.confidence_interval.upper_bound, true),
+                    },
+
+                    additional_plots: vec![
+                        Plot::new("Change in mean", "../change/mean.svg"),
+                        Plot::new("Change in median", "../change/median.svg"),
+                        Plot::new("T-Test", "../change/t-test.svg"),
+                    ]
+            };
+            Some(comp)
+        }
+        else {
+            None
+        }
+    }
+}
+
+enum ComparisonResult {
+    Improved,
+    Regressed,
+    NonSignificant,
+}
+
+fn compare_to_threshold(estimate: &Estimate, noise: f64) -> ComparisonResult {
+    let ci = estimate.confidence_interval;
+    let lb = ci.lower_bound;
+    let ub = ci.upper_bound;
+
+    if lb < -noise && ub < -noise {
+        ComparisonResult::Improved
+    } else if lb > noise && ub > noise {
+        ComparisonResult::Regressed
+    } else {
+        ComparisonResult::NonSignificant
     }
 }

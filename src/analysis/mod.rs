@@ -97,12 +97,16 @@ pub(crate) fn common<T>(
     let compare_data = if base_dir_exists(id, &criterion.output_directory) {
         let result = compare::common(id, data, avg_times, &estimates, config, criterion);
         match result {
-            Ok((t_val, p_val, rel_est)) => Some(::report::ComparisonData {
+            Ok((t_val, p_val, rel_est, base_iters, base_times, base_avg, base_estimates)) => Some(::report::ComparisonData {
                 p_value: p_val,
                 t_value: t_val,
                 relative_estimates: rel_est,
                 significance_threshold: config.significance_level,
                 noise_threshold: config.noise_threshold,
+                base_iter_counts: base_iters,
+                base_sample_times: base_times,
+                base_avg_times: base_avg,
+                base_estimates: base_estimates,
             }),
             Err(e) => {
                 ::error::log_error(&e);

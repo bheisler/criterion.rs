@@ -17,6 +17,10 @@ pub(crate) struct ComparisonData {
     pub relative_estimates: Estimates,
     pub significance_threshold: f64,
     pub noise_threshold: f64,
+    pub base_iter_counts: Vec<f64>,
+    pub base_sample_times: Vec<f64>,
+    pub base_avg_times: Vec<f64>,
+    pub base_estimates: Estimates,
 }
 
 pub(crate) struct MeasurementData<'a> {

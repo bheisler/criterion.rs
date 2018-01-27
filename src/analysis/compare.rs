@@ -19,11 +19,9 @@ pub(crate) fn common(
     estimates_: &Estimates,
     config: &BenchmarkConfig,
     criterion: &Criterion,
-) -> Result<(f64, f64, Estimates)> {
+) -> Result<(f64, f64, Estimates, Vec<f64>, Vec<f64>, Vec<f64>, Estimates)> {
     let sample_dir = format!("{}/{}/base/sample.json", criterion.output_directory, id);
     let (iters, times): (Vec<f64>, Vec<f64>) = fs::load(&sample_dir)?;
-
-    let base_data = Data::new(&iters, &times);
 
     let base_estimates: Estimates = fs::load(&format!(
         "{}/{}/base/estimates.json",
@@ -35,32 +33,36 @@ pub(crate) fn common(
         .zip(times.iter())
         .map(|(iters, elapsed)| elapsed / iters)
         .collect();
-    let base_avg_times = Sample::new(&base_avg_times);
+    let base_avg_time_sample = Sample::new(&base_avg_times);
 
     fs::mkdirp(&format!("{}/{}/both", criterion.output_directory, id))?;
     if criterion.plotting.is_enabled() {
         elapsed!(
             "Plotting both linear regressions",
             plot::both::regression(
-                base_data,
+                Data::new(&iters, &times),
                 &base_estimates,
                 data,
                 estimates_,
                 id,
-                &criterion.output_directory
+                format!("{}/{}/both/regression.svg", criterion.output_directory, id),
+                None,
+                false
             )
         );
         elapsed!(
             "Plotting both estimated PDFs",
-            plot::both::pdfs(base_avg_times, avg_times, id, &criterion.output_directory)
+            plot::both::pdfs(base_avg_time_sample, avg_times, id, 
+                format!("{}/{}/both/pdf.svg", criterion.output_directory, id),
+                None, false)
         );
     }
 
     fs::mkdirp(&format!("{}/{}/change", criterion.output_directory, id))?;
-    let (t_statistic, p_statistic) = t_test(id, avg_times, base_avg_times, config, criterion);
+    let (t_statistic, p_statistic) = t_test(id, avg_times, base_avg_time_sample, config, criterion);
 
-    let estimates = estimates(id, avg_times, base_avg_times, config, criterion);
-    Ok((t_statistic, p_statistic, estimates))
+    let estimates = estimates(id, avg_times, base_avg_time_sample, config, criterion);
+    Ok((t_statistic, p_statistic, estimates, iters, times, base_avg_times.clone(), base_estimates))
 }
 
 // Performs a two sample t-test

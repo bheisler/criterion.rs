@@ -3,7 +3,7 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>{{title}} - Criterion.rs report</title>
+    <title>{{title}} - Criterion.rs</title>
     {{!-- TODO: Make it look nice --}}
     <style type="text/css">
     </style>
@@ -11,11 +11,12 @@
 
 <body>
 <h2>{{title}}</h2>
+<div class="absolute">
 <table width="100%">
     <tbody>
         <tr>
-            <td><a href="pdf.svg"><img src="pdf_small.svg" alt="PDF of Slope" height="300" width="400"/></a></td>
-            <td><a href="regression.svg"><img src="regression_small.svg" alt="Regression" height="300" width="400"/></a></td>
+            <td><a href="pdf.svg"><img src="pdf_small.svg" alt="PDF of Slope" width="{{thumbnail_width}}", height="{{thumbnail_height}}"/></a></td>
+            <td><a href="regression.svg"><img src="regression_small.svg" alt="Regression" width="{{thumbnail_width}}", height="{{thumbnail_height}}"/></a></td>
         </tr>
     </tbody>
 </table>
@@ -86,6 +87,52 @@
     </ul>
 </div>
 {{/if}}
+</div>
+{{#if comparison}}
+<h3>Change Since Previous Benchmark</h3>
+<div class="relative">
+<table width="100%">
+    <tbody>
+        <tr>
+            <td><a href="../both/pdf.svg"><img src="relative_pdf_small.svg" alt="PDF Comparison" width="{{thumbnail_width}}", height="{{thumbnail_height}}"/></a></td>
+            <td><a href="../both/regression.svg"><img src="relative_regression_small.svg" alt="Regression Comparison" width="{{thumbnail_width}}", height="{{thumbnail_height}}"/></a></td>
+        </tr>
+    </tbody>
+</table>
+<div class="additional_stats">
+    <h4>Additional Statistics:</h4>
+    <table>
+        <thead>
+            <th></th>
+            <th title="{{confidence}} confidence level">Lower bound</th>
+            <th>Estimate</th>
+            <th title="{{confidence}} confidence level">Upper bound</th>
+            <th></th>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Change</td>
+                <td>{{comparison.change.lower}}</td>
+                <td>{{comparison.change.point}}</td>
+                <td>{{comparison.change.upper}}</td>
+                <td>(p = {{comparison.p_value}} {{comparison.inequality}} {{comparison.significance_level}})</td>
+            </tr>
+        </tbody>
+    </table>
+    {{comparison.explanation}}
+</div>
+{{#if comparison.additional_plots}}
+<div class="additional_plots">
+    <h4>Additional Plots:</h4>
+    <ul>
+    {{#each comparison.additional_plots}}
+        <li><a href="{{this.url}}">{{this.name}}</a></li>
+    {{/each}}
+    </ul>
+</div>
+{{/if}}
+</div>
+{{/if}}
 </body>
-{{!-- Add change-from-last-run information --}}
+{{!-- TODO Add footer --}}
 </html>

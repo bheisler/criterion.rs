@@ -18,9 +18,11 @@ pub(crate) fn regression(
     data: Data<f64, f64>,
     estimates: &Estimates,
     id: &str,
-    output_directory: &str,
+    path: String,
+    size: Option<Size>,
+    thumbnail_mode: bool,
 ) {
-    let path = PathBuf::from(format!("{}/{}/both/regression.svg", output_directory, id));
+    let path = PathBuf::from(path);
 
     let max_iters = base_data.x().max().max(data.x().max());
     let max_elapsed = base_data.y().max().max(data.y().max());
@@ -59,10 +61,13 @@ pub(crate) fn regression(
     } = estimates[&Slope];
 
     let mut figure = Figure::new();
+    if !thumbnail_mode {
+        figure.set(Title(id.to_owned()));
+    }
+
     figure
         .set(Font(DEFAULT_FONT))
-        .set(SIZE)
-        .set(Title(id.to_owned()))
+        .set(size.unwrap_or(SIZE))
         .configure(Axis::BottomX, |a| {
             a.configure(Grid::Major, |g| g.show())
                 .set(Label(x_label))
@@ -74,6 +79,9 @@ pub(crate) fn regression(
                 .set(ScaleFactor(y_scale))
         })
         .configure(Key, |k| {
+            if thumbnail_mode {
+                k.hide();
+            }
             k.set(Justification::Left)
                 .set(Order::SampleText)
                 .set(Position::Inside(Vertical::Top, Horizontal::Left))
@@ -128,9 +136,11 @@ pub fn pdfs(
     base_avg_times: &Sample<f64>,
     avg_times: &Sample<f64>,
     id: &str,
-    output_directory: &str,
+    path: String,
+    size: Option<Size>,
+    thumbnail_mode: bool,
 ) {
-    let path = PathBuf::from(format!("{}/{}/both/pdf.svg", output_directory, id));
+    let path = PathBuf::from(path);
 
     let (base_xs, base_ys) = kde::sweep(base_avg_times, KDE_POINTS, None);
     let (xs, ys) = kde::sweep(avg_times, KDE_POINTS, None);
@@ -142,10 +152,12 @@ pub fn pdfs(
     let zeros = iter::repeat(0);
 
     let mut figure = Figure::new();
+    if !thumbnail_mode {
+        figure.set(Title(id.to_owned()));
+    }
     figure
         .set(Font(DEFAULT_FONT))
-        .set(SIZE)
-        .set(Title(id.to_owned()))
+        .set(size.unwrap_or(SIZE))
         .configure(Axis::BottomX, |a| {
             a.set(Label(format!("Average time ({}s)", prefix)))
                 .set(ScaleFactor(x_scale))
@@ -155,6 +167,9 @@ pub fn pdfs(
         })
         .configure(Axis::RightY, |a| a.hide())
         .configure(Key, |k| {
+            if thumbnail_mode {
+                k.hide();
+            }
             k.set(Justification::Left)
                 .set(Order::SampleText)
                 .set(Position::Outside(Vertical::Top, Horizontal::Right))
