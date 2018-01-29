@@ -90,6 +90,10 @@ impl Report for Html {
         criterion: &Criterion,
         measurements: &MeasurementData,
     ) {
+        if !criterion.plotting.is_enabled() {
+            return;
+        }
+
         let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
 
         fn time_interval(est: &Estimate) -> ConfidenceInterval {
