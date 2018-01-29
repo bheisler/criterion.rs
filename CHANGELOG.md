@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   no longer publicly accessible.
 - The `Criterion.summarize` function has been removed.
 
+### Fixed
+- Fixed the relative mean and median reports.
+
 ## [0.1.2]
 ### Changed
 - Criterion.rs is now stable-compatible!

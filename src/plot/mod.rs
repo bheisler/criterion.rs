@@ -506,8 +506,8 @@ pub(crate) fn rel_distributions(
                 )
             };
 
+            let mut figure = figure.clone();
             figure
-                .clone()
                 .set(Title(format!("{}: {}", id, statistic)))
                 .configure(Axis::BottomX, |a| {
                     a.set(Label("Relative change (%)"))
