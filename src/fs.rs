@@ -49,11 +49,18 @@ where
     D: Serialize,
     P: AsRef<Path>,
 {
+    let buf = serde_json::to_string(&data)?;
+    save_string(&buf, path)
+}
+
+pub fn save_string<P>(data: &str, path: &P) -> Result<()>
+where
+    P: AsRef<Path>,
+{
     use std::io::Write;
 
-    let buf = serde_json::to_string(&data)?;
     File::create(path)
-        .and_then(|mut f| f.write_all(buf.as_bytes()))
+        .and_then(|mut f| f.write_all(data.as_bytes()))
         .map_err(|inner| AccessError {
             inner,
             path: path.as_ref().to_owned(),

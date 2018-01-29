@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Criterion.rs can now report the throughput of the benchmarked code in units of
   bytes or elements per second. See the `Benchmark.throughput` and
   `ParameterizedBenchmark.throughput` functions for further details.
+- Criterion.rs now generates a basic HTML report for each benchmark.
 
 ### Changed
 - The builder methods on the Criterion struct now take and return self by value

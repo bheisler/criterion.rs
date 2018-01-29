@@ -23,6 +23,7 @@ extern crate clap;
 extern crate criterion_plot as simplot;
 extern crate criterion_stats as stats;
 extern crate failure;
+extern crate handlebars;
 extern crate isatty;
 extern crate itertools;
 extern crate itertools_num;
@@ -56,6 +57,7 @@ mod program;
 mod report;
 mod routine;
 mod macros;
+mod html;
 
 use std::default::Default;
 use std::iter::IntoIterator;
@@ -74,6 +76,7 @@ use report::{CliReport, Report, Reports};
 use benchmark::BenchmarkConfig;
 use benchmark::NamedRoutine;
 use routine::Function;
+use html::Html;
 
 pub use benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
 
@@ -420,8 +423,10 @@ impl Default for Criterion {
             },
             plotting: plotting,
             filter: None,
-            report: Box::new(Reports::new(
-                vec![Box::new(CliReport::new(false, false, false))])),
+            report: Box::new(Reports::new(vec![
+                Box::new(CliReport::new(false, false, false)),
+                Box::new(Html::new()),
+            ])),
             output_directory: "target/criterion".to_owned(),
         }
     }
@@ -637,8 +642,7 @@ scripts alongside the generated plots.
             verbose,
         ));
 
-        self.report=Box::new(Reports::new(
-                vec![cli_report]));
+        self.report = Box::new(Reports::new(vec![cli_report, Box::new(Html::new())]));
 
         self
     }
