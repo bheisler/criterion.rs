@@ -30,6 +30,8 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
 }
 
 fn wait_on_gnuplot(children: Vec<Child>) {
+    let start = ::std::time::Instant::now();
+    let child_count = children.len();
     for child in children {
         match child.wait_with_output() {
             Ok(ref out) if out.status.success() => {}
@@ -37,6 +39,12 @@ fn wait_on_gnuplot(children: Vec<Child>) {
             Err(e) => error!("Got IO error while waiting for Gnuplot to complete: {}", e),
         }
     }
+    let elapsed = &start.elapsed();
+    info!(
+        "Waiting for {} gnuplot processes took {}",
+        child_count,
+        ::format::time(::DurationExt::to_nanos(elapsed) as f64)
+    );
 }
 
 static DEFAULT_FONT: &'static str = "Helvetica";

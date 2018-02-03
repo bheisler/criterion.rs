@@ -244,12 +244,18 @@ impl Report for CliReport {
         iter_count: u64,
     ) {
         self.text_overwrite();
+        let iter_string = if self.verbose {
+            format!("{} iterations", iter_count)
+        } else {
+            format::iter_count(iter_count)
+        };
+
         self.print_overwritable(format!(
-            "Benchmarking {}: Collecting {} samples in estimated {} ({} iterations)",
+            "Benchmarking {}: Collecting {} samples in estimated {} ({})",
             id,
             sample_count,
             format::time(estimate_ns),
-            iter_count
+            iter_string
         ));
     }
 
