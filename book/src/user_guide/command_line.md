@@ -120,3 +120,4 @@ substring of the benchmark ID. For example, running `cargo bench -- fib_20`
 would only run benchmarks whose ID contains the string `fib_20`
 * To print more detailed output, use `cargo bench -- --verbose`
 * To disable colored output, use `cargo bench -- --color never`
+* To disable plot generation, use `cargo bench -- --noplot`

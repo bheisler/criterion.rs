@@ -600,6 +600,10 @@ impl Criterion {
                 .short("v")
                 .long("verbose")
                 .help("Print additional statistical information."))
+            .arg(Arg::with_name("noplot")
+                .short("np")
+                .long("noplot")
+                .help("Disable plot and HTML generation."))
             //Ignored but always passed to benchmark executables
             .arg(Arg::with_name("bench")
                 .hidden(true)
@@ -634,6 +638,13 @@ scripts alongside the generated plots.
                 enable_text_overwrite = false;
             }
             _ => enable_text_coloring = cfg!(unix) && isatty::stdout_isatty(),
+        }
+
+        if matches.is_present("noplot") {
+            match self.plotting {
+                Plotting::NotAvailable => {}
+                _ => self.plotting = Plotting::Disabled,
+            }
         }
 
         let cli_report = Box::new(CliReport::new(
