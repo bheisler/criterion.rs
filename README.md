@@ -14,11 +14,11 @@
 
 <div align="center">
 	<a href="https://travis-ci.org/japaric/criterion.rs">
-    	<img src="https://travis-ci.org/japaric/criterion.rs.svg?branch=master" alt="Travis-CI">
+        <img src="https://travis-ci.org/japaric/criterion.rs.svg?branch=master" alt="Travis-CI">
     </a>
     |
     <a href="https://ci.appveyor.com/project/japaric/criterion-rs-vt9fl">
-    	<img src="https://ci.appveyor.com/api/projects/status/4255ads9ctpupcl2?svg=true" alt="Appveyor">
+        <img src="https://ci.appveyor.com/api/projects/status/4255ads9ctpupcl2?svg=true" alt="Appveyor">
     </a>
     |
     <a href="https://crates.io/crates/criterion">
@@ -50,7 +50,7 @@ Criterion.<span></span>rs helps you write fast code by detecting and measuring p
 
 ### Quickstart
 
-In order to generate plots, you must have [gnuplot](http://www.gnuplot.info/) installed. See the gnuplot website for installation instructions.
+In order to generate plots, you must have [gnuplot](http://www.gnuplot.info/) installed. See the gnuplot website for installation instructions. Criterion.rs also currently requires Rust 1.23 or later.
 
 To start with Criterion.<span></span>rs, add the following to your `Cargo.toml` file:
 
