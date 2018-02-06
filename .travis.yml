@@ -37,6 +37,13 @@ matrix:
           packages:
             - gnuplot
     - os: linux
+      env: GNUPLOT=yes
+      rust: 1.23.0
+      addons:
+        apt:
+          packages:
+            - gnuplot
+    - os: linux
       env: CLIPPY=yes
       rust: nightly-2018-01-12
     - os: linux
