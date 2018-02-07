@@ -1,13 +1,16 @@
 extern crate criterion;
 extern crate walkdir;
+extern crate serde_json;
 
+use std::fs::File;
 use criterion::{Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
 use std::time::Duration;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::process::{Command, Stdio};
+use serde_json::value::Value;
 
 /*
  * Please note that these tests are not complete examples of how to use
@@ -127,7 +130,7 @@ fn test_warmup_time() {
     let counter2 = Counter::default();
     let clone = counter2.clone();
     short_benchmark()
-        .warm_up_time(Duration::from_millis(1000))
+        .warm_up_time(Duration::from_millis(2000))
         .bench_function("test_warmup_time_2", move |b| {
             clone.count();
             b.iter(|| 10)
@@ -148,7 +151,7 @@ fn test_measurement_time() {
     let counter2 = Counter::default();
     let clone = counter2.clone();
     short_benchmark()
-        .measurement_time(Duration::from_millis(1000))
+        .measurement_time(Duration::from_millis(2000))
         .bench_function("test_meas_time_2", move |b| b.iter(|| clone.count()));
 
     assert!(counter1.read() < counter2.read());
@@ -274,4 +277,71 @@ fn test_throughput() {
             vec![vec![1], vec![1, 2, 3]],
         ).throughput(|v| Throughput::Elements(v.len() as u32)),
     );
+}
+
+// Verify that all expected output files are present
+#[test]
+fn test_output_files() {
+    for _ in 0..2 {
+        short_benchmark()
+        .bench(
+            "test_output",
+            Benchmark::new("output_1", |b| b.iter(|| 10 ) )
+                .with_function("output_2", |b| b.iter(|| 20))
+        );
+    }
+
+    fn verify_file(dir: &str, path: &str) -> PathBuf {
+        let full_path = PathBuf::from(&format!("{}/{}", dir, path));
+        assert!(full_path.is_file(), "File {:?} does not exist or is not a file", full_path);
+        let metadata = full_path.metadata().unwrap();
+        assert!(metadata.len() > 0);
+        full_path
+    }
+
+    fn verify_json(dir: &str, path: &str) {
+        let full_path = verify_file(dir, path);
+        let f = File::open(full_path).unwrap();
+        serde_json::from_reader::<File, Value>(f).unwrap();
+    }
+
+    fn verify_svg(dir: &str, path: &str) {
+        verify_file(dir, path);
+    }
+
+    fn verify_html(dir: &str, path: &str) {
+        verify_file(dir, path);
+    }
+
+    for x in 0..2 {
+        let dir = format!("target/criterion/test_output/output_{}", x + 1);
+
+        verify_json(&dir, "new/estimates.json");
+        verify_json(&dir, "new/sample.json");
+        verify_json(&dir, "new/tukey.json");
+        verify_json(&dir, "change/estimates.json");
+
+        if short_benchmark().can_plot() {
+            verify_svg(&dir, "new/MAD.svg");
+            verify_svg(&dir, "new/mean.svg");
+            verify_svg(&dir, "new/median.svg");
+            verify_svg(&dir, "new/pdf.svg");
+            verify_svg(&dir, "new/pdf_small.svg");
+            verify_svg(&dir, "new/regression.svg");
+            verify_svg(&dir, "new/regression_small.svg");
+            verify_svg(&dir, "new/relative_pdf_small.svg");
+            verify_svg(&dir, "new/relative_regression_small.svg");
+            verify_svg(&dir, "new/SD.svg");
+            verify_svg(&dir, "new/slope.svg");
+            verify_svg(&dir, "both/pdf.svg");
+            verify_svg(&dir, "both/regression.svg");
+            verify_svg(&dir, "change/mean.svg");
+            verify_svg(&dir, "change/median.svg");
+            verify_svg(&dir, "change/t-test.svg");
+
+            verify_html(&dir, "new/index.html");
+        }
+    }
+
+
 }
