@@ -1,6 +1,6 @@
 extern crate criterion;
-extern crate walkdir;
 extern crate serde_json;
+extern crate walkdir;
 
 use std::fs::File;
 use criterion::{Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
@@ -283,17 +283,20 @@ fn test_throughput() {
 #[test]
 fn test_output_files() {
     for _ in 0..2 {
-        short_benchmark()
-        .bench(
+        short_benchmark().bench(
             "test_output",
-            Benchmark::new("output_1", |b| b.iter(|| 10 ) )
-                .with_function("output_2", |b| b.iter(|| 20))
+            Benchmark::new("output_1", |b| b.iter(|| 10))
+                .with_function("output_2", |b| b.iter(|| 20)),
         );
     }
 
     fn verify_file(dir: &str, path: &str) -> PathBuf {
         let full_path = PathBuf::from(&format!("{}/{}", dir, path));
-        assert!(full_path.is_file(), "File {:?} does not exist or is not a file", full_path);
+        assert!(
+            full_path.is_file(),
+            "File {:?} does not exist or is not a file",
+            full_path
+        );
         let metadata = full_path.metadata().unwrap();
         assert!(metadata.len() > 0);
         full_path
@@ -342,6 +345,4 @@ fn test_output_files() {
             verify_html(&dir, "new/index.html");
         }
     }
-
-
 }
