@@ -24,7 +24,7 @@ extern crate criterion_plot as simplot;
 extern crate criterion_stats as stats;
 extern crate failure;
 extern crate handlebars;
-extern crate isatty;
+extern crate atty;
 extern crate itertools;
 extern crate itertools_num;
 #[macro_use]
@@ -90,9 +90,9 @@ fn debug_enabled() -> bool {
 pub fn init_logging() {
     use simplelog::*;
     let filter = if debug_enabled() {
-        LogLevelFilter::max()
+        LevelFilter::max()
     } else {
-        LogLevelFilter::Warn
+        LevelFilter::Warn
     };
 
     SimpleLogger::init(filter, Config::default()).unwrap();
@@ -627,7 +627,8 @@ scripts alongside the generated plots.
         }
 
         let verbose = matches.is_present("verbose");
-        let mut enable_text_overwrite = isatty::stdout_isatty() && !verbose && !debug_enabled();
+        let stdout_isatty = atty::is(atty::Stream::Stdout);
+        let mut enable_text_overwrite = stdout_isatty && !verbose && !debug_enabled();
         let enable_text_coloring;
         match matches.value_of("color") {
             Some("always") => {
@@ -637,7 +638,7 @@ scripts alongside the generated plots.
                 enable_text_coloring = false;
                 enable_text_overwrite = false;
             }
-            _ => enable_text_coloring = cfg!(unix) && isatty::stdout_isatty(),
+            _ => enable_text_coloring = cfg!(unix) && stdout_isatty,
         }
 
         if matches.is_present("noplot") {

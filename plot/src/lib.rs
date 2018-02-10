@@ -235,7 +235,7 @@
 //!
 //! ```
 //! extern crate itertools_num;
-//! extern crate num;
+//! extern crate num_complex;
 //! extern crate criterion_plot as plot;
 //!
 //! # use std::fs;
@@ -243,7 +243,7 @@
 //! use std::f64::consts::PI;
 //!
 //! use itertools_num::linspace;
-//! use num::Complex;
+//! use num_complex::Complex;
 //! use plot::prelude::*;
 //!
 //! fn tf(x: f64) -> Complex<f64> {

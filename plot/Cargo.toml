@@ -17,8 +17,8 @@ itertools = "0.7"
 
 [dev-dependencies]
 itertools-num = "0.1"
-num = "0.1.30"
-rand = "0.3.13"
+num-complex = { version = "0.1", default-features = false }
+rand = "0.4"
 
 [badges]
 travis-ci = { repository = "japaric/criterion.rs" }
