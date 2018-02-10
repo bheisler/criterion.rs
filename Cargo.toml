@@ -33,7 +33,8 @@ walkdir = "2.1"
 [badges]
 travis-ci = { repository = "japaric/criterion.rs" }
 appveyor = { repository = "japaric/criterion.rs", id = "4255ads9ctpupcl2" }
-maintenance = { status = "actively-maintained" }
+coveralls = { repository = "japaric/criterion.rs" }
+maintenance = { status = "actively-developed" }
 
 [features]
 real_blackbox = []

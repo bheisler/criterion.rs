@@ -25,7 +25,7 @@ criterion = { path="..", version="0.2.0" }
 [badges]
 travis-ci = { repository = "japaric/criterion.rs" }
 appveyor = { repository = "japaric/criterion.rs", id = "4255ads9ctpupcl2" }
-maintenance = { status = "actively-maintained" }
+maintenance = { status = "actively-developed" }
 
 [[bench]]
 name = "univariate_kde"

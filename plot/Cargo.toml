@@ -23,4 +23,4 @@ rand = "0.4"
 [badges]
 travis-ci = { repository = "japaric/criterion.rs" }
 appveyor = { repository = "japaric/criterion.rs", id = "4255ads9ctpupcl2" }
-maintenance = { status = "actively-maintained" }
+maintenance = { status = "actively-developed" }
