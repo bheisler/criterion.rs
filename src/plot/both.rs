@@ -9,7 +9,7 @@ use {ConfidenceInterval, Estimate};
 use estimate::Statistic::Slope;
 use estimate::Estimates;
 use kde;
-use super::{debug_script, scale_time, wait_on_gnuplot};
+use super::{debug_script, scale_time, wait_on_gnuplot, escape_underscores};
 use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
 
 #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
@@ -63,7 +63,7 @@ pub(crate) fn regression(
 
     let mut figure = Figure::new();
     if !thumbnail_mode {
-        figure.set(Title(id.to_owned()));
+        figure.set(Title(escape_underscores(id)));
     }
 
     figure
@@ -151,7 +151,7 @@ pub fn pdfs(
 
     let mut figure = Figure::new();
     if !thumbnail_mode {
-        figure.set(Title(id.to_owned()));
+        figure.set(Title(escape_underscores(id)));
     }
     figure
         .set(Font(DEFAULT_FONT))

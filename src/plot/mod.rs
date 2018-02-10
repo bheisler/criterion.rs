@@ -15,6 +15,10 @@ use {fs, kde};
 
 pub mod both;
 
+fn escape_underscores(string: &str) -> String {
+    string.replace("_", "\\_")
+}
+
 fn scale_time(ns: f64) -> (f64, &'static str) {
     if ns < 10f64.powi(0) {
         (10f64.powi(3), "p")
@@ -264,7 +268,7 @@ pub fn pdf(
             |c| c.set(DARK_RED).set(LINEWIDTH).set(LineType::Dash),
         );
     if !thumbnail_mode {
-        figure.set(Title(id.to_owned()));
+        figure.set(Title(escape_underscores(id)));
     }
 
     debug_script(&path, &figure);
@@ -361,7 +365,7 @@ pub fn regression(
             },
         );
     if !thumbnail_mode {
-        figure.set(Title(id.to_owned()));
+        figure.set(Title(escape_underscores(id)));
     }
 
     debug_script(&path, &figure);
@@ -414,7 +418,7 @@ pub(crate) fn abs_distributions(
             figure
                 .set(Font(DEFAULT_FONT))
                 .set(SIZE)
-                .set(Title(format!("{}: {}", id, statistic)))
+                .set(Title(format!("{}: {}", escape_underscores(id), statistic)))
                 .configure(Axis::BottomX, |a| {
                     a.set(Label(format!("Average time ({}s)", prefix)))
                         .set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale))
@@ -536,7 +540,7 @@ pub(crate) fn rel_distributions(
 
             let mut figure = figure.clone();
             figure
-                .set(Title(format!("{}: {}", id, statistic)))
+                .set(Title(format!("{}: {}", escape_underscores(id), statistic)))
                 .configure(Axis::BottomX, |a| {
                     a.set(Label("Relative change (%)"))
                         .set(Range::Limits(x_min * 100., x_max * 100.))
@@ -604,7 +608,7 @@ pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str, output_directo
     figure
         .set(Font(DEFAULT_FONT))
         .set(SIZE)
-        .set(Title(format!("{}: Welch t test", id)))
+        .set(Title(format!("{}: Welch t test", escape_underscores(id))))
         .configure(Axis::BottomX, |a| a.set(Label("t score")))
         .configure(Axis::LeftY, |a| a.set(Label("Density")))
         .configure(Key, |k| {
@@ -742,7 +746,7 @@ pub fn summarize(id: &str, output_directory: &str) {
                     figure
                         .set(Font(DEFAULT_FONT))
                         .set(SIZE)
-                        .set(Title(id.to_owned()))
+                        .set(Title(escape_underscores(id)))
                         .configure(Axis::BottomX, |a| {
                             a.configure(Grid::Major, |g| g.show())
                                 .configure(Grid::Minor, |g| g.hide())
@@ -822,7 +826,7 @@ pub fn summarize(id: &str, output_directory: &str) {
                     figure
                         .set(Font(DEFAULT_FONT))
                         .set(SIZE)
-                        .set(Title(format!("{}: Estimates of the {}s", id, statistic)))
+                        .set(Title(format!("{}: Estimates of the {}s", escape_underscores(id), statistic)))
                         .configure(Axis::BottomX, |a| {
                             a.configure(Grid::Major, |g| g.show())
                                 .configure(Grid::Minor, |g| g.hide())
@@ -903,7 +907,7 @@ pub fn summarize(id: &str, output_directory: &str) {
                     let mut f = Figure::new();
                     f.set(Font(DEFAULT_FONT))
                         .set(SIZE)
-                        .set(Title(format!("{}: Violin plot", id)))
+                        .set(Title(format!("{}: Violin plot", escape_underscores(id))))
                         .configure(Axis::BottomX, |a| {
                             a.configure(Grid::Major, |g| g.show())
                                 .configure(Grid::Minor, |g| g.hide())
