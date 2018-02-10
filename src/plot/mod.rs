@@ -661,11 +661,9 @@ impl<T> Append<T> for Vec<T> {
     }
 }
 
-pub fn summarize(id: &str, output_directory: &str) {
-    let dir = Path::new(output_directory).join(id);
-    let contents: Vec<_> = try_else_return!(fs::ls(&dir))
-        .map(|e| e.unwrap().path())
-        .collect();
+pub fn summarize(group_id: &str, all_ids: &[String], output_directory: &str) {
+    let dir = Path::new(output_directory).join(group_id);
+    let contents: Vec<_> = all_ids.iter().map(|id| dir.join(id)).collect();
 
     // XXX Plot both summaries?
     for &sample in &["new", "base"] {
@@ -746,7 +744,7 @@ pub fn summarize(id: &str, output_directory: &str) {
                     figure
                         .set(Font(DEFAULT_FONT))
                         .set(SIZE)
-                        .set(Title(escape_underscores(id)))
+                        .set(Title(escape_underscores(group_id)))
                         .configure(Axis::BottomX, |a| {
                             a.configure(Grid::Major, |g| g.show())
                                 .configure(Grid::Minor, |g| g.hide())
@@ -828,7 +826,7 @@ pub fn summarize(id: &str, output_directory: &str) {
                         .set(SIZE)
                         .set(Title(format!(
                             "{}: Estimates of the {}s",
-                            escape_underscores(id),
+                            escape_underscores(group_id),
                             statistic
                         )))
                         .configure(Axis::BottomX, |a| {
@@ -911,7 +909,10 @@ pub fn summarize(id: &str, output_directory: &str) {
                     let mut f = Figure::new();
                     f.set(Font(DEFAULT_FONT))
                         .set(SIZE)
-                        .set(Title(format!("{}: Violin plot", escape_underscores(id))))
+                        .set(Title(format!(
+                            "{}: Violin plot",
+                            escape_underscores(group_id)
+                        )))
                         .configure(Axis::BottomX, |a| {
                             a.configure(Grid::Major, |g| g.show())
                                 .configure(Grid::Minor, |g| g.hide())

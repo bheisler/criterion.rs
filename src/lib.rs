@@ -18,10 +18,10 @@
 
 #![deny(missing_docs)]
 #![cfg_attr(feature = "real_blackbox", feature(test))]
+#![cfg_attr(not(feature = "html_reports"), allow(dead_code))]
 
 extern crate atty;
 extern crate clap;
-extern crate criterion_plot as simplot;
 extern crate criterion_stats as stats;
 extern crate failure;
 extern crate itertools;
@@ -29,6 +29,9 @@ extern crate itertools_num;
 extern crate serde;
 extern crate serde_json;
 extern crate simplelog;
+
+#[cfg(feature = "html_reports")]
+extern crate criterion_plot as simplot;
 
 #[cfg(feature = "html_reports")]
 extern crate handlebars;
@@ -56,12 +59,16 @@ mod error;
 mod estimate;
 mod format;
 mod fs;
-mod kde;
-mod plot;
 mod program;
 mod report;
 mod routine;
 mod macros;
+
+#[cfg(feature = "html_reports")]
+mod kde;
+
+#[cfg(feature = "html_reports")]
+mod plot;
 
 #[cfg(feature = "html_reports")]
 mod html;
@@ -412,19 +419,21 @@ impl Default for Criterion {
     /// - Plotting: enabled (if gnuplot is available)
     /// - No filter
     fn default() -> Criterion {
-        let plotting = if simplot::version().is_ok() {
-            Plotting::Enabled
-        } else {
-            println!("Gnuplot not found, disabling plotting");
-
-            Plotting::NotAvailable
-        };
+        #[allow(unused_mut, unused_assignments)]
+        let mut plotting = Plotting::NotAvailable;
 
         let mut reports: Vec<Box<Report>> = vec![];
         reports.push(Box::new(CliReport::new(false, false, false)));
 
         #[cfg(feature = "html_reports")]
         {
+            plotting = if simplot::version().is_ok() {
+                Plotting::Enabled
+            } else {
+                println!("Gnuplot not found, disabling plotting");
+
+                Plotting::NotAvailable
+            };
             reports.push(Box::new(Html::new()));
         }
 

@@ -11,7 +11,7 @@ use estimate::{Distributions, Estimates, Statistic};
 use routine::Routine;
 use benchmark::BenchmarkConfig;
 use {ConfidenceInterval, Criterion, Estimate, Throughput};
-use {format, fs, plot};
+use {format, fs};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => ({
@@ -26,14 +26,6 @@ macro_rules! elapsed {
 }
 
 mod compare;
-
-pub fn summarize(id: &str, criterion: &Criterion) {
-    if criterion.plotting.is_enabled() {
-        plot::summarize(id, &criterion.output_directory);
-    }
-
-    println!();
-}
 
 // Common analysis procedure
 pub(crate) fn common<T>(

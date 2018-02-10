@@ -348,6 +348,8 @@ impl BenchmarkDefinition for Benchmark {
         let num_routines = self.routines.len();
         let mut any_matched = false;
 
+        let mut all_ids = vec![];
+
         for routine in self.routines {
             let id = if num_routines == 1 && group_id == routine.id {
                 routine.id
@@ -365,15 +367,14 @@ impl BenchmarkDefinition for Benchmark {
                     &(),
                     self.throughput.clone(),
                 );
+
+                all_ids.push(id);
             }
         }
 
         if any_matched {
+            c.report.summarize(c, group_id, &all_ids);
             println!();
-
-            if num_routines > 1 {
-                analysis::summarize(group_id, c);
-            }
         }
     }
 }
@@ -558,6 +559,8 @@ where
         let num_routines = self.routines.len();
         let mut any_matched = false;
 
+        let mut all_ids = vec![];
+
         for routine in self.routines {
             for value in &self.values {
                 let id = if num_routines == 1 && group_id == routine.id {
@@ -584,16 +587,15 @@ where
                         value,
                         throughput,
                     );
+
+                    all_ids.push(id);
                 }
             }
         }
 
         if any_matched {
+            c.report.summarize(c, group_id, &all_ids);
             println!();
-
-            if num_routines > 1 || num_parameters > 1 {
-                analysis::summarize(group_id, c);
-            }
         }
     }
 }

@@ -49,6 +49,7 @@ pub(crate) trait Report {
         iter_count: u64,
     );
     fn measurement_complete(&self, id: &str, criterion: &Criterion, measurements: &MeasurementData);
+    fn summarize(&self, criterion: &Criterion, group_id: &str, all_ids: &[String]);
 }
 
 pub(crate) struct Reports {
@@ -98,6 +99,12 @@ impl Report for Reports {
     ) {
         for report in &self.reports {
             report.measurement_complete(id, criterion, measurements);
+        }
+    }
+
+    fn summarize(&self, criterion: &Criterion, group_id: &str, all_ids: &[String]) {
+        for report in &self.reports {
+            report.summarize(criterion, group_id, all_ids);
         }
     }
 }
@@ -394,6 +401,8 @@ impl Report for CliReport {
             );
         }
     }
+
+    fn summarize(&self, _: &Criterion, _: &str, _: &[String]) {}
 }
 
 enum ComparisonResult {

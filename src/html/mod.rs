@@ -166,6 +166,14 @@ impl Report for Html {
             &format!("{}/{}/new/index.html", criterion.output_directory, id),
         ).unwrap();
     }
+
+    fn summarize(&self, criterion: &Criterion, group_id: &str, all_ids: &[String]) {
+        if !criterion.plotting.is_enabled() {
+            return;
+        }
+
+        plot::summarize(group_id, all_ids, &criterion.output_directory);
+    }
 }
 impl Html {
     fn comparison(&self, measurements: &MeasurementData) -> Option<Comparison> {
