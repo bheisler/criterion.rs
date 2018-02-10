@@ -108,32 +108,8 @@ impl Report for Html {
             measurements.iter_counts.as_slice(),
             measurements.sample_times.as_slice(),
         );
-        let point = Slope::fit(data);
-        let slope_dist = &measurements.distributions[&Statistic::Slope];
-        let (lb, ub) =
-            slope_dist.confidence_interval(slope_estimate.confidence_interval.confidence_level);
-        let (lb_, ub_) = (Slope(lb), Slope(ub));
 
-        plot::pdf(
-            data,
-            measurements.avg_times,
-            id,
-            format!("{}/{}/new/pdf_small.svg", criterion.output_directory, id),
-            Some(THUMBNAIL_SIZE),
-            true,
-        );
-        plot::regression(
-            data,
-            &point,
-            (lb_, ub_),
-            id,
-            format!(
-                "{}/{}/new/regression_small.svg",
-                criterion.output_directory, id
-            ),
-            Some(THUMBNAIL_SIZE),
-            true,
-        );
+        self.generate_plots(id, criterion, measurements);
 
         let throughput = measurements
             .throughput
@@ -181,7 +157,7 @@ impl Report for Html {
                 Plot::new("MAD", "MAD.svg"),
             ],
 
-            comparison: self.comparison(id, criterion, measurements, data),
+            comparison: self.comparison(measurements),
         };
 
         let text = self.handlebars.render("report", &context).unwrap();
@@ -192,13 +168,7 @@ impl Report for Html {
     }
 }
 impl Html {
-    fn comparison(
-        &self,
-        id: &str,
-        criterion: &Criterion,
-        measurements: &MeasurementData,
-        data: Data<f64, f64>,
-    ) -> Option<Comparison> {
+    fn comparison(&self, measurements: &MeasurementData) -> Option<Comparison> {
         if let Some(ref comp) = measurements.comparison {
             let different_mean = comp.p_value < comp.significance_threshold;
             let mean_est = comp.relative_estimates[&Statistic::Mean];
@@ -221,6 +191,64 @@ impl Html {
                 }
             }
 
+            let comp = Comparison {
+                p_value: format!("{:.2}", comp.p_value),
+                inequality: (if different_mean { "<" } else { ">" }).to_owned(),
+                significance_level: format!("{:.2}", comp.significance_threshold),
+                explanation: explanation_str,
+
+                change: ConfidenceInterval {
+                    point: format::change(mean_est.point_estimate, true),
+                    lower: format::change(mean_est.confidence_interval.lower_bound, true),
+                    upper: format::change(mean_est.confidence_interval.upper_bound, true),
+                },
+
+                additional_plots: vec![
+                    Plot::new("Change in mean", "../change/mean.svg"),
+                    Plot::new("Change in median", "../change/median.svg"),
+                    Plot::new("T-Test", "../change/t-test.svg"),
+                ],
+            };
+            Some(comp)
+        } else {
+            None
+        }
+    }
+
+    fn generate_plots(&self, id: &str, criterion: &Criterion, measurements: &MeasurementData) {
+        let data = Data::new(
+            measurements.iter_counts.as_slice(),
+            measurements.sample_times.as_slice(),
+        );
+        let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
+        let point = Slope::fit(data);
+        let slope_dist = &measurements.distributions[&Statistic::Slope];
+        let (lb, ub) =
+            slope_dist.confidence_interval(slope_estimate.confidence_interval.confidence_level);
+        let (lb_, ub_) = (Slope(lb), Slope(ub));
+
+        plot::pdf(
+            data,
+            measurements.avg_times,
+            id,
+            format!("{}/{}/new/pdf_small.svg", criterion.output_directory, id),
+            Some(THUMBNAIL_SIZE),
+            true,
+        );
+        plot::regression(
+            data,
+            &point,
+            (lb_, ub_),
+            id,
+            format!(
+                "{}/{}/new/regression_small.svg",
+                criterion.output_directory, id
+            ),
+            Some(THUMBNAIL_SIZE),
+            true,
+        );
+
+        if let Some(ref comp) = measurements.comparison {
             let base_data = Data::new(&comp.base_iter_counts, &comp.base_sample_times);
 
             plot::both::regression(
@@ -247,28 +275,6 @@ impl Html {
                 Some(THUMBNAIL_SIZE),
                 true,
             );
-
-            let comp = Comparison {
-                p_value: format!("{:.2}", comp.p_value),
-                inequality: (if different_mean { "<" } else { ">" }).to_owned(),
-                significance_level: format!("{:.2}", comp.significance_threshold),
-                explanation: explanation_str,
-
-                change: ConfidenceInterval {
-                    point: format::change(mean_est.point_estimate, true),
-                    lower: format::change(mean_est.confidence_interval.lower_bound, true),
-                    upper: format::change(mean_est.confidence_interval.upper_bound, true),
-                },
-
-                additional_plots: vec![
-                    Plot::new("Change in mean", "../change/mean.svg"),
-                    Plot::new("Change in median", "../change/median.svg"),
-                    Plot::new("T-Test", "../change/t-test.svg"),
-                ],
-            };
-            Some(comp)
-        } else {
-            None
         }
     }
 }
