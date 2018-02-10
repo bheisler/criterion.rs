@@ -1,26 +1,34 @@
 use std::collections::BTreeMap;
 
-use stats::Tails;
-use stats::bivariate::Data;
+use stats::Distribution;
 use stats::univariate::Sample;
 use stats::univariate::{self, mixed};
 
 use estimate::Statistic;
 use estimate::{Distributions, Estimates};
 use benchmark::BenchmarkConfig;
-use {format, fs, plot, Criterion, Estimate};
+use {format, fs, Criterion, Estimate};
 use error::Result;
 
 // Common comparison procedure
 #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
 pub(crate) fn common(
     id: &str,
-    data: Data<f64, f64>,
     avg_times: &Sample<f64>,
-    estimates_: &Estimates,
     config: &BenchmarkConfig,
     criterion: &Criterion,
-) -> Result<(f64, f64, Estimates, Vec<f64>, Vec<f64>, Vec<f64>, Estimates)> {
+) -> Result<
+    (
+        f64,
+        Distribution<f64>,
+        Estimates,
+        Distributions,
+        Vec<f64>,
+        Vec<f64>,
+        Vec<f64>,
+        Estimates,
+    ),
+> {
     let sample_dir = format!("{}/{}/base/sample.json", criterion.output_directory, id);
     let (iters, times): (Vec<f64>, Vec<f64>) = fs::load(&sample_dir)?;
 
@@ -36,42 +44,16 @@ pub(crate) fn common(
         .collect();
     let base_avg_time_sample = Sample::new(&base_avg_times);
 
-    fs::mkdirp(&format!("{}/{}/both", criterion.output_directory, id))?;
-    if criterion.plotting.is_enabled() {
-        elapsed!(
-            "Plotting both linear regressions",
-            plot::both::regression(
-                Data::new(&iters, &times),
-                &base_estimates,
-                data,
-                estimates_,
-                id,
-                format!("{}/{}/both/regression.svg", criterion.output_directory, id),
-                None,
-                false
-            )
-        );
-        elapsed!(
-            "Plotting both estimated PDFs",
-            plot::both::pdfs(
-                base_avg_time_sample,
-                avg_times,
-                id,
-                format!("{}/{}/both/pdf.svg", criterion.output_directory, id),
-                None,
-                false
-            )
-        );
-    }
-
     fs::mkdirp(&format!("{}/{}/change", criterion.output_directory, id))?;
-    let (t_statistic, p_statistic) = t_test(id, avg_times, base_avg_time_sample, config, criterion);
+    let (t_statistic, t_distribution) = t_test(avg_times, base_avg_time_sample, config);
 
-    let estimates = estimates(id, avg_times, base_avg_time_sample, config, criterion);
+    let (estimates, relative_distributions) =
+        estimates(id, avg_times, base_avg_time_sample, config, criterion);
     Ok((
         t_statistic,
-        p_statistic,
+        t_distribution,
         estimates,
+        relative_distributions,
         iters,
         times,
         base_avg_times.clone(),
@@ -81,12 +63,10 @@ pub(crate) fn common(
 
 // Performs a two sample t-test
 fn t_test(
-    id: &str,
     avg_times: &Sample<f64>,
     base_avg_times: &Sample<f64>,
     config: &BenchmarkConfig,
-    criterion: &Criterion,
-) -> (f64, f64) {
+) -> (f64, Distribution<f64>) {
     let nresamples = config.nresamples;
 
     let t_statistic = avg_times.t(base_avg_times);
@@ -94,21 +74,8 @@ fn t_test(
         "Bootstrapping the T distribution",
         mixed::bootstrap(avg_times, base_avg_times, nresamples, |a, b| (a.t(b),))
     ).0;
-    let p_value = t_distribution.p_value(t_statistic, &Tails::Two);
 
-    if criterion.plotting.is_enabled() {
-        elapsed!(
-            "Plotting the T test",
-            plot::t_test(
-                t_statistic,
-                &t_distribution,
-                id,
-                &criterion.output_directory
-            )
-        );
-    }
-
-    (t_statistic, p_value)
+    (t_statistic, t_distribution)
 }
 
 // Estimates the relative change in the statistics of the population
@@ -118,7 +85,7 @@ fn estimates(
     base_avg_times: &Sample<f64>,
     config: &BenchmarkConfig,
     criterion: &Criterion,
-) -> Estimates {
+) -> (Estimates, Distributions) {
     fn stats(a: &Sample<f64>, b: &Sample<f64>) -> (f64, f64) {
         (
             a.mean() / b.mean() - 1.,
@@ -128,7 +95,6 @@ fn estimates(
 
     let cl = config.confidence_level;
     let nresamples = config.nresamples;
-    let threshold = config.noise_threshold;
 
     let (dist_mean, dist_median) = elapsed!(
         "Bootstrapping the relative statistics",
@@ -155,19 +121,5 @@ fn estimates(
             )
         ));
     }
-
-    if criterion.plotting.is_enabled() {
-        elapsed!(
-            "Plotting the distribution of the relative statistics",
-            plot::rel_distributions(
-                &distributions,
-                &estimates,
-                id,
-                &criterion.output_directory,
-                threshold
-            )
-        );
-    }
-
-    estimates
+    (estimates, distributions)
 }

@@ -3,6 +3,7 @@ use stats::bivariate::regression::Slope;
 use stats::univariate::outliers::tukey::LabeledSample;
 
 use format;
+use stats::Distribution;
 use stats::univariate::Sample;
 use estimate::{Distributions, Estimates, Statistic};
 use Estimate;
@@ -13,8 +14,10 @@ use {Criterion, Throughput};
 
 pub(crate) struct ComparisonData {
     pub p_value: f64,
+    pub t_distribution: Distribution<f64>,
     pub t_value: f64,
     pub relative_estimates: Estimates,
+    pub relative_distributions: Distributions,
     pub significance_threshold: f64,
     pub noise_threshold: f64,
     pub base_iter_counts: Vec<f64>,

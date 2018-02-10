@@ -227,54 +227,145 @@ impl Html {
             slope_dist.confidence_interval(slope_estimate.confidence_interval.confidence_level);
         let (lb_, ub_) = (Slope(lb), Slope(ub));
 
-        plot::pdf(
-            data,
-            measurements.avg_times,
-            id,
-            format!("{}/{}/new/pdf_small.svg", criterion.output_directory, id),
-            Some(THUMBNAIL_SIZE),
-            true,
+        elapsed!(
+            "Plotting the estimated sample PDF",
+            plot::pdf(
+                data,
+                measurements.avg_times,
+                id,
+                format!("{}/{}/new/pdf.svg", criterion.output_directory, id),
+                None,
+                false
+            )
         );
-        plot::regression(
-            data,
-            &point,
-            (lb_, ub_),
-            id,
-            format!(
-                "{}/{}/new/regression_small.svg",
-                criterion.output_directory, id
-            ),
-            Some(THUMBNAIL_SIZE),
-            true,
+        elapsed!(
+            "Plotting the distribution of the absolute statistics",
+            plot::abs_distributions(
+                &measurements.distributions,
+                &measurements.absolute_estimates,
+                id,
+                &criterion.output_directory
+            )
         );
+        elapsed!(
+            "Plotting linear regression",
+            plot::regression(
+                data,
+                &point,
+                (lb_, ub_),
+                id,
+                format!("{}/{}/new/regression.svg", criterion.output_directory, id),
+                None,
+                false
+            )
+        );
+        elapsed!{
+            "Generating the small PDF plot.",
+            plot::pdf(
+                data,
+                measurements.avg_times,
+                id,
+                format!("{}/{}/new/pdf_small.svg", criterion.output_directory, id),
+                Some(THUMBNAIL_SIZE),
+                true,
+            )
+        }
+        elapsed!{
+            "Generating the small regression plot.",
+            plot::regression(
+                data,
+                &point,
+                (lb_, ub_),
+                id,
+                format!(
+                    "{}/{}/new/regression_small.svg",
+                    criterion.output_directory, id
+                ),
+                Some(THUMBNAIL_SIZE),
+                true,
+            )
+        }
 
         if let Some(ref comp) = measurements.comparison {
             let base_data = Data::new(&comp.base_iter_counts, &comp.base_sample_times);
 
-            plot::both::regression(
-                base_data,
-                &comp.base_estimates,
-                data,
-                &measurements.absolute_estimates,
-                id,
-                format!(
-                    "{}/{}/new/relative_regression_small.svg",
-                    criterion.output_directory, id
-                ),
-                Some(THUMBNAIL_SIZE),
-                true,
+            log_if_err!(fs::mkdirp(&format!(
+                "{}/{}/both",
+                criterion.output_directory, id
+            )));
+            elapsed!(
+                "Plotting both linear regressions",
+                plot::both::regression(
+                    base_data,
+                    &comp.base_estimates,
+                    data,
+                    &measurements.absolute_estimates,
+                    id,
+                    format!("{}/{}/both/regression.svg", criterion.output_directory, id),
+                    None,
+                    false
+                )
             );
-            plot::both::pdfs(
-                Sample::new(&comp.base_avg_times),
-                &*measurements.avg_times,
-                id,
-                format!(
-                    "{}/{}/new/relative_pdf_small.svg",
-                    criterion.output_directory, id
-                ),
-                Some(THUMBNAIL_SIZE),
-                true,
+            elapsed!(
+                "Plotting both estimated PDFs",
+                plot::both::pdfs(
+                    Sample::new(&comp.base_avg_times),
+                    &*measurements.avg_times,
+                    id,
+                    format!("{}/{}/both/pdf.svg", criterion.output_directory, id),
+                    None,
+                    false
+                )
             );
+            elapsed!(
+                "Plotting the T test",
+                plot::t_test(
+                    comp.t_value,
+                    &comp.t_distribution,
+                    id,
+                    &criterion.output_directory
+                )
+            );
+            elapsed!(
+                "Plotting the distribution of the relative statistics",
+                plot::rel_distributions(
+                    &comp.relative_distributions,
+                    &comp.relative_estimates,
+                    id,
+                    &criterion.output_directory,
+                    comp.noise_threshold
+                )
+            );
+            elapsed!{
+                "Generating the small regression plot.",
+                plot::both::regression(
+                    base_data,
+                    &comp.base_estimates,
+                    data,
+                    &measurements.absolute_estimates,
+                    id,
+                    format!(
+                        "{}/{}/new/relative_regression_small.svg",
+                        criterion.output_directory, id
+                    ),
+                    Some(THUMBNAIL_SIZE),
+                    true,
+                )
+            }
+            elapsed!{
+                "Generating the small PDF comparison plot.",
+                plot::both::pdfs(
+                    Sample::new(&comp.base_avg_times),
+                    &*measurements.avg_times,
+                    id,
+                    format!(
+                        "{}/{}/new/relative_pdf_small.svg",
+                        criterion.output_directory, id
+                    ),
+                    Some(THUMBNAIL_SIZE),
+                    true,
+                )
+            }
         }
     }
 }
