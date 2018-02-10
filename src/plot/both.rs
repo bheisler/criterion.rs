@@ -9,7 +9,7 @@ use {ConfidenceInterval, Estimate};
 use estimate::Statistic::Slope;
 use estimate::Estimates;
 use kde;
-use super::{debug_script, scale_time, wait_on_gnuplot, escape_underscores};
+use super::{debug_script, escape_underscores, scale_time, wait_on_gnuplot};
 use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
 
 #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]

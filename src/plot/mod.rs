@@ -826,7 +826,11 @@ pub fn summarize(id: &str, output_directory: &str) {
                     figure
                         .set(Font(DEFAULT_FONT))
                         .set(SIZE)
-                        .set(Title(format!("{}: Estimates of the {}s", escape_underscores(id), statistic)))
+                        .set(Title(format!(
+                            "{}: Estimates of the {}s",
+                            escape_underscores(id),
+                            statistic
+                        )))
                         .configure(Axis::BottomX, |a| {
                             a.configure(Grid::Major, |g| g.show())
                                 .configure(Grid::Minor, |g| g.hide())

@@ -19,12 +19,12 @@
 #![deny(missing_docs)]
 #![cfg_attr(feature = "real_blackbox", feature(test))]
 
+extern crate atty;
 extern crate clap;
 extern crate criterion_plot as simplot;
 extern crate criterion_stats as stats;
 extern crate failure;
 extern crate handlebars;
-extern crate atty;
 extern crate itertools;
 extern crate itertools_num;
 #[macro_use]
