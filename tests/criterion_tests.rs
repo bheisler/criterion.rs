@@ -312,6 +312,7 @@ fn test_output_files() {
         verify_file(dir, path);
     }
 
+    #[cfg(feature = "html_reports")]
     fn verify_html(dir: &str, path: &str) {
         verify_file(dir, path);
     }
@@ -329,11 +330,7 @@ fn test_output_files() {
             verify_svg(&dir, "new/mean.svg");
             verify_svg(&dir, "new/median.svg");
             verify_svg(&dir, "new/pdf.svg");
-            verify_svg(&dir, "new/pdf_small.svg");
             verify_svg(&dir, "new/regression.svg");
-            verify_svg(&dir, "new/regression_small.svg");
-            verify_svg(&dir, "new/relative_pdf_small.svg");
-            verify_svg(&dir, "new/relative_regression_small.svg");
             verify_svg(&dir, "new/SD.svg");
             verify_svg(&dir, "new/slope.svg");
             verify_svg(&dir, "both/pdf.svg");
@@ -342,7 +339,14 @@ fn test_output_files() {
             verify_svg(&dir, "change/median.svg");
             verify_svg(&dir, "change/t-test.svg");
 
-            verify_html(&dir, "new/index.html");
+            #[cfg(feature = "html_reports")]
+            {
+                verify_svg(&dir, "new/pdf_small.svg");
+                verify_svg(&dir, "new/regression_small.svg");
+                verify_svg(&dir, "new/relative_pdf_small.svg");
+                verify_svg(&dir, "new/relative_regression_small.svg");
+                verify_html(&dir, "new/index.html");
+            }
         }
     }
 }

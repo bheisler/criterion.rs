@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- HTML reports are now a default Cargo feature. If you wish to disable HTML reports,
+  disable Criterion.rs' default features. Doing so will allow compatibility with
+  older Rust versions such as 1.20. If you wish to continue using HTML reports, you
+  don't need to do anything.
+
+### Fixed
+- Underscores in benchmark names will no longer cause subscripted characters to
+  appear in generated plots.
 
 ## [0.2.0]
 ### Added

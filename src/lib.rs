@@ -24,19 +24,24 @@ extern crate clap;
 extern crate criterion_plot as simplot;
 extern crate criterion_stats as stats;
 extern crate failure;
-extern crate handlebars;
 extern crate itertools;
 extern crate itertools_num;
-#[macro_use]
-extern crate log;
 extern crate serde;
 extern crate serde_json;
 extern crate simplelog;
+
+#[cfg(feature = "html_reports")]
+extern crate handlebars;
+
 #[cfg(feature = "real_blackbox")]
 extern crate test;
 
 #[macro_use]
+extern crate log;
+
+#[macro_use]
 extern crate failure_derive;
+
 #[macro_use]
 extern crate serde_derive;
 
@@ -57,6 +62,8 @@ mod program;
 mod report;
 mod routine;
 mod macros;
+
+#[cfg(feature = "html_reports")]
 mod html;
 
 use std::default::Default;
@@ -76,6 +83,8 @@ use report::{CliReport, Report, Reports};
 use benchmark::BenchmarkConfig;
 use benchmark::NamedRoutine;
 use routine::Function;
+
+#[cfg(feature = "html_reports")]
 use html::Html;
 
 pub use benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
@@ -411,6 +420,14 @@ impl Default for Criterion {
             Plotting::NotAvailable
         };
 
+        let mut reports: Vec<Box<Report>> = vec![];
+        reports.push(Box::new(CliReport::new(false, false, false)));
+
+        #[cfg(feature = "html_reports")]
+        {
+            reports.push(Box::new(Html::new()));
+        }
+
         Criterion {
             config: BenchmarkConfig {
                 confidence_level: 0.95,
@@ -423,10 +440,7 @@ impl Default for Criterion {
             },
             plotting: plotting,
             filter: None,
-            report: Box::new(Reports::new(vec![
-                Box::new(CliReport::new(false, false, false)),
-                Box::new(Html::new()),
-            ])),
+            report: Box::new(Reports::new(reports)),
             output_directory: "target/criterion".to_owned(),
         }
     }
@@ -648,13 +662,19 @@ scripts alongside the generated plots.
             }
         }
 
-        let cli_report = Box::new(CliReport::new(
+        let mut reports: Vec<Box<Report>> = vec![];
+        reports.push(Box::new(CliReport::new(
             enable_text_overwrite,
             enable_text_coloring,
             verbose,
-        ));
+        )));
 
-        self.report = Box::new(Reports::new(vec![cli_report, Box::new(Html::new())]));
+        #[cfg(feature = "html_reports")]
+        {
+            reports.push(Box::new(Html::new()));
+        }
+
+        self.report = Box::new(Reports::new(reports));
 
         self
     }
