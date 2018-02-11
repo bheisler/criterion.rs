@@ -269,7 +269,6 @@ impl Html {
             id,
             format!("{}/{}/new/pdf.svg", criterion.output_directory, id),
             None,
-            false,
         ));
         gnuplots.extend(plot::abs_distributions(
             &measurements.distributions,
@@ -286,13 +285,10 @@ impl Html {
             None,
             false,
         ));
-        gnuplots.push(plot::pdf(
-            data,
-            measurements.avg_times,
-            id,
+        gnuplots.push(plot::pdf_small(
+            &*measurements.avg_times,
             format!("{}/{}/new/pdf_small.svg", criterion.output_directory, id),
             Some(THUMBNAIL_SIZE),
-            true,
         ));
         gnuplots.push(plot::regression(
             data,

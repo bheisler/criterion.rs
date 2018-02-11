@@ -56,16 +56,74 @@ fn debug_script(path: &PathBuf, figure: &Figure) {
     }
 }
 
+pub fn pdf_small(
+    sample: &Sample<f64>,
+    path: String,
+    size: Option<Size>,
+) -> Child {
+    let path = PathBuf::from(path);
+    let (x_scale, prefix) = scale_time(sample.max());
+    let mean = sample.mean();
+
+    let (xs, ys, mean_y) = kde::sweep_and_estimate(&sample, KDE_POINTS, None, mean);
+    let xs_ = Sample::new(&xs);
+    let ys_ = Sample::new(&ys);
+
+    let y_limit = ys_.max() * 1.1;
+    let zeros = iter::repeat(0);
+
+    let mut figure = Figure::new();
+    figure
+        .set(Font(DEFAULT_FONT))
+        .set(size.unwrap_or(SIZE))
+        .configure(Axis::BottomX, |a| {
+            a.set(Label(format!("Average time ({}s)", prefix)))
+                .set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale))
+                .set(ScaleFactor(x_scale))
+        })
+        .configure(Axis::LeftY, |a| {
+            a.set(Label("Density (a.u.)"))
+                .set(Range::Limits(0., y_limit))
+        })
+        .configure(Axis::RightY, |a| a.hide())
+        .configure(Key, |k| {
+            k.hide()
+        })
+        .plot(
+            FilledCurve {
+                x: &*xs,
+                y1: &*ys,
+                y2: zeros,
+            },
+            |c| {
+                c.set(Axes::BottomXRightY)
+                    .set(DARK_BLUE)
+                    .set(Label("PDF"))
+                    .set(Opacity(0.25))
+            },
+        )
+        .plot(
+            Lines {
+                x: &[mean, mean],
+                y: &[0., mean_y],
+            },
+            |c| c.set(DARK_BLUE).set(LINEWIDTH).set(Label("Mean")),
+        );
+
+    debug_script(&path, &figure);
+    figure.set(Output(path)).draw().unwrap()
+}
+
 pub fn pdf(
     data: Data<f64, f64>,
     labeled_sample: LabeledSample<f64>,
     id: &str,
     path: String,
     size: Option<Size>,
-    thumbnail_mode: bool,
 ) -> Child {
     let path = PathBuf::from(path);
     let (x_scale, prefix) = scale_time(labeled_sample.max());
+    let mean = labeled_sample.mean();
 
     let &max_iters = data.x()
         .as_slice()
@@ -104,15 +162,9 @@ pub fn pdf(
                 .set(ScaleFactor(y_scale))
         })
         .configure(Axis::RightY, |a| {
-            if thumbnail_mode {
-                a.hide();
-            }
             a.set(Label("Density (a.u.)"))
         })
         .configure(Key, |k| {
-            if thumbnail_mode {
-                k.hide();
-            }
             k.set(Justification::Left)
                 .set(Order::SampleText)
                 .set(Position::Outside(Vertical::Top, Horizontal::Right))
@@ -129,6 +181,13 @@ pub fn pdf(
                     .set(Label("PDF"))
                     .set(Opacity(0.25))
             },
+        )
+        .plot(
+            Lines {
+                x: &[mean, mean],
+                y: vertical,
+            },
+            |c| c.set(DARK_BLUE).set(LINEWIDTH).set(LineType::Dash).set(Label("Mean"))
         )
         .plot(
             Points {
@@ -249,9 +308,7 @@ pub fn pdf(
             },
             |c| c.set(DARK_RED).set(LINEWIDTH).set(LineType::Dash),
         );
-    if !thumbnail_mode {
-        figure.set(Title(escape_underscores(id)));
-    }
+    figure.set(Title(escape_underscores(id)));
 
     debug_script(&path, &figure);
     figure.set(Output(path)).draw().unwrap()

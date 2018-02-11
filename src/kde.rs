@@ -8,6 +8,16 @@ pub fn sweep(
     npoints: usize,
     range: Option<(f64, f64)>,
 ) -> (Box<[f64]>, Box<[f64]>) {
+    let (xs, ys, _) = sweep_and_estimate(sample, npoints, range, sample.as_slice()[0]);
+    (xs, ys)
+}
+
+pub fn sweep_and_estimate(
+    sample: &Sample<f64>,
+    npoints: usize,
+    range: Option<(f64, f64)>,
+    point_to_estimate: f64,
+) -> (Box<[f64]>, Box<[f64]>, f64) {
     let x_min = sample.min();
     let x_max = sample.max();
 
@@ -20,8 +30,8 @@ pub fn sweep(
     };
 
     let xs: Vec<_> = itertools_num::linspace(start, end, npoints).collect();
-
     let ys = kde.map(&xs);
+    let point_estimate = kde.estimate(point_to_estimate);
 
-    (xs.into_boxed_slice(), ys)
+    (xs.into_boxed_slice(), ys, point_estimate)
 }
