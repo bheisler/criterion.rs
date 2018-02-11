@@ -24,6 +24,6 @@ elif [ "$RUSTFMT" = "yes" ]; then
     cargo fmt -- --write-mode diff
 else
     cargo build $BUILD_ARGS
-    cargo test --all $BUILD_ARGS
-    cargo build --benches --all $BUILD_ARGS
+    cargo test $BUILD_ARGS --all
+    cargo build $BUILD_ARGS --benches --all
 fi
