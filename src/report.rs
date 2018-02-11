@@ -3,6 +3,7 @@ use stats::bivariate::regression::Slope;
 use stats::univariate::outliers::tukey::LabeledSample;
 
 use format;
+use stats::Distribution;
 use stats::univariate::Sample;
 use estimate::{Distributions, Estimates, Statistic};
 use Estimate;
@@ -13,8 +14,10 @@ use {Criterion, Throughput};
 
 pub(crate) struct ComparisonData {
     pub p_value: f64,
+    pub t_distribution: Distribution<f64>,
     pub t_value: f64,
     pub relative_estimates: Estimates,
+    pub relative_distributions: Distributions,
     pub significance_threshold: f64,
     pub noise_threshold: f64,
     pub base_iter_counts: Vec<f64>,
@@ -46,6 +49,7 @@ pub(crate) trait Report {
         iter_count: u64,
     );
     fn measurement_complete(&self, id: &str, criterion: &Criterion, measurements: &MeasurementData);
+    fn summarize(&self, criterion: &Criterion, group_id: &str, all_ids: &[String]);
 }
 
 pub(crate) struct Reports {
@@ -95,6 +99,12 @@ impl Report for Reports {
     ) {
         for report in &self.reports {
             report.measurement_complete(id, criterion, measurements);
+        }
+    }
+
+    fn summarize(&self, criterion: &Criterion, group_id: &str, all_ids: &[String]) {
+        for report in &self.reports {
+            report.summarize(criterion, group_id, all_ids);
         }
     }
 }
@@ -391,6 +401,8 @@ impl Report for CliReport {
             );
         }
     }
+
+    fn summarize(&self, _: &Criterion, _: &str, _: &[String]) {}
 }
 
 enum ComparisonResult {

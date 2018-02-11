@@ -1,4 +1,4 @@
-use std::fs::{self, File, ReadDir};
+use std::fs::{self, File};
 use std::io::Read;
 use std::path::Path;
 use serde_json;
@@ -21,10 +21,6 @@ where
     let result: A = serde_json::from_str(string.as_str())?;
 
     Ok(result)
-}
-
-pub fn ls(dir: &Path) -> Result<ReadDir> {
-    Ok(fs::read_dir(dir)?)
 }
 
 pub fn mkdirp<P>(path: &P) -> Result<()>

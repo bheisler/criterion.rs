@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::collections::BTreeMap;
 
-use stats::Distribution;
+use stats::{Distribution, Tails};
 use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
 use stats::univariate::Sample;
@@ -11,7 +11,7 @@ use estimate::{Distributions, Estimates, Statistic};
 use routine::Routine;
 use benchmark::BenchmarkConfig;
 use {ConfidenceInterval, Criterion, Estimate, Throughput};
-use {format, fs, plot};
+use {format, fs};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => ({
@@ -26,14 +26,6 @@ macro_rules! elapsed {
 }
 
 mod compare;
-
-pub fn summarize(id: &str, criterion: &Criterion) {
-    if criterion.plotting.is_enabled() {
-        plot::summarize(id, &criterion.output_directory);
-    }
-
-    println!();
-}
 
 // Common analysis procedure
 pub(crate) fn common<T>(
@@ -66,29 +58,11 @@ pub(crate) fn common<T>(
 
     let data = Data::new(&iters, &times);
     let labeled_sample = outliers(id, &criterion.output_directory, avg_times);
-    let (distribution, slope) = regression(id, data, config, criterion);
+    let (distribution, slope) = regression(data, config);
     let (mut distributions, mut estimates) = estimates(avg_times, config);
 
     estimates.insert(Statistic::Slope, slope);
     distributions.insert(Statistic::Slope, distribution);
-
-    if criterion.plotting.is_enabled() {
-        elapsed!(
-            "Plotting the estimated sample PDF",
-            plot::pdf(
-                data,
-                labeled_sample,
-                id,
-                format!("{}/{}/new/pdf.svg", criterion.output_directory, id),
-                None,
-                false
-            )
-        );
-        elapsed!(
-            "Plotting the distribution of the absolute statistics",
-            plot::abs_distributions(&distributions, &estimates, id, &criterion.output_directory)
-        );
-    }
 
     log_if_err!(fs::save(
         &(data.x().as_slice(), data.y().as_slice()),
@@ -100,13 +74,25 @@ pub(crate) fn common<T>(
     ));
 
     let compare_data = if base_dir_exists(id, &criterion.output_directory) {
-        let result = compare::common(id, data, avg_times, &estimates, config, criterion);
+        let result = compare::common(id, avg_times, config, criterion);
         match result {
-            Ok((t_val, p_val, rel_est, base_iters, base_times, base_avg, base_estimates)) => {
+            Ok((
+                t_val,
+                t_dist,
+                rel_est,
+                rel_dist,
+                base_iters,
+                base_times,
+                base_avg,
+                base_estimates,
+            )) => {
+                let p_value = t_dist.p_value(t_val, &Tails::Two);
                 Some(::report::ComparisonData {
-                    p_value: p_val,
+                    p_value: p_value,
+                    t_distribution: t_dist,
                     t_value: t_val,
                     relative_estimates: rel_est,
+                    relative_distributions: rel_dist,
                     significance_threshold: config.significance_level,
                     noise_threshold: config.noise_threshold,
                     base_iter_counts: base_iters,
@@ -144,12 +130,7 @@ fn base_dir_exists(id: &str, output_directory: &str) -> bool {
 }
 
 // Performs a simple linear regression on the sample
-fn regression(
-    id: &str,
-    data: Data<f64, f64>,
-    config: &BenchmarkConfig,
-    criterion: &Criterion,
-) -> (Distribution<f64>, Estimate) {
+fn regression(data: Data<f64, f64>, config: &BenchmarkConfig) -> (Distribution<f64>, Estimate) {
     let cl = config.confidence_level;
 
     let distribution = elapsed!(
@@ -160,23 +141,6 @@ fn regression(
     let point = Slope::fit(data);
     let (lb, ub) = distribution.confidence_interval(config.confidence_level);
     let se = distribution.std_dev(None);
-
-    let (lb_, ub_) = (Slope(lb), Slope(ub));
-
-    if criterion.plotting.is_enabled() {
-        elapsed!(
-            "Plotting linear regression",
-            plot::regression(
-                data,
-                &point,
-                (lb_, ub_),
-                id,
-                format!("{}/{}/new/regression.svg", criterion.output_directory, id),
-                None,
-                false
-            )
-        );
-    }
 
     (
         distribution,

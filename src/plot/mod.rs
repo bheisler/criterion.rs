@@ -33,24 +33,6 @@ fn scale_time(ns: f64) -> (f64, &'static str) {
     }
 }
 
-fn wait_on_gnuplot(children: Vec<Child>) {
-    let start = ::std::time::Instant::now();
-    let child_count = children.len();
-    for child in children {
-        match child.wait_with_output() {
-            Ok(ref out) if out.status.success() => {}
-            Ok(out) => error!("Error in Gnuplot: {}", String::from_utf8_lossy(&out.stderr)),
-            Err(e) => error!("Got IO error while waiting for Gnuplot to complete: {}", e),
-        }
-    }
-    let elapsed = &start.elapsed();
-    info!(
-        "Waiting for {} gnuplot processes took {}",
-        child_count,
-        ::format::time(::DurationExt::to_nanos(elapsed) as f64)
-    );
-}
-
 static DEFAULT_FONT: &'static str = "Helvetica";
 static KDE_POINTS: usize = 500;
 static SIZE: Size = Size(1280, 720);
@@ -81,7 +63,7 @@ pub fn pdf(
     path: String,
     size: Option<Size>,
     thumbnail_mode: bool,
-) {
+) -> Child {
     let path = PathBuf::from(path);
     let (x_scale, prefix) = scale_time(labeled_sample.max());
 
@@ -272,9 +254,7 @@ pub fn pdf(
     }
 
     debug_script(&path, &figure);
-    let gnuplot = figure.set(Output(path)).draw().unwrap();
-
-    wait_on_gnuplot(vec![gnuplot]);
+    figure.set(Output(path)).draw().unwrap()
 }
 
 pub fn regression(
@@ -285,7 +265,7 @@ pub fn regression(
     path: String,
     size: Option<Size>,
     thumbnail_mode: bool,
-) {
+) -> Child {
     let path = PathBuf::from(path);
 
     let (max_iters, max_elapsed) = (data.x().max(), data.y().max());
@@ -369,9 +349,7 @@ pub fn regression(
     }
 
     debug_script(&path, &figure);
-    let gnuplot = figure.set(Output(path)).draw().unwrap();
-
-    wait_on_gnuplot(vec![gnuplot]);
+    figure.set(Output(path)).draw().unwrap()
 }
 
 pub(crate) fn abs_distributions(
@@ -379,8 +357,8 @@ pub(crate) fn abs_distributions(
     estimates: &Estimates,
     id: &str,
     output_directory: &str,
-) {
-    let gnuplots = distributions
+) -> Vec<Child> {
+    distributions
         .iter()
         .map(|(&statistic, distribution)| {
             let path = PathBuf::from(format!("{}/{}/new/{}.svg", output_directory, id, statistic));
@@ -465,9 +443,7 @@ pub(crate) fn abs_distributions(
             debug_script(&path, &figure);
             figure.set(Output(path)).draw().unwrap()
         })
-        .collect::<Vec<_>>();
-
-    wait_on_gnuplot(gnuplots);
+        .collect::<Vec<_>>()
 }
 
 // TODO DRY: This is very similar to the `abs_distributions` method
@@ -477,7 +453,7 @@ pub(crate) fn rel_distributions(
     id: &str,
     output_directory: &str,
     nt: f64,
-) {
+) -> Vec<Child> {
     let mut figure = Figure::new();
 
     figure
@@ -490,7 +466,7 @@ pub(crate) fn rel_distributions(
                 .set(Position::Outside(Vertical::Top, Horizontal::Right))
         });
 
-    let gnuplots = distributions
+    distributions
         .iter()
         .map(|(&statistic, distribution)| {
             let path = PathBuf::from(format!(
@@ -592,13 +568,10 @@ pub(crate) fn rel_distributions(
             debug_script(&path, &figure);
             figure.set(Output(path)).draw().unwrap()
         })
-        .collect::<Vec<_>>();
-
-    // FIXME This sometimes fails!
-    wait_on_gnuplot(gnuplots);
+        .collect::<Vec<_>>()
 }
 
-pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str, output_directory: &str) {
+pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str, output_directory: &str) -> Child {
     let path = PathBuf::from(format!("{}/{}/change/t-test.svg", output_directory, id));
 
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, None);
@@ -642,9 +615,7 @@ pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str, output_directo
             },
         );
     debug_script(&path, &figure);
-    let gnuplot = figure.set(Output(path)).draw().unwrap();
-
-    wait_on_gnuplot(vec![gnuplot]);
+    figure.set(Output(path)).draw().unwrap()
 }
 
 /// Private
@@ -661,11 +632,11 @@ impl<T> Append<T> for Vec<T> {
     }
 }
 
-pub fn summarize(id: &str, output_directory: &str) {
-    let dir = Path::new(output_directory).join(id);
-    let contents: Vec<_> = try_else_return!(fs::ls(&dir))
-        .map(|e| e.unwrap().path())
-        .collect();
+pub fn summarize(group_id: &str, all_ids: &[String], output_directory: &str) -> Vec<Child> {
+    let dir = Path::new(output_directory).join(group_id);
+    let contents: Vec<_> = all_ids.iter().map(|id| dir.join(id)).collect();
+
+    let mut all_gnuplots = vec![];
 
     // XXX Plot both summaries?
     for &sample in &["new", "base"] {
@@ -701,7 +672,10 @@ pub fn summarize(id: &str, output_directory: &str) {
 
         // The following code needs this directory,
         // therefore we exit the function if anything goes wrong.
-        try_else_return!(fs::mkdirp(&dir.join(&format!("summary/{}", sample))));
+        try_else_return!(
+            fs::mkdirp(&dir.join(&format!("summary/{}", sample))),
+            || vec![]
+        );
 
         let gnuplots = if benches.iter().all(|&(_, ref input, _, _)| input.is_ok()) {
             // TODO trendline
@@ -746,7 +720,7 @@ pub fn summarize(id: &str, output_directory: &str) {
                     figure
                         .set(Font(DEFAULT_FONT))
                         .set(SIZE)
-                        .set(Title(escape_underscores(id)))
+                        .set(Title(escape_underscores(group_id)))
                         .configure(Axis::BottomX, |a| {
                             a.configure(Grid::Major, |g| g.show())
                                 .configure(Grid::Minor, |g| g.hide())
@@ -828,7 +802,7 @@ pub fn summarize(id: &str, output_directory: &str) {
                         .set(SIZE)
                         .set(Title(format!(
                             "{}: Estimates of the {}s",
-                            escape_underscores(id),
+                            escape_underscores(group_id),
                             statistic
                         )))
                         .configure(Axis::BottomX, |a| {
@@ -911,7 +885,10 @@ pub fn summarize(id: &str, output_directory: &str) {
                     let mut f = Figure::new();
                     f.set(Font(DEFAULT_FONT))
                         .set(SIZE)
-                        .set(Title(format!("{}: Violin plot", escape_underscores(id))))
+                        .set(Title(format!(
+                            "{}: Violin plot",
+                            escape_underscores(group_id)
+                        )))
                         .configure(Axis::BottomX, |a| {
                             a.configure(Grid::Major, |g| g.show())
                                 .configure(Grid::Minor, |g| g.hide())
@@ -969,6 +946,7 @@ pub fn summarize(id: &str, output_directory: &str) {
                 })
         };
 
-        wait_on_gnuplot(gnuplots);
+        all_gnuplots.extend(gnuplots);
     }
+    all_gnuplots
 }
