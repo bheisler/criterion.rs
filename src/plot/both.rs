@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use std::{iter, str};
+use std::iter;
 
 use simplot::prelude::*;
 use stats::bivariate::Data;
@@ -12,6 +12,7 @@ use kde;
 use std::process::Child;
 use super::{debug_script, escape_underscores, scale_time};
 use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
+use report::BenchmarkId;
 
 #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
 pub(crate) fn regression(
@@ -19,7 +20,7 @@ pub(crate) fn regression(
     base_estimates: &Estimates,
     data: Data<f64, f64>,
     estimates: &Estimates,
-    id: &str,
+    id: &BenchmarkId,
     path: String,
     size: Option<Size>,
     thumbnail_mode: bool,
@@ -64,7 +65,7 @@ pub(crate) fn regression(
 
     let mut figure = Figure::new();
     if !thumbnail_mode {
-        figure.set(Title(escape_underscores(id)));
+        figure.set(Title(escape_underscores(id.id())));
     }
 
     figure
@@ -135,7 +136,7 @@ pub(crate) fn regression(
 pub fn pdfs(
     base_avg_times: &Sample<f64>,
     avg_times: &Sample<f64>,
-    id: &str,
+    id: &BenchmarkId,
     path: String,
     size: Option<Size>,
     thumbnail_mode: bool,
@@ -155,7 +156,7 @@ pub fn pdfs(
 
     let mut figure = Figure::new();
     if !thumbnail_mode {
-        figure.set(Title(escape_underscores(id)));
+        figure.set(Title(escape_underscores(id.id())));
     }
     figure
         .set(Font(DEFAULT_FONT))

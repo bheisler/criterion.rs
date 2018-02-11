@@ -1,4 +1,4 @@
-use std::{iter, str};
+use std::iter;
 use std::path::{Path, PathBuf};
 use std::process::Child;
 
@@ -12,6 +12,7 @@ use stats::univariate::outliers::tukey::LabeledSample;
 use Estimate;
 use estimate::{Distributions, Estimates, Statistic};
 use {fs, kde};
+use report::BenchmarkId;
 
 pub mod both;
 
@@ -117,7 +118,7 @@ pub fn pdf_small(
 pub fn pdf(
     data: Data<f64, f64>,
     labeled_sample: LabeledSample<f64>,
-    id: &str,
+    id: &BenchmarkId,
     path: String,
     size: Option<Size>,
 ) -> Child {
@@ -308,7 +309,7 @@ pub fn pdf(
             },
             |c| c.set(DARK_RED).set(LINEWIDTH).set(LineType::Dash),
         );
-    figure.set(Title(escape_underscores(id)));
+    figure.set(Title(escape_underscores(id.id())));
 
     debug_script(&path, &figure);
     figure.set(Output(path)).draw().unwrap()
@@ -318,7 +319,7 @@ pub fn regression(
     data: Data<f64, f64>,
     point: &Slope<f64>,
     (lb, ub): (Slope<f64>, Slope<f64>),
-    id: &str,
+    id: &BenchmarkId,
     path: String,
     size: Option<Size>,
     thumbnail_mode: bool,
@@ -402,7 +403,7 @@ pub fn regression(
             },
         );
     if !thumbnail_mode {
-        figure.set(Title(escape_underscores(id)));
+        figure.set(Title(escape_underscores(id.id())));
     }
 
     debug_script(&path, &figure);
@@ -412,7 +413,7 @@ pub fn regression(
 pub(crate) fn abs_distributions(
     distributions: &Distributions,
     estimates: &Estimates,
-    id: &str,
+    id: &BenchmarkId,
     output_directory: &str,
 ) -> Vec<Child> {
     distributions
@@ -453,7 +454,7 @@ pub(crate) fn abs_distributions(
             figure
                 .set(Font(DEFAULT_FONT))
                 .set(SIZE)
-                .set(Title(format!("{}: {}", escape_underscores(id), statistic)))
+                .set(Title(format!("{}: {}", escape_underscores(id.id()), statistic)))
                 .configure(Axis::BottomX, |a| {
                     a.set(Label(format!("Average time ({}s)", prefix)))
                         .set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale))
@@ -507,7 +508,7 @@ pub(crate) fn abs_distributions(
 pub(crate) fn rel_distributions(
     distributions: &Distributions,
     estimates: &Estimates,
-    id: &str,
+    id: &BenchmarkId,
     output_directory: &str,
     nt: f64,
 ) -> Vec<Child> {
@@ -573,7 +574,7 @@ pub(crate) fn rel_distributions(
 
             let mut figure = figure.clone();
             figure
-                .set(Title(format!("{}: {}", escape_underscores(id), statistic)))
+                .set(Title(format!("{}: {}", escape_underscores(id.id()), statistic)))
                 .configure(Axis::BottomX, |a| {
                     a.set(Label("Relative change (%)"))
                         .set(Range::Limits(x_min * 100., x_max * 100.))
@@ -628,7 +629,7 @@ pub(crate) fn rel_distributions(
         .collect::<Vec<_>>()
 }
 
-pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str, output_directory: &str) -> Child {
+pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &BenchmarkId, output_directory: &str) -> Child {
     let path = PathBuf::from(format!("{}/{}/change/t-test.svg", output_directory, id));
 
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, None);
@@ -638,7 +639,7 @@ pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &str, output_directo
     figure
         .set(Font(DEFAULT_FONT))
         .set(SIZE)
-        .set(Title(format!("{}: Welch t test", escape_underscores(id))))
+        .set(Title(format!("{}: Welch t test", escape_underscores(id.id()))))
         .configure(Axis::BottomX, |a| a.set(Label("t score")))
         .configure(Axis::LeftY, |a| a.set(Label("Density")))
         .configure(Key, |k| {
@@ -689,10 +690,10 @@ impl<T> Append<T> for Vec<T> {
     }
 }
 
-pub fn summarize(group_id: &str, all_ids: &[String], output_directory: &str) -> Vec<Child> {
+pub fn summarize(group_id: &str, all_ids: &[BenchmarkId], output_directory: &str) -> Vec<Child> {
     let output_dir = Path::new(output_directory);
     let dir = output_dir.join(group_id);
-    let contents: Vec<_> = all_ids.iter().map(|id| output_dir.join(id)).collect();
+    let contents: Vec<_> = all_ids.iter().map(|id| output_dir.join(id.id())).collect();
 
     let mut all_gnuplots = vec![];
 

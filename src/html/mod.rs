@@ -1,6 +1,6 @@
 use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
-use report::{MeasurementData, Report};
+use report::{MeasurementData, Report, BenchmarkId};
 use Criterion;
 
 use handlebars::Handlebars;
@@ -99,13 +99,13 @@ impl Html {
     }
 }
 impl Report for Html {
-    fn benchmark_start(&self, _: &str, _: &Criterion) {}
-    fn warmup(&self, _: &str, _: &Criterion, _: f64) {}
-    fn analysis(&self, _: &str, _: &Criterion) {}
-    fn measurement_start(&self, _: &str, _: &Criterion, _: u64, _: f64, _: u64) {}
+    fn benchmark_start(&self, _: &BenchmarkId, _: &Criterion) {}
+    fn warmup(&self, _: &BenchmarkId, _: &Criterion, _: f64) {}
+    fn analysis(&self, _: &BenchmarkId, _: &Criterion) {}
+    fn measurement_start(&self, _: &BenchmarkId, _: &Criterion, _: u64, _: f64, _: u64) {}
     fn measurement_complete(
         &self,
-        id: &str,
+        id: &BenchmarkId,
         criterion: &Criterion,
         measurements: &MeasurementData,
     ) {
@@ -143,7 +143,7 @@ impl Report for Html {
             });
 
         let context = Context {
-            title: id.to_owned(),
+            title: id.id().to_owned(),
             confidence: format!("{:.2}", slope_estimate.confidence_interval.confidence_level),
 
             thumbnail_width: THUMBNAIL_SIZE.0,
@@ -189,13 +189,13 @@ impl Report for Html {
         ).unwrap();
     }
 
-    fn summarize(&self, criterion: &Criterion, group_id: &str, all_ids: &[String]) {
+    fn summarize(&self, criterion: &Criterion, all_ids: &[BenchmarkId]) {
         if !criterion.plotting.is_enabled() {
             return;
         }
 
         wait_on_gnuplot(plot::summarize(
-            group_id,
+            &all_ids[0].group_id,
             all_ids,
             &criterion.output_directory,
         ));
@@ -249,7 +249,7 @@ impl Html {
         }
     }
 
-    fn generate_plots(&self, id: &str, criterion: &Criterion, measurements: &MeasurementData) {
+    fn generate_plots(&self, id: &BenchmarkId, criterion: &Criterion, measurements: &MeasurementData) {
         let data = Data::new(
             measurements.iter_counts.as_slice(),
             measurements.sample_times.as_slice(),

@@ -12,6 +12,7 @@ use routine::Routine;
 use benchmark::BenchmarkConfig;
 use {ConfidenceInterval, Criterion, Estimate, Throughput};
 use {format, fs};
+use report::BenchmarkId;
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => ({
@@ -29,7 +30,7 @@ mod compare;
 
 // Common analysis procedure
 pub(crate) fn common<T>(
-    id: &str,
+    id: &BenchmarkId,
     routine: &mut Routine<T>,
     config: &BenchmarkConfig,
     criterion: &Criterion,
@@ -42,7 +43,7 @@ pub(crate) fn common<T>(
 
     criterion.report.analysis(id, criterion);
 
-    rename_new_dir_to_base(id, &criterion.output_directory);
+    rename_new_dir_to_base(id.id(), &criterion.output_directory);
 
     let avg_times = iters
         .iter()
@@ -125,7 +126,7 @@ pub(crate) fn common<T>(
         .measurement_complete(id, criterion, &measurement_data);
 }
 
-fn base_dir_exists(id: &str, output_directory: &str) -> bool {
+fn base_dir_exists(id: &BenchmarkId, output_directory: &str) -> bool {
     Path::new(&format!("{}/{}/base", output_directory, id)).exists()
 }
 
@@ -158,7 +159,7 @@ fn regression(data: Data<f64, f64>, config: &BenchmarkConfig) -> (Distribution<f
 
 // Classifies the outliers in the sample
 fn outliers<'a>(
-    id: &str,
+    id: &BenchmarkId,
     output_directory: &str,
     avg_times: &'a Sample<f64>,
 ) -> LabeledSample<'a, f64> {

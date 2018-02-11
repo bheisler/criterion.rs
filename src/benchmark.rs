@@ -7,6 +7,7 @@ use std::process::Command;
 use std::marker::Sized;
 use std::fmt::Debug;
 use program::CommandFactory;
+use report::BenchmarkId;
 
 /// Struct containing all of the configuration options for a benchmark.
 pub struct BenchmarkConfig {
@@ -351,13 +352,15 @@ impl BenchmarkDefinition for Benchmark {
         let mut all_ids = vec![];
 
         for routine in self.routines {
-            let id = if num_routines == 1 && group_id == routine.id {
-                routine.id
+            let function_id = if num_routines == 1 && group_id == routine.id {
+                None
             } else {
-                format!("{}/{}", group_id, routine.id)
+                Some(routine.id)
             };
 
-            if c.filter_matches(&id) {
+            let id = BenchmarkId::new(group_id.to_owned(), function_id, None, self.throughput.clone());
+
+            if c.filter_matches(id.id()) {
                 any_matched = true;
                 analysis::common(
                     &id,
@@ -367,13 +370,12 @@ impl BenchmarkDefinition for Benchmark {
                     &(),
                     self.throughput.clone(),
                 );
-
                 all_ids.push(id);
             }
         }
 
         if any_matched {
-            c.report.summarize(c, group_id, &all_ids);
+            c.report.summarize(c, &all_ids);
             println!();
         }
     }
@@ -563,21 +565,22 @@ where
 
         for routine in self.routines {
             for value in &self.values {
-                let id = if num_routines == 1 && group_id == routine.id {
-                    routine.id.clone()
+                let function_id = if num_routines == 1 && group_id == routine.id {
+                    None
                 } else {
-                    format!("{}/{}", group_id, routine.id)
+                    Some(routine.id.clone())
                 };
 
-                let id = if num_parameters == 1 {
-                    id
+                let value_str = if num_parameters == 1 {
+                    None
                 } else {
-                    format!("{}/{:?}", id, value)
+                    Some(format!("{:?}", value))
                 };
 
                 let throughput = self.throughput.as_ref().map(|func| func(value));
+                let id = BenchmarkId::new(group_id.to_owned(), function_id, value_str, throughput.clone());
 
-                if c.filter_matches(&id) {
+                if c.filter_matches(id.id()) {
                     any_matched = true;
                     analysis::common(
                         &id,
@@ -594,7 +597,7 @@ where
         }
 
         if any_matched {
-            c.report.summarize(c, group_id, &all_ids);
+            c.report.summarize(c, &all_ids);
             println!();
         }
     }

@@ -10,6 +10,7 @@ use Estimate;
 use std::io::stdout;
 use std::io::Write;
 use std::cell::Cell;
+use std::fmt;
 use {Criterion, Throughput};
 
 pub(crate) struct ComparisonData {
@@ -36,20 +37,66 @@ pub(crate) struct MeasurementData<'a> {
     pub throughput: Option<Throughput>,
 }
 
+pub struct BenchmarkId {
+    pub group_id: String,
+    pub function_id: Option<String>,
+    pub value_str: Option<String>,
+    pub throughput: Option<Throughput>,
+    full_id: String,
+}
+
+impl BenchmarkId {
+    pub fn new(group_id: String, function_id: Option<String>, value_str: Option<String>, throughput: Option<Throughput>) -> BenchmarkId {
+        let full_id = match (&function_id, &value_str) {
+            (&Some(ref func), &Some(ref val)) => format!("{}/{}/{}", group_id, func, val),
+            (&Some(ref func), &None) => format!("{}/{}", group_id, func),
+            (&None, &Some(ref val)) => format!("{}/{}", group_id, val),
+            (&None, &None) => group_id.clone(),
+        };
+        BenchmarkId { group_id, function_id, value_str, throughput, full_id }
+    }
+
+    pub fn id(&self) -> &str {
+        &self.full_id
+    }
+}
+impl fmt::Display for BenchmarkId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(&self.id())
+    }
+}
+impl fmt::Debug for BenchmarkId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fn format_opt(opt: &Option<String>) -> String {
+            match opt {
+                &Some(ref string) => format!("\"{}\"", string),
+                &None => "None".to_owned()
+            }
+        }
+
+        write!(f, "BenchmarkId {{ group_id: \"{}\", function_id: {}, value_str: {}, throughput: {:?} }}",
+            self.group_id,
+            format_opt(&self.function_id),
+            format_opt(&self.value_str),
+            self.throughput,
+        )
+    }
+}
+
 pub(crate) trait Report {
-    fn benchmark_start(&self, id: &str, criterion: &Criterion);
-    fn warmup(&self, id: &str, criterion: &Criterion, warmup_ns: f64);
-    fn analysis(&self, id: &str, criterion: &Criterion);
+    fn benchmark_start(&self, id: &BenchmarkId, criterion: &Criterion);
+    fn warmup(&self, id: &BenchmarkId, criterion: &Criterion, warmup_ns: f64);
+    fn analysis(&self, id: &BenchmarkId, criterion: &Criterion);
     fn measurement_start(
         &self,
-        id: &str,
+        id: &BenchmarkId,
         criterion: &Criterion,
         sample_count: u64,
         estimate_ns: f64,
         iter_count: u64,
     );
-    fn measurement_complete(&self, id: &str, criterion: &Criterion, measurements: &MeasurementData);
-    fn summarize(&self, criterion: &Criterion, group_id: &str, all_ids: &[String]);
+    fn measurement_complete(&self, id: &BenchmarkId, criterion: &Criterion, measurements: &MeasurementData);
+    fn summarize(&self, criterion: &Criterion, all_ids: &[BenchmarkId]);
 }
 
 pub(crate) struct Reports {
@@ -61,19 +108,19 @@ impl Reports {
     }
 }
 impl Report for Reports {
-    fn benchmark_start(&self, id: &str, criterion: &Criterion) {
+    fn benchmark_start(&self, id: &BenchmarkId, criterion: &Criterion) {
         for report in &self.reports {
             report.benchmark_start(id, criterion);
         }
     }
 
-    fn warmup(&self, id: &str, criterion: &Criterion, warmup_ns: f64) {
+    fn warmup(&self, id: &BenchmarkId, criterion: &Criterion, warmup_ns: f64) {
         for report in &self.reports {
             report.warmup(id, criterion, warmup_ns);
         }
     }
 
-    fn analysis(&self, id: &str, criterion: &Criterion) {
+    fn analysis(&self, id: &BenchmarkId, criterion: &Criterion) {
         for report in &self.reports {
             report.analysis(id, criterion);
         }
@@ -81,7 +128,7 @@ impl Report for Reports {
 
     fn measurement_start(
         &self,
-        id: &str,
+        id: &BenchmarkId,
         criterion: &Criterion,
         sample_count: u64,
         estimate_ns: f64,
@@ -93,7 +140,7 @@ impl Report for Reports {
     }
     fn measurement_complete(
         &self,
-        id: &str,
+        id: &BenchmarkId,
         criterion: &Criterion,
         measurements: &MeasurementData,
     ) {
@@ -102,9 +149,9 @@ impl Report for Reports {
         }
     }
 
-    fn summarize(&self, criterion: &Criterion, group_id: &str, all_ids: &[String]) {
+    fn summarize(&self, criterion: &Criterion, all_ids: &[BenchmarkId]) {
         for report in &self.reports {
-            report.summarize(criterion, group_id, all_ids);
+            report.summarize(criterion, all_ids);
         }
     }
 }
@@ -227,11 +274,11 @@ impl CliReport {
     }
 }
 impl Report for CliReport {
-    fn benchmark_start(&self, id: &str, _: &Criterion) {
+    fn benchmark_start(&self, id: &BenchmarkId, _: &Criterion) {
         self.print_overwritable(format!("Benchmarking {}", id));
     }
 
-    fn warmup(&self, id: &str, _: &Criterion, warmup_ns: f64) {
+    fn warmup(&self, id: &BenchmarkId, _: &Criterion, warmup_ns: f64) {
         self.text_overwrite();
         self.print_overwritable(format!(
             "Benchmarking {}: Warming up for {}",
@@ -240,14 +287,14 @@ impl Report for CliReport {
         ));
     }
 
-    fn analysis(&self, id: &str, _: &Criterion) {
+    fn analysis(&self, id: &BenchmarkId, _: &Criterion) {
         self.text_overwrite();
         self.print_overwritable(format!("Benchmarking {}: Analyzing", id));
     }
 
     fn measurement_start(
         &self,
-        id: &str,
+        id: &BenchmarkId,
         _: &Criterion,
         sample_count: u64,
         estimate_ns: f64,
@@ -269,13 +316,13 @@ impl Report for CliReport {
         ));
     }
 
-    fn measurement_complete(&self, id: &str, _: &Criterion, meas: &MeasurementData) {
+    fn measurement_complete(&self, id: &BenchmarkId, _: &Criterion, meas: &MeasurementData) {
         self.text_overwrite();
 
         let slope_estimate = meas.absolute_estimates[&Statistic::Slope];
 
         {
-            let mut id = String::from(id);
+            let mut id = id.id().to_owned();
 
             if id.len() > 23 {
                 if id.len() > 80 {
@@ -402,7 +449,7 @@ impl Report for CliReport {
         }
     }
 
-    fn summarize(&self, _: &Criterion, _: &str, _: &[String]) {}
+    fn summarize(&self, _: &Criterion, _: &[BenchmarkId]) {}
 }
 
 enum ComparisonResult {

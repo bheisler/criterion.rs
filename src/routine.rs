@@ -4,6 +4,7 @@ use benchmark::BenchmarkConfig;
 use {Bencher, Criterion, DurationExt};
 use program::Program;
 use std::marker::PhantomData;
+use report::BenchmarkId;
 
 /// PRIVATE
 pub trait Routine<T> {
@@ -18,7 +19,7 @@ pub trait Routine<T> {
     /// PRIVATE
     fn sample(
         &mut self,
-        id: &str,
+        id: &BenchmarkId,
         config: &BenchmarkConfig,
         criterion: &Criterion,
         parameter: &T,
