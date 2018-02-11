@@ -37,6 +37,7 @@ pub(crate) struct MeasurementData<'a> {
     pub throughput: Option<Throughput>,
 }
 
+#[derive(Clone)]
 pub struct BenchmarkId {
     pub group_id: String,
     pub function_id: Option<String>,

@@ -12,6 +12,7 @@ use plot;
 use simplot::Size;
 use stats::univariate::Sample;
 use std::process::Child;
+use std::collections::BTreeSet;
 
 const THUMBNAIL_SIZE: Size = Size(450, 300);
 
@@ -194,11 +195,36 @@ impl Report for Html {
             return;
         }
 
-        wait_on_gnuplot(plot::summarize(
-            &all_ids[0].group_id,
+        let mut all_plots = vec![];
+        let group_id = &all_ids[0].group_id;
+
+        let mut function_ids = BTreeSet::new();
+        for id in all_ids {
+            if let Some(ref function_id) = id.function_id {
+                function_ids.insert(function_id);
+            }
+        }
+        for function_id in function_ids {
+            let ids_with_function : Vec<_> = all_ids.iter().filter(|id|
+                id.function_id.as_ref() == Some(function_id)).cloned().collect();
+            if ids_with_function.len() > 1 {
+                let subgroup_id = format!("{}/{}", group_id, function_id);
+                all_plots.extend(
+                    plot::summarize(
+                        &subgroup_id,
+                        &*ids_with_function,
+                        &criterion.output_directory
+                    )
+                );
+            }
+        }
+
+        all_plots.extend(plot::summarize(
+            group_id,
             all_ids,
             &criterion.output_directory,
         ));
+        wait_on_gnuplot(all_plots)
     }
 }
 impl Html {
