@@ -345,4 +345,13 @@ fn test_output_files() {
             verify_html(&dir, "new/index.html");
         }
     }
+
+    if short_benchmark().can_plot() && cfg!(feature = "html_reports") {
+        let dir = "target/criterion/test_output";
+
+        verify_svg(dir, "summary/new/means.svg");
+        verify_svg(dir, "summary/new/medians.svg");
+        verify_svg(dir, "summary/new/slopes.svg");
+        verify_svg(dir, "summary/new/violin_plot.svg");
+    }
 }

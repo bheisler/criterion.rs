@@ -633,8 +633,9 @@ impl<T> Append<T> for Vec<T> {
 }
 
 pub fn summarize(group_id: &str, all_ids: &[String], output_directory: &str) -> Vec<Child> {
-    let dir = Path::new(output_directory).join(group_id);
-    let contents: Vec<_> = all_ids.iter().map(|id| dir.join(id)).collect();
+    let output_dir = Path::new(output_directory);
+    let dir = output_dir.join(group_id);
+    let contents: Vec<_> = all_ids.iter().map(|id| output_dir.join(id)).collect();
 
     let mut all_gnuplots = vec![];
 
