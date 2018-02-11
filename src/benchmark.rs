@@ -347,7 +347,6 @@ impl BenchmarkDefinition for Benchmark {
     fn run(self, group_id: &str, c: &Criterion) {
         let config = self.config.to_complete(&c.config);
         let num_routines = self.routines.len();
-        let mut any_matched = false;
 
         let mut all_ids = vec![];
 
@@ -361,7 +360,6 @@ impl BenchmarkDefinition for Benchmark {
             let id = BenchmarkId::new(group_id.to_owned(), function_id, None, self.throughput.clone());
 
             if c.filter_matches(id.id()) {
-                any_matched = true;
                 analysis::common(
                     &id,
                     &mut *routine.f.borrow_mut(),
@@ -370,11 +368,12 @@ impl BenchmarkDefinition for Benchmark {
                     &(),
                     self.throughput.clone(),
                 );
-                all_ids.push(id);
             }
+
+            all_ids.push(id);
         }
 
-        if any_matched {
+        if all_ids.len() > 1 {
             c.report.summarize(c, &all_ids);
             println!();
         }
@@ -559,7 +558,6 @@ where
         let config = self.config.to_complete(&c.config);
         let num_parameters = self.values.len();
         let num_routines = self.routines.len();
-        let mut any_matched = false;
 
         let mut all_ids = vec![];
 
@@ -581,7 +579,6 @@ where
                 let id = BenchmarkId::new(group_id.to_owned(), function_id, value_str, throughput.clone());
 
                 if c.filter_matches(id.id()) {
-                    any_matched = true;
                     analysis::common(
                         &id,
                         &mut *routine.f.borrow_mut(),
@@ -590,13 +587,13 @@ where
                         value,
                         throughput,
                     );
-
-                    all_ids.push(id);
                 }
+
+                all_ids.push(id);
             }
         }
 
-        if any_matched {
+        if all_ids.len() > 1 {
             c.report.summarize(c, &all_ids);
             println!();
         }
