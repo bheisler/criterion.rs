@@ -9,7 +9,8 @@ use {ConfidenceInterval, Estimate};
 use estimate::Statistic::Slope;
 use estimate::Estimates;
 use kde;
-use super::{debug_script, escape_underscores, scale_time, wait_on_gnuplot};
+use std::process::Child;
+use super::{debug_script, escape_underscores, scale_time};
 use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
 
 #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
@@ -22,7 +23,7 @@ pub(crate) fn regression(
     path: String,
     size: Option<Size>,
     thumbnail_mode: bool,
-) {
+) -> Child {
     let path = PathBuf::from(path);
 
     let max_iters = base_data.x().max().max(data.x().max());
@@ -125,9 +126,7 @@ pub(crate) fn regression(
             },
         );
     debug_script(&path, &figure);
-    let gnuplot = figure.set(Output(path)).draw().unwrap();
-
-    wait_on_gnuplot(vec![gnuplot]);
+    figure.set(Output(path)).draw().unwrap()
 }
 
 pub fn pdfs(
@@ -137,7 +136,7 @@ pub fn pdfs(
     path: String,
     size: Option<Size>,
     thumbnail_mode: bool,
-) {
+) -> Child {
     let path = PathBuf::from(path);
 
     let (base_xs, base_ys) = kde::sweep(base_avg_times, KDE_POINTS, None);
@@ -189,7 +188,5 @@ pub fn pdfs(
             |c| c.set(DARK_BLUE).set(Label("New PDF")).set(Opacity(0.5)),
         );
     debug_script(&path, &figure);
-    let gnuplot = figure.set(Output(path)).draw().unwrap();
-
-    wait_on_gnuplot(vec![gnuplot]);
+    figure.set(Output(path)).draw().unwrap()
 }

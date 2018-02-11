@@ -11,8 +11,27 @@ use Estimate;
 use plot;
 use simplot::Size;
 use stats::univariate::Sample;
+use std::process::Child;
 
 const THUMBNAIL_SIZE: Size = Size(450, 300);
+
+fn wait_on_gnuplot(children: Vec<Child>) {
+    let start = ::std::time::Instant::now();
+    let child_count = children.len();
+    for child in children {
+        match child.wait_with_output() {
+            Ok(ref out) if out.status.success() => {}
+            Ok(out) => error!("Error in Gnuplot: {}", String::from_utf8_lossy(&out.stderr)),
+            Err(e) => error!("Got IO error while waiting for Gnuplot to complete: {}", e),
+        }
+    }
+    let elapsed = &start.elapsed();
+    info!(
+        "Waiting for {} gnuplot processes took {}",
+        child_count,
+        ::format::time(::DurationExt::to_nanos(elapsed) as f64)
+    );
+}
 
 #[derive(Serialize)]
 struct Context {
@@ -109,7 +128,10 @@ impl Report for Html {
             measurements.sample_times.as_slice(),
         );
 
-        self.generate_plots(id, criterion, measurements);
+        elapsed!{
+            "Generating plots",
+            self.generate_plots(id, criterion, measurements)
+        }
 
         let throughput = measurements
             .throughput
@@ -172,7 +194,11 @@ impl Report for Html {
             return;
         }
 
-        plot::summarize(group_id, all_ids, &criterion.output_directory);
+        wait_on_gnuplot(plot::summarize(
+            group_id,
+            all_ids,
+            &criterion.output_directory,
+        ));
     }
 }
 impl Html {
@@ -235,64 +261,51 @@ impl Html {
             slope_dist.confidence_interval(slope_estimate.confidence_interval.confidence_level);
         let (lb_, ub_) = (Slope(lb), Slope(ub));
 
-        elapsed!(
-            "Plotting the estimated sample PDF",
-            plot::pdf(
-                data,
-                measurements.avg_times,
-                id,
-                format!("{}/{}/new/pdf.svg", criterion.output_directory, id),
-                None,
-                false
-            )
-        );
-        elapsed!(
-            "Plotting the distribution of the absolute statistics",
-            plot::abs_distributions(
-                &measurements.distributions,
-                &measurements.absolute_estimates,
-                id,
-                &criterion.output_directory
-            )
-        );
-        elapsed!(
-            "Plotting linear regression",
-            plot::regression(
-                data,
-                &point,
-                (lb_, ub_),
-                id,
-                format!("{}/{}/new/regression.svg", criterion.output_directory, id),
-                None,
-                false
-            )
-        );
-        elapsed!{
-            "Generating the small PDF plot.",
-            plot::pdf(
-                data,
-                measurements.avg_times,
-                id,
-                format!("{}/{}/new/pdf_small.svg", criterion.output_directory, id),
-                Some(THUMBNAIL_SIZE),
-                true,
-            )
-        }
-        elapsed!{
-            "Generating the small regression plot.",
-            plot::regression(
-                data,
-                &point,
-                (lb_, ub_),
-                id,
-                format!(
-                    "{}/{}/new/regression_small.svg",
-                    criterion.output_directory, id
-                ),
-                Some(THUMBNAIL_SIZE),
-                true,
-            )
-        }
+        let mut gnuplots = vec![];
+
+        gnuplots.push(plot::pdf(
+            data,
+            measurements.avg_times,
+            id,
+            format!("{}/{}/new/pdf.svg", criterion.output_directory, id),
+            None,
+            false,
+        ));
+        gnuplots.extend(plot::abs_distributions(
+            &measurements.distributions,
+            &measurements.absolute_estimates,
+            id,
+            &criterion.output_directory,
+        ));
+        gnuplots.push(plot::regression(
+            data,
+            &point,
+            (lb_, ub_),
+            id,
+            format!("{}/{}/new/regression.svg", criterion.output_directory, id),
+            None,
+            false,
+        ));
+        gnuplots.push(plot::pdf(
+            data,
+            measurements.avg_times,
+            id,
+            format!("{}/{}/new/pdf_small.svg", criterion.output_directory, id),
+            Some(THUMBNAIL_SIZE),
+            true,
+        ));
+        gnuplots.push(plot::regression(
+            data,
+            &point,
+            (lb_, ub_),
+            id,
+            format!(
+                "{}/{}/new/regression_small.svg",
+                criterion.output_directory, id
+            ),
+            Some(THUMBNAIL_SIZE),
+            true,
+        ));
 
         if let Some(ref comp) = measurements.comparison {
             let base_data = Data::new(&comp.base_iter_counts, &comp.base_sample_times);
@@ -301,80 +314,64 @@ impl Html {
                 "{}/{}/both",
                 criterion.output_directory, id
             )));
-            elapsed!(
-                "Plotting both linear regressions",
-                plot::both::regression(
-                    base_data,
-                    &comp.base_estimates,
-                    data,
-                    &measurements.absolute_estimates,
-                    id,
-                    format!("{}/{}/both/regression.svg", criterion.output_directory, id),
-                    None,
-                    false
-                )
-            );
-            elapsed!(
-                "Plotting both estimated PDFs",
-                plot::both::pdfs(
-                    Sample::new(&comp.base_avg_times),
-                    &*measurements.avg_times,
-                    id,
-                    format!("{}/{}/both/pdf.svg", criterion.output_directory, id),
-                    None,
-                    false
-                )
-            );
-            elapsed!(
-                "Plotting the T test",
-                plot::t_test(
-                    comp.t_value,
-                    &comp.t_distribution,
-                    id,
-                    &criterion.output_directory
-                )
-            );
-            elapsed!(
-                "Plotting the distribution of the relative statistics",
-                plot::rel_distributions(
-                    &comp.relative_distributions,
-                    &comp.relative_estimates,
-                    id,
-                    &criterion.output_directory,
-                    comp.noise_threshold
-                )
-            );
-            elapsed!{
-                "Generating the small regression plot.",
-                plot::both::regression(
-                    base_data,
-                    &comp.base_estimates,
-                    data,
-                    &measurements.absolute_estimates,
-                    id,
-                    format!(
-                        "{}/{}/new/relative_regression_small.svg",
-                        criterion.output_directory, id
-                    ),
-                    Some(THUMBNAIL_SIZE),
-                    true,
-                )
-            }
-            elapsed!{
-                "Generating the small PDF comparison plot.",
-                plot::both::pdfs(
-                    Sample::new(&comp.base_avg_times),
-                    &*measurements.avg_times,
-                    id,
-                    format!(
-                        "{}/{}/new/relative_pdf_small.svg",
-                        criterion.output_directory, id
-                    ),
-                    Some(THUMBNAIL_SIZE),
-                    true,
-                )
-            }
+            gnuplots.push(plot::both::regression(
+                base_data,
+                &comp.base_estimates,
+                data,
+                &measurements.absolute_estimates,
+                id,
+                format!("{}/{}/both/regression.svg", criterion.output_directory, id),
+                None,
+                false,
+            ));
+            gnuplots.push(plot::both::pdfs(
+                Sample::new(&comp.base_avg_times),
+                &*measurements.avg_times,
+                id,
+                format!("{}/{}/both/pdf.svg", criterion.output_directory, id),
+                None,
+                false,
+            ));
+            gnuplots.push(plot::t_test(
+                comp.t_value,
+                &comp.t_distribution,
+                id,
+                &criterion.output_directory,
+            ));
+            gnuplots.extend(plot::rel_distributions(
+                &comp.relative_distributions,
+                &comp.relative_estimates,
+                id,
+                &criterion.output_directory,
+                comp.noise_threshold,
+            ));
+            gnuplots.push(plot::both::regression(
+                base_data,
+                &comp.base_estimates,
+                data,
+                &measurements.absolute_estimates,
+                id,
+                format!(
+                    "{}/{}/new/relative_regression_small.svg",
+                    criterion.output_directory, id
+                ),
+                Some(THUMBNAIL_SIZE),
+                true,
+            ));
+            gnuplots.push(plot::both::pdfs(
+                Sample::new(&comp.base_avg_times),
+                &*measurements.avg_times,
+                id,
+                format!(
+                    "{}/{}/new/relative_pdf_small.svg",
+                    criterion.output_directory, id
+                ),
+                Some(THUMBNAIL_SIZE),
+                true,
+            ));
         }
+
+        wait_on_gnuplot(gnuplots);
     }
 }
 
