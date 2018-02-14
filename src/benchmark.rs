@@ -357,7 +357,12 @@ impl BenchmarkDefinition for Benchmark {
                 Some(routine.id)
             };
 
-            let id = BenchmarkId::new(group_id.to_owned(), function_id, None, self.throughput.clone());
+            let id = BenchmarkId::new(
+                group_id.to_owned(),
+                function_id,
+                None,
+                self.throughput.clone(),
+            );
 
             if c.filter_matches(id.id()) {
                 analysis::common(
@@ -576,7 +581,12 @@ where
                 };
 
                 let throughput = self.throughput.as_ref().map(|func| func(value));
-                let id = BenchmarkId::new(group_id.to_owned(), function_id, value_str, throughput.clone());
+                let id = BenchmarkId::new(
+                    group_id.to_owned(),
+                    function_id,
+                    value_str,
+                    throughput.clone(),
+                );
 
                 if c.filter_matches(id.id()) {
                     analysis::common(

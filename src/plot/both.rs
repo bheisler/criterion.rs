@@ -146,7 +146,8 @@ pub fn pdfs(
     let base_mean = base_avg_times.mean();
     let new_mean = avg_times.mean();
 
-    let (base_xs, base_ys, base_y_mean) = kde::sweep_and_estimate(base_avg_times, KDE_POINTS, None, base_mean);
+    let (base_xs, base_ys, base_y_mean) =
+        kde::sweep_and_estimate(base_avg_times, KDE_POINTS, None, base_mean);
     let (xs, ys, y_mean) = kde::sweep_and_estimate(avg_times, KDE_POINTS, None, new_mean);
     let base_xs_ = Sample::new(&base_xs);
     let xs_ = Sample::new(&xs);
@@ -165,9 +166,7 @@ pub fn pdfs(
             a.set(Label(format!("Average time ({}s)", prefix)))
                 .set(ScaleFactor(x_scale))
         })
-        .configure(Axis::LeftY, |a| {
-            a.set(Label("Density (a.u.)"))
-        })
+        .configure(Axis::LeftY, |a| a.set(Label("Density (a.u.)")))
         .configure(Axis::RightY, |a| a.hide())
         .configure(Key, |k| {
             if thumbnail_mode {
@@ -190,7 +189,7 @@ pub fn pdfs(
                 x: &[base_mean, base_mean],
                 y: &[0., base_y_mean],
             },
-            |c| c.set(DARK_RED).set(Label("Base Mean")).set(LINEWIDTH)
+            |c| c.set(DARK_RED).set(Label("Base Mean")).set(LINEWIDTH),
         )
         .plot(
             FilledCurve {
@@ -205,7 +204,7 @@ pub fn pdfs(
                 x: &[new_mean, new_mean],
                 y: &[0., y_mean],
             },
-            |c| c.set(DARK_BLUE).set(Label("New Mean")).set(LINEWIDTH)
+            |c| c.set(DARK_BLUE).set(Label("New Mean")).set(LINEWIDTH),
         );
     debug_script(&path, &figure);
     figure.set(Output(path)).draw().unwrap()

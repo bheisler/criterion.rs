@@ -12,7 +12,9 @@ use stats::univariate::outliers::tukey::LabeledSample;
 use Estimate;
 use estimate::{Distributions, Estimates, Statistic};
 use {fs, kde};
-use report::BenchmarkId;
+use report::{BenchmarkId, ValueType};
+
+use itertools::Itertools;
 
 pub mod both;
 
@@ -45,6 +47,18 @@ const DARK_BLUE: Color = Color::Rgb(31, 120, 180);
 const DARK_ORANGE: Color = Color::Rgb(255, 127, 0);
 const DARK_RED: Color = Color::Rgb(227, 26, 28);
 
+const NUM_COLORS: usize = 8;
+static COMPARISON_COLORS: [Color; NUM_COLORS] = [
+    Color::Rgb(178, 34, 34),
+    Color::Rgb(46, 139, 87),
+    Color::Rgb(0, 139, 139),
+    Color::Rgb(255, 215, 0),
+    Color::Rgb(0, 0, 139),
+    Color::Rgb(220, 20, 60),
+    Color::Rgb(139, 0, 139),
+    Color::Rgb(0, 255, 127),
+];
+
 fn debug_script(path: &PathBuf, figure: &Figure) {
     if ::debug_enabled() {
         let mut script_path = path.clone();
@@ -57,16 +71,12 @@ fn debug_script(path: &PathBuf, figure: &Figure) {
     }
 }
 
-pub fn pdf_small(
-    sample: &Sample<f64>,
-    path: String,
-    size: Option<Size>,
-) -> Child {
+pub fn pdf_small(sample: &Sample<f64>, path: String, size: Option<Size>) -> Child {
     let path = PathBuf::from(path);
     let (x_scale, prefix) = scale_time(sample.max());
     let mean = sample.mean();
 
-    let (xs, ys, mean_y) = kde::sweep_and_estimate(&sample, KDE_POINTS, None, mean);
+    let (xs, ys, mean_y) = kde::sweep_and_estimate(sample, KDE_POINTS, None, mean);
     let xs_ = Sample::new(&xs);
     let ys_ = Sample::new(&ys);
 
@@ -87,9 +97,7 @@ pub fn pdf_small(
                 .set(Range::Limits(0., y_limit))
         })
         .configure(Axis::RightY, |a| a.hide())
-        .configure(Key, |k| {
-            k.hide()
-        })
+        .configure(Key, |k| k.hide())
         .plot(
             FilledCurve {
                 x: &*xs,
@@ -162,9 +170,7 @@ pub fn pdf(
                 .set(Range::Limits(0., max_iters * y_scale))
                 .set(ScaleFactor(y_scale))
         })
-        .configure(Axis::RightY, |a| {
-            a.set(Label("Density (a.u.)"))
-        })
+        .configure(Axis::RightY, |a| a.set(Label("Density (a.u.)")))
         .configure(Key, |k| {
             k.set(Justification::Left)
                 .set(Order::SampleText)
@@ -188,7 +194,12 @@ pub fn pdf(
                 x: &[mean, mean],
                 y: vertical,
             },
-            |c| c.set(DARK_BLUE).set(LINEWIDTH).set(LineType::Dash).set(Label("Mean"))
+            |c| {
+                c.set(DARK_BLUE)
+                    .set(LINEWIDTH)
+                    .set(LineType::Dash)
+                    .set(Label("Mean"))
+            },
         )
         .plot(
             Points {
@@ -454,7 +465,11 @@ pub(crate) fn abs_distributions(
             figure
                 .set(Font(DEFAULT_FONT))
                 .set(SIZE)
-                .set(Title(format!("{}: {}", escape_underscores(id.id()), statistic)))
+                .set(Title(format!(
+                    "{}: {}",
+                    escape_underscores(id.id()),
+                    statistic
+                )))
                 .configure(Axis::BottomX, |a| {
                     a.set(Label(format!("Average time ({}s)", prefix)))
                         .set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale))
@@ -574,7 +589,11 @@ pub(crate) fn rel_distributions(
 
             let mut figure = figure.clone();
             figure
-                .set(Title(format!("{}: {}", escape_underscores(id.id()), statistic)))
+                .set(Title(format!(
+                    "{}: {}",
+                    escape_underscores(id.id()),
+                    statistic
+                )))
                 .configure(Axis::BottomX, |a| {
                     a.set(Label("Relative change (%)"))
                         .set(Range::Limits(x_min * 100., x_max * 100.))
@@ -629,7 +648,12 @@ pub(crate) fn rel_distributions(
         .collect::<Vec<_>>()
 }
 
-pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &BenchmarkId, output_directory: &str) -> Child {
+pub fn t_test(
+    t: f64,
+    distribution: &Distribution<f64>,
+    id: &BenchmarkId,
+    output_directory: &str,
+) -> Child {
     let path = PathBuf::from(format!("{}/{}/change/t-test.svg", output_directory, id));
 
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, None);
@@ -639,7 +663,10 @@ pub fn t_test(t: f64, distribution: &Distribution<f64>, id: &BenchmarkId, output
     figure
         .set(Font(DEFAULT_FONT))
         .set(SIZE)
-        .set(Title(format!("{}: Welch t test", escape_underscores(id.id()))))
+        .set(Title(format!(
+            "{}: Welch t test",
+            escape_underscores(id.id())
+        )))
         .configure(Axis::BottomX, |a| a.set(Label("t score")))
         .configure(Axis::LeftY, |a| a.set(Label("Density")))
         .configure(Key, |k| {
@@ -913,7 +940,11 @@ pub fn summarize(group_id: &str, all_ids: &[BenchmarkId], output_directory: &str
     all_gnuplots
 }
 
-pub fn violin(group_id: &str, all_curves: &[&(BenchmarkId, Vec<f64>)], output_directory: &str) -> Child {
+pub fn violin(
+    group_id: &str,
+    all_curves: &[&(BenchmarkId, Vec<f64>)],
+    output_directory: &str,
+) -> Child {
     let dir = Path::new(output_directory).join(group_id);
     let all_curves_vec = all_curves.iter().rev().map(|&t| t).collect::<Vec<_>>();
     let all_curves: &[&(BenchmarkId, Vec<f64>)] = &*all_curves_vec;
@@ -963,13 +994,14 @@ pub fn violin(group_id: &str, all_curves: &[&(BenchmarkId, Vec<f64>)], output_di
                 .set(Scale::Linear)
                 .set(ScaleFactor(scale))
         })
-        .configure(Axis::BottomX, |a| a)
         .configure(Axis::LeftY, |a| {
             a.set(Label("Input"))
                 .set(Range::Limits(0., all_curves.len() as f64))
                 .set(TicLabels {
                     positions: tics(),
-                    labels: all_curves.iter().map(|&&(ref id, _)| escape_underscores(id.id())),
+                    labels: all_curves
+                        .iter()
+                        .map(|&&(ref id, _)| escape_underscores(id.id())),
                 })
         });
 
@@ -996,6 +1028,97 @@ pub fn violin(group_id: &str, all_curves: &[&(BenchmarkId, Vec<f64>)], output_di
             },
         );
     }
+    debug_script(&path, &f);
+    f.set(Output(path)).draw().unwrap()
+}
+
+#[cfg_attr(feature = "cargo-clippy", allow(explicit_counter_loop))]
+pub fn line_comparison(
+    group_id: &str,
+    all_curves: &[&(BenchmarkId, Vec<f64>)],
+    output_directory: &str,
+    value_type: ValueType,
+) -> Child {
+    let dir = Path::new(output_directory).join(group_id);
+    let path = dir.join("summary/new/lines.svg");
+    let mut f = Figure::new();
+
+    let input_suffix = match value_type {
+        ValueType::Bytes => " Size (Bytes)",
+        ValueType::Elements => " Size (Elements)",
+        ValueType::Value => "",
+    };
+
+    f.set(Font(DEFAULT_FONT))
+        .set(SIZE)
+        .configure(Key, |k| {
+            k.set(Justification::Left)
+                .set(Order::SampleText)
+                .set(Position::Outside(Vertical::Top, Horizontal::Right))
+        })
+        .set(Title(format!(
+            "{}: Comparison",
+            escape_underscores(group_id)
+        )))
+        .configure(Axis::BottomX, |a| {
+            a.set(Label(format!("Input{}", input_suffix)))
+        });
+
+    let mut max = 0.0;
+    let mut i = 0;
+
+    // This assumes the curves are sorted. It also assumes that the benchmark IDs all have numeric
+    // values or throughputs and that value is sensible (ie. not a mix of bytes and elements
+    // or whatnot)
+    for (key, group) in &all_curves
+        .into_iter()
+        .group_by(|&&&(ref id, _)| &id.function_id)
+    {
+        let (xs, ys) = group
+            .into_iter()
+            .map(|&&(ref id, ref sample)| {
+                // Unwrap is fine here because it will only fail if the assumptions above are not true
+                // ie. programmer error.
+                let x = id.as_number().unwrap();
+                let y = Sample::new(sample).mean();
+
+                if y > max {
+                    max = y;
+                }
+
+                (x, y)
+            })
+            .unzip::<_, _, Vec<f64>, Vec<f64>>();
+
+        let function_name = match *key {
+            Some(ref string) => escape_underscores(string),
+            None => "None".to_owned(),
+        };
+
+        f.plot(Lines { x: &xs, y: &ys }, |c| {
+            c.set(LINEWIDTH)
+                .set(Label(function_name))
+                .set(LineType::Solid)
+                .set(COMPARISON_COLORS[i % NUM_COLORS])
+        }).plot(Points { x: &xs, y: &ys }, |p| {
+            p.set(PointType::FilledCircle)
+                .set(POINT_SIZE)
+                .set(COMPARISON_COLORS[i % NUM_COLORS])
+        });
+
+        i += 1;
+    }
+
+    let (scale, prefix) = scale_time(max);
+
+    f.configure(Axis::LeftY, |a| {
+        a.configure(Grid::Major, |g| g.show())
+            .configure(Grid::Minor, |g| g.hide())
+            .set(Label(format!("Average time ({}s)", prefix)))
+            .set(Scale::Linear)
+            .set(ScaleFactor(scale))
+    });
+
     debug_script(&path, &f);
     f.set(Output(path)).draw().unwrap()
 }

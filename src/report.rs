@@ -37,6 +37,13 @@ pub(crate) struct MeasurementData<'a> {
     pub throughput: Option<Throughput>,
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum ValueType {
+    Bytes,
+    Elements,
+    Value,
+}
+
 #[derive(Clone)]
 pub struct BenchmarkId {
     pub group_id: String,
@@ -47,35 +54,68 @@ pub struct BenchmarkId {
 }
 
 impl BenchmarkId {
-    pub fn new(group_id: String, function_id: Option<String>, value_str: Option<String>, throughput: Option<Throughput>) -> BenchmarkId {
+    pub fn new(
+        group_id: String,
+        function_id: Option<String>,
+        value_str: Option<String>,
+        throughput: Option<Throughput>,
+    ) -> BenchmarkId {
         let full_id = match (&function_id, &value_str) {
             (&Some(ref func), &Some(ref val)) => format!("{}/{}/{}", group_id, func, val),
             (&Some(ref func), &None) => format!("{}/{}", group_id, func),
             (&None, &Some(ref val)) => format!("{}/{}", group_id, val),
             (&None, &None) => group_id.clone(),
         };
-        BenchmarkId { group_id, function_id, value_str, throughput, full_id }
+        BenchmarkId {
+            group_id,
+            function_id,
+            value_str,
+            throughput,
+            full_id,
+        }
     }
 
     pub fn id(&self) -> &str {
         &self.full_id
     }
+
+    pub fn as_number(&self) -> Option<f64> {
+        match self.throughput {
+            Some(Throughput::Bytes(n)) | Some(Throughput::Elements(n)) => Some(f64::from(n)),
+            None => self.value_str
+                .as_ref()
+                .and_then(|string| string.parse::<f64>().ok()),
+        }
+    }
+
+    pub fn value_type(&self) -> Option<ValueType> {
+        match self.throughput {
+            Some(Throughput::Bytes(_)) => Some(ValueType::Bytes),
+            Some(Throughput::Elements(_)) => Some(ValueType::Elements),
+            None => self.value_str
+                .as_ref()
+                .and_then(|string| string.parse::<f64>().ok())
+                .map(|_| ValueType::Value),
+        }
+    }
 }
 impl fmt::Display for BenchmarkId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(&self.id())
+        f.write_str(self.id())
     }
 }
 impl fmt::Debug for BenchmarkId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fn format_opt(opt: &Option<String>) -> String {
-            match opt {
-                &Some(ref string) => format!("\"{}\"", string),
-                &None => "None".to_owned()
+            match *opt {
+                Some(ref string) => format!("\"{}\"", string),
+                None => "None".to_owned(),
             }
         }
 
-        write!(f, "BenchmarkId {{ group_id: \"{}\", function_id: {}, value_str: {}, throughput: {:?} }}",
+        write!(
+            f,
+            "BenchmarkId {{ group_id: \"{}\", function_id: {}, value_str: {}, throughput: {:?} }}",
             self.group_id,
             format_opt(&self.function_id),
             format_opt(&self.value_str),
@@ -96,7 +136,12 @@ pub(crate) trait Report {
         estimate_ns: f64,
         iter_count: u64,
     );
-    fn measurement_complete(&self, id: &BenchmarkId, criterion: &Criterion, measurements: &MeasurementData);
+    fn measurement_complete(
+        &self,
+        id: &BenchmarkId,
+        criterion: &Criterion,
+        measurements: &MeasurementData,
+    );
     fn summarize(&self, criterion: &Criterion, all_ids: &[BenchmarkId]);
 }
 

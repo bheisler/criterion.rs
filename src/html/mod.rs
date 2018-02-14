@@ -1,6 +1,6 @@
 use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
-use report::{MeasurementData, Report, BenchmarkId};
+use report::{BenchmarkId, MeasurementData, Report};
 use Criterion;
 
 use handlebars::Handlebars;
@@ -16,6 +16,7 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 const THUMBNAIL_SIZE: Size = Size(450, 300);
+const MAX_VIOLIN_PLOTS: usize = 16;
 
 fn wait_on_gnuplot(children: Vec<Child>) {
     let start = ::std::time::Instant::now();
@@ -200,22 +201,27 @@ impl Report for Html {
         let group_id = &all_ids[0].group_id;
 
         let mut function_ids = BTreeSet::new();
-            for id in all_ids.iter() {
-                if let Some(ref function_id) = id.function_id {
-                    function_ids.insert(function_id);
-                }
-            };
+        for id in all_ids.iter() {
+            if let Some(ref function_id) = id.function_id {
+                function_ids.insert(function_id);
+            }
+        }
 
-        let data: Vec<(BenchmarkId, Vec<f64>)> = self.load_summary_data(&criterion.output_directory, all_ids);
+        let data: Vec<(BenchmarkId, Vec<f64>)> =
+            self.load_summary_data(&criterion.output_directory, all_ids);
 
         for function_id in function_ids {
-            let samples_with_function : Vec<_> = data.iter().by_ref().filter(|&&(ref id, _)|
-                id.function_id.as_ref() == Some(function_id)).collect();
+            let samples_with_function: Vec<_> = data.iter()
+                .by_ref()
+                .filter(|&&(ref id, _)| id.function_id.as_ref() == Some(function_id))
+                .collect();
             if samples_with_function.len() > 1 {
                 let subgroup_id = format!("{}/{}", group_id, function_id);
-                all_plots.extend(
-                    self.generate_summary(&subgroup_id, &*samples_with_function, &criterion.output_directory)
-                );
+                all_plots.extend(self.generate_summary(
+                    &subgroup_id,
+                    &*samples_with_function,
+                    &criterion.output_directory,
+                ));
             }
         }
 
@@ -275,7 +281,12 @@ impl Html {
         }
     }
 
-    fn generate_plots(&self, id: &BenchmarkId, criterion: &Criterion, measurements: &MeasurementData) {
+    fn generate_plots(
+        &self,
+        id: &BenchmarkId,
+        criterion: &Criterion,
+        measurements: &MeasurementData,
+    ) {
         let data = Data::new(
             measurements.iter_counts.as_slice(),
             measurements.sample_times.as_slice(),
@@ -396,7 +407,11 @@ impl Html {
         wait_on_gnuplot(gnuplots);
     }
 
-    fn load_summary_data(&self, output_directory: &str, all_ids: &[BenchmarkId]) -> Vec<(BenchmarkId, Vec<f64>)> {
+    fn load_summary_data(
+        &self,
+        output_directory: &str,
+        all_ids: &[BenchmarkId],
+    ) -> Vec<(BenchmarkId, Vec<f64>)> {
         let output_dir = Path::new(output_directory);
 
         all_ids
@@ -417,11 +432,36 @@ impl Html {
             .collect::<Vec<_>>()
     }
 
-    fn generate_summary(&self, group_id: &str, data: &[&(BenchmarkId, Vec<f64>)], output_directory: &str) -> Vec<Child> {
-        let mut gnuplots = plot::summarize(group_id,
-            &*data.iter().map(|&&(ref id, _)| id.clone()).collect::<Vec<_>>(),
-            output_directory);
-        gnuplots.push(plot::violin(group_id, data, output_directory));
+    fn generate_summary(
+        &self,
+        group_id: &str,
+        data: &[&(BenchmarkId, Vec<f64>)],
+        output_directory: &str,
+    ) -> Vec<Child> {
+        let mut gnuplots = plot::summarize(
+            group_id,
+            &*data.iter()
+                .map(|&&(ref id, _)| id.clone())
+                .collect::<Vec<_>>(),
+            output_directory,
+        );
+
+        if data.len() <= MAX_VIOLIN_PLOTS {
+            gnuplots.push(plot::violin(group_id, data, output_directory));
+        }
+
+        let value_types: Vec<_> = data.iter().map(|&&(ref id, _)| id.value_type()).collect();
+
+        if value_types.iter().all(|x| x == &value_types[0]) {
+            if let Some(value_type) = value_types[0] {
+                gnuplots.push(plot::line_comparison(
+                    group_id,
+                    data,
+                    output_directory,
+                    value_type,
+                ));
+            }
+        }
         gnuplots
     }
 }
