@@ -906,106 +906,96 @@ pub fn summarize(group_id: &str, all_ids: &[BenchmarkId], output_directory: &str
                     figure.set(Output(path)).draw().unwrap()
                 })
                 .collect::<Vec<_>>()
-                .append_({
-                    let kdes = benches
-                        .iter()
-                        .map(|&(_, _, _, ref sample)| {
-                            let (x, mut y) = kde::sweep(Sample::new(sample), KDE_POINTS, None);
-                            let y_max = Sample::new(&y).max();
-                            for y in y.iter_mut() {
-                                *y /= y_max;
-                            }
-
-                            (x, y)
-                        })
-                        .collect::<Vec<_>>();
-                    let medians = benches
-                        .iter()
-                        .map(|&(_, _, _, ref sample)| Sample::new(sample).percentiles().median())
-                        .collect::<Vec<_>>();
-                    let mut xs = kdes.iter()
-                        .flat_map(|&(ref x, _)| x.iter())
-                        .filter(|&&x| x > 0.);
-                    let (mut min, mut max) = {
-                        let &first = xs.next().unwrap();
-                        (first, first)
-                    };
-                    for &e in xs {
-                        if e < min {
-                            min = e;
-                        } else if e > max {
-                            max = e;
-                        }
-                    }
-                    let (scale, prefix) = scale_time(max);
-
-                    let tics = || (0..).map(|x| (f64::from(x)) + 0.5);
-                    let path = dir.join(&format!("summary/{}/violin_plot.svg", sample));
-                    let mut f = Figure::new();
-                    f.set(Font(DEFAULT_FONT))
-                        .set(SIZE)
-                        .set(Title(format!(
-                            "{}: Violin plot",
-                            escape_underscores(group_id)
-                        )))
-                        .configure(Axis::BottomX, |a| {
-                            a.configure(Grid::Major, |g| g.show())
-                                .configure(Grid::Minor, |g| g.hide())
-                                .set(Label(format!("Average time ({}s)", prefix)))
-                                .set(Scale::Linear)
-                                .set(ScaleFactor(scale))
-                        })
-                        .configure(Axis::BottomX, |a| a)
-                        .configure(Axis::LeftY, |a| {
-                            a.set(Label("Input"))
-                                .set(Range::Limits(0., benches.len() as f64))
-                                .set(TicLabels {
-                                    positions: tics(),
-                                    labels: benches.iter().map(|&(label, _, _, _)| label),
-                                })
-                        })
-                        .plot(
-                            Points {
-                                x: medians.iter().cloned(),
-                                y: tics(),
-                            },
-                            |c| {
-                                c.set(Color::Black)
-                                    .set(Label("Median"))
-                                    .set(PointType::Plus)
-                                    .set(PointSize(2. * POINT_SIZE.0))
-                            },
-                        );
-
-                    let mut is_first = true;
-                    for (i, &(ref x, ref y)) in kdes.iter().enumerate() {
-                        let i = i as f64 + 0.5;
-                        let y1 = y.iter().map(|&y| i + y * 0.5);
-                        let y2 = y.iter().map(|&y| i - y * 0.5);
-
-                        f.plot(
-                            FilledCurve {
-                                x: &**x,
-                                y1: y1,
-                                y2: y2,
-                            },
-                            |c| {
-                                if is_first {
-                                    is_first = false;
-
-                                    c.set(DARK_BLUE).set(Label("PDF")).set(Opacity(0.25))
-                                } else {
-                                    c.set(DARK_BLUE).set(Opacity(0.25))
-                                }
-                            },
-                        );
-                    }
-                    debug_script(&path, &f);
-                    f.set(Output(path)).draw().unwrap()
-                })
         };
 
         all_gnuplots.extend(gnuplots);
     }
     all_gnuplots
+}
+
+pub fn violin(group_id: &str, all_curves: &[&(BenchmarkId, Vec<f64>)], output_directory: &str) -> Child {
+    let dir = Path::new(output_directory).join(group_id);
+    let all_curves_vec = all_curves.iter().rev().map(|&t| t).collect::<Vec<_>>();
+    let all_curves: &[&(BenchmarkId, Vec<f64>)] = &*all_curves_vec;
+
+    let kdes = all_curves
+        .iter()
+        .map(|&&(_, ref sample)| {
+            let (x, mut y) = kde::sweep(Sample::new(sample), KDE_POINTS, None);
+            let y_max = Sample::new(&y).max();
+            for y in y.iter_mut() {
+                *y /= y_max;
+            }
+
+            (x, y)
+        })
+        .collect::<Vec<_>>();
+    let mut xs = kdes.iter()
+        .flat_map(|&(ref x, _)| x.iter())
+        .filter(|&&x| x > 0.);
+    let (mut min, mut max) = {
+        let &first = xs.next().unwrap();
+        (first, first)
+    };
+    for &e in xs {
+        if e < min {
+            min = e;
+        } else if e > max {
+            max = e;
+        }
+    }
+    let (scale, prefix) = scale_time(max);
+
+    let tics = || (0..).map(|x| (f64::from(x)) + 0.5);
+    let path = dir.join("summary/new/violin_plot.svg");
+    let size = Size(1280, 200 + (25 * all_curves.len()));
+    let mut f = Figure::new();
+    f.set(Font(DEFAULT_FONT))
+        .set(size)
+        .set(Title(format!(
+            "{}: Violin plot",
+            escape_underscores(group_id)
+        )))
+        .configure(Axis::BottomX, |a| {
+            a.configure(Grid::Major, |g| g.show())
+                .configure(Grid::Minor, |g| g.hide())
+                .set(Label(format!("Average time ({}s)", prefix)))
+                .set(Scale::Linear)
+                .set(ScaleFactor(scale))
+        })
+        .configure(Axis::BottomX, |a| a)
+        .configure(Axis::LeftY, |a| {
+            a.set(Label("Input"))
+                .set(Range::Limits(0., all_curves.len() as f64))
+                .set(TicLabels {
+                    positions: tics(),
+                    labels: all_curves.iter().map(|&&(ref id, _)| escape_underscores(id.id())),
+                })
+        });
+
+    let mut is_first = true;
+    for (i, &(ref x, ref y)) in kdes.iter().enumerate() {
+        let i = i as f64 + 0.5;
+        let y1 = y.iter().map(|&y| i + y * 0.5);
+        let y2 = y.iter().map(|&y| i - y * 0.5);
+
+        f.plot(
+            FilledCurve {
+                x: &**x,
+                y1: y1,
+                y2: y2,
+            },
+            |c| {
+                if is_first {
+                    is_first = false;
+
+                    c.set(DARK_BLUE).set(Label("PDF")).set(Opacity(0.25))
+                } else {
+                    c.set(DARK_BLUE).set(Opacity(0.25))
+                }
+            },
+        );
+    }
+    debug_script(&path, &f);
+    f.set(Output(path)).draw().unwrap()
 }

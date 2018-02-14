@@ -13,6 +13,7 @@ use simplot::Size;
 use stats::univariate::Sample;
 use std::process::Child;
 use std::collections::BTreeSet;
+use std::path::Path;
 
 const THUMBNAIL_SIZE: Size = Size(450, 300);
 
@@ -199,29 +200,28 @@ impl Report for Html {
         let group_id = &all_ids[0].group_id;
 
         let mut function_ids = BTreeSet::new();
-        for id in all_ids {
-            if let Some(ref function_id) = id.function_id {
-                function_ids.insert(function_id);
-            }
-        }
+            for id in all_ids.iter() {
+                if let Some(ref function_id) = id.function_id {
+                    function_ids.insert(function_id);
+                }
+            };
+
+        let data: Vec<(BenchmarkId, Vec<f64>)> = self.load_summary_data(&criterion.output_directory, all_ids);
+
         for function_id in function_ids {
-            let ids_with_function : Vec<_> = all_ids.iter().filter(|id|
-                id.function_id.as_ref() == Some(function_id)).cloned().collect();
-            if ids_with_function.len() > 1 {
+            let samples_with_function : Vec<_> = data.iter().by_ref().filter(|&&(ref id, _)|
+                id.function_id.as_ref() == Some(function_id)).collect();
+            if samples_with_function.len() > 1 {
                 let subgroup_id = format!("{}/{}", group_id, function_id);
                 all_plots.extend(
-                    plot::summarize(
-                        &subgroup_id,
-                        &*ids_with_function,
-                        &criterion.output_directory
-                    )
+                    self.generate_summary(&subgroup_id, &*samples_with_function, &criterion.output_directory)
                 );
             }
         }
 
-        all_plots.extend(plot::summarize(
+        all_plots.extend(self.generate_summary(
             group_id,
-            all_ids,
+            &*(data.iter().by_ref().collect::<Vec<_>>()),
             &criterion.output_directory,
         ));
         wait_on_gnuplot(all_plots)
@@ -394,6 +394,35 @@ impl Html {
         }
 
         wait_on_gnuplot(gnuplots);
+    }
+
+    fn load_summary_data(&self, output_directory: &str, all_ids: &[BenchmarkId]) -> Vec<(BenchmarkId, Vec<f64>)> {
+        let output_dir = Path::new(output_directory);
+
+        all_ids
+            .iter()
+            .filter_map(|id| {
+                let entry = output_dir.join(id.id()).join("new");
+
+                let (iters, times): (Vec<f64>, Vec<f64>) =
+                    try_else_return!(fs::load(&entry.join("sample.json")), || None);
+                let avg_times = iters
+                    .into_iter()
+                    .zip(times.into_iter())
+                    .map(|(iters, time)| time / iters)
+                    .collect::<Vec<_>>();
+
+                Some((id.clone(), avg_times))
+            })
+            .collect::<Vec<_>>()
+    }
+
+    fn generate_summary(&self, group_id: &str, data: &[&(BenchmarkId, Vec<f64>)], output_directory: &str) -> Vec<Child> {
+        let mut gnuplots = plot::summarize(group_id,
+            &*data.iter().map(|&&(ref id, _)| id.clone()).collect::<Vec<_>>(),
+            output_directory);
+        gnuplots.push(plot::violin(group_id, data, output_directory));
+        gnuplots
     }
 }
 
