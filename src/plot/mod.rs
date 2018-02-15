@@ -1,5 +1,5 @@
 use std::iter;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Child;
 
 use simplot::prelude::*;

@@ -16,7 +16,6 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 const THUMBNAIL_SIZE: Size = Size(450, 300);
-const MAX_VIOLIN_PLOTS: usize = 16;
 
 fn wait_on_gnuplot(children: Vec<Child>) {
     let start = ::std::time::Instant::now();
@@ -440,13 +439,12 @@ impl Html {
     ) -> Vec<Child> {
         let mut gnuplots = vec![];
 
-        if data.len() <= MAX_VIOLIN_PLOTS {
-            gnuplots.push(plot::summary::violin(group_id, data, output_directory));
-        }
+        gnuplots.push(plot::summary::violin(group_id, data, output_directory));
 
         let value_types: Vec<_> = data.iter().map(|&&(ref id, _)| id.value_type()).collect();
+        let function_types: BTreeSet<_> = data.iter().map(|&&(ref id, _)| &id.function_id).collect();
 
-        if value_types.iter().all(|x| x == &value_types[0]) {
+        if value_types.iter().all(|x| x == &value_types[0]) && function_types.len() > 1 {
             if let Some(value_type) = value_types[0] {
                 gnuplots.push(plot::summary::line_comparison(
                     group_id,

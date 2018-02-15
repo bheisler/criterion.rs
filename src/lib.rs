@@ -81,10 +81,6 @@ use std::{fmt, mem};
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
-use std::fs::File;
-use std::io::Read;
-use std::path::Path;
-
 use estimate::{Distributions, Estimates, Statistic};
 use report::{CliReport, Report, Reports};
 use benchmark::BenchmarkConfig;
@@ -948,21 +944,6 @@ impl Estimate {
                 )
             })
             .collect()
-    }
-
-    fn load(path: &Path) -> Option<Estimates> {
-        let mut string = String::new();
-
-        match File::open(path) {
-            Err(_) => None,
-            Ok(mut f) => match f.read_to_string(&mut string) {
-                Err(_) => None,
-                Ok(_) => match serde_json::from_str(&string) {
-                    Err(_) => None,
-                    Ok(estimates) => Some(estimates),
-                },
-            },
-        }
     }
 }
 

@@ -82,10 +82,7 @@ pub fn line_comparison(
             })
             .unzip::<_, _, Vec<f64>, Vec<f64>>();
 
-        let function_name = match *key {
-            Some(ref string) => escape_underscores(string),
-            None => "None".to_owned(),
-        };
+        let function_name = key.as_ref().map(|string| escape_underscores(string)).unwrap();
 
         f.plot(Lines { x: &xs, y: &ys }, |c| {
             c.set(LINEWIDTH)
