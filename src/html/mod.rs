@@ -57,6 +57,33 @@ struct Context {
 }
 
 #[derive(Serialize)]
+struct IndividualBenchmark {
+    name: String,
+    path: String,
+}
+impl IndividualBenchmark {
+    fn new(path_prefix: &str, id: &BenchmarkId) -> IndividualBenchmark {
+        IndividualBenchmark {
+            name: id.id().to_owned(),
+            path: format!("{}/{}", path_prefix, id.id()),
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct SummaryContext {
+    group_id: String,
+
+    thumbnail_width: usize,
+    thumbnail_height: usize,
+
+    violin_plot: Option<String>,
+    line_chart: Option<String>,
+
+    benchmarks: Vec<IndividualBenchmark>,
+}
+
+#[derive(Serialize)]
 struct ConfidenceInterval {
     lower: String,
     upper: String,
@@ -96,6 +123,9 @@ impl Html {
         let mut handlebars = Handlebars::new();
         handlebars
             .register_template_string("report", include_str!("benchmark_report.html.handlebars"))
+            .unwrap();
+        handlebars
+            .register_template_string("summary_report", include_str!("summary_report.html.handlebars"))
             .unwrap();
         Html { handlebars }
     }
@@ -220,6 +250,7 @@ impl Report for Html {
                     &subgroup_id,
                     &*samples_with_function,
                     &criterion.output_directory,
+                    false,
                 ));
             }
         }
@@ -228,6 +259,7 @@ impl Report for Html {
             group_id,
             &*(data.iter().by_ref().collect::<Vec<_>>()),
             &criterion.output_directory,
+            true,
         ));
         wait_on_gnuplot(all_plots)
     }
@@ -436,24 +468,58 @@ impl Html {
         group_id: &str,
         data: &[&(BenchmarkId, Vec<f64>)],
         output_directory: &str,
+        full_summary: bool,
     ) -> Vec<Child> {
         let mut gnuplots = vec![];
 
-        gnuplots.push(plot::summary::violin(group_id, data, output_directory));
+        let violin_path = format!("{}/{}/summary/new/violin.svg", output_directory, group_id);
+        gnuplots.push(plot::summary::violin(group_id, data, &violin_path));
 
         let value_types: Vec<_> = data.iter().map(|&&(ref id, _)| id.value_type()).collect();
         let function_types: BTreeSet<_> = data.iter().map(|&&(ref id, _)| &id.function_id).collect();
 
+        let mut line_path = None;
+
         if value_types.iter().all(|x| x == &value_types[0]) && function_types.len() > 1 {
             if let Some(value_type) = value_types[0] {
+                let path = format!("{}/{}/summary/new/lines.svg", output_directory, group_id);
+
                 gnuplots.push(plot::summary::line_comparison(
                     group_id,
                     data,
-                    output_directory,
+                    &path,
                     value_type,
                 ));
+
+                line_path = Some(path);
             }
         }
+
+        let path_prefix = if full_summary {
+            "../../.."
+        } else {
+            "../../../.."
+        };
+        let benchmarks = data.iter().map(|&&(ref id, _)| IndividualBenchmark::new(&path_prefix, id)).collect();
+
+        let context = SummaryContext {
+            group_id: group_id.to_owned(),
+
+            thumbnail_width: THUMBNAIL_SIZE.0,
+            thumbnail_height: THUMBNAIL_SIZE.1,
+
+            violin_plot: Some(violin_path),
+            line_chart: line_path,
+
+            benchmarks: benchmarks,
+        };
+
+        let text = self.handlebars.render("summary_report", &context).unwrap();
+        fs::save_string(
+            &text,
+            &format!("{}/{}/summary/new/index.html", output_directory, group_id),
+        ).unwrap();
+
         gnuplots
     }
 }

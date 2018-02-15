@@ -1,5 +1,6 @@
-use std::path::Path;
+use std::path::PathBuf;
 use std::process::Child;
+use std::cmp::Ordering;
 
 use simplot::prelude::*;
 use stats::univariate::Sample;
@@ -28,11 +29,10 @@ static COMPARISON_COLORS: [Color; NUM_COLORS] = [
 pub fn line_comparison(
     group_id: &str,
     all_curves: &[&(BenchmarkId, Vec<f64>)],
-    output_directory: &str,
+    path: &str,
     value_type: ValueType,
 ) -> Child {
-    let dir = Path::new(output_directory).join(group_id);
-    let path = dir.join("summary/new/lines.svg");
+    let path = PathBuf::from(path);
     let mut f = Figure::new();
 
     let input_suffix = match value_type {
@@ -66,7 +66,9 @@ pub fn line_comparison(
         .into_iter()
         .group_by(|&&&(ref id, _)| &id.function_id)
     {
-        let (xs, ys) = group
+
+
+        let mut tuples : Vec<_> = group
             .into_iter()
             .map(|&&(ref id, ref sample)| {
                 // Unwrap is fine here because it will only fail if the assumptions above are not true
@@ -80,7 +82,9 @@ pub fn line_comparison(
 
                 (x, y)
             })
-            .unzip::<_, _, Vec<f64>, Vec<f64>>();
+            .collect();
+        tuples.sort_by(|&(ax, _), &(bx, _)| (ax.partial_cmp(&bx).unwrap_or(Ordering::Less)));
+        let (xs, ys): (Vec<_>, Vec<_>) = tuples.into_iter().unzip();
 
         let function_name = key.as_ref().map(|string| escape_underscores(string)).unwrap();
 
@@ -115,9 +119,9 @@ pub fn line_comparison(
 pub fn violin(
     group_id: &str,
     all_curves: &[&(BenchmarkId, Vec<f64>)],
-    output_directory: &str,
+    path: &str,
 ) -> Child {
-    let dir = Path::new(output_directory).join(group_id);
+    let path = PathBuf::from(&path);
     let all_curves_vec = all_curves.iter().rev().map(|&t| t).collect::<Vec<_>>();
     let all_curves: &[&(BenchmarkId, Vec<f64>)] = &*all_curves_vec;
 
@@ -150,7 +154,6 @@ pub fn violin(
     let (scale, prefix) = scale_time(max);
 
     let tics = || (0..).map(|x| (f64::from(x)) + 0.5);
-    let path = dir.join("summary/new/violin_plot.svg");
     let size = Size(1280, 200 + (25 * all_curves.len()));
     let mut f = Figure::new();
     f.set(Font(DEFAULT_FONT))
