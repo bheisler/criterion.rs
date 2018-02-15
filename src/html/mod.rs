@@ -438,13 +438,7 @@ impl Html {
         data: &[&(BenchmarkId, Vec<f64>)],
         output_directory: &str,
     ) -> Vec<Child> {
-        let mut gnuplots = plot::summarize(
-            group_id,
-            &*data.iter()
-                .map(|&&(ref id, _)| id.clone())
-                .collect::<Vec<_>>(),
-            output_directory,
-        );
+        let mut gnuplots = vec![];
 
         if data.len() <= MAX_VIOLIN_PLOTS {
             gnuplots.push(plot::violin(group_id, data, output_directory));
