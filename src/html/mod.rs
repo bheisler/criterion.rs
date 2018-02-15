@@ -441,14 +441,14 @@ impl Html {
         let mut gnuplots = vec![];
 
         if data.len() <= MAX_VIOLIN_PLOTS {
-            gnuplots.push(plot::violin(group_id, data, output_directory));
+            gnuplots.push(plot::summary::violin(group_id, data, output_directory));
         }
 
         let value_types: Vec<_> = data.iter().map(|&&(ref id, _)| id.value_type()).collect();
 
         if value_types.iter().all(|x| x == &value_types[0]) {
             if let Some(value_type) = value_types[0] {
-                gnuplots.push(plot::line_comparison(
+                gnuplots.push(plot::summary::line_comparison(
                     group_id,
                     data,
                     output_directory,
