@@ -1,7 +1,6 @@
 use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
-use report::{BenchmarkId, MeasurementData, Report};
-use Criterion;
+use report::{BenchmarkId, MeasurementData, Report, ReportContext};
 
 use handlebars::Handlebars;
 use fs;
@@ -125,23 +124,26 @@ impl Html {
             .register_template_string("report", include_str!("benchmark_report.html.handlebars"))
             .unwrap();
         handlebars
-            .register_template_string("summary_report", include_str!("summary_report.html.handlebars"))
+            .register_template_string(
+                "summary_report",
+                include_str!("summary_report.html.handlebars"),
+            )
             .unwrap();
         Html { handlebars }
     }
 }
 impl Report for Html {
-    fn benchmark_start(&self, _: &BenchmarkId, _: &Criterion) {}
-    fn warmup(&self, _: &BenchmarkId, _: &Criterion, _: f64) {}
-    fn analysis(&self, _: &BenchmarkId, _: &Criterion) {}
-    fn measurement_start(&self, _: &BenchmarkId, _: &Criterion, _: u64, _: f64, _: u64) {}
+    fn benchmark_start(&self, _: &BenchmarkId, _: &ReportContext) {}
+    fn warmup(&self, _: &BenchmarkId, _: &ReportContext, _: f64) {}
+    fn analysis(&self, _: &BenchmarkId, _: &ReportContext) {}
+    fn measurement_start(&self, _: &BenchmarkId, _: &ReportContext, _: u64, _: f64, _: u64) {}
     fn measurement_complete(
         &self,
         id: &BenchmarkId,
-        criterion: &Criterion,
+        report_context: &ReportContext,
         measurements: &MeasurementData,
     ) {
-        if !criterion.plotting.is_enabled() {
+        if !report_context.plotting.is_enabled() {
             return;
         }
 
@@ -162,7 +164,7 @@ impl Report for Html {
 
         elapsed!{
             "Generating plots",
-            self.generate_plots(id, criterion, measurements)
+            self.generate_plots(id, report_context, measurements)
         }
 
         let throughput = measurements
@@ -217,12 +219,12 @@ impl Report for Html {
         let text = self.handlebars.render("report", &context).unwrap();
         fs::save_string(
             &text,
-            &format!("{}/{}/new/index.html", criterion.output_directory, id),
+            &format!("{}/{}/new/index.html", report_context.output_directory, id),
         ).unwrap();
     }
 
-    fn summarize(&self, criterion: &Criterion, all_ids: &[BenchmarkId]) {
-        if !criterion.plotting.is_enabled() {
+    fn summarize(&self, context: &ReportContext, all_ids: &[BenchmarkId]) {
+        if !context.plotting.is_enabled() {
             return;
         }
 
@@ -237,7 +239,7 @@ impl Report for Html {
         }
 
         let data: Vec<(BenchmarkId, Vec<f64>)> =
-            self.load_summary_data(&criterion.output_directory, all_ids);
+            self.load_summary_data(&context.output_directory, all_ids);
 
         for function_id in function_ids {
             let samples_with_function: Vec<_> = data.iter()
@@ -249,7 +251,7 @@ impl Report for Html {
                 all_plots.extend(self.generate_summary(
                     &subgroup_id,
                     &*samples_with_function,
-                    &criterion.output_directory,
+                    context,
                     false,
                 ));
             }
@@ -258,7 +260,7 @@ impl Report for Html {
         all_plots.extend(self.generate_summary(
             group_id,
             &*(data.iter().by_ref().collect::<Vec<_>>()),
-            &criterion.output_directory,
+            context,
             true,
         ));
         wait_on_gnuplot(all_plots)
@@ -315,7 +317,7 @@ impl Html {
     fn generate_plots(
         &self,
         id: &BenchmarkId,
-        criterion: &Criterion,
+        context: &ReportContext,
         measurements: &MeasurementData,
     ) {
         let data = Data::new(
@@ -335,27 +337,27 @@ impl Html {
             data,
             measurements.avg_times,
             id,
-            format!("{}/{}/new/pdf.svg", criterion.output_directory, id),
+            format!("{}/{}/new/pdf.svg", context.output_directory, id),
             None,
         ));
         gnuplots.extend(plot::abs_distributions(
             &measurements.distributions,
             &measurements.absolute_estimates,
             id,
-            &criterion.output_directory,
+            &context.output_directory,
         ));
         gnuplots.push(plot::regression(
             data,
             &point,
             (lb_, ub_),
             id,
-            format!("{}/{}/new/regression.svg", criterion.output_directory, id),
+            format!("{}/{}/new/regression.svg", context.output_directory, id),
             None,
             false,
         ));
         gnuplots.push(plot::pdf_small(
             &*measurements.avg_times,
-            format!("{}/{}/new/pdf_small.svg", criterion.output_directory, id),
+            format!("{}/{}/new/pdf_small.svg", context.output_directory, id),
             Some(THUMBNAIL_SIZE),
         ));
         gnuplots.push(plot::regression(
@@ -365,7 +367,7 @@ impl Html {
             id,
             format!(
                 "{}/{}/new/regression_small.svg",
-                criterion.output_directory, id
+                context.output_directory, id
             ),
             Some(THUMBNAIL_SIZE),
             true,
@@ -376,7 +378,7 @@ impl Html {
 
             log_if_err!(fs::mkdirp(&format!(
                 "{}/{}/both",
-                criterion.output_directory, id
+                context.output_directory, id
             )));
             gnuplots.push(plot::both::regression(
                 base_data,
@@ -384,7 +386,7 @@ impl Html {
                 data,
                 &measurements.absolute_estimates,
                 id,
-                format!("{}/{}/both/regression.svg", criterion.output_directory, id),
+                format!("{}/{}/both/regression.svg", context.output_directory, id),
                 None,
                 false,
             ));
@@ -392,7 +394,7 @@ impl Html {
                 Sample::new(&comp.base_avg_times),
                 &*measurements.avg_times,
                 id,
-                format!("{}/{}/both/pdf.svg", criterion.output_directory, id),
+                format!("{}/{}/both/pdf.svg", context.output_directory, id),
                 None,
                 false,
             ));
@@ -400,13 +402,13 @@ impl Html {
                 comp.t_value,
                 &comp.t_distribution,
                 id,
-                &criterion.output_directory,
+                &context.output_directory,
             ));
             gnuplots.extend(plot::rel_distributions(
                 &comp.relative_distributions,
                 &comp.relative_estimates,
                 id,
-                &criterion.output_directory,
+                &context.output_directory,
                 comp.noise_threshold,
             ));
             gnuplots.push(plot::both::regression(
@@ -417,7 +419,7 @@ impl Html {
                 id,
                 format!(
                     "{}/{}/new/relative_regression_small.svg",
-                    criterion.output_directory, id
+                    context.output_directory, id
                 ),
                 Some(THUMBNAIL_SIZE),
                 true,
@@ -428,7 +430,7 @@ impl Html {
                 id,
                 format!(
                     "{}/{}/new/relative_pdf_small.svg",
-                    criterion.output_directory, id
+                    context.output_directory, id
                 ),
                 Some(THUMBNAIL_SIZE),
                 true,
@@ -467,28 +469,41 @@ impl Html {
         &self,
         group_id: &str,
         data: &[&(BenchmarkId, Vec<f64>)],
-        output_directory: &str,
+        report_context: &ReportContext,
         full_summary: bool,
     ) -> Vec<Child> {
         let mut gnuplots = vec![];
 
-        let violin_path = format!("{}/{}/summary/new/violin.svg", output_directory, group_id);
-        gnuplots.push(plot::summary::violin(group_id, data, &violin_path));
+        let violin_path = format!(
+            "{}/{}/summary/new/violin.svg",
+            report_context.output_directory, group_id
+        );
+        gnuplots.push(plot::summary::violin(
+            group_id,
+            data,
+            &violin_path,
+            report_context.plot_config.summary_scale,
+        ));
 
         let value_types: Vec<_> = data.iter().map(|&&(ref id, _)| id.value_type()).collect();
-        let function_types: BTreeSet<_> = data.iter().map(|&&(ref id, _)| &id.function_id).collect();
+        let function_types: BTreeSet<_> =
+            data.iter().map(|&&(ref id, _)| &id.function_id).collect();
 
         let mut line_path = None;
 
         if value_types.iter().all(|x| x == &value_types[0]) && function_types.len() > 1 {
             if let Some(value_type) = value_types[0] {
-                let path = format!("{}/{}/summary/new/lines.svg", output_directory, group_id);
+                let path = format!(
+                    "{}/{}/summary/new/lines.svg",
+                    report_context.output_directory, group_id
+                );
 
                 gnuplots.push(plot::summary::line_comparison(
                     group_id,
                     data,
                     &path,
                     value_type,
+                    report_context.plot_config.summary_scale,
                 ));
 
                 line_path = Some(path);
@@ -500,7 +515,9 @@ impl Html {
         } else {
             "../../../.."
         };
-        let benchmarks = data.iter().map(|&&(ref id, _)| IndividualBenchmark::new(&path_prefix, id)).collect();
+        let benchmarks = data.iter()
+            .map(|&&(ref id, _)| IndividualBenchmark::new(&path_prefix, id))
+            .collect();
 
         let context = SummaryContext {
             group_id: group_id.to_owned(),
@@ -517,7 +534,10 @@ impl Html {
         let text = self.handlebars.render("summary_report", &context).unwrap();
         fs::save_string(
             &text,
-            &format!("{}/{}/summary/new/index.html", output_directory, group_id),
+            &format!(
+                "{}/{}/summary/new/index.html",
+                report_context.output_directory, group_id
+            ),
         ).unwrap();
 
         gnuplots

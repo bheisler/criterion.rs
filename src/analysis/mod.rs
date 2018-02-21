@@ -12,7 +12,7 @@ use routine::Routine;
 use benchmark::BenchmarkConfig;
 use {ConfidenceInterval, Criterion, Estimate, Throughput};
 use {format, fs};
-use report::BenchmarkId;
+use report::{BenchmarkId, ReportContext};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => ({
@@ -34,14 +34,15 @@ pub(crate) fn common<T>(
     routine: &mut Routine<T>,
     config: &BenchmarkConfig,
     criterion: &Criterion,
+    report_context: &ReportContext,
     parameter: &T,
     throughput: Option<Throughput>,
 ) {
-    criterion.report.benchmark_start(id, criterion);
+    criterion.report.benchmark_start(id, report_context);
 
-    let (iters, times) = routine.sample(id, config, criterion, parameter);
+    let (iters, times) = routine.sample(id, config, criterion, report_context, parameter);
 
-    criterion.report.analysis(id, criterion);
+    criterion.report.analysis(id, report_context);
 
     rename_new_dir_to_base(id.id(), &criterion.output_directory);
 
@@ -123,7 +124,7 @@ pub(crate) fn common<T>(
 
     criterion
         .report
-        .measurement_complete(id, criterion, &measurement_data);
+        .measurement_complete(id, report_context, &measurement_data);
 }
 
 fn base_dir_exists(id: &BenchmarkId, output_directory: &str) -> bool {

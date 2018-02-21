@@ -1,5 +1,5 @@
 use std::time::Duration;
-use {Bencher, Criterion, DurationExt, Throughput};
+use {Bencher, Criterion, DurationExt, PlotConfiguration, Throughput};
 use routine::{Function, Routine};
 use analysis;
 use std::cell::RefCell;
@@ -7,7 +7,7 @@ use std::process::Command;
 use std::marker::Sized;
 use std::fmt::Debug;
 use program::CommandFactory;
-use report::BenchmarkId;
+use report::{BenchmarkId, ReportContext};
 
 /// Struct containing all of the configuration options for a benchmark.
 pub struct BenchmarkConfig {
@@ -29,6 +29,7 @@ struct PartialBenchmarkConfig {
     sample_size: Option<usize>,
     significance_level: Option<f64>,
     warm_up_time: Option<Duration>,
+    plot_config: PlotConfiguration,
 }
 
 impl Default for PartialBenchmarkConfig {
@@ -41,6 +42,7 @@ impl Default for PartialBenchmarkConfig {
             sample_size: None,
             significance_level: None,
             warm_up_time: None,
+            plot_config: PlotConfiguration::default(),
         }
     }
 }
@@ -202,6 +204,13 @@ macro_rules! benchmark_config {
             self.config.significance_level = Some(sl);
             self
         }
+
+        /// Changes the plot configuration for this benchmark.
+        pub fn plot_config(mut self, new_config: PlotConfiguration) -> Self {
+            self.config.plot_config = new_config;
+            self
+        }
+
     }
 }
 
@@ -345,6 +354,12 @@ impl Benchmark {
 
 impl BenchmarkDefinition for Benchmark {
     fn run(self, group_id: &str, c: &Criterion) {
+        let report_context = ReportContext {
+            output_directory: c.output_directory.clone(),
+            plotting: c.plotting,
+            plot_config: self.config.plot_config.clone(),
+        };
+
         let config = self.config.to_complete(&c.config);
         let num_routines = self.routines.len();
 
@@ -370,6 +385,7 @@ impl BenchmarkDefinition for Benchmark {
                     &mut *routine.f.borrow_mut(),
                     &config,
                     c,
+                    &report_context,
                     &(),
                     self.throughput.clone(),
                 );
@@ -379,7 +395,7 @@ impl BenchmarkDefinition for Benchmark {
         }
 
         if all_ids.len() > 1 {
-            c.report.summarize(c, &all_ids);
+            c.report.summarize(&report_context, &all_ids);
             println!();
         }
     }
@@ -560,6 +576,12 @@ where
     T: Debug + 'static,
 {
     fn run(self, group_id: &str, c: &Criterion) {
+        let report_context = ReportContext {
+            output_directory: c.output_directory.clone(),
+            plotting: c.plotting,
+            plot_config: self.config.plot_config.clone(),
+        };
+
         let config = self.config.to_complete(&c.config);
         let num_parameters = self.values.len();
         let num_routines = self.routines.len();
@@ -594,6 +616,7 @@ where
                         &mut *routine.f.borrow_mut(),
                         &config,
                         c,
+                        &report_context,
                         value,
                         throughput,
                     );
@@ -604,7 +627,7 @@ where
         }
 
         if all_ids.len() > 1 {
-            c.report.summarize(c, &all_ids);
+            c.report.summarize(&report_context, &all_ids);
             println!();
         }
     }

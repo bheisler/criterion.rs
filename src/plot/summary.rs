@@ -11,7 +11,8 @@ use report::{BenchmarkId, ValueType};
 use itertools::Itertools;
 
 use super::{debug_script, escape_underscores, scale_time};
-use super::{DARK_BLUE, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE, POINT_SIZE};
+use super::{DARK_BLUE, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, POINT_SIZE, SIZE};
+use AxisScale;
 
 const NUM_COLORS: usize = 8;
 static COMPARISON_COLORS: [Color; NUM_COLORS] = [
@@ -25,12 +26,22 @@ static COMPARISON_COLORS: [Color; NUM_COLORS] = [
     Color::Rgb(0, 255, 127),
 ];
 
+impl AxisScale {
+    fn to_gnuplot(&self) -> Scale {
+        match self {
+            &AxisScale::Linear => Scale::Linear,
+            &AxisScale::Logarithmic => Scale::Logarithmic,
+        }
+    }
+}
+
 #[cfg_attr(feature = "cargo-clippy", allow(explicit_counter_loop))]
 pub fn line_comparison(
     group_id: &str,
     all_curves: &[&(BenchmarkId, Vec<f64>)],
     path: &str,
     value_type: ValueType,
+    axis_scale: AxisScale,
 ) -> Child {
     let path = PathBuf::from(path);
     let mut f = Figure::new();
@@ -54,6 +65,7 @@ pub fn line_comparison(
         )))
         .configure(Axis::BottomX, |a| {
             a.set(Label(format!("Input{}", input_suffix)))
+                .set(axis_scale.to_gnuplot())
         });
 
     let mut max = 0.0;
@@ -66,9 +78,7 @@ pub fn line_comparison(
         .into_iter()
         .group_by(|&&&(ref id, _)| &id.function_id)
     {
-
-
-        let mut tuples : Vec<_> = group
+        let mut tuples: Vec<_> = group
             .into_iter()
             .map(|&&(ref id, ref sample)| {
                 // Unwrap is fine here because it will only fail if the assumptions above are not true
@@ -86,7 +96,9 @@ pub fn line_comparison(
         tuples.sort_by(|&(ax, _), &(bx, _)| (ax.partial_cmp(&bx).unwrap_or(Ordering::Less)));
         let (xs, ys): (Vec<_>, Vec<_>) = tuples.into_iter().unzip();
 
-        let function_name = key.as_ref().map(|string| escape_underscores(string)).unwrap();
+        let function_name = key.as_ref()
+            .map(|string| escape_underscores(string))
+            .unwrap();
 
         f.plot(Lines { x: &xs, y: &ys }, |c| {
             c.set(LINEWIDTH)
@@ -108,7 +120,7 @@ pub fn line_comparison(
         a.configure(Grid::Major, |g| g.show())
             .configure(Grid::Minor, |g| g.hide())
             .set(Label(format!("Average time ({}s)", prefix)))
-            .set(Scale::Linear)
+            .set(axis_scale.to_gnuplot())
             .set(ScaleFactor(scale))
     });
 
@@ -120,6 +132,7 @@ pub fn violin(
     group_id: &str,
     all_curves: &[&(BenchmarkId, Vec<f64>)],
     path: &str,
+    axis_scale: AxisScale,
 ) -> Child {
     let path = PathBuf::from(&path);
     let all_curves_vec = all_curves.iter().rev().map(|&t| t).collect::<Vec<_>>();
@@ -166,7 +179,7 @@ pub fn violin(
             a.configure(Grid::Major, |g| g.show())
                 .configure(Grid::Minor, |g| g.hide())
                 .set(Label(format!("Average time ({}s)", prefix)))
-                .set(Scale::Linear)
+                .set(axis_scale.to_gnuplot())
                 .set(ScaleFactor(scale))
         })
         .configure(Axis::LeftY, |a| {
