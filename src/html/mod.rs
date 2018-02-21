@@ -516,7 +516,7 @@ impl Html {
             "../../../.."
         };
         let benchmarks = data.iter()
-            .map(|&&(ref id, _)| IndividualBenchmark::new(&path_prefix, id))
+            .map(|&&(ref id, _)| IndividualBenchmark::new(path_prefix, id))
             .collect();
 
         let context = SummaryContext {
