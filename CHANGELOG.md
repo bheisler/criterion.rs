@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   disable Criterion.rs' default features. Doing so will allow compatibility with
   older Rust versions such as 1.20. If you wish to continue using HTML reports, you
   don't need to do anything.
+- Added a summary report for benchmarks that compare multiple functions or different
+  inputs.
+
+### Changed
+- The plots and HTML reports are now generated in a `report` folder.
 
 ### Fixed
 - Underscores in benchmark names will no longer cause subscripted characters to

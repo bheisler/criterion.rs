@@ -9,11 +9,12 @@ use estimate::{Distributions, Estimates};
 use benchmark::BenchmarkConfig;
 use {format, fs, Criterion, Estimate};
 use error::Result;
+use report::BenchmarkId;
 
 // Common comparison procedure
 #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
 pub(crate) fn common(
-    id: &str,
+    id: &BenchmarkId,
     avg_times: &Sample<f64>,
     config: &BenchmarkConfig,
     criterion: &Criterion,
@@ -80,7 +81,7 @@ fn t_test(
 
 // Estimates the relative change in the statistics of the population
 fn estimates(
-    id: &str,
+    id: &BenchmarkId,
     avg_times: &Sample<f64>,
     base_avg_times: &Sample<f64>,
     config: &BenchmarkConfig,

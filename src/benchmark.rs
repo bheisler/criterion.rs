@@ -1,5 +1,5 @@
 use std::time::Duration;
-use {Bencher, Criterion, DurationExt, Throughput};
+use {Bencher, Criterion, DurationExt, PlotConfiguration, Throughput};
 use routine::{Function, Routine};
 use analysis;
 use std::cell::RefCell;
@@ -7,6 +7,7 @@ use std::process::Command;
 use std::marker::Sized;
 use std::fmt::Debug;
 use program::CommandFactory;
+use report::{BenchmarkId, ReportContext};
 
 /// Struct containing all of the configuration options for a benchmark.
 pub struct BenchmarkConfig {
@@ -28,6 +29,7 @@ struct PartialBenchmarkConfig {
     sample_size: Option<usize>,
     significance_level: Option<f64>,
     warm_up_time: Option<Duration>,
+    plot_config: PlotConfiguration,
 }
 
 impl Default for PartialBenchmarkConfig {
@@ -40,6 +42,7 @@ impl Default for PartialBenchmarkConfig {
             sample_size: None,
             significance_level: None,
             warm_up_time: None,
+            plot_config: PlotConfiguration::default(),
         }
     }
 }
@@ -201,6 +204,13 @@ macro_rules! benchmark_config {
             self.config.significance_level = Some(sl);
             self
         }
+
+        /// Changes the plot configuration for this benchmark.
+        pub fn plot_config(mut self, new_config: PlotConfiguration) -> Self {
+            self.config.plot_config = new_config;
+            self
+        }
+
     }
 }
 
@@ -344,36 +354,52 @@ impl Benchmark {
 
 impl BenchmarkDefinition for Benchmark {
     fn run(self, group_id: &str, c: &Criterion) {
+        let report_context = ReportContext {
+            output_directory: c.output_directory.clone(),
+            plotting: c.plotting,
+            plot_config: self.config.plot_config.clone(),
+        };
+
         let config = self.config.to_complete(&c.config);
         let num_routines = self.routines.len();
-        let mut any_matched = false;
 
         let mut all_ids = vec![];
+        let mut any_matched = false;
 
         for routine in self.routines {
-            let id = if num_routines == 1 && group_id == routine.id {
-                routine.id
+            let function_id = if num_routines == 1 && group_id == routine.id {
+                None
             } else {
-                format!("{}/{}", group_id, routine.id)
+                Some(routine.id)
             };
 
-            if c.filter_matches(&id) {
+            let id = BenchmarkId::new(
+                group_id.to_owned(),
+                function_id,
+                None,
+                self.throughput.clone(),
+            );
+
+            if c.filter_matches(id.id()) {
                 any_matched = true;
                 analysis::common(
                     &id,
                     &mut *routine.f.borrow_mut(),
                     &config,
                     c,
+                    &report_context,
                     &(),
                     self.throughput.clone(),
                 );
-
-                all_ids.push(id);
             }
+
+            all_ids.push(id);
         }
 
+        if all_ids.len() > 1 && any_matched {
+            c.report.summarize(&report_context, &all_ids);
+        }
         if any_matched {
-            c.report.summarize(c, group_id, &all_ids);
             println!();
         }
     }
@@ -554,47 +580,64 @@ where
     T: Debug + 'static,
 {
     fn run(self, group_id: &str, c: &Criterion) {
+        let report_context = ReportContext {
+            output_directory: c.output_directory.clone(),
+            plotting: c.plotting,
+            plot_config: self.config.plot_config.clone(),
+        };
+
         let config = self.config.to_complete(&c.config);
         let num_parameters = self.values.len();
         let num_routines = self.routines.len();
-        let mut any_matched = false;
 
         let mut all_ids = vec![];
 
+        let mut any_matched = false;
+
         for routine in self.routines {
             for value in &self.values {
-                let id = if num_routines == 1 && group_id == routine.id {
-                    routine.id.clone()
+                let function_id = if num_routines == 1 && group_id == routine.id {
+                    None
                 } else {
-                    format!("{}/{}", group_id, routine.id)
+                    Some(routine.id.clone())
                 };
 
-                let id = if num_parameters == 1 {
-                    id
+                let value_str = if num_parameters == 1 {
+                    None
                 } else {
-                    format!("{}/{:?}", id, value)
+                    Some(format!("{:?}", value))
                 };
 
                 let throughput = self.throughput.as_ref().map(|func| func(value));
+                let id = BenchmarkId::new(
+                    group_id.to_owned(),
+                    function_id,
+                    value_str,
+                    throughput.clone(),
+                );
 
-                if c.filter_matches(&id) {
+                if c.filter_matches(id.id()) {
                     any_matched = true;
+
                     analysis::common(
                         &id,
                         &mut *routine.f.borrow_mut(),
                         &config,
                         c,
+                        &report_context,
                         value,
                         throughput,
                     );
-
-                    all_ids.push(id);
                 }
+
+                all_ids.push(id);
             }
         }
 
+        if all_ids.len() > 1 && any_matched {
+            c.report.summarize(&report_context, &all_ids);
+        }
         if any_matched {
-            c.report.summarize(c, group_id, &all_ids);
             println!();
         }
     }

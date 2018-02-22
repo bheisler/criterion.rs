@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use std::{iter, str};
+use std::iter;
 
 use simplot::prelude::*;
 use stats::bivariate::Data;
@@ -12,6 +12,7 @@ use kde;
 use std::process::Child;
 use super::{debug_script, escape_underscores, scale_time};
 use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
+use report::BenchmarkId;
 
 #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
 pub(crate) fn regression(
@@ -19,7 +20,7 @@ pub(crate) fn regression(
     base_estimates: &Estimates,
     data: Data<f64, f64>,
     estimates: &Estimates,
-    id: &str,
+    id: &BenchmarkId,
     path: String,
     size: Option<Size>,
     thumbnail_mode: bool,
@@ -64,7 +65,7 @@ pub(crate) fn regression(
 
     let mut figure = Figure::new();
     if !thumbnail_mode {
-        figure.set(Title(escape_underscores(id)));
+        figure.set(Title(escape_underscores(id.id())));
     }
 
     figure
@@ -81,6 +82,9 @@ pub(crate) fn regression(
                 .set(ScaleFactor(y_scale))
         })
         .configure(Key, |k| {
+            if thumbnail_mode {
+                k.hide();
+            }
             k.set(Justification::Left)
                 .set(Order::SampleText)
                 .set(Position::Inside(Vertical::Top, Horizontal::Left))
@@ -132,25 +136,28 @@ pub(crate) fn regression(
 pub fn pdfs(
     base_avg_times: &Sample<f64>,
     avg_times: &Sample<f64>,
-    id: &str,
+    id: &BenchmarkId,
     path: String,
     size: Option<Size>,
     thumbnail_mode: bool,
 ) -> Child {
     let path = PathBuf::from(path);
 
-    let (base_xs, base_ys) = kde::sweep(base_avg_times, KDE_POINTS, None);
-    let (xs, ys) = kde::sweep(avg_times, KDE_POINTS, None);
+    let base_mean = base_avg_times.mean();
+    let new_mean = avg_times.mean();
+
+    let (base_xs, base_ys, base_y_mean) =
+        kde::sweep_and_estimate(base_avg_times, KDE_POINTS, None, base_mean);
+    let (xs, ys, y_mean) = kde::sweep_and_estimate(avg_times, KDE_POINTS, None, new_mean);
     let base_xs_ = Sample::new(&base_xs);
     let xs_ = Sample::new(&xs);
 
     let (x_scale, prefix) = scale_time(base_xs_.max().max(xs_.max()));
-    let y_scale = x_scale.recip();
     let zeros = iter::repeat(0);
 
     let mut figure = Figure::new();
     if !thumbnail_mode {
-        figure.set(Title(escape_underscores(id)));
+        figure.set(Title(escape_underscores(id.id())));
     }
     figure
         .set(Font(DEFAULT_FONT))
@@ -159,9 +166,7 @@ pub fn pdfs(
             a.set(Label(format!("Average time ({}s)", prefix)))
                 .set(ScaleFactor(x_scale))
         })
-        .configure(Axis::LeftY, |a| {
-            a.set(Label("Density (a.u.)")).set(ScaleFactor(y_scale))
-        })
+        .configure(Axis::LeftY, |a| a.set(Label("Density (a.u.)")))
         .configure(Axis::RightY, |a| a.hide())
         .configure(Key, |k| {
             if thumbnail_mode {
@@ -180,12 +185,26 @@ pub fn pdfs(
             |c| c.set(DARK_RED).set(Label("Base PDF")).set(Opacity(0.5)),
         )
         .plot(
+            Lines {
+                x: &[base_mean, base_mean],
+                y: &[0., base_y_mean],
+            },
+            |c| c.set(DARK_RED).set(Label("Base Mean")).set(LINEWIDTH),
+        )
+        .plot(
             FilledCurve {
                 x: &*xs,
                 y1: &*ys,
                 y2: zeros,
             },
             |c| c.set(DARK_BLUE).set(Label("New PDF")).set(Opacity(0.5)),
+        )
+        .plot(
+            Lines {
+                x: &[new_mean, new_mean],
+                y: &[0., y_mean],
+            },
+            |c| c.set(DARK_BLUE).set(Label("New Mean")).set(LINEWIDTH),
         );
     debug_script(&path, &figure);
     figure.set(Output(path)).draw().unwrap()
