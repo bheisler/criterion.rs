@@ -147,9 +147,10 @@ impl Report for Html {
             return;
         }
 
-        fs::mkdirp(
-            &format!("{}/{}/report/", report_context.output_directory, id),
-        ).unwrap();
+        fs::mkdirp(&format!(
+            "{}/{}/report/",
+            report_context.output_directory, id
+        )).unwrap();
 
         let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
 
@@ -223,7 +224,10 @@ impl Report for Html {
         let text = self.handlebars.render("report", &context).unwrap();
         fs::save_string(
             &text,
-            &format!("{}/{}/report/index.html", report_context.output_directory, id),
+            &format!(
+                "{}/{}/report/index.html",
+                report_context.output_directory, id
+            ),
         ).unwrap();
     }
 
@@ -378,9 +382,10 @@ impl Html {
         ));
 
         if let Some(ref comp) = measurements.comparison {
-            fs::mkdirp(
-                &format!("{}/{}/report/change/", context.output_directory, id),
-            ).unwrap();
+            fs::mkdirp(&format!(
+                "{}/{}/report/change/",
+                context.output_directory, id
+            )).unwrap();
 
             let base_data = Data::new(&comp.base_iter_counts, &comp.base_sample_times);
 
@@ -394,7 +399,10 @@ impl Html {
                 data,
                 &measurements.absolute_estimates,
                 id,
-                format!("{}/{}/report/both/regression.svg", context.output_directory, id),
+                format!(
+                    "{}/{}/report/both/regression.svg",
+                    context.output_directory, id
+                ),
                 None,
                 false,
             ));
@@ -482,9 +490,10 @@ impl Html {
     ) -> Vec<Child> {
         let mut gnuplots = vec![];
 
-        fs::mkdirp(
-            &format!("{}/{}/report/", report_context.output_directory, group_id),
-        ).unwrap();
+        fs::mkdirp(&format!(
+            "{}/{}/report/",
+            report_context.output_directory, group_id
+        )).unwrap();
 
         let violin_path = format!(
             "{}/{}/report/violin.svg",

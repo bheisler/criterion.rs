@@ -48,14 +48,14 @@ Here, we create two benchmark functions which simply call our two Fibonacci impl
 
 Finally, we construct a Vec of the benchmark functions and run the benchmark. This performs two benchmarks ("Fibonacci/Recursive" and "Fibonacci/Iterative") which individually behave the same as other benchmarks seen earlier. In addition to the usual set of plots generated for each individual benchmark, this will generate a set of summary plots at `.criterion/$BENCHMARK/Summary` highlighting the differences between the functions.
 
-## Means/Medians/Slopes
-
-![Means Chart](./user_guide/means_compare.svg)
-
-These charts show the absolute and relative differences in the appropriate statistics between the implementations. Here we can see that the recursive implementation took 40 microseconds per iteration, which is 1665 times slower than the iterative implementation.
-
 ## Violin Plot
 
 ![Violin Plot](./user_guide/violin_plot.svg)
 
 The [Violin Plot](https://en.wikipedia.org/wiki/Violin_plot) shows the median times and the PDF of each implementation.
+
+## Line Chart
+
+![Line Chart](./user_guide/lines.svg)
+
+The line chart shows a comparison of the different functions as the input or input size increases.
