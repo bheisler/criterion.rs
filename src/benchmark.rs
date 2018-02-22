@@ -398,6 +398,8 @@ impl BenchmarkDefinition for Benchmark {
 
         if all_ids.len() > 1 && any_matched {
             c.report.summarize(&report_context, &all_ids);
+        }
+        if any_matched {
             println!();
         }
     }
@@ -634,6 +636,9 @@ where
 
         if all_ids.len() > 1 && any_matched {
             c.report.summarize(&report_context, &all_ids);
+        }
+        if any_matched {
+            println!();
         }
     }
 }
