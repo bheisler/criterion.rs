@@ -325,33 +325,31 @@ fn test_output_files() {
         verify_json(&dir, "change/estimates.json");
 
         if short_benchmark().can_plot() && cfg!(feature = "html_reports") {
-            verify_svg(&dir, "new/MAD.svg");
-            verify_svg(&dir, "new/mean.svg");
-            verify_svg(&dir, "new/median.svg");
-            verify_svg(&dir, "new/pdf.svg");
-            verify_svg(&dir, "new/regression.svg");
-            verify_svg(&dir, "new/SD.svg");
-            verify_svg(&dir, "new/slope.svg");
-            verify_svg(&dir, "both/pdf.svg");
-            verify_svg(&dir, "both/regression.svg");
-            verify_svg(&dir, "change/mean.svg");
-            verify_svg(&dir, "change/median.svg");
-            verify_svg(&dir, "change/t-test.svg");
+            verify_svg(&dir, "report/MAD.svg");
+            verify_svg(&dir, "report/mean.svg");
+            verify_svg(&dir, "report/median.svg");
+            verify_svg(&dir, "report/pdf.svg");
+            verify_svg(&dir, "report/regression.svg");
+            verify_svg(&dir, "report/SD.svg");
+            verify_svg(&dir, "report/slope.svg");
+            verify_svg(&dir, "report/both/pdf.svg");
+            verify_svg(&dir, "report/both/regression.svg");
+            verify_svg(&dir, "report/change/mean.svg");
+            verify_svg(&dir, "report/change/median.svg");
+            verify_svg(&dir, "report/change/t-test.svg");
 
-            verify_svg(&dir, "new/pdf_small.svg");
-            verify_svg(&dir, "new/regression_small.svg");
-            verify_svg(&dir, "new/relative_pdf_small.svg");
-            verify_svg(&dir, "new/relative_regression_small.svg");
-            verify_html(&dir, "new/index.html");
+            verify_svg(&dir, "report/pdf_small.svg");
+            verify_svg(&dir, "report/regression_small.svg");
+            verify_svg(&dir, "report/relative_pdf_small.svg");
+            verify_svg(&dir, "report/relative_regression_small.svg");
+            verify_html(&dir, "report/index.html");
         }
     }
 
     if short_benchmark().can_plot() && cfg!(feature = "html_reports") {
         let dir = "target/criterion/test_output";
 
-        verify_svg(dir, "summary/new/means.svg");
-        verify_svg(dir, "summary/new/medians.svg");
-        verify_svg(dir, "summary/new/slopes.svg");
-        verify_svg(dir, "summary/new/violin_plot.svg");
+        verify_svg(dir, "report/violin.svg");
+        verify_html(dir, "report/index.html");
     }
 }

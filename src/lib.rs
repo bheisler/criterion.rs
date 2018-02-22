@@ -989,7 +989,7 @@ pub enum AxisScale {
 ///     .summary_scale(AxisScale::Logarithmic);
 ///
 /// Benchmark::new("test", |b| b.iter(|| 10))
-///     .plot_config(plot_config)
+///     .plot_config(plot_config);
 /// ```
 #[derive(Debug, Clone)]
 pub struct PlotConfiguration {

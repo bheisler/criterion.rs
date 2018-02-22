@@ -416,7 +416,7 @@ pub(crate) fn abs_distributions(
     distributions
         .iter()
         .map(|(&statistic, distribution)| {
-            let path = PathBuf::from(format!("{}/{}/new/{}.svg", output_directory, id, statistic));
+            let path = PathBuf::from(format!("{}/{}/report/{}.svg", output_directory, id, statistic));
             let estimate = estimates[&statistic];
 
             let ci = estimate.confidence_interval;
@@ -529,7 +529,7 @@ pub(crate) fn rel_distributions(
         .iter()
         .map(|(&statistic, distribution)| {
             let path = PathBuf::from(format!(
-                "{}/{}/change/{}.svg",
+                "{}/{}/report/change/{}.svg",
                 output_directory, id, statistic
             ));
 
@@ -640,7 +640,7 @@ pub fn t_test(
     id: &BenchmarkId,
     output_directory: &str,
 ) -> Child {
-    let path = PathBuf::from(format!("{}/{}/change/t-test.svg", output_directory, id));
+    let path = PathBuf::from(format!("{}/{}/report/change/t-test.svg", output_directory, id));
 
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, None);
     let zero = iter::repeat(0);
