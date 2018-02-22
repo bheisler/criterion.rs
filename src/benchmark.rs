@@ -364,6 +364,7 @@ impl BenchmarkDefinition for Benchmark {
         let num_routines = self.routines.len();
 
         let mut all_ids = vec![];
+        let mut any_matched = false;
 
         for routine in self.routines {
             let function_id = if num_routines == 1 && group_id == routine.id {
@@ -380,6 +381,7 @@ impl BenchmarkDefinition for Benchmark {
             );
 
             if c.filter_matches(id.id()) {
+                any_matched = true;
                 analysis::common(
                     &id,
                     &mut *routine.f.borrow_mut(),
@@ -394,7 +396,7 @@ impl BenchmarkDefinition for Benchmark {
             all_ids.push(id);
         }
 
-        if all_ids.len() > 1 {
+        if all_ids.len() > 1 && any_matched {
             c.report.summarize(&report_context, &all_ids);
             println!();
         }
@@ -588,6 +590,8 @@ where
 
         let mut all_ids = vec![];
 
+        let mut any_matched = false;
+
         for routine in self.routines {
             for value in &self.values {
                 let function_id = if num_routines == 1 && group_id == routine.id {
@@ -611,6 +615,8 @@ where
                 );
 
                 if c.filter_matches(id.id()) {
+                    any_matched = true;
+
                     analysis::common(
                         &id,
                         &mut *routine.f.borrow_mut(),
@@ -626,9 +632,8 @@ where
             }
         }
 
-        if all_ids.len() > 1 {
+        if all_ids.len() > 1 && any_matched {
             c.report.summarize(&report_context, &all_ids);
-            println!();
         }
     }
 }
