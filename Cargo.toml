@@ -12,7 +12,7 @@ categories = ["development-tools::profiling"]
 license = "Apache-2.0/MIT"
 
 [dependencies]
-criterion-plot = { path="plot", version="0.2.0" }
+criterion-plot = { path="plot", version="0.2.0", optional = true }
 criterion-stats = { path="stats", version="0.2.0" }
 failure = "0.1.1"
 failure_derive = "0.1.1"
@@ -38,7 +38,7 @@ maintenance = { status = "actively-developed" }
 
 [features]
 real_blackbox = []
-html_reports = ["handlebars"]
+html_reports = ["handlebars", "criterion-plot"]
 default = ["html_reports"]
 
 [workspace]
