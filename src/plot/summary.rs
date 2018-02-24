@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::process::Child;
 use std::cmp::Ordering;
 
-use simplot::prelude::*;
+use criterion_plot::prelude::*;
 use stats::univariate::Sample;
 
 use kde;

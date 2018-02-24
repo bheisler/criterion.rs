@@ -31,7 +31,7 @@ extern crate serde_json;
 extern crate simplelog;
 
 #[cfg(feature = "html_reports")]
-extern crate criterion_plot as simplot;
+extern crate criterion_plot;
 
 #[cfg(feature = "html_reports")]
 extern crate handlebars;
@@ -424,7 +424,7 @@ impl Default for Criterion {
 
         #[cfg(feature = "html_reports")]
         {
-            plotting = if simplot::version().is_ok() {
+            plotting = if criterion_plot::version().is_ok() {
                 Plotting::Enabled
             } else {
                 println!("Gnuplot not found, disabling plotting");

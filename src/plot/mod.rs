@@ -2,7 +2,7 @@ use std::iter;
 use std::path::PathBuf;
 use std::process::Child;
 
-use simplot::prelude::*;
+use criterion_plot::prelude::*;
 use stats::Distribution;
 use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;

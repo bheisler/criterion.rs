@@ -8,7 +8,7 @@ use format;
 use estimate::Statistic;
 use Estimate;
 use plot;
-use simplot::Size;
+use criterion_plot::Size;
 use stats::univariate::Sample;
 use std::process::Child;
 use std::collections::BTreeSet;

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::iter;
 
-use simplot::prelude::*;
+use criterion_plot::prelude::*;
 use stats::bivariate::Data;
 use stats::univariate::Sample;
 
