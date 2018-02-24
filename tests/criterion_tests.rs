@@ -1,26 +1,33 @@
 extern crate criterion;
 extern crate serde_json;
 extern crate walkdir;
+extern crate tempdir;
 
 use std::fs::File;
 use criterion::{Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
 use std::time::Duration;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use walkdir::WalkDir;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::process::{Command, Stdio};
 use serde_json::value::Value;
+use tempdir::TempDir;
 
 /*
  * Please note that these tests are not complete examples of how to use
  * Criterion.rs. See the benches folder for actual examples.
  */
+fn temp_dir() -> TempDir {
+    TempDir::new("").unwrap()
+}
+
 
 // Configure a Criterion struct to perform really fast benchmarks. This is not
 // recommended for real benchmarking, only for testing.
-fn short_benchmark() -> Criterion {
+fn short_benchmark(dir: &TempDir) -> Criterion {
     Criterion::default()
+        .output_directory(dir.path())
         .warm_up_time(Duration::from_millis(250))
         .measurement_time(Duration::from_millis(500))
         .nresamples(1000)
@@ -72,17 +79,19 @@ fn has_python3() -> bool {
 
 #[test]
 fn test_creates_directory() {
-    short_benchmark().bench_function("test_creates_directory", |b| b.iter(|| 10));
-    assert!(Path::new("target/criterion/test_creates_directory").is_dir());
+    let dir = temp_dir();
+    short_benchmark(&dir).bench_function("test_creates_directory", |b| b.iter(|| 10));
+    assert!(dir.path().join("test_creates_directory").is_dir());
 }
 
 #[test]
 fn test_without_plots() {
-    short_benchmark()
+    let dir = temp_dir();
+    short_benchmark(&dir)
         .without_plots()
         .bench_function("test_without_plots", |b| b.iter(|| 10));
 
-    for entry in WalkDir::new("target/criterion/test_without_plots") {
+    for entry in WalkDir::new(dir.path().join("test_without_plots")) {
         let entry = entry.ok();
         let is_svg = entry
             .as_ref()
@@ -100,10 +109,11 @@ fn test_without_plots() {
 
 #[test]
 fn test_sample_size() {
+    let dir = temp_dir();
     let counter = Counter::default();
 
     let clone = counter.clone();
-    short_benchmark()
+    short_benchmark(&dir)
         .sample_size(50)
         .bench_function("test_sample_size", move |b| {
             clone.count();
@@ -117,10 +127,11 @@ fn test_sample_size() {
 
 #[test]
 fn test_warmup_time() {
+    let dir = temp_dir();
     let counter1 = Counter::default();
 
     let clone = counter1.clone();
-    short_benchmark()
+    short_benchmark(&dir)
         .warm_up_time(Duration::from_millis(100))
         .bench_function("test_warmup_time_1", move |b| {
             clone.count();
@@ -129,7 +140,7 @@ fn test_warmup_time() {
 
     let counter2 = Counter::default();
     let clone = counter2.clone();
-    short_benchmark()
+    short_benchmark(&dir)
         .warm_up_time(Duration::from_millis(2000))
         .bench_function("test_warmup_time_2", move |b| {
             clone.count();
@@ -141,16 +152,17 @@ fn test_warmup_time() {
 
 #[test]
 fn test_measurement_time() {
+    let dir = temp_dir();
     let counter1 = Counter::default();
 
     let clone = counter1.clone();
-    short_benchmark()
+    short_benchmark(&dir)
         .measurement_time(Duration::from_millis(100))
         .bench_function("test_meas_time_1", move |b| b.iter(|| clone.count()));
 
     let counter2 = Counter::default();
     let clone = counter2.clone();
-    short_benchmark()
+    short_benchmark(&dir)
         .measurement_time(Duration::from_millis(2000))
         .bench_function("test_meas_time_2", move |b| b.iter(|| clone.count()));
 
@@ -159,22 +171,25 @@ fn test_measurement_time() {
 
 #[test]
 fn test_bench_function() {
-    short_benchmark().bench_function("test_bench_function", move |b| b.iter(|| 10));
+    let dir = temp_dir();
+    short_benchmark(&dir).bench_function("test_bench_function", move |b| b.iter(|| 10));
 }
 
 #[test]
 fn test_bench_functions() {
+    let dir = temp_dir();
     let function_1 = Fun::new("times 10", |b, i| b.iter(|| *i * 10));
     let function_2 = Fun::new("times 20", |b, i| b.iter(|| *i * 20));
 
     let functions = vec![function_1, function_2];
 
-    short_benchmark().bench_functions("test_bench_functions", functions, 20);
+    short_benchmark(&dir).bench_functions("test_bench_functions", functions, 20);
 }
 
 #[test]
 fn test_bench_function_over_inputs() {
-    short_benchmark().bench_function_over_inputs(
+    let dir = temp_dir();
+    short_benchmark(&dir).bench_function_over_inputs(
         "test_bench_function_over_inputs",
         |b, i| b.iter(|| *i * 10),
         vec![100, 1000],
@@ -187,7 +202,8 @@ fn test_bench_program() {
         return;
     }
 
-    short_benchmark().bench_program("test_bench_program", create_command(10));
+    let dir = temp_dir();
+    short_benchmark(&dir).bench_program("test_bench_program", create_command(10));
 }
 
 #[test]
@@ -196,9 +212,11 @@ fn test_bench_program_over_inputs() {
         return;
     }
 
+    let dir = temp_dir();
+
     // Note that bench_program_over_inputs automatically passes the input
     // as the first command-line parameter.
-    short_benchmark().bench_program_over_inputs(
+    short_benchmark(&dir).bench_program_over_inputs(
         "test_bench_program_over_inputs",
         create_command_without_arg,
         vec![10, 20],
@@ -207,6 +225,7 @@ fn test_bench_program_over_inputs() {
 
 #[test]
 fn test_bench_unparameterized() {
+    let dir = temp_dir();
     let mut benchmark = Benchmark::new("return 10", |b| b.iter(|| 10))
         .with_function("return 20", |b| b.iter(|| 20));
 
@@ -214,11 +233,12 @@ fn test_bench_unparameterized() {
         benchmark = benchmark.with_program("external", create_command(10));
     }
 
-    short_benchmark().bench("test_bench_unparam", benchmark);
+    short_benchmark(&dir).bench("test_bench_unparam", benchmark);
 }
 
 #[test]
 fn test_bench_parameterized() {
+    let dir = temp_dir();
     let parameters = vec![5, 10];
     let mut benchmark =
         ParameterizedBenchmark::new("times 10", |b, i| b.iter(|| *i * 10), parameters)
@@ -230,25 +250,27 @@ fn test_bench_parameterized() {
         benchmark = benchmark.with_program("external", |i| create_command(*i));
     }
 
-    short_benchmark().bench("test_bench_param", benchmark);
+    short_benchmark(&dir).bench("test_bench_param", benchmark);
 }
 
 #[test]
 fn test_filtering() {
+    let dir = temp_dir();
     let counter = Counter::default();
     let clone = counter.clone();
 
-    short_benchmark()
+    short_benchmark(&dir)
         .with_filter("Foo")
         .bench_function("test_filtering", move |b| b.iter(|| clone.count()));
 
     assert_eq!(counter.read(), 0);
-    assert!(!Path::new("target/criterion/test_filtering").is_dir());
+    assert!(!dir.path().join("test_filtering").is_dir());
 }
 
 #[test]
 fn test_timing_loops() {
-    short_benchmark().bench(
+    let dir = temp_dir();
+    short_benchmark(&dir).bench(
         "test_timing_loops",
         Benchmark::new("iter", |b| b.iter(|| 10))
             .with_function("iter_with_setup", |b| {
@@ -265,11 +287,12 @@ fn test_timing_loops() {
 
 #[test]
 fn test_throughput() {
-    short_benchmark().bench(
+    let dir = temp_dir();
+    short_benchmark(&dir).bench(
         "test_throughput_bytes",
         Benchmark::new("strlen", |b| b.iter(|| "foo".len())).throughput(Throughput::Bytes(3)),
     );
-    short_benchmark().bench(
+    short_benchmark(&dir).bench(
         "test_throughput_elems",
         ParameterizedBenchmark::new(
             "veclen",
@@ -282,16 +305,17 @@ fn test_throughput() {
 // Verify that all expected output files are present
 #[test]
 fn test_output_files() {
+    let tempdir = temp_dir();
     for _ in 0..2 {
-        short_benchmark().bench(
+        short_benchmark(&tempdir).bench(
             "test_output",
             Benchmark::new("output_1", |b| b.iter(|| 10))
                 .with_function("output_2", |b| b.iter(|| 20)),
         );
     }
 
-    fn verify_file(dir: &str, path: &str) -> PathBuf {
-        let full_path = PathBuf::from(&format!("{}/{}", dir, path));
+    fn verify_file(dir: &PathBuf, path: &str) -> PathBuf {
+        let full_path = dir.join(path);
         assert!(
             full_path.is_file(),
             "File {:?} does not exist or is not a file",
@@ -302,29 +326,29 @@ fn test_output_files() {
         full_path
     }
 
-    fn verify_json(dir: &str, path: &str) {
+    fn verify_json(dir: &PathBuf, path: &str) {
         let full_path = verify_file(dir, path);
         let f = File::open(full_path).unwrap();
         serde_json::from_reader::<File, Value>(f).unwrap();
     }
 
-    fn verify_svg(dir: &str, path: &str) {
+    fn verify_svg(dir: &PathBuf, path: &str) {
         verify_file(dir, path);
     }
 
-    fn verify_html(dir: &str, path: &str) {
+    fn verify_html(dir: &PathBuf, path: &str) {
         verify_file(dir, path);
     }
 
     for x in 0..2 {
-        let dir = format!("target/criterion/test_output/output_{}", x + 1);
+        let dir = tempdir.path().join(format!("test_output/output_{}", x + 1));
 
         verify_json(&dir, "new/estimates.json");
         verify_json(&dir, "new/sample.json");
         verify_json(&dir, "new/tukey.json");
         verify_json(&dir, "change/estimates.json");
 
-        if short_benchmark().can_plot() && cfg!(feature = "html_reports") {
+        if short_benchmark(&tempdir).can_plot() && cfg!(feature = "html_reports") {
             verify_svg(&dir, "report/MAD.svg");
             verify_svg(&dir, "report/mean.svg");
             verify_svg(&dir, "report/median.svg");
@@ -346,10 +370,10 @@ fn test_output_files() {
         }
     }
 
-    if short_benchmark().can_plot() && cfg!(feature = "html_reports") {
-        let dir = "target/criterion/test_output";
+    if short_benchmark(&tempdir).can_plot() && cfg!(feature = "html_reports") {
+        let dir = tempdir.path().join("test_output");
 
-        verify_svg(dir, "report/violin.svg");
-        verify_html(dir, "report/index.html");
+        verify_svg(&dir, "report/violin.svg");
+        verify_html(&dir, "report/index.html");
     }
 }

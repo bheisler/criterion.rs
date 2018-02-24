@@ -29,6 +29,7 @@ handlebars = { version = "0.31", optional = true }
 
 [dev-dependencies]
 walkdir = "2.1"
+tempdir = "0.3"
 
 [badges]
 travis-ci = { repository = "japaric/criterion.rs" }

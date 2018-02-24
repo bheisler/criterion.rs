@@ -600,6 +600,14 @@ impl Criterion {
         self
     }
 
+    /// Set the output directory (currently for testing only)
+    #[doc(hidden)]
+    pub fn output_directory(mut self, path: &std::path::Path) -> Criterion {
+        self.output_directory = path.to_string_lossy().into_owned();
+
+        self
+    }
+
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
     pub fn configure_from_args(mut self) -> Criterion {
