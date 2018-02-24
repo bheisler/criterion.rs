@@ -1,7 +1,7 @@
 [package]
 authors = ["Jorge Aparicio <japaricious@gmail.com>", "Brook Heisler <brookheisler@gmail.com>"]
 name = "criterion-plot"
-version = "0.2.0"
+version = "0.2.1"
 
 description = "Criterion's plotting library"
 repository = "https://github.com/japaric/criterion.rs"
