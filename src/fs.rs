@@ -27,11 +27,13 @@ pub fn mkdirp<P>(path: &P) -> Result<()>
 where
     P: AsRef<Path>,
 {
-    Ok(fs::create_dir_all(path.as_ref())?)
+    fs::create_dir_all(path.as_ref())?;
+    Ok(())
 }
 
 pub fn mv(from: &Path, to: &Path) -> Result<()> {
-    Ok(fs::rename(from, to)?)
+    fs::rename(from, to)?;
+    Ok(())
 }
 
 pub fn rmrf(path: &Path) -> Result<()> {

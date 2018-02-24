@@ -231,7 +231,7 @@ where
         let (x_factor, y_factor) = ::scale_factor(&self.axes, ::Axes::BottomXLeftY);
 
         let style = e.style();
-        let (x, y, l, h, e_factor) = match e {
+        let (x, y, length, height, e_factor) = match e {
             ErrorBar::XErrorBars {
                 x,
                 y,
@@ -257,7 +257,10 @@ where
                 y_high,
             } => (x, y, y_low, y_high, y_factor),
         };
-        let data = Matrix::new(izip!(x, y, l, h), (x_factor, y_factor, e_factor, e_factor));
+        let data = Matrix::new(
+            izip!(x, y, length, height),
+            (x_factor, y_factor, e_factor, e_factor),
+        );
         self.plots.push(Plot::new(
             data,
             configure(&mut ErrorBarDefault::default(style)),
