@@ -122,13 +122,13 @@ impl Html {
         let mut handlebars = Handlebars::new();
         handlebars
             .register_template_string("report", include_str!("benchmark_report.html.handlebars"))
-            .unwrap();
+            .expect("Unable to parse benchmark report template.");
         handlebars
             .register_template_string(
                 "summary_report",
                 include_str!("summary_report.html.handlebars"),
             )
-            .unwrap();
+            .expect("Unable to parse summary report template.");
         Html { handlebars }
     }
 }
@@ -147,10 +147,10 @@ impl Report for Html {
             return;
         }
 
-        fs::mkdirp(&format!(
+        try_else_return!(fs::mkdirp(&format!(
             "{}/{}/report/",
             report_context.output_directory, id
-        )).unwrap();
+        )));
 
         let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
 
@@ -221,14 +221,16 @@ impl Report for Html {
             comparison: self.comparison(measurements),
         };
 
-        let text = self.handlebars.render("report", &context).unwrap();
-        fs::save_string(
+        let text = self.handlebars
+            .render("report", &context)
+            .expect("Failed to render benchmark report template");
+        try_else_return!(fs::save_string(
             &text,
             &format!(
                 "{}/{}/report/index.html",
                 report_context.output_directory, id
             ),
-        ).unwrap();
+        ));
     }
 
     fn summarize(&self, context: &ReportContext, all_ids: &[BenchmarkId]) {
@@ -382,14 +384,14 @@ impl Html {
         ));
 
         if let Some(ref comp) = measurements.comparison {
-            fs::mkdirp(&format!(
+            try_else_return!(fs::mkdirp(&format!(
                 "{}/{}/report/change/",
                 context.output_directory, id
-            )).unwrap();
+            )));
 
             let base_data = Data::new(&comp.base_iter_counts, &comp.base_sample_times);
 
-            log_if_err!(fs::mkdirp(&format!(
+            try_else_return!(fs::mkdirp(&format!(
                 "{}/{}/report/both",
                 context.output_directory, id
             )));
@@ -490,10 +492,13 @@ impl Html {
     ) -> Vec<Child> {
         let mut gnuplots = vec![];
 
-        fs::mkdirp(&format!(
-            "{}/{}/report/",
-            report_context.output_directory, group_id
-        )).unwrap();
+        try_else_return!(
+            fs::mkdirp(&format!(
+                "{}/{}/report/",
+                report_context.output_directory, group_id
+            )),
+            || gnuplots
+        );
 
         let violin_path = format!(
             "{}/{}/report/violin.svg",
@@ -552,14 +557,19 @@ impl Html {
             benchmarks: benchmarks,
         };
 
-        let text = self.handlebars.render("summary_report", &context).unwrap();
-        fs::save_string(
-            &text,
-            &format!(
-                "{}/{}/report/index.html",
-                report_context.output_directory, group_id
+        let text = self.handlebars
+            .render("summary_report", &context)
+            .expect("Failed to render summary report template");
+        try_else_return!(
+            fs::save_string(
+                &text,
+                &format!(
+                    "{}/{}/report/index.html",
+                    report_context.output_directory, group_id
+                ),
             ),
-        ).unwrap();
+            || gnuplots
+        );
 
         gnuplots
     }

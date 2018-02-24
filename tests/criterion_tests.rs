@@ -1,7 +1,7 @@
 extern crate criterion;
 extern crate serde_json;
-extern crate walkdir;
 extern crate tempdir;
+extern crate walkdir;
 
 use std::fs::File;
 use criterion::{Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
@@ -21,7 +21,6 @@ use tempdir::TempDir;
 fn temp_dir() -> TempDir {
     TempDir::new("").unwrap()
 }
-
 
 // Configure a Criterion struct to perform really fast benchmarks. This is not
 // recommended for real benchmarking, only for testing.
