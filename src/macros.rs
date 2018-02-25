@@ -60,7 +60,7 @@
 /// function.
 #[macro_export]
 macro_rules! criterion_group {
-    (name = $name:ident; config = $config:expr; targets = $( $target:path ),+ ) => {
+    (name = $name:ident; config = $config:expr; targets = $( $target:path ),+ $(,)*) => {
         pub fn $name() {
             let mut criterion: Criterion = $config
                 .configure_from_args();
@@ -69,7 +69,7 @@ macro_rules! criterion_group {
             )+
         }
     };
-    ($name:ident, $( $target:path ),+ ) => {
+    ($name:ident, $( $target:path ),+ $(,)*) => {
         criterion_group!{
             name = $name;
             config = Criterion::default();
@@ -115,7 +115,7 @@ macro_rules! criterion_group {
 ///
 #[macro_export]
 macro_rules! criterion_main {
-    ( $( $group:path ),+ ) => {
+    ( $( $group:path ),+ $(,)* ) => {
         fn main() {
             criterion::init_logging();
             $(
