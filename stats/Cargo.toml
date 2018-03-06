@@ -5,6 +5,7 @@ version = "0.2.1"
 
 description = "Criterion's statistics library"
 repository = "https://github.com/japaric/criterion.rs"
+documentation = "https://docs.rs/criterion-stats"
 readme = "README.md"
 keywords = ["statistics", "stats", "criterion"]
 license = "MIT/Apache-2.0"
