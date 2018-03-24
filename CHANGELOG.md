@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+- Fixed broken links in some summary reports.
+
 ## [0.2.1]
 ### Added
 - HTML reports are now a default Cargo feature. If you wish to disable HTML reports,
