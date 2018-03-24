@@ -537,7 +537,7 @@ impl Html {
         }
 
         let path_prefix = if full_summary {
-            "../../.."
+            "../.."
         } else {
             "../../../.."
         };
