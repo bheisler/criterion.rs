@@ -17,7 +17,7 @@
 //!   performance behavior.
 
 #![deny(missing_docs)]
-#![cfg_attr(feature = "real_blackbox", feature(test))]
+#![feature(test)]
 #![cfg_attr(not(feature = "html_reports"), allow(dead_code))]
 
 extern crate atty;
@@ -36,7 +36,6 @@ extern crate criterion_plot;
 #[cfg(feature = "html_reports")]
 extern crate handlebars;
 
-#[cfg(feature = "real_blackbox")]
 extern crate test;
 
 #[macro_use]

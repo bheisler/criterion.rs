@@ -121,7 +121,7 @@ where
             (*f)(&mut b, parameter);
 
             total_iters += b.iters;
-            let elapsed = start.elapsed();
+            let elapsed = ::test::black_box(start.elapsed());
             if elapsed > how_long {
                 return (elapsed.to_nanos(), total_iters);
             }
