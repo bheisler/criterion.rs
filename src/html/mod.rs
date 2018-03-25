@@ -536,11 +536,7 @@ impl Html {
             }
         }
 
-        let path_prefix = if full_summary {
-            "../.."
-        } else {
-            "../../../.."
-        };
+        let path_prefix = if full_summary { "../.." } else { "../../../.." };
         let benchmarks = data.iter()
             .map(|&&(ref id, _)| IndividualBenchmark::new(path_prefix, id))
             .collect();

@@ -117,11 +117,15 @@ where
 
         let mut total_iters = 0;
         let start = Instant::now();
+        // This vec is used as a workaround for a rust bug - #49336
+        // It should be removed a reasonable time period after that bug is fixed.
+        let mut workaround = Vec::with_capacity(25);
         loop {
             (*f)(&mut b, parameter);
 
             total_iters += b.iters;
             let elapsed = start.elapsed();
+            workaround.push(total_iters);
             if elapsed > how_long {
                 return (elapsed.to_nanos(), total_iters);
             }
