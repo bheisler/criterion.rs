@@ -378,6 +378,16 @@ fn test_output_files() {
     }
 }
 
+#[test]
+#[should_panic(expected = "Benchmark function must call Bencher::iter or related method.")]
+fn test_bench_with_no_iteration_panics() {
+    let dir = temp_dir();
+    short_benchmark(&dir).bench(
+        "test_no_iter",
+        Benchmark::new("no_iter", |_b| {}),
+    );
+}
+
 mod macros {
     use super::criterion;
 

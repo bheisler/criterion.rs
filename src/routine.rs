@@ -89,6 +89,7 @@ where
         let f = &mut self.f;
 
         let mut b = Bencher {
+            iterated: false,
             iters: 0,
             elapsed: Duration::from_secs(0),
         };
@@ -98,6 +99,7 @@ where
             .map(|iters| {
                 b.iters = *iters;
                 (*f)(&mut b, parameter);
+                b.assert_iterated();
                 b.elapsed.to_nanos() as f64
             })
             .collect()
@@ -111,6 +113,7 @@ where
     ) -> (u64, u64) {
         let f = &mut self.f;
         let mut b = Bencher {
+            iterated: false,
             iters: 1,
             elapsed: Duration::from_secs(0),
         };
@@ -122,6 +125,8 @@ where
         let mut workaround = Vec::with_capacity(25);
         loop {
             (*f)(&mut b, parameter);
+
+            b.assert_iterated();
 
             total_iters += b.iters;
             let elapsed = start.elapsed();

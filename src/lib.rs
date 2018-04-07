@@ -172,6 +172,7 @@ where
 /// * Otherwise, use `iter`.
 #[derive(Clone, Copy)]
 pub struct Bencher {
+    iterated: bool,
     iters: u64,
     elapsed: Duration,
 }
@@ -208,6 +209,7 @@ impl Bencher {
     where
         R: FnMut() -> O,
     {
+        self.iterated = true;
         let start = Instant::now();
         for _ in 0..self.iters {
             black_box(routine());
@@ -278,6 +280,7 @@ impl Bencher {
         S: FnMut() -> I,
         R: FnMut(I) -> O,
     {
+        self.iterated = true;
         self.elapsed = Duration::from_secs(0);
         for _ in 0..self.iters {
             let input = setup();
@@ -326,6 +329,7 @@ impl Bencher {
     where
         R: FnMut() -> O,
     {
+        self.iterated = true;
         let mut outputs = Vec::with_capacity(self.iters as usize);
 
         let start = Instant::now();
@@ -371,6 +375,7 @@ impl Bencher {
         S: FnMut() -> I,
         R: FnMut(I),
     {
+        self.iterated = true;
         let inputs = (0..self.iters).map(|_| setup()).collect::<Vec<_>>();
 
         let start = Instant::now();
@@ -378,6 +383,15 @@ impl Bencher {
             routine(black_box(input));
         }
         self.elapsed = start.elapsed();
+    }
+
+    // Benchmarks must actually call one of the iter methods. This causes benchmarks to fail loudly
+    // if they don't.
+    fn assert_iterated(&mut self) {
+        if !self.iterated {
+            panic!("Benchmark function must call Bencher::iter or related method.");
+        }
+        self.iterated = false;
     }
 }
 
