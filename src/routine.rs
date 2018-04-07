@@ -1,77 +1,37 @@
 use std::time::{Duration, Instant};
-use BenchmarkConfig;
-
-use {Bencher, Criterion, DurationExt};
-use std::marker::PhantomData;
-use report::BenchmarkId;
+use {Bencher, DurationExt};
 
 /// PRIVATE
-pub trait Routine<T> {
+pub trait Routine {
     /// PRIVATE
-    fn warm_up(&mut self, how_long: Duration, parameter: &T)
+    fn warm_up(&mut self, how_long: Duration)
         -> (u64, u64);
-
-    /// PRIVATE
-    fn sample(
-        &mut self,
-        id: &BenchmarkId,
-        config: &BenchmarkConfig,
-        criterion: &Criterion,
-        parameter: &T,
-    ) {
-        let wu = config.warm_up_time;
-        let m_ns = config.measurement_time.to_nanos();
-
-        criterion
-            .report
-            .warmup(id, wu.to_nanos() as f64);
-
-        let (wu_elapsed, wu_iters) = self.warm_up(wu, parameter);
-
-        // Initial guess for the mean execution time
-        let met = wu_elapsed as f64 / wu_iters as f64;
-
-        let n = config.sample_size as u64;
-        // Solve: [d + 2*d + 3*d + ... + n*d] * met = m_ns
-        let total_runs = n * (n + 1) / 2;
-        let d = (m_ns as f64 / met / total_runs as f64).ceil() as u64;
-
-        let m_iters = (1..(n + 1) as u64).map(|a| a * d).collect::<Vec<u64>>();
-
-        let m_ns = total_runs as f64 * d as f64 * met;
-        criterion
-            .report
-            .measurement_start(id, n, m_ns, m_iters.iter().sum());
-    }
 }
 
-pub struct Function<F, T>
+pub struct Function<F>
 where
-    F: FnMut(&mut Bencher, &T),
+    F: FnMut(&mut Bencher),
 {
     f: F,
-    _phantom: PhantomData<T>,
 }
-impl<F, T> Function<F, T>
+impl<F> Function<F>
 where
-    F: FnMut(&mut Bencher, &T),
+    F: FnMut(&mut Bencher),
 {
-    pub fn new(f: F) -> Function<F, T> {
+    pub fn new(f: F) -> Function<F> {
         Function {
             f: f,
-            _phantom: PhantomData,
         }
     }
 }
 
-impl<F, T> Routine<T> for Function<F, T>
+impl<F> Routine for Function<F>
 where
-    F: FnMut(&mut Bencher, &T),
+    F: FnMut(&mut Bencher),
 {
     fn warm_up(
         &mut self,
         how_long: Duration,
-        parameter: &T,
     ) -> (u64, u64) {
         let f = &mut self.f;
         let mut b = Bencher {
@@ -82,7 +42,7 @@ where
         let mut total_iters = 0;
         let start = Instant::now();
         loop {
-            (*f)(&mut b, parameter);
+            (*f)(&mut b);
 
             total_iters += b.iters;
             let elapsed = start.elapsed();

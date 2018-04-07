@@ -16,17 +16,12 @@
 //! * Produces detailed charts, providing thorough understanding of your code's
 //!   performance behavior.
 
-mod format;
-mod report;
 mod routine;
 mod macros;
 
 use std::default::Default;
 use std::time::{Duration, Instant};
-use std::cell::RefCell;
 use routine::Routine;
-
-use report::{CliReport, Report, Reports, BenchmarkId};
 
 /// A function that is opaque to the optimizer, used to prevent the compiler from
 /// optimizing away computations in a benchmark.
@@ -114,8 +109,9 @@ impl Bencher {
 /// - **Comparison**: The current sample is compared with the sample obtained in the previous
 /// benchmark.
 pub struct Criterion {
-    config: BenchmarkConfig,
-    report: Box<Report>,
+    measurement_time: Duration,
+    sample_size: usize,
+    warm_up_time: Duration,
 }
 
 impl Default for Criterion {
@@ -131,20 +127,10 @@ impl Default for Criterion {
     /// - Plotting: enabled (if gnuplot is available)
     /// - No filter
     fn default() -> Criterion {
-        let mut reports: Vec<Box<Report>> = vec![];
-        reports.push(Box::new(CliReport::new(false, false, false)));
-
         Criterion {
-            config: BenchmarkConfig {
-                confidence_level: 0.95,
-                measurement_time: Duration::new(5, 0),
-                noise_threshold: 0.01,
-                nresamples: 100_000,
-                sample_size: 100,
-                significance_level: 0.05,
-                warm_up_time: Duration::new(3, 0),
-            },
-            report: Box::new(Reports::new(reports)),
+            measurement_time: Duration::new(5, 0),
+            sample_size: 100,
+            warm_up_time: Duration::new(3, 0),
         }
     }
 }
@@ -158,7 +144,7 @@ impl Criterion {
     pub fn warm_up_time(mut self, dur: Duration) -> Criterion {
         assert!(dur.to_nanos() > 0);
 
-        self.config.warm_up_time = dur;
+        self.warm_up_time = dur;
         self
     }
 
@@ -175,7 +161,7 @@ impl Criterion {
     pub fn measurement_time(mut self, dur: Duration) -> Criterion {
         assert!(dur.to_nanos() > 0);
 
-        self.config.measurement_time = dur;
+        self.measurement_time = dur;
         self
     }
     
@@ -187,16 +173,7 @@ impl Criterion {
 
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
-    pub fn configure_from_args(mut self) -> Criterion {
-        let mut reports: Vec<Box<Report>> = vec![];
-        reports.push(Box::new(CliReport::new(
-            false,
-            false,
-            true,
-        )));
-
-        self.report = Box::new(Reports::new(reports));
-
+    pub fn configure_from_args(self) -> Criterion {
         self
     }
 
@@ -219,66 +196,60 @@ impl Criterion {
     ///
     /// Criterion::default().bench_function("routine", routine);
     /// ```
-    pub fn bench_function<F>(&mut self, id: &str, mut f: F) -> &mut Criterion
+    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion
     where
         F: FnMut(&mut Bencher) + 'static,
     {
-        let routine = NamedRoutine {
-            id: id.into(),
-            f: Box::new(RefCell::new(routine::Function::new(move |b, _| f(b)))),
-        };
-        run(id, self, routine);
+        let id = BenchmarkId::new(
+            id.to_owned(),
+            id.to_owned(),
+        );
+
+        println!("Benchmarking {}", id);
+
+        let mut routine = routine::Function::new(f);
+        sample(&mut routine, &id, &self);
         self
     }
 }
 
-/// Struct containing all of the configuration options for a benchmark.
-pub struct BenchmarkConfig {
-    pub confidence_level: f64,
-    pub measurement_time: Duration,
-    pub noise_threshold: f64,
-    pub nresamples: usize,
-    pub sample_size: usize,
-    pub significance_level: f64,
-    pub warm_up_time: Duration,
-}
-
-struct NamedRoutine {
-    pub id: String,
-    pub f: Box<RefCell<Routine<()>>>,
-}
-
-fn run(group_id: &str, c: &Criterion, routine: NamedRoutine) {
-    let function_id = Some(routine.id);
-
-    let id = BenchmarkId::new(
-        group_id.to_owned(),
-        function_id,
-        None,
-    );
-
-    common(
-        &id,
-        &mut *routine.f.borrow_mut(),
-        &c.config,
-        c,
-        &(),
-    );
-}
-
-// Common analysis procedure
-fn common<T>(
+fn sample<F>(
+    routine: &mut routine::Function<F>,
     id: &BenchmarkId,
-    routine: &mut Routine<T>,
-    config: &BenchmarkConfig,
     criterion: &Criterion,
-    parameter: &T,
-) {
-    criterion.report.benchmark_start(id);
+) where F: FnMut(&mut Bencher) + 'static {
+    let wu = criterion.warm_up_time;
+    let m_ns = criterion.measurement_time.to_nanos();
 
-    routine.sample(id, config, criterion, parameter);
+    println!(
+        "Benchmarking {}: Warming up for {}",
+        id,
+        time(wu.to_nanos() as f64)
+    );
+
+    let (wu_elapsed, wu_iters) = routine.warm_up(wu);
+
+    // Initial guess for the mean execution time
+    let met = wu_elapsed as f64 / wu_iters as f64;
+
+    let n = criterion.sample_size as u64;
+    // Solve: [d + 2*d + 3*d + ... + n*d] * met = m_ns
+    let total_runs = n * (n + 1) / 2;
+    let d = (m_ns as f64 / met / total_runs as f64).ceil() as u64;
+
+    let m_iters = (1..(n + 1) as u64).map(|a| a * d).collect::<Vec<u64>>();
+
+    let m_ns = total_runs as f64 * d as f64 * met;
+    let iter_count : u64 = m_iters.iter().sum();
+    let iter_string = format!("{} iterations", iter_count);
+
+    println!("Benchmarking {}: Collecting {} samples in estimated {} ({})",
+        id,
+        n,
+        time(m_ns),
+        iter_string
+    );
 }
-
 
 
 trait DurationExt {
@@ -293,3 +264,62 @@ impl DurationExt for Duration {
     }
 }
 
+use std::fmt;
+
+#[derive(Clone)]
+pub struct BenchmarkId {
+    pub group_id: String,
+    pub function_id: String,
+    full_id: String,
+}
+
+impl BenchmarkId {
+    pub fn new(
+        group_id: String,
+        function_id: String,
+    ) -> BenchmarkId {
+        let full_id = format!("{}/{}", group_id, function_id);
+        BenchmarkId {
+            group_id,
+            function_id,
+            full_id,
+        }
+    }
+
+    pub fn id(&self) -> &str {
+        &self.full_id
+    }
+}
+impl fmt::Display for BenchmarkId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(self.id())
+    }
+}
+
+fn short(n: f64) -> String {
+    if n < 10.0 {
+        format!("{:.4}", n)
+    } else if n < 100.0 {
+        format!("{:.3}", n)
+    } else if n < 1000.0 {
+        format!("{:.2}", n)
+    } else if n < 10000.0 {
+        format!("{:.1}", n)
+    } else {
+        format!("{}", n)
+    }
+}
+
+pub fn time(ns: f64) -> String {
+    if ns < 1.0 {
+        format!("{:>6} ps", short(ns * 1e3))
+    } else if ns < 10f64.powi(3) {
+        format!("{:>6} ns", short(ns))
+    } else if ns < 10f64.powi(6) {
+        format!("{:>6} us", short(ns / 1e3))
+    } else if ns < 10f64.powi(9) {
+        format!("{:>6} ms", short(ns / 1e6))
+    } else {
+        format!("{:>6} s", short(ns / 1e9))
+    }
+}
