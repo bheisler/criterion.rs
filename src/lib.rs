@@ -142,8 +142,6 @@ impl Criterion {
     ///
     /// Panics if the input duration is zero
     pub fn warm_up_time(mut self, dur: Duration) -> Criterion {
-        assert!(dur.to_nanos() > 0);
-
         self.warm_up_time = dur;
         self
     }
@@ -159,18 +157,10 @@ impl Criterion {
     ///
     /// Panics if the input duration in zero
     pub fn measurement_time(mut self, dur: Duration) -> Criterion {
-        assert!(dur.to_nanos() > 0);
-
         self.measurement_time = dur;
         self
     }
     
-    /// Filters the benchmarks. Only benchmarks with names that contain the
-    /// given string will be executed.
-    pub fn with_filter<S: Into<String>>(self, _: S) -> Criterion {
-        self
-    }
-
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
     pub fn configure_from_args(self) -> Criterion {
@@ -200,12 +190,6 @@ impl Criterion {
     where
         F: FnMut(&mut Bencher) + 'static,
     {
-        let id = BenchmarkId::new(
-            id.to_owned(),
-            id.to_owned(),
-        );
-
-        println!("Benchmarking {}", id);
 
         let mut routine = routine::Function::new(f);
         sample(&mut routine, &id, &self);
@@ -215,17 +199,11 @@ impl Criterion {
 
 fn sample<F>(
     routine: &mut routine::Function<F>,
-    id: &BenchmarkId,
+    id: &str,
     criterion: &Criterion,
 ) where F: FnMut(&mut Bencher) + 'static {
     let wu = criterion.warm_up_time;
     let m_ns = criterion.measurement_time.to_nanos();
-
-    println!(
-        "Benchmarking {}: Warming up for {}",
-        id,
-        time(wu.to_nanos() as f64)
-    );
 
     let (wu_elapsed, wu_iters) = routine.warm_up(wu);
 
@@ -239,15 +217,10 @@ fn sample<F>(
 
     let m_iters = (1..(n + 1) as u64).map(|a| a * d).collect::<Vec<u64>>();
 
-    let m_ns = total_runs as f64 * d as f64 * met;
     let iter_count : u64 = m_iters.iter().sum();
-    let iter_string = format!("{} iterations", iter_count);
-
-    println!("Benchmarking {}: Collecting {} samples in estimated {} ({})",
+    println!("{}: Calculated iterations: {}",
         id,
-        n,
-        time(m_ns),
-        iter_string
+        iter_count
     );
 }
 
@@ -264,62 +237,3 @@ impl DurationExt for Duration {
     }
 }
 
-use std::fmt;
-
-#[derive(Clone)]
-pub struct BenchmarkId {
-    pub group_id: String,
-    pub function_id: String,
-    full_id: String,
-}
-
-impl BenchmarkId {
-    pub fn new(
-        group_id: String,
-        function_id: String,
-    ) -> BenchmarkId {
-        let full_id = format!("{}/{}", group_id, function_id);
-        BenchmarkId {
-            group_id,
-            function_id,
-            full_id,
-        }
-    }
-
-    pub fn id(&self) -> &str {
-        &self.full_id
-    }
-}
-impl fmt::Display for BenchmarkId {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.id())
-    }
-}
-
-fn short(n: f64) -> String {
-    if n < 10.0 {
-        format!("{:.4}", n)
-    } else if n < 100.0 {
-        format!("{:.3}", n)
-    } else if n < 1000.0 {
-        format!("{:.2}", n)
-    } else if n < 10000.0 {
-        format!("{:.1}", n)
-    } else {
-        format!("{}", n)
-    }
-}
-
-pub fn time(ns: f64) -> String {
-    if ns < 1.0 {
-        format!("{:>6} ps", short(ns * 1e3))
-    } else if ns < 10f64.powi(3) {
-        format!("{:>6} ns", short(ns))
-    } else if ns < 10f64.powi(6) {
-        format!("{:>6} us", short(ns / 1e3))
-    } else if ns < 10f64.powi(9) {
-        format!("{:>6} ms", short(ns / 1e6))
-    } else {
-        format!("{:>6} s", short(ns / 1e9))
-    }
-}
