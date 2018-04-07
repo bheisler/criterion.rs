@@ -12,8 +12,8 @@ categories = ["development-tools::profiling"]
 license = "Apache-2.0/MIT"
 
 [dependencies]
-criterion-plot = { path="plot", version="0.2.1", optional = true }
-criterion-stats = { path="stats", version="0.2.1" }
+criterion-plot = { path="plot", version="0.2.2", optional = true }
+criterion-stats = { path="stats", version="0.2.2" }
 failure = "0.1.1"
 failure_derive = "0.1.1"
 itertools = "0.7"
