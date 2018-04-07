@@ -415,6 +415,7 @@ pub struct Criterion {
     filter: Option<String>,
     report: Box<Report>,
     output_directory: String,
+    measure_only: bool,
 }
 
 impl Default for Criterion {
@@ -462,6 +463,7 @@ impl Default for Criterion {
             filter: None,
             report: Box::new(Reports::new(reports)),
             output_directory: "target/criterion".to_owned(),
+            measure_only: false,
         }
     }
 }
@@ -643,9 +645,12 @@ impl Criterion {
                 .long("verbose")
                 .help("Print additional statistical information."))
             .arg(Arg::with_name("noplot")
-                .short("np")
+                .short("n")
                 .long("noplot")
                 .help("Disable plot and HTML generation."))
+            .arg(Arg::with_name("measure-only")
+                .long("measure-only")
+                .help("Only perform measurements; do no analysis or storage of results. This is useful eg. when profiling the benchmarks, to reduce clutter in the profiling data."))
             //Ignored but always passed to benchmark executables
             .arg(Arg::with_name("bench")
                 .hidden(true)
@@ -697,9 +702,12 @@ scripts alongside the generated plots.
             verbose,
         )));
 
+        self.measure_only = matches.is_present("measure-only");
         #[cfg(feature = "html_reports")]
         {
-            reports.push(Box::new(Html::new()));
+            if !self.measure_only {
+                reports.push(Box::new(Html::new()));
+            }
         }
 
         self.report = Box::new(Reports::new(reports));

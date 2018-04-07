@@ -135,6 +135,7 @@ impl Html {
 impl Report for Html {
     fn benchmark_start(&self, _: &BenchmarkId, _: &ReportContext) {}
     fn warmup(&self, _: &BenchmarkId, _: &ReportContext, _: f64) {}
+    fn terminated(&self, _: &BenchmarkId, _: &ReportContext) {}
     fn analysis(&self, _: &BenchmarkId, _: &ReportContext) {}
     fn measurement_start(&self, _: &BenchmarkId, _: &ReportContext, _: u64, _: f64, _: u64) {}
     fn measurement_complete(

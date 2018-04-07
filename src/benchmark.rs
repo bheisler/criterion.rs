@@ -396,7 +396,7 @@ impl BenchmarkDefinition for Benchmark {
             all_ids.push(id);
         }
 
-        if all_ids.len() > 1 && any_matched {
+        if all_ids.len() > 1 && any_matched && !c.measure_only {
             c.report.summarize(&report_context, &all_ids);
         }
         if any_matched {
@@ -634,7 +634,7 @@ where
             }
         }
 
-        if all_ids.len() > 1 && any_matched {
+        if all_ids.len() > 1 && any_matched && !c.measure_only {
             c.report.summarize(&report_context, &all_ids);
         }
         if any_matched {

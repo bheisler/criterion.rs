@@ -133,6 +133,7 @@ pub struct ReportContext {
 pub(crate) trait Report {
     fn benchmark_start(&self, id: &BenchmarkId, context: &ReportContext);
     fn warmup(&self, id: &BenchmarkId, context: &ReportContext, warmup_ns: f64);
+    fn terminated(&self, id:&BenchmarkId, context: &ReportContext);
     fn analysis(&self, id: &BenchmarkId, context: &ReportContext);
     fn measurement_start(
         &self,
@@ -172,6 +173,12 @@ impl Report for Reports {
         }
     }
 
+    fn terminated(&self, id: &BenchmarkId, context: &ReportContext) {
+        for report in &self.reports {
+            report.terminated(id, context);
+        }
+    }
+
     fn analysis(&self, id: &BenchmarkId, context: &ReportContext) {
         for report in &self.reports {
             report.analysis(id, context);
@@ -190,6 +197,7 @@ impl Report for Reports {
             report.measurement_start(id, context, sample_count, estimate_ns, iter_count);
         }
     }
+
     fn measurement_complete(
         &self,
         id: &BenchmarkId,
@@ -337,6 +345,11 @@ impl Report for CliReport {
             id,
             format::time(warmup_ns)
         ));
+    }
+
+    fn terminated(&self, id: &BenchmarkId, _: &ReportContext) {
+        self.text_overwrite();
+        println!("Benchmarking {}: Complete (Analysis Disabled)", id);
     }
 
     fn analysis(&self, id: &BenchmarkId, _: &ReportContext) {
