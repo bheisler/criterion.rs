@@ -1,18 +1,18 @@
-use std::path::PathBuf;
 use std::iter;
+use std::path::PathBuf;
 
 use criterion_plot::prelude::*;
 use stats::bivariate::Data;
 use stats::univariate::Sample;
 
-use {ConfidenceInterval, Estimate};
-use estimate::Statistic::Slope;
-use estimate::Estimates;
-use kde;
-use std::process::Child;
-use super::{debug_script, escape_underscores, scale_time};
 use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
+use super::{debug_script, escape_underscores, scale_time};
+use estimate::Estimates;
+use estimate::Statistic::Slope;
+use kde;
 use report::BenchmarkId;
+use std::process::Child;
+use {ConfidenceInterval, Estimate};
 
 #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
 pub(crate) fn regression(

@@ -2,8 +2,8 @@
 
 use std::mem;
 
-use cast::From as _0;
 use byteorder::{LittleEndian, WriteBytesExt};
+use cast::From as _0;
 
 use traits::Data;
 

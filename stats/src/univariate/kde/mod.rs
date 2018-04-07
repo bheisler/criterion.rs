@@ -172,7 +172,7 @@ macro_rules! test {
                 }
             }
         }
-    }
+    };
 }
 
 #[cfg(test)]

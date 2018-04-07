@@ -1,9 +1,9 @@
+use serde::Serialize;
+use serde::de::DeserializeOwned;
+use serde_json;
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::Path;
-use serde_json;
-use serde::Serialize;
-use serde::de::DeserializeOwned;
 
 use error::{AccessError, Result};
 

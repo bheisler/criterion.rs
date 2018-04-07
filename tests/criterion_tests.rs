@@ -4,16 +4,16 @@ extern crate serde_json;
 extern crate tempdir;
 extern crate walkdir;
 
-use std::fs::File;
 use criterion::{Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
-use std::time::Duration;
-use std::path::PathBuf;
-use walkdir::WalkDir;
-use std::rc::Rc;
-use std::cell::RefCell;
-use std::process::{Command, Stdio};
 use serde_json::value::Value;
+use std::cell::RefCell;
+use std::fs::File;
+use std::path::PathBuf;
+use std::process::{Command, Stdio};
+use std::rc::Rc;
+use std::time::Duration;
 use tempdir::TempDir;
+use walkdir::WalkDir;
 
 /*
  * Please note that these tests are not complete examples of how to use
@@ -382,10 +382,7 @@ fn test_output_files() {
 #[should_panic(expected = "Benchmark function must call Bencher::iter or related method.")]
 fn test_bench_with_no_iteration_panics() {
     let dir = temp_dir();
-    short_benchmark(&dir).bench(
-        "test_no_iter",
-        Benchmark::new("no_iter", |_b| {}),
-    );
+    short_benchmark(&dir).bench("test_no_iter", Benchmark::new("no_iter", |_b| {}));
 }
 
 mod macros {

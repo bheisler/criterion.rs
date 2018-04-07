@@ -62,51 +62,69 @@ macro_rules! bench {
     ($ty:ident) => {
         pub mod $ty {
             pub trait SampleExt {
-                fn base_percentiles(&self) -> ::stats::univariate::Percentiles<$ty> where
-                    usize: ::cast::From<$ty, Output=Result<usize, ::cast::Error>>;
+                fn base_percentiles(&self) -> ::stats::univariate::Percentiles<$ty>
+                where
+                    usize: ::cast::From<$ty, Output = Result<usize, ::cast::Error>>;
 
-                fn iqr(&self) -> $ty where
-                    usize: ::cast::From<$ty, Output=Result<usize, ::cast::Error>>,
+                fn iqr(&self) -> $ty
+                where
+                    usize: ::cast::From<$ty, Output = Result<usize, ::cast::Error>>,
                 {
                     self.base_percentiles().iqr()
                 }
 
-                fn median(&self) -> $ty where
-                    usize: ::cast::From<$ty, Output=Result<usize, ::cast::Error>>,
+                fn median(&self) -> $ty
+                where
+                    usize: ::cast::From<$ty, Output = Result<usize, ::cast::Error>>,
                 {
                     self.base_percentiles().median()
                 }
             }
             impl SampleExt for ::stats::univariate::Sample<$ty> {
-                fn base_percentiles(&self) -> ::stats::univariate::Percentiles<$ty> where
-                    usize: ::cast::From<$ty, Output=Result<usize, ::cast::Error>> {
-                        self.percentiles()
-                    }
+                fn base_percentiles(&self) -> ::stats::univariate::Percentiles<$ty>
+                where
+                    usize: ::cast::From<$ty, Output = Result<usize, ::cast::Error>>,
+                {
+                    self.percentiles()
+                }
             }
 
             use criterion::Criterion;
 
-            stat!($ty <- iqr, max, mean, median, median_abs_dev_pct, min, std_dev_pct, sum);
+            stat!(
+                $ty <- iqr,
+                max,
+                mean,
+                median,
+                median_abs_dev_pct,
+                min,
+                std_dev_pct,
+                sum
+            );
             stat_none!($ty <- median_abs_dev, std_dev, var);
 
             criterion_group!(
-                name = benches;
-                config = ::common_bench::reduced_samples();
-                targets = iqr, max, mean, median, median_abs_dev_pct, min,
-                            std_dev_pct, sum, median_abs_dev, std_dev, var);
+                        name = benches;
+                        config = ::common_bench::reduced_samples();
+                        targets = iqr, max, mean, median, median_abs_dev_pct, min,
+                                    std_dev_pct, sum, median_abs_dev, std_dev, var);
 
             pub mod fast {
-                use criterion::Criterion;
                 use super::SampleExt;
+                use criterion::Criterion;
 
-                fast_stat!($ty <- (median_abs_dev, median), (std_dev, mean), (var, mean));
+                fast_stat!(
+                    $ty <- (median_abs_dev, median),
+                    (std_dev, mean),
+                    (var, mean)
+                );
                 criterion_group!(
-                    name = benches;
-                    config = ::common_bench::reduced_samples();
-                    targets = median_abs_dev, std_dev, var);
+                            name = benches;
+                            config = ::common_bench::reduced_samples();
+                            targets = median_abs_dev, std_dev, var);
             }
         }
-    }
+    };
 }
 
 bench!(f64);

@@ -33,7 +33,7 @@ macro_rules! test {
             mod gaussian {
                 use quickcheck::TestResult;
 
-                use univariate::kde::kernel::{Kernel, Gaussian};
+                use univariate::kde::kernel::{Gaussian, Kernel};
 
                 quickcheck!{
                     fn symmetric(x: $ty) -> bool {
@@ -70,7 +70,7 @@ macro_rules! test {
                 }
             }
         }
-    }
+    };
 }
 
 #[cfg(test)]

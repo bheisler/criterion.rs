@@ -10,8 +10,8 @@ use criterion::Criterion;
 macro_rules! bench {
     ($ty:ident) => {
         pub mod $ty {
-            use stats::univariate::Sample;
             use criterion::Criterion;
+            use stats::univariate::Sample;
 
             const NRESAMPLES: usize = 100_000;
             const SAMPLE_SIZE: usize = 100;
@@ -23,13 +23,12 @@ macro_rules! bench {
                     &format!("univariate_bootstrap_mean_{}", stringify!($ty)),
                     move |b| {
                         let sample = Sample::new(&v);
-                        b.iter(|| {
-                            sample.bootstrap(NRESAMPLES, |s| (s.mean(),))
-                        })
-                    });
+                        b.iter(|| sample.bootstrap(NRESAMPLES, |s| (s.mean(),)))
+                    },
+                );
             }
         }
-    }
+    };
 }
 
 mod bench {

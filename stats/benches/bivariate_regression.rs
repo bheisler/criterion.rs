@@ -10,9 +10,9 @@ use criterion::Criterion;
 macro_rules! bench {
     ($ty:ident) => {
         pub mod $ty {
-            use stats::bivariate::regression::{Slope, StraightLine};
-            use stats::bivariate::Data;
             use criterion::Criterion;
+            use stats::bivariate::Data;
+            use stats::bivariate::regression::{Slope, StraightLine};
 
             pub fn slope(c: &mut Criterion) {
                 let x = ::common_bench::vec::<$ty>();
@@ -20,13 +20,11 @@ macro_rules! bench {
 
                 c.bench_function(
                     &format!("bivariate_regression_slope_{}", stringify!($ty)),
-                    move |b|
-                    {
+                    move |b| {
                         let data = Data::new(&x, &y);
-                        b.iter(|| {
-                            Slope::fit(data)
-                        })
-                    });
+                        b.iter(|| Slope::fit(data))
+                    },
+                );
             }
 
             pub fn straight_line(c: &mut Criterion) {
@@ -37,13 +35,12 @@ macro_rules! bench {
                     &format!("bivariate_regression_straight_line_{}", stringify!($ty)),
                     move |b| {
                         let data = Data::new(&x, &y);
-                        b.iter(|| {
-                            StraightLine::fit(data)
-                        })
-                    });
+                        b.iter(|| StraightLine::fit(data))
+                    },
+                );
             }
         }
-    }
+    };
 }
 
 mod bench {

@@ -45,7 +45,6 @@ macro_rules! test {
                 }
             }
 
-
             quickcheck!{
                 fn slope(size: usize, start: usize,
                          offset: usize, nresamples: usize) -> TestResult {
@@ -72,7 +71,7 @@ macro_rules! test {
             }
 
         }
-    }
+    };
 }
 
 #[cfg(test)]

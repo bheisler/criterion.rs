@@ -1,6 +1,6 @@
+use float::Float;
 use rand::distributions::{IndependentSample, Range};
 use rand::{Rng, XorShiftRng};
-use float::Float;
 
 use bivariate::Data;
 

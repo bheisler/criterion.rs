@@ -10,9 +10,9 @@ mod common_bench;
 macro_rules! bench {
     ($ty:ident) => {
         pub mod $ty {
+            use criterion::Criterion;
             use stats::bivariate::Data;
             use stats::bivariate::regression::{Slope, StraightLine};
-            use criterion::Criterion;
 
             const NRESAMPLES: usize = 100_000;
             const SAMPLE_SIZE: usize = 100;
@@ -25,10 +25,9 @@ macro_rules! bench {
                     &format!("bivariate_bootstrap_straight_line_{}", stringify!($ty)),
                     move |b| {
                         let data = Data::new(&x, &y);
-                        b.iter(|| {
-                            data.bootstrap(NRESAMPLES, |d| (StraightLine::fit(d),))
-                        })
-                    });
+                        b.iter(|| data.bootstrap(NRESAMPLES, |d| (StraightLine::fit(d),)))
+                    },
+                );
             }
 
             pub fn slope(c: &mut Criterion) {
@@ -39,13 +38,12 @@ macro_rules! bench {
                     &format!("bivariate_bootstrap_slope_{}", stringify!($ty)),
                     move |b| {
                         let data = Data::new(&x, &y);
-                        b.iter(|| {
-                            data.bootstrap(NRESAMPLES, |d| (Slope::fit(d),))
-                        })
-                    });
+                        b.iter(|| data.bootstrap(NRESAMPLES, |d| (Slope::fit(d),)))
+                    },
+                );
             }
         }
-    }
+    };
 }
 
 mod bench {

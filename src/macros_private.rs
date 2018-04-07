@@ -3,7 +3,9 @@
 /// Logs an error, ignores an `Ok` value.
 macro_rules! log_if_err {
     ($x:expr) => {
-        let closure = || { try_else_return!($x); };
+        let closure = || {
+            try_else_return!($x);
+        };
         closure();
     };
 }
@@ -23,7 +25,7 @@ macro_rules! try_else_return {
                 ::error::log_error(&e);
                 let closure = $el;
                 return closure();
-            },
+            }
         }
     };
 }

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
-use rand::{thread_rng, Rand, Rng, XorShiftRng};
 use criterion::Criterion;
+use rand::{thread_rng, Rand, Rng, XorShiftRng};
 
 pub fn vec<T>() -> Vec<T>
 where

@@ -11,8 +11,8 @@ pub mod outliers;
 
 use float::Float;
 use num_cpus;
-use thread_scoped as thread;
 use std::cmp;
+use thread_scoped as thread;
 
 use tuple::{Tuple, TupledDistributionsBuilder};
 

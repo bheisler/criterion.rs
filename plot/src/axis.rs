@@ -4,8 +4,8 @@ use std::borrow::Cow;
 use std::iter::IntoIterator;
 
 use map;
-use {grid, Axis, Default, Display, Grid, Label, Range, Scale, ScaleFactor, Script, TicLabels};
 use traits::{Configure, Data, Set};
+use {grid, Axis, Default, Display, Grid, Label, Range, Scale, ScaleFactor, Script, TicLabels};
 
 /// Properties of the coordinate axes
 #[derive(Clone)]

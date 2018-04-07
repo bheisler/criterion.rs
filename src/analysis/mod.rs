@@ -1,29 +1,33 @@
-use std::path::Path;
 use std::collections::BTreeMap;
+use std::path::Path;
 
-use stats::{Distribution, Tails};
 use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
 use stats::univariate::Sample;
 use stats::univariate::outliers::tukey::{self, LabeledSample};
+use stats::{Distribution, Tails};
 
-use estimate::{Distributions, Estimates, Statistic};
-use routine::Routine;
 use benchmark::BenchmarkConfig;
+use estimate::{Distributions, Estimates, Statistic};
+use report::{BenchmarkId, ReportContext};
+use routine::Routine;
 use {ConfidenceInterval, Criterion, Estimate, Throughput};
 use {format, fs};
-use report::{BenchmarkId, ReportContext};
 
 macro_rules! elapsed {
-    ($msg:expr, $block:expr) => ({
+    ($msg:expr, $block:expr) => {{
         let start = ::std::time::Instant::now();
         let out = $block;
         let elapsed = &start.elapsed();
 
-        info!("{} took {}", $msg, format::time(::DurationExt::to_nanos(elapsed) as f64));
+        info!(
+            "{} took {}",
+            $msg,
+            format::time(::DurationExt::to_nanos(elapsed) as f64)
+        );
 
         out
-    })
+    }};
 }
 
 mod compare;

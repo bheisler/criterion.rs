@@ -1,5 +1,5 @@
-use criterion::Criterion;
 use criterion::Benchmark;
+use criterion::Criterion;
 use criterion::Throughput;
 use std::time::Duration;
 

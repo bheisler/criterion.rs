@@ -1,6 +1,6 @@
+use criterion::Benchmark;
 use criterion::Criterion;
 use criterion::Fun;
-use criterion::Benchmark;
 
 fn fibonacci_slow(n: u64) -> u64 {
     match n {
@@ -43,8 +43,8 @@ fn compare_fibonaccis_builder(c: &mut Criterion) {
 }
 
 fn compare_looped(c: &mut Criterion) {
-    use criterion::black_box;
     use criterion::ParameterizedBenchmark;
+    use criterion::black_box;
 
     c.bench(
         "small",

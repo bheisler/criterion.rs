@@ -1,8 +1,8 @@
 use std::fmt;
 use std::io::BufReader;
+use std::marker::PhantomData;
 use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, Stdio};
 use std::time::{Duration, Instant};
-use std::marker::PhantomData;
 
 use DurationExt;
 use routine::Routine;

@@ -1,13 +1,13 @@
-use std::time::Duration;
-use {Bencher, Criterion, DurationExt, PlotConfiguration, Throughput};
-use routine::{Function, Routine};
 use analysis;
-use std::cell::RefCell;
-use std::process::Command;
-use std::marker::Sized;
-use std::fmt::Debug;
 use program::CommandFactory;
 use report::{BenchmarkId, ReportContext};
+use routine::{Function, Routine};
+use std::cell::RefCell;
+use std::fmt::Debug;
+use std::marker::Sized;
+use std::process::Command;
+use std::time::Duration;
+use {Bencher, Criterion, DurationExt, PlotConfiguration, Throughput};
 
 /// Struct containing all of the configuration options for a benchmark.
 pub struct BenchmarkConfig {

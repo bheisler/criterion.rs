@@ -4,12 +4,12 @@ use stats::Distribution;
 use stats::univariate::Sample;
 use stats::univariate::{self, mixed};
 
+use benchmark::BenchmarkConfig;
+use error::Result;
 use estimate::Statistic;
 use estimate::{Distributions, Estimates};
-use benchmark::BenchmarkConfig;
-use {format, fs, Criterion, Estimate};
-use error::Result;
 use report::BenchmarkId;
+use {format, fs, Criterion, Estimate};
 
 // Common comparison procedure
 #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
@@ -18,18 +18,16 @@ pub(crate) fn common(
     avg_times: &Sample<f64>,
     config: &BenchmarkConfig,
     criterion: &Criterion,
-) -> Result<
-    (
-        f64,
-        Distribution<f64>,
-        Estimates,
-        Distributions,
-        Vec<f64>,
-        Vec<f64>,
-        Vec<f64>,
-        Estimates,
-    ),
-> {
+) -> Result<(
+    f64,
+    Distribution<f64>,
+    Estimates,
+    Distributions,
+    Vec<f64>,
+    Vec<f64>,
+    Vec<f64>,
+    Estimates,
+)> {
     let sample_dir = format!("{}/{}/base/sample.json", criterion.output_directory, id);
     let (iters, times): (Vec<f64>, Vec<f64>) = fs::load(&sample_dir)?;
 

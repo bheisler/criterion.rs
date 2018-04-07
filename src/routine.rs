@@ -1,10 +1,10 @@
-use std::time::{Duration, Instant};
 use benchmark::BenchmarkConfig;
+use std::time::{Duration, Instant};
 
-use {Bencher, Criterion, DurationExt};
 use program::Program;
-use std::marker::PhantomData;
 use report::{BenchmarkId, ReportContext};
+use std::marker::PhantomData;
+use {Bencher, Criterion, DurationExt};
 
 /// PRIVATE
 pub trait Routine<T> {

@@ -2,15 +2,15 @@ use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
 use stats::univariate::outliers::tukey::LabeledSample;
 
+use Estimate;
+use estimate::{Distributions, Estimates, Statistic};
 use format;
 use stats::Distribution;
 use stats::univariate::Sample;
-use estimate::{Distributions, Estimates, Statistic};
-use Estimate;
-use std::io::stdout;
-use std::io::Write;
 use std::cell::Cell;
 use std::fmt;
+use std::io::Write;
+use std::io::stdout;
 use {PlotConfiguration, Plotting, Throughput};
 
 pub(crate) struct ComparisonData {
@@ -133,7 +133,7 @@ pub struct ReportContext {
 pub(crate) trait Report {
     fn benchmark_start(&self, id: &BenchmarkId, context: &ReportContext);
     fn warmup(&self, id: &BenchmarkId, context: &ReportContext, warmup_ns: f64);
-    fn terminated(&self, id:&BenchmarkId, context: &ReportContext);
+    fn terminated(&self, id: &BenchmarkId, context: &ReportContext);
     fn analysis(&self, id: &BenchmarkId, context: &ReportContext);
     fn measurement_start(
         &self,

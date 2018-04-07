@@ -59,10 +59,10 @@ mod error;
 mod estimate;
 mod format;
 mod fs;
+mod macros;
 mod program;
 mod report;
 mod routine;
-mod macros;
 
 #[cfg(feature = "html_reports")]
 mod kde;
@@ -73,20 +73,20 @@ mod plot;
 #[cfg(feature = "html_reports")]
 mod html;
 
+use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::default::Default;
 use std::iter::IntoIterator;
 use std::process::Command;
 use std::time::{Duration, Instant};
 use std::{fmt, mem};
-use std::cell::RefCell;
-use std::collections::BTreeMap;
 
-use estimate::{Distributions, Estimates, Statistic};
-use report::{CliReport, Report, Reports};
 use benchmark::BenchmarkConfig;
 use benchmark::NamedRoutine;
-use routine::Function;
+use estimate::{Distributions, Estimates, Statistic};
 use plotting::Plotting;
+use report::{CliReport, Report, Reports};
+use routine::Function;
 
 #[cfg(feature = "html_reports")]
 use html::Html;

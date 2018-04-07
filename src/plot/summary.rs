@@ -1,6 +1,6 @@
+use std::cmp::Ordering;
 use std::path::PathBuf;
 use std::process::Child;
-use std::cmp::Ordering;
 
 use criterion_plot::prelude::*;
 use stats::univariate::Sample;
@@ -10,8 +10,8 @@ use report::{BenchmarkId, ValueType};
 
 use itertools::Itertools;
 
-use super::{debug_script, escape_underscores, scale_time};
 use super::{DARK_BLUE, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, POINT_SIZE, SIZE};
+use super::{debug_script, escape_underscores, scale_time};
 use AxisScale;
 
 const NUM_COLORS: usize = 8;
