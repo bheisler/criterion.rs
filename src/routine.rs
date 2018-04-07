@@ -1,19 +1,14 @@
 use std::time::{Duration, Instant};
-use benchmark::BenchmarkConfig;
+use BenchmarkConfig;
 
 use {Bencher, Criterion, DurationExt};
-use program::Program;
 use std::marker::PhantomData;
-use report::{BenchmarkId, ReportContext};
+use report::BenchmarkId;
 
 /// PRIVATE
 pub trait Routine<T> {
-    fn start(&mut self, parameter: &T) -> Option<Program>;
-
     /// PRIVATE
-    fn bench(&mut self, m: &mut Option<Program>, iters: &[u64], parameter: &T) -> Vec<f64>;
-    /// PRIVATE
-    fn warm_up(&mut self, m: &mut Option<Program>, how_long: Duration, parameter: &T)
+    fn warm_up(&mut self, how_long: Duration, parameter: &T)
         -> (u64, u64);
 
     /// PRIVATE
@@ -22,19 +17,16 @@ pub trait Routine<T> {
         id: &BenchmarkId,
         config: &BenchmarkConfig,
         criterion: &Criterion,
-        report_context: &ReportContext,
         parameter: &T,
-    ) -> (Box<[f64]>, Box<[f64]>) {
+    ) {
         let wu = config.warm_up_time;
         let m_ns = config.measurement_time.to_nanos();
 
         criterion
             .report
-            .warmup(id, report_context, wu.to_nanos() as f64);
+            .warmup(id, wu.to_nanos() as f64);
 
-        let mut m = self.start(parameter);
-
-        let (wu_elapsed, wu_iters) = self.warm_up(&mut m, wu, parameter);
+        let (wu_elapsed, wu_iters) = self.warm_up(wu, parameter);
 
         // Initial guess for the mean execution time
         let met = wu_elapsed as f64 / wu_iters as f64;
@@ -49,12 +41,7 @@ pub trait Routine<T> {
         let m_ns = total_runs as f64 * d as f64 * met;
         criterion
             .report
-            .measurement_start(id, report_context, n, m_ns, m_iters.iter().sum());
-        let m_elapsed = self.bench(&mut m, &m_iters, parameter);
-
-        let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();
-
-        (m_iters_f.into_boxed_slice(), m_elapsed.into_boxed_slice())
+            .measurement_start(id, n, m_ns, m_iters.iter().sum());
     }
 }
 
@@ -81,31 +68,8 @@ impl<F, T> Routine<T> for Function<F, T>
 where
     F: FnMut(&mut Bencher, &T),
 {
-    fn start(&mut self, _: &T) -> Option<Program> {
-        None
-    }
-
-    fn bench(&mut self, _: &mut Option<Program>, iters: &[u64], parameter: &T) -> Vec<f64> {
-        let f = &mut self.f;
-
-        let mut b = Bencher {
-            iters: 0,
-            elapsed: Duration::from_secs(0),
-        };
-
-        iters
-            .iter()
-            .map(|iters| {
-                b.iters = *iters;
-                (*f)(&mut b, parameter);
-                b.elapsed.to_nanos() as f64
-            })
-            .collect()
-    }
-
     fn warm_up(
         &mut self,
-        _: &mut Option<Program>,
         how_long: Duration,
         parameter: &T,
     ) -> (u64, u64) {
