@@ -205,6 +205,7 @@ impl Bencher {
     /// elapsed = Instant::now + iters * (routine + mem::drop(O) + Range::next)
     /// ```
     ///
+    #[inline(never)]
     pub fn iter<O, R>(&mut self, mut routine: R)
     where
         R: FnMut() -> O,
@@ -275,6 +276,7 @@ impl Bencher {
     /// ``` text
     /// elapsed = iters * (Instant::now + routine)
     /// ```
+    #[inline(never)]
     pub fn iter_with_setup<I, O, S, R>(&mut self, mut setup: S, mut routine: R)
     where
         S: FnMut() -> I,
@@ -325,6 +327,7 @@ impl Bencher {
     /// elapsed = Instant::now + iters * (routine + Vec::push + Range::next)
     /// ```
     ///
+    #[inline(never)]
     pub fn iter_with_large_drop<O, R>(&mut self, mut routine: R)
     where
         R: FnMut() -> O,
@@ -370,6 +373,7 @@ impl Bencher {
     /// ``` text
     /// elapsed = Instant::now + iters * (routine + vec::IntoIter::next)
     /// ```
+    #[inline(never)]
     pub fn iter_with_large_setup<I, S, R>(&mut self, mut setup: S, mut routine: R)
     where
         S: FnMut() -> I,
