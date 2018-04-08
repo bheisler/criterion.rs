@@ -47,7 +47,7 @@ macro_rules! bench {
                 name = benches;
                 config = ::common_bench::reduced_samples();
                 targets = call, map
-            };
+            }
         }
     };
 }

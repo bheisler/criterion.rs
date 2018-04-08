@@ -123,7 +123,7 @@ macro_rules! bench {
                     name = benches;
                     config = ::common_bench::reduced_samples();
                     targets = median_abs_dev, std_dev, var
-                };
+                }
             }
         }
     };
