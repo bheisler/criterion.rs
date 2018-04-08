@@ -104,10 +104,11 @@ macro_rules! bench {
             stat_none!($ty <- median_abs_dev, std_dev, var);
 
             criterion_group!(
-                                        name = benches;
-                                        config = ::common_bench::reduced_samples();
-                                        targets = iqr, max, mean, median, median_abs_dev_pct, min,
-                                                    std_dev_pct, sum, median_abs_dev, std_dev, var);
+                name = benches;
+                config = ::common_bench::reduced_samples();
+                targets = iqr, max, mean, median, median_abs_dev_pct, min,
+                            std_dev_pct, sum, median_abs_dev, std_dev, var
+            );
 
             pub mod fast {
                 use super::SampleExt;
@@ -119,9 +120,10 @@ macro_rules! bench {
                     (var, mean)
                 );
                 criterion_group!(
-                                            name = benches;
-                                            config = ::common_bench::reduced_samples();
-                                            targets = median_abs_dev, std_dev, var);
+                    name = benches;
+                    config = ::common_bench::reduced_samples();
+                    targets = median_abs_dev, std_dev, var
+                );
             }
         }
     };

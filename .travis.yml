@@ -57,9 +57,6 @@ matrix:
       env: COVERAGE=yes GNUPLOT=yes
       sudo: required
     - os: linux
-      env: RUSTFMT=yes
-      rust: nightly-2018-03-29
-    - os: linux
       env: DOCS=yes
     - os: linux
       env: BENCHMARK=yes
@@ -73,6 +70,9 @@ matrix:
     - os: osx
       env: GNUPLOT=yes
       rust: nightly
+#    - os: linux
+#      env: RUSTFMT=yes
+#      rust: nightly-2018-03-29
 
 before_script:
   - if [ "$DOCS" = "yes" ]; then
