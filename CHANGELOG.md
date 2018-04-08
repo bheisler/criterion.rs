@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Criterion.rs will now panic with a clear error message if the user attempts to run
+  a benchmark which doesn't call the `Bencher::iter` function or a related function,
+  rather than failing in an uncontrolled manner later.
+
+### Added
+- Added a `--measure-only` argument which causes the benchmark executable to run the
+  warmup and measurement and then move on to the next benchmark without analyzing or
+  saving data. This is useful to prevent Criterion.rs' analysis code from appearing
+  in profile data when profiling benchmarks.
 
 ## [0.2.2]
 ### Fixed
