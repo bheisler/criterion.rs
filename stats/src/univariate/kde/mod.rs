@@ -28,13 +28,13 @@ where
     A: 'a + Float,
     K: Kernel<A>,
 {
-    /// Creates a new kernel density estimator from the `sample`, using a kernel `k` and estimating
+    /// Creates a new kernel density estimator from the `sample`, using a kernel and estimating
     /// the bandwidth using the method `bw`
-    pub fn new(sample: &'a Sample<A>, k: K, bw: Bandwidth<A>) -> Kde<'a, A, K> {
+    pub fn new(sample: &'a Sample<A>, kernel: K, bw: Bandwidth<A>) -> Kde<'a, A, K> {
         Kde {
             bandwidth: bw.estimate(sample),
-            kernel: k,
-            sample: sample,
+            kernel,
+            sample,
         }
     }
 

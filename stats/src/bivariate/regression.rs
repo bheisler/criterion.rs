@@ -96,8 +96,8 @@ where
         let intercept = y_bar - slope * x_bar;
 
         StraightLine {
-            intercept: intercept,
-            slope: slope,
+            intercept,
+            slope,
         }
     }
 

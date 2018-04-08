@@ -144,7 +144,7 @@ where
 {
     pub fn new(f: F) -> CommandFactory<F, T> {
         CommandFactory {
-            f: f,
+            f,
             _phantom: PhantomData,
         }
     }

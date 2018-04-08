@@ -71,7 +71,7 @@ where
 {
     pub fn new(f: F) -> Function<F, T> {
         Function {
-            f: f,
+            f,
             _phantom: PhantomData,
         }
     }

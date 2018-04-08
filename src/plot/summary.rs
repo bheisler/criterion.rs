@@ -202,8 +202,8 @@ pub fn violin(
         f.plot(
             FilledCurve {
                 x: &**x,
-                y1: y1,
-                y2: y2,
+                y1,
+                y2,
             },
             |c| {
                 if is_first {

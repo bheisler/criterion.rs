@@ -89,28 +89,28 @@ pub(crate) fn common<T>(
         let result = compare::common(id, avg_times, config, criterion);
         match result {
             Ok((
-                t_val,
-                t_dist,
-                rel_est,
-                rel_dist,
-                base_iters,
-                base_times,
-                base_avg,
+                t_value,
+                t_distribution,
+                relative_estimates,
+                relative_distributions,
+                base_iter_counts,
+                base_sample_times,
+                base_avg_times,
                 base_estimates,
             )) => {
-                let p_value = t_dist.p_value(t_val, &Tails::Two);
+                let p_value = t_distribution.p_value(t_value, &Tails::Two);
                 Some(::report::ComparisonData {
-                    p_value: p_value,
-                    t_distribution: t_dist,
-                    t_value: t_val,
-                    relative_estimates: rel_est,
-                    relative_distributions: rel_dist,
+                    p_value,
+                    t_distribution,
+                    t_value,
+                    relative_estimates,
+                    relative_distributions,
                     significance_threshold: config.significance_level,
                     noise_threshold: config.noise_threshold,
-                    base_iter_counts: base_iters,
-                    base_sample_times: base_times,
-                    base_avg_times: base_avg,
-                    base_estimates: base_estimates,
+                    base_iter_counts,
+                    base_sample_times,
+                    base_avg_times,
+                    base_estimates,
                 })
             }
             Err(e) => {
@@ -127,9 +127,9 @@ pub(crate) fn common<T>(
         sample_times: Sample::new(&*times),
         avg_times: labeled_sample,
         absolute_estimates: estimates.clone(),
-        distributions: distributions,
+        distributions,
         comparison: compare_data,
-        throughput: throughput,
+        throughput,
     };
 
     criterion

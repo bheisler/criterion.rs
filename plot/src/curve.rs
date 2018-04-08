@@ -30,7 +30,7 @@ impl CurveDefault<Style> for Properties {
             linewidth: None,
             point_size: None,
             point_type: None,
-            style: style,
+            style,
         }
     }
 }

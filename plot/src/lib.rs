@@ -936,7 +936,7 @@ impl Plot {
         S: Script,
     {
         Plot {
-            data: data,
+            data,
             script: script.script(),
         }
     }

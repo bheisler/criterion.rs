@@ -28,7 +28,7 @@ impl ErrorBarDefault<Style> for Properties {
             linewidth: None,
             point_type: None,
             point_size: None,
-            style: style,
+            style,
         }
     }
 }

@@ -194,7 +194,7 @@ impl Report for Html {
             median: time_interval(&measurements.absolute_estimates[&Statistic::Median]),
             mad: time_interval(&measurements.absolute_estimates[&Statistic::MedianAbsDev]),
             std_dev: time_interval(&measurements.absolute_estimates[&Statistic::StdDev]),
-            throughput: throughput,
+            throughput,
 
             r2: ConfidenceInterval {
                 lower: format!(
@@ -551,7 +551,7 @@ impl Html {
             violin_plot: Some(violin_path),
             line_chart: line_path,
 
-            benchmarks: benchmarks,
+            benchmarks,
         };
 
         let text = self.handlebars

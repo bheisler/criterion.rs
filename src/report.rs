@@ -230,9 +230,9 @@ impl CliReport {
         verbose: bool,
     ) -> CliReport {
         CliReport {
-            enable_text_overwrite: enable_text_overwrite,
-            enable_text_coloring: enable_text_coloring,
-            verbose: verbose,
+            enable_text_overwrite,
+            enable_text_coloring,
+            verbose,
 
             last_line_len: Cell::new(0),
         }

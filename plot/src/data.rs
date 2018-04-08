@@ -42,18 +42,18 @@ impl Matrix {
     {
         let ncols = I::Item::ncols();
         let bytes_per_row = ncols * mem::size_of::<f64>();
-        let mut buffer = Vec::with_capacity(rows.size_hint().0 * bytes_per_row);
+        let mut bytes = Vec::with_capacity(rows.size_hint().0 * bytes_per_row);
 
         let mut nrows = 0;
         for row in rows {
             nrows += 1;
-            row.append_to(&mut buffer, scale);
+            row.append_to(&mut bytes, scale);
         }
 
         Matrix {
-            bytes: buffer,
-            ncols: ncols,
-            nrows: nrows,
+            bytes,
+            ncols,
+            nrows,
         }
     }
 

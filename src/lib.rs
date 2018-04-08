@@ -459,7 +459,7 @@ impl Default for Criterion {
                 significance_level: 0.05,
                 warm_up_time: Duration::new(3, 0),
             },
-            plotting: plotting,
+            plotting,
             filter: None,
             report: Box::new(Reports::new(reports)),
             output_directory: "target/criterion".to_owned(),
@@ -973,7 +973,7 @@ impl Estimate {
                             lower_bound: lb,
                             upper_bound: ub,
                         },
-                        point_estimate: point_estimate,
+                        point_estimate,
                         standard_error: distribution.std_dev(None),
                     },
                 )

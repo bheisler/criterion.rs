@@ -288,6 +288,6 @@ where
             q3 + k_m * iqr,
             q3 + k_s * iqr,
         ),
-        sample: sample,
+        sample,
     }
 }
