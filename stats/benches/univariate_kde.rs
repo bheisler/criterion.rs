@@ -44,9 +44,9 @@ macro_rules! bench {
             }
 
             criterion_group!(
-                        name = benches;
-                        config = ::common_bench::reduced_samples();
-                        targets = call, map);
+                                name = benches;
+                                config = ::common_bench::reduced_samples();
+                                targets = call, map);
         }
     };
 }

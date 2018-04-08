@@ -199,22 +199,15 @@ pub fn violin(
         let y1 = y.iter().map(|&y| i + y * 0.5);
         let y2 = y.iter().map(|&y| i - y * 0.5);
 
-        f.plot(
-            FilledCurve {
-                x: &**x,
-                y1,
-                y2,
-            },
-            |c| {
-                if is_first {
-                    is_first = false;
+        f.plot(FilledCurve { x: &**x, y1, y2 }, |c| {
+            if is_first {
+                is_first = false;
 
-                    c.set(DARK_BLUE).set(Label("PDF")).set(Opacity(0.25))
-                } else {
-                    c.set(DARK_BLUE).set(Opacity(0.25))
-                }
-            },
-        );
+                c.set(DARK_BLUE).set(Label("PDF")).set(Opacity(0.25))
+            } else {
+                c.set(DARK_BLUE).set(Opacity(0.25))
+            }
+        });
     }
     debug_script(&path, &f);
     f.set(Output(path)).draw().unwrap()

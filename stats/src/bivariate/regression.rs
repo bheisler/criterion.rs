@@ -95,10 +95,7 @@ where
 
         let intercept = y_bar - slope * x_bar;
 
-        StraightLine {
-            intercept,
-            slope,
-        }
+        StraightLine { intercept, slope }
     }
 
     /// Computes the goodness of fit (coefficient of determination) for this data set
