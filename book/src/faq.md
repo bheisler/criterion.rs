@@ -111,3 +111,23 @@ on modern CPU's. Regardless, Criterion.rs is able to accurately measure
 functions all the way down to single instructions. See the [Analysis
 Process](./analysis.md) page for more details on how Criterion.rs performs its
 measurements.
+
+### When Should I Use `criterion::black_box`?
+
+`black_box` is a function which prevents certain compiler optimizations. Benchmarks are often
+slightly artificial in nature and the compiler can take advantage of that to generate faster code
+when compiling the benchmarks than it would in real usage. In particular, it is common for
+benchmarked functions to be called with constant parameters, and in some cases rustc can
+evaluate the function entirely at compile time and replace the function call with a constant.
+This can produce unnaturally fast benchmarks that don't represent how some code would perform
+when called normally. Therefore, it's useful to black-box the constant input to prevent this
+optimization.
+
+However, you might have a function which you expect to be called with one or more constant
+parameters. In this case, you might want to write your benchmark to represent that scenario instead,
+and allow the compiler to optimize the constant parameters.
+
+For the most part, Criterion.rs handles this for you - if you use paramterized benchmarks, the
+parameters are automatically black-boxed by Criterion.rs so you don't need to do anything. If you're
+writing an un-parameterized benchmark of a function that takes an argument, however, this may be
+worth considering.
