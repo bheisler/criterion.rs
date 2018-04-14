@@ -40,10 +40,9 @@ fn fibonaccis(c: &mut Criterion) {
 Here, we create two benchmark functions which simply call our two Fibonacci implementations. Notice that the closure takes two arguments - b is the Bencher as in other examples, and i is the input parameter to be given to the benchmarked function.
 
 ```rust
-    let functions = vec!(fib_slow, fib_fast);
-    
-    c.bench_functions("Fibonacci", functions, &20);
-}
+let functions = vec!(fib_slow, fib_fast);
+
+c.bench_functions("Fibonacci", functions, &20);
 ```
 
 Finally, we construct a Vec of the benchmark functions and run the benchmark. This performs two benchmarks ("Fibonacci/Recursive" and "Fibonacci/Iterative") which individually behave the same as other benchmarks seen earlier. In addition to the usual set of plots generated for each individual benchmark, this will generate a set of summary plots at `.criterion/$BENCHMARK/Summary` highlighting the differences between the functions.
@@ -58,4 +57,13 @@ The [Violin Plot](https://en.wikipedia.org/wiki/Violin_plot) shows the median ti
 
 ![Line Chart](./user_guide/lines.svg)
 
-The line chart shows a comparison of the different functions as the input or input size increases.
+The line chart shows a comparison of the different functions as the input or input size increases, which can be enabled with ParameterizedBenchmark.
+
+```rust
+let parameters = vec![5, 10];
+let mut benchmark = ParameterizedBenchmark::new("print", |b, i| b.iter(|| print!("{}", i) ), parameters)
+.with_function("format", |b, i| b.iter(|| format!("{}", i)));
+
+c.bench("test_bench_param", benchmark);
+```
+    
