@@ -121,3 +121,4 @@ would only run benchmarks whose ID contains the string `fib_20`
 * To print more detailed output, use `cargo bench -- --verbose`
 * To disable colored output, use `cargo bench -- --color never`
 * To disable plot generation, use `cargo bench -- --noplot`
+* To only run the measurements, without saving, analyzing or plotting the results, use `cargo bench -- --measure-only`. This is useful when profiling the benchmarks, to reduce the amount of unrelated clutter in the profiling results.

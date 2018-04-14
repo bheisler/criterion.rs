@@ -127,7 +127,7 @@ However, you might have a function which you expect to be called with one or mor
 parameters. In this case, you might want to write your benchmark to represent that scenario instead,
 and allow the compiler to optimize the constant parameters.
 
-For the most part, Criterion.rs handles this for you - if you use paramterized benchmarks, the
+For the most part, Criterion.rs handles this for you - if you use parameterized benchmarks, the
 parameters are automatically black-boxed by Criterion.rs so you don't need to do anything. If you're
 writing an un-parameterized benchmark of a function that takes an argument, however, this may be
 worth considering.
