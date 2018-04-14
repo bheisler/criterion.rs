@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   warmup and measurement and then move on to the next benchmark without analyzing or
   saving data. This is useful to prevent Criterion.rs' analysis code from appearing
   in profile data when profiling benchmarks.
+- Added an index report file at "target/criterion/report/index.html" which links to
+  the other reports for easy navigation.
 
 ## [0.2.2]
 ### Fixed

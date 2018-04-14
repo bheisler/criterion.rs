@@ -3,7 +3,7 @@ use serde::de::DeserializeOwned;
 use serde_json;
 use std::fs::{self, File};
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use error::{AccessError, Result};
 
@@ -65,4 +65,18 @@ where
         })?;
 
     Ok(())
+}
+
+pub fn list_existing_reports<P>(directory: &P) -> Result<Vec<PathBuf>>
+where
+    P: AsRef<Path>,
+{
+    let mut paths = vec![];
+    for entry in fs::read_dir(directory)? {
+        let path = entry?.path().join("report");
+        if path.is_dir() && path.join("index.html").is_file() {
+            paths.push(path.to_owned());
+        }
+    }
+    Ok(paths)
 }

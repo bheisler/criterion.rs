@@ -376,6 +376,14 @@ fn test_output_files() {
         verify_svg(&dir, "report/violin.svg");
         verify_html(&dir, "report/index.html");
     }
+
+    short_benchmark(&tempdir).final_summary();
+
+    if short_benchmark(&tempdir).can_plot() && cfg!(feature = "html_reports") {
+        let dir = tempdir.path().to_owned();
+
+        verify_html(&dir, "report/index.html");
+    }
 }
 
 #[test]

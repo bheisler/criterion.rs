@@ -121,6 +121,10 @@ macro_rules! criterion_main {
             $(
                 $group();
             )+
+
+            criterion::Criterion::default()
+                .configure_from_args()
+                .final_summary();
         }
     }
 }

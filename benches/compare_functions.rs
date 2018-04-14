@@ -1,6 +1,6 @@
-use criterion::Benchmark;
 use criterion::Criterion;
 use criterion::Fun;
+use criterion::ParameterizedBenchmark;
 
 fn fibonacci_slow(n: u64) -> u64 {
     match n {
@@ -37,8 +37,11 @@ fn compare_fibonaccis(c: &mut Criterion) {
 fn compare_fibonaccis_builder(c: &mut Criterion) {
     c.bench(
         "Fibonacci2",
-        Benchmark::new("Recursive", |b| b.iter(|| fibonacci_slow(20)))
-            .with_function("Iterative", |b| b.iter(|| fibonacci_fast(20))),
+        ParameterizedBenchmark::new(
+            "Recursive",
+            |b, i| b.iter(|| fibonacci_slow(*i)),
+            vec![20u64, 21u64],
+        ).with_function("Iterative", |b, i| b.iter(|| fibonacci_fast(*i))),
     );
 }
 

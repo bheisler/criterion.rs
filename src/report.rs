@@ -150,6 +150,7 @@ pub(crate) trait Report {
         measurements: &MeasurementData,
     );
     fn summarize(&self, context: &ReportContext, all_ids: &[BenchmarkId]);
+    fn final_summary(&self, context: &ReportContext);
 }
 
 pub(crate) struct Reports {
@@ -212,6 +213,12 @@ impl Report for Reports {
     fn summarize(&self, context: &ReportContext, all_ids: &[BenchmarkId]) {
         for report in &self.reports {
             report.summarize(context, all_ids);
+        }
+    }
+
+    fn final_summary(&self, context: &ReportContext) {
+        for report in &self.reports {
+            report.final_summary(context);
         }
     }
 }
@@ -515,6 +522,7 @@ impl Report for CliReport {
     }
 
     fn summarize(&self, _: &ReportContext, _: &[BenchmarkId]) {}
+    fn final_summary(&self, _: &ReportContext) {}
 }
 
 enum ComparisonResult {

@@ -4,6 +4,7 @@ use stats::bivariate::regression::Slope;
 
 use Estimate;
 use criterion_plot::Size;
+use error::Result;
 use estimate::Statistic;
 use format;
 use fs;
@@ -61,7 +62,7 @@ struct IndividualBenchmark {
     path: String,
 }
 impl IndividualBenchmark {
-    fn new(path_prefix: &str, id: &BenchmarkId) -> IndividualBenchmark {
+    fn from_id(path_prefix: &str, id: &BenchmarkId) -> IndividualBenchmark {
         IndividualBenchmark {
             name: id.id().to_owned(),
             path: format!("{}/{}", path_prefix, id.id()),
@@ -114,6 +115,17 @@ struct Comparison {
     additional_plots: Vec<Plot>,
 }
 
+#[derive(Serialize)]
+struct IndexBenchmark {
+    name: String,
+    path: String,
+    sub_benchmarks: Vec<IndexBenchmark>,
+}
+#[derive(Serialize)]
+struct IndexContext {
+    benchmarks: Vec<IndexBenchmark>,
+}
+
 pub struct Html {
     handlebars: Handlebars,
 }
@@ -129,6 +141,9 @@ impl Html {
                 include_str!("summary_report.html.handlebars"),
             )
             .expect("Unable to parse summary report template.");
+        handlebars
+            .register_template_string("index", include_str!("index.html.handlebars"))
+            .expect("Unable to parse index report template.");
         Html { handlebars }
     }
 }
@@ -275,6 +290,59 @@ impl Report for Html {
             true,
         ));
         wait_on_gnuplot(all_plots)
+    }
+
+    fn final_summary(&self, report_context: &ReportContext) {
+        if !report_context.plotting.is_enabled() {
+            return;
+        }
+        //TODO: Once criterion.rs moves to a proc-macro test harness, we should ensure that we have
+        //all of the test IDs together in one place so we don't have to scan the file system to
+        //generate this index.
+
+        let output_directory = &report_context.output_directory;
+
+        fn path_to_individual_benchmark(
+            path: &Path,
+            output_directory: &str,
+        ) -> Result<IndexBenchmark> {
+            let base_dir = path.parent().unwrap();
+            let name = base_dir
+                .file_name()
+                .map(|name| name.to_string_lossy())
+                .unwrap();
+            let sub_benchmarks = fs::list_existing_reports(&base_dir)?
+                .into_iter()
+                .map(|sub_path| path_to_individual_benchmark(&sub_path, output_directory))
+                .collect::<Result<Vec<_>>>()?;
+            Ok(IndexBenchmark {
+                name: name.to_string(),
+                path: path.join("index.html")
+                    .strip_prefix(output_directory)?
+                    .to_string_lossy()
+                    .to_string(),
+                sub_benchmarks,
+            })
+        }
+
+        let reports = try_else_return!(fs::list_existing_reports(&output_directory));
+        let benchmarks = reports
+            .iter()
+            .map(|path| path_to_individual_benchmark(path, output_directory))
+            .collect::<Result<Vec<_>>>();
+        let benchmarks = try_else_return!(benchmarks);
+
+        try_else_return!(fs::mkdirp(&format!("{}/report/", output_directory)));
+
+        let context = IndexContext { benchmarks };
+
+        let text = self.handlebars
+            .render("index", &context)
+            .expect("Failed to render index template");
+        try_else_return!(fs::save_string(
+            &text,
+            &format!("{}/report/index.html", output_directory),
+        ));
     }
 }
 impl Html {
@@ -537,9 +605,9 @@ impl Html {
             }
         }
 
-        let path_prefix = if full_summary { "../.." } else { "../../../.." };
+        let path_prefix = if full_summary { "../.." } else { "../../.." };
         let benchmarks = data.iter()
-            .map(|&&(ref id, _)| IndividualBenchmark::new(path_prefix, id))
+            .map(|&&(ref id, _)| IndividualBenchmark::from_id(path_prefix, id))
             .collect();
 
         let context = SummaryContext {

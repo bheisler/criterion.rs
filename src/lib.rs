@@ -85,7 +85,7 @@ use benchmark::BenchmarkConfig;
 use benchmark::NamedRoutine;
 use estimate::{Distributions, Estimates, Statistic};
 use plotting::Plotting;
-use report::{CliReport, Report, Reports};
+use report::{CliReport, Report, ReportContext, Reports};
 use routine::Function;
 
 #[cfg(feature = "html_reports")]
@@ -626,6 +626,17 @@ impl Criterion {
         self.output_directory = path.to_string_lossy().into_owned();
 
         self
+    }
+
+    /// Generate the final summary at the end of a run.
+    #[doc(hidden)]
+    pub fn final_summary(&self) {
+        let report_context = ReportContext {
+            output_directory: self.output_directory.clone(),
+            plotting: self.plotting,
+            plot_config: PlotConfiguration::default(),
+        };
+        self.report.final_summary(&report_context);
     }
 
     /// Configure this criterion struct based on the command-line arguments to
