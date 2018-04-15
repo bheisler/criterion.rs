@@ -5,10 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.2.3]
 ### Fixed
 - Criterion.rs will now panic with a clear error message if the user attempts to run
   a benchmark which doesn't call the `Bencher::iter` function or a related function,
   rather than failing in an uncontrolled manner later.
+- Fixed broken links in some more summary reports.
 
 ### Added
 - Added a `--measure-only` argument which causes the benchmark executable to run the
@@ -119,3 +122,4 @@ more details
 [0.2.0]: https://github.com/japaric/criterion.rs/compare/0.1.2...0.2.0
 [0.2.1]: https://github.com/japaric/criterion.rs/compare/0.2.0...0.2.1
 [0.2.2]: https://github.com/japaric/criterion.rs/compare/0.2.1...0.2.2
+[0.2.3]: https://github.com/japaric/criterion.rs/compare/0.2.2...0.2.3
