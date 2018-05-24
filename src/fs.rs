@@ -1,7 +1,7 @@
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json;
-use std::fs::{self, File};
+use std::fs::{self, File, OpenOptions};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
@@ -21,6 +21,10 @@ where
     let result: A = serde_json::from_str(string.as_str())?;
 
     Ok(result)
+}
+
+pub fn append<P: AsRef<Path>>(path: P) -> Result<File> {
+    Ok(OpenOptions::new().append(true).open(path)?)
 }
 
 pub fn mkdirp<P>(path: &P) -> Result<()>

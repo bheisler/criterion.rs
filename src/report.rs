@@ -131,6 +131,7 @@ pub struct ReportContext {
 }
 
 pub(crate) trait Report {
+    fn report_init(&self, _context: &ReportContext) {}
     fn benchmark_start(&self, id: &BenchmarkId, context: &ReportContext);
     fn warmup(&self, id: &BenchmarkId, context: &ReportContext, warmup_ns: f64);
     fn terminated(&self, id: &BenchmarkId, context: &ReportContext);
@@ -162,6 +163,12 @@ impl Reports {
     }
 }
 impl Report for Reports {
+    fn report_init(&self, context: &ReportContext) {
+        for report in &self.reports {
+            report.report_init(context);
+        }
+    }
+
     fn benchmark_start(&self, id: &BenchmarkId, context: &ReportContext) {
         for report in &self.reports {
             report.benchmark_start(id, context);

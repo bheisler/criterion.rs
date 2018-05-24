@@ -30,6 +30,9 @@ extern crate serde;
 extern crate serde_json;
 extern crate simplelog;
 
+#[cfg(feature = "csv_reports")]
+extern crate csv;
+
 #[cfg(feature = "html_reports")]
 extern crate criterion_plot;
 
@@ -73,6 +76,9 @@ mod plot;
 #[cfg(feature = "html_reports")]
 mod html;
 
+#[cfg(feature = "csv_reports")]
+mod csv_reports;
+
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::default::Default;
@@ -90,6 +96,9 @@ use routine::Function;
 
 #[cfg(feature = "html_reports")]
 use html::Html;
+
+#[cfg(feature = "csv_reports")]
+use csv_reports::CsvReport;
 
 pub use benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
 
@@ -453,6 +462,11 @@ impl Default for Criterion {
             reports.push(Box::new(Html::new()));
         }
 
+        #[cfg(feature = "csv_reports")]
+        {
+            reports.push(Box::new(CsvReport::new()));
+        }
+
         Criterion {
             config: BenchmarkConfig {
                 confidence_level: 0.95,
@@ -722,6 +736,13 @@ scripts alongside the generated plots.
         {
             if !self.measure_only {
                 reports.push(Box::new(Html::new()));
+            }
+        }
+
+        #[cfg(feature = "csv_reports")]
+        {
+            if !self.measure_only {
+                reports.push(Box::new(CsvReport::new()));
             }
         }
 

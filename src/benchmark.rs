@@ -366,6 +366,7 @@ impl BenchmarkDefinition for Benchmark {
         let mut all_ids = vec![];
         let mut any_matched = false;
 
+        c.report.report_init(&report_context);
         for routine in self.routines {
             let function_id = if num_routines == 1 && group_id == routine.id {
                 None

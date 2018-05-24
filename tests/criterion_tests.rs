@@ -340,6 +340,8 @@ fn test_output_files() {
         verify_file(dir, path);
     }
 
+    verify_file(&tempdir.path().to_path_buf(), "benchmark-raw.csv");
+
     for x in 0..2 {
         let dir = tempdir.path().join(format!("test_output/output_{}", x + 1));
 
