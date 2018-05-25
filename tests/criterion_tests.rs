@@ -340,6 +340,7 @@ fn test_output_files() {
         verify_file(dir, path);
     }
 
+    #[cfg(feature = "csv_reports")]
     verify_file(&tempdir.path().to_path_buf(), "benchmark-raw.csv");
 
     for x in 0..2 {
