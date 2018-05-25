@@ -38,8 +38,8 @@ impl Report for CsvReport {
         for avg_time in measurements.avg_times.as_slice() {
             let write_res = wtr.write_record(&[
                 id.group_id.as_str(),
-                &id.function_id.as_ref().map_or("", String::as_str),
-                &id.value_str.as_ref().map_or("", String::as_str),
+                id.function_id.as_ref().map_or("", String::as_str),
+                id.value_str.as_ref().map_or("", String::as_str),
                 &avg_time.to_string(),
             ]);
 
