@@ -25,6 +25,7 @@ serde_json = "1.0"
 serde_derive = "1.0"
 atty = "0.2"
 clap = "2.29"
+csv = { version = "1", optional = true }
 handlebars = { version = "0.32", optional = true }
 
 [dev-dependencies]
@@ -40,7 +41,8 @@ maintenance = { status = "passively-maintained" }
 [features]
 real_blackbox = []
 html_reports = ["handlebars", "criterion-plot"]
-default = ["html_reports"]
+csv_reports = ["csv"]
+default = ["html_reports", "csv_reports"]
 
 [workspace]
 

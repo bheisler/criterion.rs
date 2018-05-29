@@ -358,6 +358,7 @@ impl BenchmarkDefinition for Benchmark {
             output_directory: c.output_directory.clone(),
             plotting: c.plotting,
             plot_config: self.config.plot_config.clone(),
+            module: c.module.clone(),
         };
 
         let config = self.config.to_complete(&c.config);
@@ -366,6 +367,7 @@ impl BenchmarkDefinition for Benchmark {
         let mut all_ids = vec![];
         let mut any_matched = false;
 
+        c.report.report_init(&report_context);
         for routine in self.routines {
             let function_id = if num_routines == 1 && group_id == routine.id {
                 None
@@ -584,6 +586,7 @@ where
             output_directory: c.output_directory.clone(),
             plotting: c.plotting,
             plot_config: self.config.plot_config.clone(),
+            module: c.module.clone(),
         };
 
         let config = self.config.to_complete(&c.config);
@@ -594,6 +597,7 @@ where
 
         let mut any_matched = false;
 
+        c.report.report_init(&report_context);
         for routine in self.routines {
             for value in &self.values {
                 let function_id = if num_routines == 1 && group_id == routine.id {

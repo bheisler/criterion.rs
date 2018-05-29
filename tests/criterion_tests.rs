@@ -28,6 +28,7 @@ fn temp_dir() -> TempDir {
 fn short_benchmark(dir: &TempDir) -> Criterion {
     Criterion::default()
         .output_directory(dir.path())
+        .with_module("test-criterion")
         .warm_up_time(Duration::from_millis(250))
         .measurement_time(Duration::from_millis(500))
         .nresamples(1000)
@@ -339,6 +340,9 @@ fn test_output_files() {
     fn verify_html(dir: &PathBuf, path: &str) {
         verify_file(dir, path);
     }
+
+    #[cfg(feature = "csv_reports")]
+    verify_file(&tempdir.path().to_path_buf(), "test-criterion-raw.csv");
 
     for x in 0..2 {
         let dir = tempdir.path().join(format!("test_output/output_{}", x + 1));

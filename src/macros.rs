@@ -72,7 +72,7 @@ macro_rules! criterion_group {
     ($name:ident, $( $target:path ),+ $(,)*) => {
         criterion_group!{
             name = $name;
-            config = Criterion::default();
+            config = Criterion::default().with_module(module_path!());
             targets = $( $target ),+
         }
     }
@@ -123,6 +123,7 @@ macro_rules! criterion_main {
             )+
 
             criterion::Criterion::default()
+                .with_module(module_path!())
                 .configure_from_args()
                 .final_summary();
         }
