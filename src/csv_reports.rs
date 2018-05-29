@@ -14,7 +14,16 @@ impl CsvReport {
 
 impl Report for CsvReport {
     fn report_init(&self, report_context: &ReportContext) {
-        let path = Path::new(&report_context.output_directory).join("benchmark-raw.csv");
+        let parent = Path::new(&report_context.output_directory);
+        try_else_return!(fs::mkdirp(&parent));
+
+        let path = parent.join(&format!(
+            "{}-raw.csv",
+            report_context
+                .module
+                .as_ref()
+                .map_or("benchmark", String::as_str)
+        ));
         try_else_return!(fs::save_string("group,function,parameter,elapsed\n", &path));
     }
 
@@ -31,7 +40,13 @@ impl Report for CsvReport {
         report_context: &ReportContext,
         measurements: &MeasurementData,
     ) {
-        let path = Path::new(&report_context.output_directory).join("benchmark-raw.csv");
+        let path = Path::new(&report_context.output_directory).join(&format!(
+            "{}-raw.csv",
+            report_context
+                .module
+                .as_ref()
+                .map_or("benchmark", String::as_str)
+        ));
         let output = try_else_return!(fs::append(path));
         let mut wtr = Writer::from_writer(output);
 

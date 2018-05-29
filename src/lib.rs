@@ -426,6 +426,7 @@ pub struct Criterion {
     config: BenchmarkConfig,
     plotting: Plotting,
     filter: Option<String>,
+    module: Option<String>,
     report: Box<Report>,
     output_directory: String,
     measure_only: bool,
@@ -479,6 +480,7 @@ impl Default for Criterion {
             },
             plotting,
             filter: None,
+            module: None,
             report: Box::new(Reports::new(reports)),
             output_directory: "target/criterion".to_owned(),
             measure_only: false,
@@ -626,6 +628,13 @@ impl Criterion {
         }
     }
 
+    /// Sets the name of the module being benchmarked
+    pub fn with_module<S: Into<String>>(mut self, module: S) -> Criterion {
+        self.module = Some(module.into());
+
+        self
+    }
+
     /// Filters the benchmarks. Only benchmarks with names that contain the
     /// given string will be executed.
     pub fn with_filter<S: Into<String>>(mut self, filter: S) -> Criterion {
@@ -649,6 +658,7 @@ impl Criterion {
             output_directory: self.output_directory.clone(),
             plotting: self.plotting,
             plot_config: PlotConfiguration::default(),
+            module: self.module.clone(),
         };
         self.report.final_summary(&report_context);
     }

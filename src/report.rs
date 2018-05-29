@@ -128,6 +128,7 @@ pub struct ReportContext {
     pub output_directory: String,
     pub plotting: Plotting,
     pub plot_config: PlotConfiguration,
+    pub module: Option<String>,
 }
 
 pub(crate) trait Report {
