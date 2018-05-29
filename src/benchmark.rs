@@ -597,6 +597,7 @@ where
 
         let mut any_matched = false;
 
+        c.report.report_init(&report_context);
         for routine in self.routines {
             for value in &self.values {
                 let function_id = if num_routines == 1 && group_id == routine.id {
