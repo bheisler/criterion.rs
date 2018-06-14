@@ -7,11 +7,13 @@ extern crate walkdir;
 use criterion::{Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
 use serde_json::value::Value;
 use std::cell::RefCell;
+use std::cmp::max;
 use std::fs::File;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::rc::Rc;
 use std::time::Duration;
+use std::time::SystemTime;
 use tempdir::TempDir;
 use walkdir::WalkDir;
 
@@ -105,6 +107,46 @@ fn test_without_plots() {
             entry.unwrap().file_name()
         );
     }
+}
+
+#[test]
+fn test_without_overwrite() {
+    // Seed the directory with previous results
+    let dir = temp_dir();
+    short_benchmark(&dir).bench_function("test_without_overwrite", |b| b.iter(|| 10));
+
+    let mut newest_update: Option<SystemTime> = None;
+
+    for entry in WalkDir::new(dir.path().join("test_without_overwrite")) {
+        let entry = entry.ok().unwrap();
+        let modified = entry.metadata().unwrap().modified().unwrap();
+        newest_update = match newest_update {
+            Some(latest) => Some(max(latest, modified)),
+            None => Some(modified),
+        };
+    }
+
+    short_benchmark(&dir)
+        .without_overwrite()
+        .bench_function("test_without_overwrite", |b| b.iter(|| 10));
+
+    let mut found_modified = false;
+    for entry in WalkDir::new(dir.path().join("test_without_overwrite")) {
+        let entry = entry.ok().unwrap();
+        let path = entry.path().to_owned();
+        let modified = entry.metadata().unwrap().modified().unwrap();
+        found_modified = (modified == newest_update.unwrap()) || found_modified;
+        if modified > newest_update.unwrap() {
+            panic!(format!(
+                "found modified file with disabled overwrite: {:?}",
+                path
+            ))
+        }
+    }
+    assert!(
+        found_modified,
+        "failed to find file with known modification time"
+    );
 }
 
 #[test]

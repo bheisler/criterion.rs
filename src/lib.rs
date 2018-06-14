@@ -420,6 +420,7 @@ pub struct Criterion {
     report: Box<Report>,
     output_directory: String,
     measure_only: bool,
+    no_overwrite: bool,
 }
 
 impl Default for Criterion {
@@ -468,6 +469,7 @@ impl Default for Criterion {
             report: Box::new(Reports::new(reports)),
             output_directory: "target/criterion".to_owned(),
             measure_only: false,
+            no_overwrite: false,
         }
     }
 }
@@ -620,6 +622,23 @@ impl Criterion {
         self
     }
 
+    /// Disables writing over previous results.
+    pub fn without_overwrite(mut self) -> Criterion {
+        self.no_overwrite = true;
+        self
+    }
+
+    /// Enables writing over previous results if previously disabled.
+    pub fn with_overwrite(mut self) -> Criterion {
+        self.no_overwrite = false;
+        self
+    }
+
+    /// Checks if overwriting previous results is possible
+    pub fn can_overwrite(&self) -> bool {
+        !self.no_overwrite
+    }
+
     /// Set the output directory (currently for testing only)
     #[doc(hidden)]
     pub fn output_directory(mut self, path: &std::path::Path) -> Criterion {
@@ -635,6 +654,7 @@ impl Criterion {
             output_directory: self.output_directory.clone(),
             plotting: self.plotting,
             plot_config: PlotConfiguration::default(),
+            no_overwrite: self.no_overwrite,
         };
         self.report.final_summary(&report_context);
     }
@@ -666,6 +686,9 @@ impl Criterion {
             .arg(Arg::with_name("measure-only")
                 .long("measure-only")
                 .help("Only perform measurements; do no analysis or storage of results. This is useful eg. when profiling the benchmarks, to reduce clutter in the profiling data."))
+            .arg(Arg::with_name("no-overwrite")
+                .long("no-overwrite")
+                .help("Perform measurements and do analysis; do not store results. This is useful eg. when iterating against a baseline measurement."))
             //Ignored but always passed to benchmark executables
             .arg(Arg::with_name("bench")
                 .hidden(true)
@@ -718,6 +741,7 @@ scripts alongside the generated plots.
         )));
 
         self.measure_only = matches.is_present("measure-only");
+        self.no_overwrite = matches.is_present("no-overwrite");
         #[cfg(feature = "html_reports")]
         {
             if !self.measure_only {

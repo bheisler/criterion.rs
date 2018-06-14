@@ -54,8 +54,6 @@ pub(crate) fn common<T>(
 
     criterion.report.analysis(id, report_context);
 
-    rename_new_dir_to_base(id.id(), &criterion.output_directory);
-
     let avg_times = iters
         .iter()
         .zip(times.iter())
@@ -63,27 +61,36 @@ pub(crate) fn common<T>(
         .collect::<Vec<f64>>();
     let avg_times = Sample::new(&avg_times);
 
-    log_if_err!(fs::mkdirp(&format!(
-        "{}/{}/new",
-        criterion.output_directory, id
-    )));
-
     let data = Data::new(&iters, &times);
-    let labeled_sample = outliers(id, &criterion.output_directory, avg_times);
+    let labeled_sample = outliers(avg_times);
     let (distribution, slope) = regression(data, config);
     let (mut distributions, mut estimates) = estimates(avg_times, config);
 
     estimates.insert(Statistic::Slope, slope);
     distributions.insert(Statistic::Slope, distribution);
 
-    log_if_err!(fs::save(
-        &(data.x().as_slice(), data.y().as_slice()),
-        &format!("{}/{}/new/sample.json", criterion.output_directory, id),
-    ));
-    log_if_err!(fs::save(
-        &estimates,
-        &format!("{}/{}/new/estimates.json", criterion.output_directory, id)
-    ));
+    if !report_context.no_overwrite {
+        rename_new_dir_to_base(id.id(), &criterion.output_directory);
+
+        log_if_err!(fs::mkdirp(&format!(
+            "{}/{}/new",
+            criterion.output_directory, id
+        )));
+
+        log_if_err!(fs::save(
+            &labeled_sample.fences(),
+            &format!("{}/{}/new/tukey.json", &criterion.output_directory, id)
+        ));
+
+        log_if_err!(fs::save(
+            &(data.x().as_slice(), data.y().as_slice()),
+            &format!("{}/{}/new/sample.json", criterion.output_directory, id),
+        ));
+        log_if_err!(fs::save(
+            &estimates,
+            &format!("{}/{}/new/estimates.json", criterion.output_directory, id)
+        ));
+    }
 
     let compare_data = if base_dir_exists(id, &criterion.output_directory) {
         let result = compare::common(id, avg_times, config, criterion);
@@ -169,16 +176,8 @@ fn regression(data: Data<f64, f64>, config: &BenchmarkConfig) -> (Distribution<f
 }
 
 // Classifies the outliers in the sample
-fn outliers<'a>(
-    id: &BenchmarkId,
-    output_directory: &str,
-    avg_times: &'a Sample<f64>,
-) -> LabeledSample<'a, f64> {
+fn outliers<'a>(avg_times: &'a Sample<f64>) -> LabeledSample<'a, f64> {
     let sample = tukey::classify(avg_times);
-    log_if_err!(fs::save(
-        &sample.fences(),
-        &format!("{}/{}/new/tukey.json", output_directory, id)
-    ));
     sample
 }
 

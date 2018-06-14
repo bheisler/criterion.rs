@@ -159,7 +159,7 @@ impl Report for Html {
         report_context: &ReportContext,
         measurements: &MeasurementData,
     ) {
-        if !report_context.plotting.is_enabled() {
+        if !report_context.plotting.is_enabled() || report_context.no_overwrite {
             return;
         }
 
@@ -250,7 +250,7 @@ impl Report for Html {
     }
 
     fn summarize(&self, context: &ReportContext, all_ids: &[BenchmarkId]) {
-        if !context.plotting.is_enabled() {
+        if !context.plotting.is_enabled() || context.no_overwrite {
             return;
         }
 
@@ -293,7 +293,7 @@ impl Report for Html {
     }
 
     fn final_summary(&self, report_context: &ReportContext) {
-        if !report_context.plotting.is_enabled() {
+        if !report_context.plotting.is_enabled() || report_context.no_overwrite {
             return;
         }
         //TODO: Once criterion.rs moves to a proc-macro test harness, we should ensure that we have
