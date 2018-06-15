@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Added a `--no-overwrite` argument which causes the benchmark executable to run
+  the  warmup, measurement, and analysis then move on to the next benchmark without
+  saving data. This is useful when iterating against a baseline
+  (eg. comparing a feature branch to the commit it branches off master)
 
 ## [0.2.3]
 ### Fixed

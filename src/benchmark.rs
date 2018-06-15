@@ -358,6 +358,7 @@ impl BenchmarkDefinition for Benchmark {
             output_directory: c.output_directory.clone(),
             plotting: c.plotting,
             plot_config: self.config.plot_config.clone(),
+            no_overwrite: c.no_overwrite,
         };
 
         let config = self.config.to_complete(&c.config);
@@ -584,6 +585,7 @@ where
             output_directory: c.output_directory.clone(),
             plotting: c.plotting,
             plot_config: self.config.plot_config.clone(),
+            no_overwrite: c.no_overwrite,
         };
 
         let config = self.config.to_complete(&c.config);
