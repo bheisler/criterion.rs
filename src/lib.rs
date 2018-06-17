@@ -399,6 +399,16 @@ impl Bencher {
     }
 }
 
+/// Baseline describes how the baseline_directory is handled.
+pub enum Baseline {
+    /// Compare ensures a previous saved version of the baseline
+    /// exists and runs comparison against that.
+    Compare,
+    /// Save writes the benchmark results to the baseline directory,
+    /// overwriting any results that were previously there.
+    Save,
+}
+
 /// The benchmark manager
 ///
 /// `Criterion` lets you configure and execute benchmarks
@@ -419,6 +429,8 @@ pub struct Criterion {
     filter: Option<String>,
     report: Box<Report>,
     output_directory: String,
+    baseline_directory: String,
+    baseline: Baseline,
     measure_only: bool,
 }
 
@@ -466,6 +478,8 @@ impl Default for Criterion {
             plotting,
             filter: None,
             report: Box::new(Reports::new(reports)),
+            baseline_directory: "base".to_owned(),
+            baseline: Baseline::Save,
             output_directory: "target/criterion".to_owned(),
             measure_only: false,
         }
@@ -612,6 +626,20 @@ impl Criterion {
         }
     }
 
+    /// Names an explicit baseline and enables overwriting the previous results.
+    pub fn save_baseline(mut self, baseline: String) -> Criterion {
+        self.baseline_directory = baseline;
+        self.baseline = Baseline::Save;
+        self
+    }
+
+    /// Names an explicit baseline and disables overwriting the previous results.
+    pub fn retain_baseline(mut self, baseline: String) -> Criterion {
+        self.baseline_directory = baseline;
+        self.baseline = Baseline::Compare;
+        self
+    }
+
     /// Filters the benchmarks. Only benchmarks with names that contain the
     /// given string will be executed.
     pub fn with_filter<S: Into<String>>(mut self, filter: S) -> Criterion {
@@ -663,6 +691,17 @@ impl Criterion {
                 .short("n")
                 .long("noplot")
                 .help("Disable plot and HTML generation."))
+            .arg(Arg::with_name("save-baseline")
+                .short("s")
+                .long("save-baseline")
+                .default_value("base")
+                .help("Save results under a named baseline."))
+            .arg(Arg::with_name("baseline")
+                .short("b")
+                .long("baseline")
+                .takes_value(true)
+                .conflicts_with("save-baseline")
+                .help("Compare to a named baseline."))
             .arg(Arg::with_name("measure-only")
                 .long("measure-only")
                 .help("Only perform measurements; do no analysis or storage of results. This is useful eg. when profiling the benchmarks, to reduce clutter in the profiling data."))
@@ -708,6 +747,15 @@ scripts alongside the generated plots.
                 Plotting::NotAvailable => {}
                 _ => self.plotting = Plotting::Disabled,
             }
+        }
+
+        if let Some(dir) = matches.value_of("save-baseline") {
+            self.baseline = Baseline::Save;
+            self.baseline_directory = dir.to_owned()
+        }
+        if let Some(dir) = matches.value_of("baseline") {
+            self.baseline = Baseline::Compare;
+            self.baseline_directory = dir.to_owned();
         }
 
         let mut reports: Vec<Box<Report>> = vec![];

@@ -11,7 +11,7 @@ use benchmark::BenchmarkConfig;
 use estimate::{Distributions, Estimates, Statistic};
 use report::{BenchmarkId, ReportContext};
 use routine::Routine;
-use {ConfidenceInterval, Criterion, Estimate, Throughput};
+use {Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
 use {format, fs};
 
 macro_rules! elapsed {
@@ -44,6 +44,19 @@ pub(crate) fn common<T>(
 ) {
     criterion.report.benchmark_start(id, report_context);
 
+    if let Baseline::Compare = criterion.baseline {
+        if !base_dir_exists(
+            id,
+            &criterion.baseline_directory,
+            &criterion.output_directory,
+        ) {
+            panic!(format!(
+                "Baseline '{base}' must exist before comparison is allowed; try --save-baseline {base}",
+                base=criterion.baseline_directory,
+            ));
+        }
+    }
+
     let (iters, times) = routine.sample(id, config, criterion, report_context, parameter);
 
     // In profiling mode, skip all of the analysis.
@@ -53,8 +66,6 @@ pub(crate) fn common<T>(
     }
 
     criterion.report.analysis(id, report_context);
-
-    rename_new_dir_to_base(id.id(), &criterion.output_directory);
 
     let avg_times = iters
         .iter()
@@ -85,7 +96,11 @@ pub(crate) fn common<T>(
         &format!("{}/{}/new/estimates.json", criterion.output_directory, id)
     ));
 
-    let compare_data = if base_dir_exists(id, &criterion.output_directory) {
+    let compare_data = if base_dir_exists(
+        id,
+        &criterion.baseline_directory,
+        &criterion.output_directory,
+    ) {
         let result = compare::common(id, avg_times, config, criterion);
         match result {
             Ok((
@@ -135,10 +150,18 @@ pub(crate) fn common<T>(
     criterion
         .report
         .measurement_complete(id, report_context, &measurement_data);
+
+    if let Baseline::Save = criterion.baseline {
+        copy_new_dir_to_base(
+            id.id(),
+            &criterion.baseline_directory,
+            &criterion.output_directory,
+        );
+    }
 }
 
-fn base_dir_exists(id: &BenchmarkId, output_directory: &str) -> bool {
-    Path::new(&format!("{}/{}/base", output_directory, id)).exists()
+fn base_dir_exists(id: &BenchmarkId, baseline: &str, output_directory: &str) -> bool {
+    Path::new(&format!("{}/{}/{}", output_directory, id, baseline)).exists()
 }
 
 // Performs a simple linear regression on the sample
@@ -219,15 +242,29 @@ fn estimates(avg_times: &Sample<f64>, config: &BenchmarkConfig) -> (Distribution
     (distributions, estimates)
 }
 
-fn rename_new_dir_to_base(id: &str, output_directory: &str) {
+fn copy_new_dir_to_base(id: &str, baseline: &str, output_directory: &str) {
     let root_dir = Path::new(output_directory).join(id);
-    let base_dir = root_dir.join("base");
+    let base_dir = root_dir.join(baseline);
     let new_dir = root_dir.join("new");
 
-    if base_dir.exists() {
-        try_else_return!(fs::rmrf(&base_dir));
-    }
-    if new_dir.exists() {
-        try_else_return!(fs::mv(&new_dir, &base_dir));
+    if !new_dir.exists() {
+        return;
     };
+    if !base_dir.exists() {
+        try_else_return!(fs::mkdirp(&base_dir));
+    }
+
+    // TODO: consider using walkdir or similar to generically copy.
+    try_else_return!(fs::cp(
+        &new_dir.join("estimates.json"),
+        &base_dir.join("estimates.json")
+    ));
+    try_else_return!(fs::cp(
+        &new_dir.join("sample.json"),
+        &base_dir.join("sample.json")
+    ));
+    try_else_return!(fs::cp(
+        &new_dir.join("tukey.json"),
+        &base_dir.join("tukey.json")
+    ));
 }
