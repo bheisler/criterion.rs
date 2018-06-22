@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added a pair of flags, `--save-baseline` and `--baseline`, which change
+  how benchmark results are stored and compared. This is useful for
+  working against a fixed baseline(eg. comparing progress on an
+  optimization feature branch to the commit it forked from).
+  Default behavior of Criterion.rs is now `--save-baseline base`
+  which emulates the previous, user facing behavior.
+  - `--save-baseline` saves the benchmark results under the provided name.
+  - `--baseline` compares the results to a saved baseline.
+    If the baseline does not exist for a benchmark, an error is given.
 
 ## [0.2.3]
 ### Fixed

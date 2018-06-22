@@ -31,14 +31,8 @@ where
     Ok(())
 }
 
-pub fn mv(from: &Path, to: &Path) -> Result<()> {
-    fs::rename(from, to)?;
-    Ok(())
-}
-
-pub fn rmrf(path: &Path) -> Result<()> {
-    fs::remove_dir_all(path)?;
-
+pub fn cp(from: &Path, to: &Path) -> Result<()> {
+    fs::copy(from, to)?;
     Ok(())
 }
 

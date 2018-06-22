@@ -7,11 +7,12 @@ extern crate walkdir;
 use criterion::{Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
 use serde_json::value::Value;
 use std::cell::RefCell;
+use std::cmp::max;
 use std::fs::File;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::rc::Rc;
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 use tempdir::TempDir;
 use walkdir::WalkDir;
 
@@ -77,6 +78,56 @@ fn has_python3() -> bool {
         .is_ok()
 }
 
+fn verify_file(dir: &PathBuf, path: &str) -> PathBuf {
+    let full_path = dir.join(path);
+    assert!(
+        full_path.is_file(),
+        "File {:?} does not exist or is not a file",
+        full_path
+    );
+    let metadata = full_path.metadata().unwrap();
+    assert!(metadata.len() > 0);
+    full_path
+}
+
+fn verify_json(dir: &PathBuf, path: &str) {
+    let full_path = verify_file(dir, path);
+    let f = File::open(full_path).unwrap();
+    serde_json::from_reader::<File, Value>(f).unwrap();
+}
+
+fn verify_svg(dir: &PathBuf, path: &str) {
+    verify_file(dir, path);
+}
+
+fn verify_html(dir: &PathBuf, path: &str) {
+    verify_file(dir, path);
+}
+
+fn verify_json_stats(dir: &PathBuf, baseline: &str) {
+    verify_json(&dir, &format!("{}/estimates.json", baseline));
+    verify_json(&dir, &format!("{}/sample.json", baseline));
+    verify_json(&dir, &format!("{}/tukey.json", baseline));
+}
+
+fn verify_not_exists(dir: &PathBuf, path: &str) {
+    assert!(!dir.join(path).exists());
+}
+
+fn latest_modified(dir: &PathBuf) -> SystemTime {
+    let mut newest_update: Option<SystemTime> = None;
+    for entry in WalkDir::new(dir) {
+        let entry = entry.unwrap();
+        let modified = entry.metadata().unwrap().modified().unwrap();
+        newest_update = match newest_update {
+            Some(latest) => Some(max(latest, modified)),
+            None => Some(modified),
+        };
+    }
+
+    newest_update.expect("failed to find a single time in directory")
+}
+
 #[test]
 fn test_creates_directory() {
     let dir = temp_dir();
@@ -105,6 +156,49 @@ fn test_without_plots() {
             entry.unwrap().file_name()
         );
     }
+}
+
+#[test]
+fn test_save_baseline() {
+    let dir = temp_dir();
+    println!("tmp directory is {:?}", dir.path());
+    short_benchmark(&dir)
+        .save_baseline("some-baseline".to_owned())
+        .bench_function("test_save_baseline", |b| b.iter(|| 10));
+
+    let dir = dir.path().join("test_save_baseline");
+    verify_json_stats(&dir, "some-baseline");
+
+    verify_not_exists(&dir, "base");
+}
+
+#[test]
+fn test_retain_baseline() {
+    // Initial benchmark to populate
+    let dir = temp_dir();
+    short_benchmark(&dir)
+        .save_baseline("some-baseline".to_owned())
+        .bench_function("test_retain_baseline", |b| b.iter(|| 10));
+
+    let pre_modified = latest_modified(&dir.path().join("test_retain_baseline/some-baseline"));
+
+    short_benchmark(&dir)
+        .retain_baseline("some-baseline".to_owned())
+        .bench_function("test_retain_baseline", |b| b.iter(|| 10));
+
+    let post_modified = latest_modified(&dir.path().join("test_retain_baseline/some-baseline"));
+
+    assert_eq!(pre_modified, post_modified, "baseline modified by retain");
+}
+
+#[test]
+#[should_panic(expected = "Baseline 'some-baseline' must exist before comparison is allowed")]
+fn test_compare_baseline() {
+    // Initial benchmark to populate
+    let dir = temp_dir();
+    short_benchmark(&dir)
+        .retain_baseline("some-baseline".to_owned())
+        .bench_function("test_compare_baseline", |b| b.iter(|| 10));
 }
 
 #[test]
@@ -314,38 +408,10 @@ fn test_output_files() {
         );
     }
 
-    fn verify_file(dir: &PathBuf, path: &str) -> PathBuf {
-        let full_path = dir.join(path);
-        assert!(
-            full_path.is_file(),
-            "File {:?} does not exist or is not a file",
-            full_path
-        );
-        let metadata = full_path.metadata().unwrap();
-        assert!(metadata.len() > 0);
-        full_path
-    }
-
-    fn verify_json(dir: &PathBuf, path: &str) {
-        let full_path = verify_file(dir, path);
-        let f = File::open(full_path).unwrap();
-        serde_json::from_reader::<File, Value>(f).unwrap();
-    }
-
-    fn verify_svg(dir: &PathBuf, path: &str) {
-        verify_file(dir, path);
-    }
-
-    fn verify_html(dir: &PathBuf, path: &str) {
-        verify_file(dir, path);
-    }
-
     for x in 0..2 {
         let dir = tempdir.path().join(format!("test_output/output_{}", x + 1));
 
-        verify_json(&dir, "new/estimates.json");
-        verify_json(&dir, "new/sample.json");
-        verify_json(&dir, "new/tukey.json");
+        verify_json_stats(&dir, "new");
         verify_json(&dir, "change/estimates.json");
 
         if short_benchmark(&tempdir).can_plot() && cfg!(feature = "html_reports") {

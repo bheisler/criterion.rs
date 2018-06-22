@@ -28,12 +28,15 @@ pub(crate) fn common(
     Vec<f64>,
     Estimates,
 )> {
-    let sample_dir = format!("{}/{}/base/sample.json", criterion.output_directory, id);
+    let sample_dir = format!(
+        "{}/{}/{}/sample.json",
+        criterion.output_directory, id, criterion.baseline_directory
+    );
     let (iters, times): (Vec<f64>, Vec<f64>) = fs::load(&sample_dir)?;
 
     let base_estimates: Estimates = fs::load(&format!(
-        "{}/{}/base/estimates.json",
-        criterion.output_directory, id
+        "{}/{}/{}/estimates.json",
+        criterion.output_directory, id, criterion.baseline_directory
     ))?;
 
     let base_avg_times: Vec<f64> = iters
