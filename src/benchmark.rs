@@ -84,7 +84,7 @@ pub struct Benchmark {
     throughput: Option<Throughput>,
 }
 
-/// Common trait for `Benchmark` and `ParameterizedBenchmark`. Not inteded to be
+/// Common trait for `Benchmark` and `ParameterizedBenchmark`. Not intended to be
 /// used outside of Criterion.rs.
 pub trait BenchmarkDefinition: Sized {
     #[doc(hidden)]
