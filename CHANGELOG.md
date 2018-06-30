@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `--save-baseline` saves the benchmark results under the provided name.
   - `--baseline` compares the results to a saved baseline.
     If the baseline does not exist for a benchmark, an error is given.
+- Added user-guide documentation for baselines, throughput measurements and
+  plot configuration.
+
+### Fixed
+- The `sample_size` method on the `Criterion`, `Benchmark` and 
+  `ParameterizedBenchmark` structs has been changed to panic if the sample size
+  is less than 2. Other parts of the code require this and will panic if the
+  sample size is 1, so this is not considered to be a breaking change.
+- API documentation has been updated to show more-complete examples.
 
 ## [0.2.3]
 ### Fixed
