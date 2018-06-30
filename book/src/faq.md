@@ -131,3 +131,30 @@ For the most part, Criterion.rs handles this for you - if you use parameterized 
 parameters are automatically black-boxed by Criterion.rs so you don't need to do anything. If you're
 writing an un-parameterized benchmark of a function that takes an argument, however, this may be
 worth considering.
+
+### Cargo Prints a Warning About Explicit [[bench]] Sections in Cargo.toml
+
+Currently, Cargo treats any `*.rs` file in the `benches` directory as a
+benchmark, unless there are one or more `[[bench]]` sections in the
+`Cargo.toml` file. In that case, the auto-discovery is disabled
+entirely.
+
+In Rust 2018 edition, Cargo will be changed so that `[[bench]]` no longer
+disables the auto-discovery. If your `benches` directory contains source files
+that are not benchmarks, this could break your build when you update, as Cargo
+will attempt to compile them as benchmarks and fail.
+
+There are two ways to prevent this breakage from happening. You can explicitly
+turn off the autodiscovery like so:
+
+```toml
+[[package]]
+autobenches = false
+```
+
+The other option is to move those non-benchmark files to a subdirectory (eg.
+`benches/benchmark_code`) where they will no longer be detected as benchmarks.
+I would recommend the latter option.
+
+Note that a file which contains a `criterion_main!` is a valid benchmark and can
+safely stay where it is.

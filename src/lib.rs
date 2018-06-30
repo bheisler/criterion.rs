@@ -747,6 +747,7 @@ impl Criterion {
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
     pub fn configure_from_args(mut self) -> Criterion {
+        println!("{:#?}", std::env::args().collect::<Vec<_>>());
         use clap::{App, Arg};
         let matches = App::new("Criterion Benchmark")
             .arg(Arg::with_name("FILTER")
