@@ -33,11 +33,12 @@ pub(crate) fn common(
         criterion.output_directory, id, criterion.baseline_directory
     );
     let (iters, times): (Vec<f64>, Vec<f64>) = fs::load(&sample_dir)?;
-
-    let base_estimates: Estimates = fs::load(&format!(
-        "{}/{}/{}/estimates.json",
-        criterion.output_directory, id, criterion.baseline_directory
-    ))?;
+    
+    let estimates_file =
+        &format!("{}/{}/base/estimates.json", criterion.output_directory, id);
+    let base_estimates: Estimates = fs::load(&estimates_file).map_err(|e| {
+        e.context(format!("Failed to load {}!", &estimates_file))
+    })?;
 
     let base_avg_times: Vec<f64> = iters
         .iter()
