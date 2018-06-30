@@ -204,6 +204,28 @@ impl Bencher {
     /// ```text
     /// elapsed = Instant::now + iters * (routine + mem::drop(O) + Range::next)
     /// ```
+    /// 
+    /// # Example
+    ///
+    /// ```rust
+    /// #![macro_use] extern crate criterion;
+    ///
+    /// use criterion::*;
+    ///
+    /// // The function to benchmark
+    /// fn foo() {
+    ///     // ...
+    /// }
+    ///
+    /// fn bench(c: &mut Criterion) {
+    ///     c.bench_function("iter", move |b| {
+    ///         b.iter(|| foo())
+    ///     });
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
+    /// ```
     ///
     #[inline(never)]
     pub fn iter<O, R>(&mut self, mut routine: R)
@@ -225,10 +247,10 @@ impl Bencher {
     ///
     /// # Example
     ///
-    /// ```rust,no_run
-    /// extern crate criterion;
+    /// ```rust
+    /// #![macro_use] extern crate criterion;
     ///
-    /// use criterion::Bencher;
+    /// use criterion::*;
     ///
     /// fn create_scrambled_data() -> Vec<u64> {
     ///     # vec![]
@@ -240,13 +262,17 @@ impl Bencher {
     ///     // ...
     /// }
     ///
-    /// fn benchmark(b: &mut Bencher) {
+    /// fn bench(c: &mut Criterion) {
     ///     let data = create_scrambled_data();
     ///
-    ///     b.iter_with_setup(move || data.to_vec(), |mut data| sort(&mut data))
+    ///     c.bench_function("with_setup", move |b| {
+    ///         // This will avoid timing the to_vec call.
+    ///         b.iter_with_setup(|| data.to_vec(), |mut data| sort(&mut data))
+    ///     });
     /// }
     ///
-    /// # fn main() {}
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
     /// ```
     ///
     /// # Timing loop
@@ -326,6 +352,29 @@ impl Bencher {
     /// ``` text
     /// elapsed = Instant::now + iters * (routine + Vec::push + Range::next)
     /// ```
+    /// 
+    /// # Example
+    ///
+    /// ```rust
+    /// #![macro_use] extern crate criterion;
+    ///
+    /// use criterion::*;
+    ///
+    /// fn create_vector() -> Vec<u64> {
+    ///     # vec![]
+    ///     // ...
+    /// }
+    ///
+    /// fn bench(c: &mut Criterion) {
+    ///     c.bench_function("with_drop", move |b| {
+    ///         // This will avoid timing the Vec::drop.
+    ///         b.iter_with_large_drop(|| create_vector())
+    ///     });
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
+    /// ```
     ///
     #[inline(never)]
     pub fn iter_with_large_drop<O, R>(&mut self, mut routine: R)
@@ -372,6 +421,32 @@ impl Bencher {
     ///
     /// ``` text
     /// elapsed = Instant::now + iters * (routine + vec::IntoIter::next)
+    /// ```
+    /// # Example
+    ///
+    /// ```rust
+    /// #![macro_use] extern crate criterion;
+    ///
+    /// use criterion::*;
+    ///
+    /// fn create_data() -> Vec<u64> {
+    ///     # vec![]
+    ///     // ...
+    /// }
+    ///
+    /// fn use_data(data: &mut [u64]) {
+    ///     // ...
+    /// }
+    ///
+    /// fn bench(c: &mut Criterion) {
+    ///     c.bench_function("with_setup", move |b| {
+    ///         // This will avoid timing the create_data call.
+    ///         b.iter_with_large_setup(|| create_data(), |mut data| use_data(&mut data))
+    ///     });
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
     /// ```
     #[inline(never)]
     pub fn iter_with_large_setup<I, S, R>(&mut self, mut setup: S, mut routine: R)
@@ -489,8 +564,8 @@ impl Default for Criterion {
 impl Criterion {
     /// Changes the default size of the sample for benchmarks run with this runner.
     ///
-    /// A bigger sample should yield more accurate results, if paired with a "sufficiently" large
-    /// measurement time, on the other hand, it also increases the analysis time
+    /// A bigger sample should yield more accurate results if paired with a sufficiently large
+    /// measurement time.
     ///
     /// # Panics
     ///
@@ -608,7 +683,7 @@ impl Criterion {
         self
     }
 
-    /// Disabled plotting
+    /// Disables plotting
     pub fn without_plots(mut self) -> Criterion {
         match self.plotting {
             Plotting::NotAvailable => {}
@@ -618,7 +693,7 @@ impl Criterion {
         self
     }
 
-    /// Checks if plotting is possible
+    /// Return true if generation of the plots is possible.
     pub fn can_plot(&self) -> bool {
         match self.plotting {
             Plotting::NotAvailable => false,
@@ -787,22 +862,24 @@ scripts alongside the generated plots.
 
     /// Benchmarks a function
     ///
-    /// The function under test must follow the setup - bench - teardown pattern:
+    /// # Example
+    /// 
+    /// ```rust
+    /// # #[macro_use] extern crate criterion;
+    /// # use self::criterion::*;
     ///
-    /// ```rust,no_run
-    /// use self::criterion::{Bencher, Criterion};
-    ///
-    /// fn routine(b: &mut Bencher) {
+    /// fn bench(c: &mut Criterion) {
     ///     // Setup (construct data, allocate memory, etc)
-    ///
-    ///     b.iter(|| {
-    ///         // Code to benchmark goes here
-    ///     })
-    ///
-    ///     // Teardown (free resources)
+    ///     c.bench_function(
+    ///         "function_name",
+    ///         |b| b.iter(|| {
+    ///             // Code to benchmark goes here
+    ///         }),
+    ///     );
     /// }
-    ///
-    /// Criterion::default().bench_function("routine", routine);
+    /// 
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
     /// ```
     pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion
     where
@@ -814,10 +891,13 @@ scripts alongside the generated plots.
     /// Benchmarks multiple functions
     ///
     /// All functions get the same input and are compared with the other implementations.
-    /// Works similar to `bench`, but with multiple functions.
+    /// Works similar to `bench_function`, but with multiple functions.
     ///
-    /// ``` rust,no_run
-    /// # use self::criterion::{Bencher, Criterion, Fun};
+    /// # Example
+    /// 
+    /// ``` rust
+    /// # #[macro_use] extern crate criterion;
+    /// # use self::criterion::*;
     /// # fn seq_fib(i: &u32) {}
     /// # fn par_fib(i: &u32) {}
     ///
@@ -832,12 +912,17 @@ scripts alongside the generated plots.
     ///         par_fib(i);
     ///     });
     /// }
+    /// 
+    /// fn bench(c: &mut Criterion) {
+    ///     let sequential_fib = Fun::new("Sequential", bench_seq_fib);
+    ///     let parallel_fib = Fun::new("Parallel", bench_par_fib);
+    ///     let funs = vec![sequential_fib, parallel_fib];
+    ///   
+    ///     c.bench_functions("Fibonacci", funs, 14);
+    /// }
     ///
-    /// let sequential_fib = Fun::new("Sequential", bench_seq_fib);
-    /// let parallel_fib = Fun::new("Parallel", bench_par_fib);
-    /// let funs = vec![sequential_fib, parallel_fib];
-    ///
-    /// Criterion::default().bench_functions("Fibonacci", funs, 14);
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
     /// ```
     pub fn bench_functions<I>(&mut self, id: &str, funs: Vec<Fun<I>>, input: I) -> &mut Criterion
     where
@@ -856,13 +941,23 @@ scripts alongside the generated plots.
     /// This is a convenience method to execute several related benchmarks. Each benchmark will
     /// receive the id: `${id}/${input}`.
     ///
-    /// ```rust,no_run
-    /// use self::criterion::{Bencher, Criterion};
+    /// # Example
+    /// 
+    /// ```rust
+    /// # #[macro_use] extern crate criterion;
+    /// # use self::criterion::*;
     ///
-    /// Criterion::default()
-    ///     .bench_function_over_inputs("from_elem", |b: &mut Bencher, size: &usize| {
-    ///         b.iter(|| vec![0u8; *size]);
-    ///     }, vec![1024, 2048, 4096]);
+    /// fn bench(c: &mut Criterion) {
+    ///     c.bench_function_over_inputs("from_elem", 
+    ///         |b: &mut Bencher, size: &usize| {
+    ///             b.iter(|| vec![0u8; *size]);
+    ///         }, 
+    ///         vec![1024, 2048, 4096]
+    ///     );
+    /// }
+    /// 
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
     /// ```
     pub fn bench_function_over_inputs<I, F>(&mut self, id: &str, f: F, inputs: I) -> &mut Criterion
     where
@@ -875,7 +970,11 @@ scripts alongside the generated plots.
 
     /// Benchmarks an external program
     ///
-    /// The external program must conform to the following specification:
+    /// The external program must:
+    /// 
+    /// * Read the number of iterations from stdin
+    /// * Execute the routine to benchmark that many times
+    /// * Print the elapsed time (in nanoseconds) to stdout
     ///
     /// ```rust,no_run
     /// # use std::io::{self, BufRead};
@@ -883,6 +982,7 @@ scripts alongside the generated plots.
     /// # use std::time::Duration;
     /// # trait DurationExt { fn to_nanos(&self) -> u64 { 0 } }
     /// # impl DurationExt for Duration {}
+    /// // Example of an external program that implements this protocol
     ///
     /// fn main() {
     ///     let stdin = io::stdin();
@@ -944,24 +1044,29 @@ scripts alongside the generated plots.
     }
 
     /// Executes the given benchmark. Use this variant to execute benchmarks
-    /// with complex configuration.
+    /// with complex configuration. This can be used to compare multiple
+    /// functions, execute benchmarks with custom configuration settings and
+    /// more. See the Benchmark and ParameterizedBenchmark structs for more
+    /// information.
     ///
-    /// ```rust,no_run
-    /// use self::criterion::{Bencher, Criterion, Benchmark};
+    /// ```rust
+    /// # #[macro_use] extern crate criterion;
+    /// # use criterion::*;
+    /// # fn routine_1() {}
+    /// # fn routine_2() {}
     ///
-    /// fn routine(b: &mut Bencher) {
+    /// fn bench(c: &mut Criterion) {
     ///     // Setup (construct data, allocate memory, etc)
-    ///
-    ///     b.iter(|| {
-    ///         // Code to benchmark goes here
-    ///     })
-    ///
-    ///     // Teardown (free resources)
+    ///     c.bench(
+    ///         "routines",
+    ///         Benchmark::new("routine_1", |b| b.iter(|| routine_1()))
+    ///             .with_function("routine_2", |b| b.iter(|| routine_2()))
+    ///             .sample_size(50)
+    ///     );
     /// }
-    ///
-    /// Criterion::default()
-    ///     .bench("routine", Benchmark::new("routine", routine)
-    ///         .sample_size(50));
+    /// 
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
     /// ```
     pub fn bench<B: BenchmarkDefinition>(
         &mut self,
@@ -1062,7 +1167,7 @@ pub enum Throughput {
     Elements(u32),
 }
 
-/// Axis Scaling Type
+/// Axis scaling type
 #[derive(Debug, Clone, Copy)]
 pub enum AxisScale {
     /// Axes scale linearly

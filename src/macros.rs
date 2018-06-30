@@ -3,7 +3,7 @@
 //! Criterion.rs benchmarks with `cargo bench`.
 
 /// Macro used to define a benchmark group for the benchmark harness; see the
-/// criterion! macro for more details.
+/// criterion_main! macro for more details.
 ///
 /// This is used to define a benchmark group; a collection of related benchmarks
 /// which share a common configuration. Accepts two forms which can be seen

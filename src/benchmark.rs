@@ -96,8 +96,8 @@ macro_rules! benchmark_config {
 
         /// Changes the size of the sample for this benchmark
         ///
-        /// A bigger sample should yield more accurate results, if paired with a "sufficiently" large
-        /// measurement time, on the other hand, it also increases the analysis time
+        /// A bigger sample should yield more accurate results if paired with a sufficiently large
+        /// measurement time.
         ///
         /// # Panics
         ///
@@ -121,12 +121,10 @@ macro_rules! benchmark_config {
             self
         }
 
-        /// Changes the measurement time for this benchmark
-        ///
+        /// Changes the target measurement time for this benchmark. Criterion will attempt
+        /// to spent approximately this amount of time measuring the benchmark.
         /// With a longer time, the measurement will become more resilient to transitory peak loads
-        /// caused by external programs
-        ///
-        /// **Note**: If the measurement time is too "low", Criterion will automatically increase it
+        /// caused by external programs.
         ///
         /// # Panics
         ///
@@ -144,7 +142,7 @@ macro_rules! benchmark_config {
         /// [bootstrap](http://en.wikipedia.org/wiki/Bootstrapping_(statistics)#Case_resampling)
         ///
         /// A larger number of resamples reduces the random sampling errors, which are inherent to the
-        /// bootstrap method, but also increases the analysis time
+        /// bootstrap method, but also increases the analysis time.
         ///
         /// # Panics
         ///
@@ -218,23 +216,25 @@ impl Benchmark {
     benchmark_config!(Benchmark);
 
     /// Create a new benchmark group and adds the given function to it.
-    /// The function under test must follow the setup - bench - teardown pattern:
     ///
-    /// ```rust,no_run
-    /// use self::criterion::{Bencher, Criterion, Benchmark};
-    ///
-    /// fn routine(b: &mut Bencher) {
-    ///     // Setup (construct data, allocate memory, etc)
-    ///
-    ///     b.iter(|| {
-    ///         // Code to benchmark goes here
-    ///     })
-    ///
-    ///     // Teardown (free resources)
+    /// # Example
+    /// 
+    /// ```rust
+    /// # #![macro_use] extern crate criterion;
+    /// # use criterion::*;
+    /// 
+    /// fn bench(c: &mut Criterion) {
+    ///     // One-time setup goes here
+    ///     c.bench(
+    ///         "my_group",
+    ///         Benchmark::new("my_function", |b| b.iter(|| {
+    ///             // Code to benchmark goes here
+    ///         })),
+    ///     );
     /// }
     ///
-    /// Criterion::default()
-    ///     .bench("routine", Benchmark::new("routine", routine));
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
     /// ```
     pub fn new<S, F>(id: S, f: F) -> Benchmark
     where
@@ -249,8 +249,9 @@ impl Benchmark {
     }
 
     /// Create a new benchmark group and add the given program to it.
-    /// The program under test must implement the following protocol:
     ///
+    /// The external program must:
+    /// 
     /// * Read the number of iterations from stdin
     /// * Execute the routine to benchmark that many times
     /// * Print the elapsed time (in nanoseconds) to stdout
@@ -261,7 +262,8 @@ impl Benchmark {
     /// # use std::time::Duration;
     /// # trait DurationExt { fn to_nanos(&self) -> u64 { 0 } }
     /// # impl DurationExt for Duration {}
-    ///
+    /// // Example of an external program that implements this protocol
+    /// 
     /// fn main() {
     ///     let stdin = io::stdin();
     ///     let ref mut stdin = stdin.lock();
@@ -300,6 +302,7 @@ impl Benchmark {
 
     /// Add a function to the benchmark group.
     ///
+    /// # Example:
     /// ```
     /// # use criterion::Benchmark;
     /// Benchmark::new("return 10", |b| b.iter(|| 10))
@@ -320,6 +323,7 @@ impl Benchmark {
 
     /// Add an external program to the benchmark group.
     ///
+    /// # Example:
     /// ```
     /// # use criterion::Benchmark;
     /// # use std::process::Command;
@@ -338,7 +342,8 @@ impl Benchmark {
         self
     }
 
-    /// Set the input size for this benchmark group.
+    /// Set the input size for this benchmark group. Used for reporting the
+    /// throughput.
     ///
     /// ```
     /// # use criterion::{Benchmark, Throughput};
@@ -414,22 +419,30 @@ where
     /// to it.
     /// The function under test must follow the setup - bench - teardown pattern:
     ///
-    /// ```rust,no_run
-    /// use self::criterion::{Bencher, Criterion, ParameterizedBenchmark};
-    ///
-    /// fn routine(b: &mut Bencher, parameter: &u64) {
-    ///     // Setup (construct data, allocate memory, etc)
-    ///
-    ///     b.iter(|| {
-    ///         // Code to benchmark goes here
-    ///     })
-    ///
-    ///     // Teardown (free resources)
+    /// # Example
+    /// 
+    /// ```rust
+    /// # #![macro_use] extern crate criterion;
+    /// # use criterion::*;
+    /// 
+    /// fn bench(c: &mut Criterion) {
+    ///     let parameters = vec![1u64, 2u64, 3u64];
+    /// 
+    ///     // One-time setup goes here
+    ///     c.bench(
+    ///         "my_group",
+    ///         ParameterizedBenchmark::new(
+    ///             "my_function", 
+    ///             |b, param| b.iter(|| {
+    ///                 // Code to benchmark using param goes here
+    ///             }),
+    ///             parameters
+    ///         )
+    ///     );
     /// }
     ///
-    /// let parameters: Vec<u64> = vec![1, 2, 3];
-    /// Criterion::default()
-    ///     .bench("routine", ParameterizedBenchmark::new("routine", routine, parameters));
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
     /// ```
     pub fn new<S, F, I>(id: S, f: F, parameters: I) -> ParameterizedBenchmark<T>
     where
@@ -452,7 +465,7 @@ where
     /// * Execute the routine to benchmark that many times
     /// * Print the elapsed time (in nanoseconds) to stdout
     ///
-    /// You can pass the argument to the program  in any way you choose.
+    /// You can pass the argument to the program in any way you choose.
     ///
     /// ```rust,no_run
     /// # use std::io::{self, BufRead};
@@ -460,10 +473,16 @@ where
     /// # use std::time::Duration;
     /// # trait DurationExt { fn to_nanos(&self) -> u64 { 0 } }
     /// # impl DurationExt for Duration {}
+    /// # use std::env;
+    /// // Example of an external program that implements this protocol
     ///
     /// fn main() {
     ///     let stdin = io::stdin();
     ///     let ref mut stdin = stdin.lock();
+    /// 
+    ///     // You might opt to pass the parameter to the external command as
+    ///     // an environment variable, command line argument, file on disk, etc.
+    ///     let parameter = env::var("PARAMETER").unwrap();
     ///
     ///     // For each line in stdin
     ///     for line in stdin.lines() {
@@ -476,7 +495,7 @@ where
     ///         let start = Instant::now();
     ///         // Execute the routine "iters" times
     ///         for _ in 0..iters {
-    ///             // Code to benchmark goes here
+    ///             // Code to benchmark using the parameter goes here
     ///         }
     ///         let elapsed = start.elapsed();
     ///
@@ -515,6 +534,8 @@ where
 
     /// Add a function to the benchmark group.
     ///
+    /// # Example
+    /// 
     /// ```
     /// # use criterion::ParameterizedBenchmark;
     /// ParameterizedBenchmark::new("times 10", |b, i| b.iter(|| i * 10), vec![1, 2, 3])
@@ -535,6 +556,8 @@ where
 
     /// Add an external program to the benchmark group.
     ///
+    /// # Example 
+    /// 
     /// ```
     /// # use criterion::ParameterizedBenchmark;
     /// # use std::process::Command;
@@ -561,6 +584,8 @@ where
 
     /// Use the given function to calculate the input size for a given input.
     ///
+    /// # Example
+    /// 
     /// ```
     /// # use criterion::{ParameterizedBenchmark, Throughput};
     /// # use std::process::Command;
