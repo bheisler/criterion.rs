@@ -1,6 +1,6 @@
 # Benchmarking External Programs
 
-Criterion.rs has the ability to benchmark external programs (which may be written in any language) the same way that it can benchmark rust functions. What follows is an example of how that can be done and some of the pitfalls to avoid along the way.
+Criterion.rs has the ability to benchmark external programs (which may be written in any language) the same way that it can benchmark Rust functions. What follows is an example of how that can be done and some of the pitfalls to avoid along the way.
 
 First, let's define our recursive Fibonacci function, only in Python this time:
 
