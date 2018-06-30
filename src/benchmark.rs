@@ -98,12 +98,14 @@ macro_rules! benchmark_config {
         ///
         /// A bigger sample should yield more accurate results if paired with a sufficiently large
         /// measurement time.
+        /// 
+        /// Sample size must be at least 2.
         ///
         /// # Panics
         ///
-        /// Panics if set to zero
+        /// Panics if set to zero or one.
         pub fn sample_size(mut self, n: usize) -> Self {
-            assert!(n > 0);
+            assert!(n >= 2);
 
             self.config.sample_size = Some(n);
             self
