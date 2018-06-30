@@ -12,5 +12,6 @@
     - [Advanced Configuration](./user_guide/advanced_configuration.md)
     - [Comparing Functions](./user_guide/comparing_functions.md)
     - [Benchmarking External Programs](./user_guide/external_programs.md)
+    - [Known Limitations](./user_guide/known_limitations.md)
 - [Analysis Process](./analysis.md)
 - [Frequently Asked Questions](./faq.md)
