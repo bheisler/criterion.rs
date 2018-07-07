@@ -165,7 +165,8 @@ impl Report for Html {
 
         try_else_return!(fs::mkdirp(&format!(
             "{}/{}/report/",
-            report_context.output_directory, id.as_directory_name()
+            report_context.output_directory,
+            id.as_directory_name()
         )));
 
         let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
@@ -244,7 +245,8 @@ impl Report for Html {
             &text,
             &format!(
                 "{}/{}/report/index.html",
-                report_context.output_directory, id.as_directory_name()
+                report_context.output_directory,
+                id.as_directory_name()
             ),
         ));
     }
@@ -416,7 +418,11 @@ impl Html {
             data,
             measurements.avg_times,
             id,
-            format!("{}/{}/report/pdf.svg", context.output_directory, id.as_directory_name()),
+            format!(
+                "{}/{}/report/pdf.svg",
+                context.output_directory,
+                id.as_directory_name()
+            ),
             None,
         ));
         gnuplots.extend(plot::abs_distributions(
@@ -430,13 +436,21 @@ impl Html {
             point,
             (lb_, ub_),
             id,
-            format!("{}/{}/report/regression.svg", context.output_directory, id.as_directory_name()),
+            format!(
+                "{}/{}/report/regression.svg",
+                context.output_directory,
+                id.as_directory_name()
+            ),
             None,
             false,
         ));
         gnuplots.push(plot::pdf_small(
             &*measurements.avg_times,
-            format!("{}/{}/report/pdf_small.svg", context.output_directory, id.as_directory_name()),
+            format!(
+                "{}/{}/report/pdf_small.svg",
+                context.output_directory,
+                id.as_directory_name()
+            ),
             Some(THUMBNAIL_SIZE),
         ));
         gnuplots.push(plot::regression(
@@ -446,7 +460,8 @@ impl Html {
             id,
             format!(
                 "{}/{}/report/regression_small.svg",
-                context.output_directory, id.as_directory_name()
+                context.output_directory,
+                id.as_directory_name()
             ),
             Some(THUMBNAIL_SIZE),
             true,
@@ -455,14 +470,16 @@ impl Html {
         if let Some(ref comp) = measurements.comparison {
             try_else_return!(fs::mkdirp(&format!(
                 "{}/{}/report/change/",
-                context.output_directory, id.as_directory_name()
+                context.output_directory,
+                id.as_directory_name()
             )));
 
             let base_data = Data::new(&comp.base_iter_counts, &comp.base_sample_times);
 
             try_else_return!(fs::mkdirp(&format!(
                 "{}/{}/report/both",
-                context.output_directory, id.as_directory_name()
+                context.output_directory,
+                id.as_directory_name()
             )));
             gnuplots.push(plot::both::regression(
                 base_data,
@@ -472,7 +489,8 @@ impl Html {
                 id,
                 format!(
                     "{}/{}/report/both/regression.svg",
-                    context.output_directory, id.as_directory_name()
+                    context.output_directory,
+                    id.as_directory_name()
                 ),
                 None,
                 false,
@@ -481,7 +499,11 @@ impl Html {
                 Sample::new(&comp.base_avg_times),
                 &*measurements.avg_times,
                 id,
-                format!("{}/{}/report/both/pdf.svg", context.output_directory, id.as_directory_name()),
+                format!(
+                    "{}/{}/report/both/pdf.svg",
+                    context.output_directory,
+                    id.as_directory_name()
+                ),
                 None,
                 false,
             ));
@@ -506,7 +528,8 @@ impl Html {
                 id,
                 format!(
                     "{}/{}/report/relative_regression_small.svg",
-                    context.output_directory, id.as_directory_name()
+                    context.output_directory,
+                    id.as_directory_name()
                 ),
                 Some(THUMBNAIL_SIZE),
                 true,
@@ -517,7 +540,8 @@ impl Html {
                 id,
                 format!(
                     "{}/{}/report/relative_pdf_small.svg",
-                    context.output_directory, id.as_directory_name()
+                    context.output_directory,
+                    id.as_directory_name()
                 ),
                 Some(THUMBNAIL_SIZE),
                 true,

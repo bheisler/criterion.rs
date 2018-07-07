@@ -417,12 +417,9 @@ fn test_output_files() {
         let dir = if x == 2 {
             // Check that certain special characters are replaced with underscores
             tempdir.path().join(format!("test_output/output_______"))
-        }
-        else {
+        } else {
             tempdir.path().join(format!("test_output/output_{}", x + 1))
         };
-
-
 
         verify_json_stats(&dir, "new");
         verify_json(&dir, "change/estimates.json");

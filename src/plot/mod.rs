@@ -418,7 +418,9 @@ pub(crate) fn abs_distributions(
         .map(|(&statistic, distribution)| {
             let path = PathBuf::from(format!(
                 "{}/{}/report/{}.svg",
-                output_directory, id.as_directory_name(), statistic
+                output_directory,
+                id.as_directory_name(),
+                statistic
             ));
             let estimate = estimates[&statistic];
 
@@ -533,7 +535,9 @@ pub(crate) fn rel_distributions(
         .map(|(&statistic, distribution)| {
             let path = PathBuf::from(format!(
                 "{}/{}/report/change/{}.svg",
-                output_directory, id.as_directory_name(), statistic
+                output_directory,
+                id.as_directory_name(),
+                statistic
             ));
 
             let estimate = estimates[&statistic];
@@ -645,7 +649,8 @@ pub fn t_test(
 ) -> Child {
     let path = PathBuf::from(format!(
         "{}/{}/report/change/t-test.svg",
-        output_directory, id.as_directory_name()
+        output_directory,
+        id.as_directory_name()
     ));
 
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, None);

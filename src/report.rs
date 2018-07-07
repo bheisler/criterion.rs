@@ -69,7 +69,8 @@ impl BenchmarkId {
         };
 
         fn directory_safe(string: &str) -> String {
-            string.to_owned()
+            string
+                .to_owned()
                 .replace("?", "_")
                 .replace("\"", "_")
                 .replace("/", "_")
@@ -79,9 +80,18 @@ impl BenchmarkId {
         }
 
         let directory_name = match (&function_id, &value_str) {
-            (&Some(ref func), &Some(ref val)) => format!("{}/{}/{}", directory_safe(&group_id), directory_safe(func), directory_safe(val)),
-            (&Some(ref func), &None) => format!("{}/{}", directory_safe(&group_id), directory_safe(func)),
-            (&None, &Some(ref val)) => format!("{}/{}", directory_safe(&group_id), directory_safe(val)),
+            (&Some(ref func), &Some(ref val)) => format!(
+                "{}/{}/{}",
+                directory_safe(&group_id),
+                directory_safe(func),
+                directory_safe(val)
+            ),
+            (&Some(ref func), &None) => {
+                format!("{}/{}", directory_safe(&group_id), directory_safe(func))
+            }
+            (&None, &Some(ref val)) => {
+                format!("{}/{}", directory_safe(&group_id), directory_safe(val))
+            }
             (&None, &None) => group_id.clone(),
         };
 
@@ -371,8 +381,7 @@ impl Report for CliReport {
     fn benchmark_start(&self, id: &BenchmarkId, ctx: &ReportContext) {
         if ctx.test_mode {
             println!("Testing {}", id);
-        }
-        else {
+        } else {
             self.print_overwritable(format!("Benchmarking {}", id));
         }
     }
@@ -389,8 +398,7 @@ impl Report for CliReport {
     fn terminated(&self, id: &BenchmarkId, ctx: &ReportContext) {
         if ctx.test_mode {
             println!("Success");
-        }
-        else {
+        } else {
             self.text_overwrite();
             println!("Benchmarking {}: Complete (Analysis Disabled)", id);
         }
