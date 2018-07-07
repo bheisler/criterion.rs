@@ -83,7 +83,7 @@ pub(crate) fn common<T>(
 
     log_if_err!(fs::mkdirp(&format!(
         "{}/{}/new",
-        criterion.output_directory, id
+        criterion.output_directory, id.as_directory_name()
     )));
 
     let data = Data::new(&iters, &times);
@@ -96,11 +96,11 @@ pub(crate) fn common<T>(
 
     log_if_err!(fs::save(
         &(data.x().as_slice(), data.y().as_slice()),
-        &format!("{}/{}/new/sample.json", criterion.output_directory, id),
+        &format!("{}/{}/new/sample.json", criterion.output_directory, id.as_directory_name()),
     ));
     log_if_err!(fs::save(
         &estimates,
-        &format!("{}/{}/new/estimates.json", criterion.output_directory, id)
+        &format!("{}/{}/new/estimates.json", criterion.output_directory, id.as_directory_name())
     ));
 
     let compare_data = if base_dir_exists(
@@ -160,7 +160,7 @@ pub(crate) fn common<T>(
 
     if let Baseline::Save = criterion.baseline {
         copy_new_dir_to_base(
-            id.id(),
+            id.as_directory_name(),
             &criterion.baseline_directory,
             &criterion.output_directory,
         );
@@ -168,7 +168,7 @@ pub(crate) fn common<T>(
 }
 
 fn base_dir_exists(id: &BenchmarkId, baseline: &str, output_directory: &str) -> bool {
-    Path::new(&format!("{}/{}/{}", output_directory, id, baseline)).exists()
+    Path::new(&format!("{}/{}/{}", output_directory, id.as_directory_name(), baseline)).exists()
 }
 
 // Performs a simple linear regression on the sample
@@ -207,7 +207,7 @@ fn outliers<'a>(
     let sample = tukey::classify(avg_times);
     log_if_err!(fs::save(
         &sample.fences(),
-        &format!("{}/{}/new/tukey.json", output_directory, id)
+        &format!("{}/{}/new/tukey.json", output_directory, id.as_directory_name())
     ));
     sample
 }

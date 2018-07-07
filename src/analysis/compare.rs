@@ -30,11 +30,11 @@ pub(crate) fn common(
 )> {
     let sample_dir = format!(
         "{}/{}/{}/sample.json",
-        criterion.output_directory, id, criterion.baseline_directory
+        criterion.output_directory, id.as_directory_name(), criterion.baseline_directory
     );
     let (iters, times): (Vec<f64>, Vec<f64>) = fs::load(&sample_dir)?;
 
-    let estimates_file = &format!("{}/{}/base/estimates.json", criterion.output_directory, id);
+    let estimates_file = &format!("{}/{}/base/estimates.json", criterion.output_directory, id.as_directory_name());
     let base_estimates: Estimates = fs::load(&estimates_file)
         .map_err(|e| e.context(format!("Failed to load {}!", &estimates_file)))?;
 
@@ -45,7 +45,7 @@ pub(crate) fn common(
         .collect();
     let base_avg_time_sample = Sample::new(&base_avg_times);
 
-    fs::mkdirp(&format!("{}/{}/change", criterion.output_directory, id))?;
+    fs::mkdirp(&format!("{}/{}/change", criterion.output_directory, id.as_directory_name()))?;
     let (t_statistic, t_distribution) = t_test(avg_times, base_avg_time_sample, config);
 
     let (estimates, relative_distributions) =
@@ -118,7 +118,7 @@ fn estimates(
             &estimates,
             &format!(
                 "{}/{}/change/estimates.json",
-                criterion.output_directory, id
+                criterion.output_directory, id.as_directory_name()
             )
         ));
     }

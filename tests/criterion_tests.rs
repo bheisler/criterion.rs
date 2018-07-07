@@ -404,12 +404,25 @@ fn test_output_files() {
         short_benchmark(&tempdir).bench(
             "test_output",
             Benchmark::new("output_1", |b| b.iter(|| 10))
-                .with_function("output_2", |b| b.iter(|| 20)),
+                .with_function("output_2", |b| b.iter(|| 20))
+                .with_function("output_\\/.*\"?", |b| b.iter(|| 30)),
         );
     }
+    for entry in WalkDir::new(&tempdir.path()) {
+        let entry = entry.unwrap();
+        println!("{:?}", entry);
+    }
 
-    for x in 0..2 {
-        let dir = tempdir.path().join(format!("test_output/output_{}", x + 1));
+    for x in 0..3 {
+        let dir = if x == 2 {
+            // Check that certain special characters are replaced with underscores
+            tempdir.path().join(format!("test_output/output_______"))
+        }
+        else {
+            tempdir.path().join(format!("test_output/output_{}", x + 1))
+        };
+
+
 
         verify_json_stats(&dir, "new");
         verify_json(&dir, "change/estimates.json");

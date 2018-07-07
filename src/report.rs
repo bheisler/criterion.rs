@@ -51,6 +51,7 @@ pub struct BenchmarkId {
     pub value_str: Option<String>,
     pub throughput: Option<Throughput>,
     full_id: String,
+    directory_name: String,
 }
 
 impl BenchmarkId {
@@ -66,17 +67,42 @@ impl BenchmarkId {
             (&None, &Some(ref val)) => format!("{}/{}", group_id, val),
             (&None, &None) => group_id.clone(),
         };
+
+        fn directory_safe(string: &str) -> String {
+            string.to_owned()
+                .replace("?", "_")
+                .replace("\"", "_")
+                .replace("/", "_")
+                .replace("\\", "_")
+                .replace(".", "_")
+                .replace("*", "_")
+        }
+
+        let directory_name = match (&function_id, &value_str) {
+            (&Some(ref func), &Some(ref val)) => format!("{}/{}/{}", directory_safe(&group_id), directory_safe(func), directory_safe(val)),
+            (&Some(ref func), &None) => format!("{}/{}", directory_safe(&group_id), directory_safe(func)),
+            (&None, &Some(ref val)) => format!("{}/{}", directory_safe(&group_id), directory_safe(val)),
+            (&None, &None) => group_id.clone(),
+        };
+
+        println!("Expected directory is {}", directory_name);
+
         BenchmarkId {
             group_id,
             function_id,
             value_str,
             throughput,
             full_id,
+            directory_name,
         }
     }
 
     pub fn id(&self) -> &str {
         &self.full_id
+    }
+
+    pub fn as_directory_name(&self) -> &str {
+        &self.directory_name
     }
 
     pub fn as_number(&self) -> Option<f64> {

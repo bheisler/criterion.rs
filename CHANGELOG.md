@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   is less than 2. Other parts of the code require this and will panic if the
   sample size is 1, so this is not considered to be a breaking change.
 - API documentation has been updated to show more-complete examples.
+- Certain characters will now be replaced with underscores when creating benchmark
+  directory paths, to avoid generating invalid or unexpected paths.
 
 ## [0.2.3]
 ### Fixed
