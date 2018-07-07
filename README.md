@@ -38,7 +38,7 @@ Criterion.<span></span>rs helps you write fast code by detecting and measuring p
     - [Quickstart](#quickstart)
     - [Goals](#goals)
     - [Contributing](#contributing)
-- [Compatibility Policy](#compatibility-policy)
+    - [Compatibility Policy](#compatibility-policy)
     - [Maintenance](#maintenance)
     - [License](#license)
     - [Related Projects](#related-projects)
@@ -119,7 +119,7 @@ If your issues or pull requests have no response after a few days, feel free to 
 
 For more details, see the [CONTRIBUTING.md file](https://github.com/japaric/criterion.rs/blob/master/CONTRIBUTING.md)
 
-## Compatibility Policy
+### Compatibility Policy
 
 Criterion.<span></span>rs supports the last three stable minor releases of Rust. At time of
 writing, this means Rust 1.25 or later. Older versions may work, but are not tested or guaranteed.
