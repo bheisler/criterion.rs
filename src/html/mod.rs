@@ -427,7 +427,7 @@ impl Html {
         ));
         gnuplots.push(plot::regression(
             data,
-            &point,
+            point,
             (lb_, ub_),
             id,
             format!("{}/{}/report/regression.svg", context.output_directory, id),
@@ -441,7 +441,7 @@ impl Html {
         ));
         gnuplots.push(plot::regression(
             data,
-            &point,
+            point,
             (lb_, ub_),
             id,
             format!(

@@ -314,7 +314,7 @@ pub fn pdf(
 
 pub fn regression(
     data: Data<f64, f64>,
-    point: &Slope<f64>,
+    point: Slope<f64>,
     (lb, ub): (Slope<f64>, Slope<f64>),
     id: &BenchmarkId,
     path: String,

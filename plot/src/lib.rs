@@ -793,10 +793,10 @@ pub enum Axis {
 }
 
 impl Axis {
-    fn next(&self) -> Option<Axis> {
+    fn next(self) -> Option<Axis> {
         use Axis::*;
 
-        match *self {
+        match self {
             BottomX => Some(LeftY),
             LeftY => Some(RightY),
             RightY => Some(TopX),
@@ -835,10 +835,10 @@ pub enum Grid {
 }
 
 impl Grid {
-    fn next(&self) -> Option<Grid> {
+    fn next(self) -> Option<Grid> {
         use Grid::*;
 
-        match *self {
+        match self {
             Major => Some(Minor),
             Minor => None,
         }

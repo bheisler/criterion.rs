@@ -244,7 +244,7 @@ impl Benchmark {
         F: FnMut(&mut Bencher) + 'static,
     {
         Benchmark {
-            config: Default::default(),
+            config: PartialBenchmarkConfig::default(),
             routines: vec![],
             throughput: None,
         }.with_function(id, f)
@@ -296,7 +296,7 @@ impl Benchmark {
         S: Into<String>,
     {
         Benchmark {
-            config: Default::default(),
+            config: PartialBenchmarkConfig::default(),
             routines: vec![],
             throughput: None,
         }.with_program(id, program)
@@ -453,7 +453,7 @@ where
         I: IntoIterator<Item = T>,
     {
         ParameterizedBenchmark {
-            config: Default::default(),
+            config: PartialBenchmarkConfig::default(),
             values: parameters.into_iter().collect(),
             routines: vec![],
             throughput: None,
@@ -515,7 +515,7 @@ where
         I: IntoIterator<Item = T>,
     {
         ParameterizedBenchmark {
-            config: Default::default(),
+            config: PartialBenchmarkConfig::default(),
             routines: vec![],
             values: parameters.into_iter().collect(),
             throughput: None,
@@ -527,7 +527,7 @@ where
         parameters: Vec<T>,
     ) -> ParameterizedBenchmark<T> {
         ParameterizedBenchmark {
-            config: Default::default(),
+            config: PartialBenchmarkConfig::default(),
             values: parameters,
             routines: functions,
             throughput: None,
