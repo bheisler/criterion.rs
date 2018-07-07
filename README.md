@@ -33,13 +33,15 @@
 Criterion.<span></span>rs helps you write fast code by detecting and measuring performance improvements or regressions, even small ones, quickly and accurately. You can optimize with confidence, knowing how each change affects the performance of your code.
 
 ## Table of Contents
-- [Features](#features)
-- [Quickstart](#quickstart)
-- [Goals](#goals)
-- [Contributing](#contributing)
-- [Maintenance](#maintenance)
-- [License](#license)
-- [Related Projects](#related-projects)
+- [Table of Contents](#table-of-contents)
+    - [Features](#features)
+    - [Quickstart](#quickstart)
+    - [Goals](#goals)
+    - [Contributing](#contributing)
+- [Compatibility Policy](#compatibility-policy)
+    - [Maintenance](#maintenance)
+    - [License](#license)
+    - [Related Projects](#related-projects)
 
 ### Features
 
@@ -50,7 +52,7 @@ Criterion.<span></span>rs helps you write fast code by detecting and measuring p
 
 ### Quickstart
 
-In order to generate plots, you must have [gnuplot](http://www.gnuplot.info/) installed. See the gnuplot website for installation instructions. Criterion.rs also currently requires Rust 1.23 or later.
+In order to generate plots, you must have [gnuplot](http://www.gnuplot.info/) installed. See the gnuplot website for installation instructions. Criterion.rs also currently requires Rust 1.25 or later (see [Compatibility Policy](#compatibility-policy) for more details).
 
 To start with Criterion.<span></span>rs, add the following to your `Cargo.toml` file:
 
@@ -116,6 +118,16 @@ Code or documentation improvements in the form of pull requests are also welcome
 If your issues or pull requests have no response after a few days, feel free to ping me (@bheisler)
 
 For more details, see the [CONTRIBUTING.md file](https://github.com/japaric/criterion.rs/blob/master/CONTRIBUTING.md)
+
+## Compatibility Policy
+
+Criterion.<span></span>rs supports the last three stable minor releases of Rust. At time of
+writing, this means Rust 1.25 or later. Older versions may work, but are not tested or guaranteed.
+
+Currently, the oldest version of Rust believed to work is 1.23. Future versions of Criterion.rs may
+break support for such old versions, and this will not be considered a breaking change. If you
+require Criterion.<span></span>rs to work on old versions of Rust, you will need to stick to a
+specific patch version of Criterion.<span></span>rs.
 
 ### Maintenance
 

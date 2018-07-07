@@ -38,14 +38,14 @@ matrix:
             - gnuplot
     - os: linux
       env: GNUPLOT=yes
-      rust: 1.23.0
+      rust: 1.25.0
       addons:
         apt:
           packages:
             - gnuplot
     - os: linux
       env: HTML_REPORTS=no GNUPLOT=yes
-      rust: 1.20.0
+      rust: 1.25.0
       addons:
         apt:
           packages:
