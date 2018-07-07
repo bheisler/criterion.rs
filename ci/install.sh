@@ -14,7 +14,7 @@ if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$GNUPLOT" = "yes" ]; then
 fi
 
 if [ "$COVERAGE" = "yes" ]; then
-    RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin
+    RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin --force
 fi
 
 if [ "$RUSTFMT" = "yes" ]; then
