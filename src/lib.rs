@@ -204,7 +204,7 @@ impl Bencher {
     /// ```text
     /// elapsed = Instant::now + iters * (routine + mem::drop(O) + Range::next)
     /// ```
-    /// 
+    ///
     /// # Example
     ///
     /// ```rust
@@ -352,7 +352,7 @@ impl Bencher {
     /// ``` text
     /// elapsed = Instant::now + iters * (routine + Vec::push + Range::next)
     /// ```
-    /// 
+    ///
     /// # Example
     ///
     /// ```rust
@@ -568,7 +568,7 @@ impl Criterion {
     /// measurement time.
     ///
     /// Sample size must be at least 2.
-    /// 
+    ///
     /// # Panics
     ///
     /// Panics if set to zero or one
@@ -866,9 +866,9 @@ scripts alongside the generated plots.
     /// Benchmarks a function
     ///
     /// # Example
-    /// 
+    ///
     /// ```rust
-    /// # #[macro_use] extern crate criterion;
+    /// # #![macro_use] extern crate criterion;
     /// # use self::criterion::*;
     ///
     /// fn bench(c: &mut Criterion) {
@@ -880,7 +880,7 @@ scripts alongside the generated plots.
     ///         }),
     ///     );
     /// }
-    /// 
+    ///
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
@@ -897,9 +897,9 @@ scripts alongside the generated plots.
     /// Works similar to `bench_function`, but with multiple functions.
     ///
     /// # Example
-    /// 
+    ///
     /// ``` rust
-    /// # #[macro_use] extern crate criterion;
+    /// # #![macro_use] extern crate criterion;
     /// # use self::criterion::*;
     /// # fn seq_fib(i: &u32) {}
     /// # fn par_fib(i: &u32) {}
@@ -915,7 +915,7 @@ scripts alongside the generated plots.
     ///         par_fib(i);
     ///     });
     /// }
-    /// 
+    ///
     /// fn bench(c: &mut Criterion) {
     ///     let sequential_fib = Fun::new("Sequential", bench_seq_fib);
     ///     let parallel_fib = Fun::new("Parallel", bench_par_fib);
@@ -945,20 +945,20 @@ scripts alongside the generated plots.
     /// receive the id: `${id}/${input}`.
     ///
     /// # Example
-    /// 
+    ///
     /// ```rust
-    /// # #[macro_use] extern crate criterion;
+    /// # #![macro_use] extern crate criterion;
     /// # use self::criterion::*;
     ///
     /// fn bench(c: &mut Criterion) {
-    ///     c.bench_function_over_inputs("from_elem", 
+    ///     c.bench_function_over_inputs("from_elem",
     ///         |b: &mut Bencher, size: &usize| {
     ///             b.iter(|| vec![0u8; *size]);
-    ///         }, 
+    ///         },
     ///         vec![1024, 2048, 4096]
     ///     );
     /// }
-    /// 
+    ///
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
@@ -974,7 +974,7 @@ scripts alongside the generated plots.
     /// Benchmarks an external program
     ///
     /// The external program must:
-    /// 
+    ///
     /// * Read the number of iterations from stdin
     /// * Execute the routine to benchmark that many times
     /// * Print the elapsed time (in nanoseconds) to stdout
@@ -1053,7 +1053,7 @@ scripts alongside the generated plots.
     /// information.
     ///
     /// ```rust
-    /// # #[macro_use] extern crate criterion;
+    /// # #![macro_use] extern crate criterion;
     /// # use criterion::*;
     /// # fn routine_1() {}
     /// # fn routine_2() {}
@@ -1067,7 +1067,7 @@ scripts alongside the generated plots.
     ///             .sample_size(50)
     ///     );
     /// }
-    /// 
+    ///
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
