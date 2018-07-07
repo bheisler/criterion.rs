@@ -220,11 +220,11 @@ impl Benchmark {
     /// Create a new benchmark group and adds the given function to it.
     ///
     /// # Example
-    /// 
+    ///
     /// ```rust
     /// # #![macro_use] extern crate criterion;
     /// # use criterion::*;
-    /// 
+    ///
     /// fn bench(c: &mut Criterion) {
     ///     // One-time setup goes here
     ///     c.bench(
@@ -253,7 +253,7 @@ impl Benchmark {
     /// Create a new benchmark group and add the given program to it.
     ///
     /// The external program must:
-    /// 
+    ///
     /// * Read the number of iterations from stdin
     /// * Execute the routine to benchmark that many times
     /// * Print the elapsed time (in nanoseconds) to stdout
@@ -265,7 +265,7 @@ impl Benchmark {
     /// # trait DurationExt { fn to_nanos(&self) -> u64 { 0 } }
     /// # impl DurationExt for Duration {}
     /// // Example of an external program that implements this protocol
-    /// 
+    ///
     /// fn main() {
     ///     let stdin = io::stdin();
     ///     let ref mut stdin = stdin.lock();
@@ -422,19 +422,19 @@ where
     /// The function under test must follow the setup - bench - teardown pattern:
     ///
     /// # Example
-    /// 
+    ///
     /// ```rust
     /// # #![macro_use] extern crate criterion;
     /// # use criterion::*;
-    /// 
+    ///
     /// fn bench(c: &mut Criterion) {
     ///     let parameters = vec![1u64, 2u64, 3u64];
-    /// 
+    ///
     ///     // One-time setup goes here
     ///     c.bench(
     ///         "my_group",
     ///         ParameterizedBenchmark::new(
-    ///             "my_function", 
+    ///             "my_function",
     ///             |b, param| b.iter(|| {
     ///                 // Code to benchmark using param goes here
     ///             }),
@@ -481,7 +481,7 @@ where
     /// fn main() {
     ///     let stdin = io::stdin();
     ///     let ref mut stdin = stdin.lock();
-    /// 
+    ///
     ///     // You might opt to pass the parameter to the external command as
     ///     // an environment variable, command line argument, file on disk, etc.
     ///     let parameter = env::var("PARAMETER").unwrap();
@@ -537,7 +537,7 @@ where
     /// Add a function to the benchmark group.
     ///
     /// # Example
-    /// 
+    ///
     /// ```
     /// # use criterion::ParameterizedBenchmark;
     /// ParameterizedBenchmark::new("times 10", |b, i| b.iter(|| i * 10), vec![1, 2, 3])
@@ -558,8 +558,8 @@ where
 
     /// Add an external program to the benchmark group.
     ///
-    /// # Example 
-    /// 
+    /// # Example
+    ///
     /// ```
     /// # use criterion::ParameterizedBenchmark;
     /// # use std::process::Command;
@@ -587,7 +587,7 @@ where
     /// Use the given function to calculate the input size for a given input.
     ///
     /// # Example
-    /// 
+    ///
     /// ```
     /// # use criterion::{ParameterizedBenchmark, Throughput};
     /// # use std::process::Command;
