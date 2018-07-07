@@ -34,7 +34,7 @@ pub(crate) fn common(
     );
     let (iters, times): (Vec<f64>, Vec<f64>) = fs::load(&sample_dir)?;
 
-    let estimates_file = &format!("{}/{}/base/estimates.json", criterion.output_directory, id.as_directory_name());
+    let estimates_file = &format!("{}/{}/{}/estimates.json", criterion.output_directory, id.as_directory_name(), criterion.baseline_directory);
     let base_estimates: Estimates = fs::load(&estimates_file)
         .map_err(|e| e.context(format!("Failed to load {}!", &estimates_file)))?;
 
