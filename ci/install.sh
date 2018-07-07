@@ -14,7 +14,7 @@ if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$GNUPLOT" = "yes" ]; then
 fi
 
 if [ "$COVERAGE" = "yes" ]; then
-    curl https://raw.githubusercontent.com/xd009642/tarpaulin/master/travis-install.sh | bash
+    RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin
 fi
 
 if [ "$RUSTFMT" = "yes" ]; then
