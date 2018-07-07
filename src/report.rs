@@ -128,6 +128,7 @@ pub struct ReportContext {
     pub output_directory: String,
     pub plotting: Plotting,
     pub plot_config: PlotConfiguration,
+    pub test_mode: bool,
 }
 
 pub(crate) trait Report {
@@ -341,8 +342,13 @@ impl CliReport {
     }
 }
 impl Report for CliReport {
-    fn benchmark_start(&self, id: &BenchmarkId, _: &ReportContext) {
-        self.print_overwritable(format!("Benchmarking {}", id));
+    fn benchmark_start(&self, id: &BenchmarkId, ctx: &ReportContext) {
+        if ctx.test_mode {
+            println!("Testing {}", id);
+        }
+        else {
+            self.print_overwritable(format!("Benchmarking {}", id));
+        }
     }
 
     fn warmup(&self, id: &BenchmarkId, _: &ReportContext, warmup_ns: f64) {
@@ -354,9 +360,14 @@ impl Report for CliReport {
         ));
     }
 
-    fn terminated(&self, id: &BenchmarkId, _: &ReportContext) {
-        self.text_overwrite();
-        println!("Benchmarking {}: Complete (Analysis Disabled)", id);
+    fn terminated(&self, id: &BenchmarkId, ctx: &ReportContext) {
+        if ctx.test_mode {
+            println!("Success");
+        }
+        else {
+            self.text_overwrite();
+            println!("Benchmarking {}: Complete (Analysis Disabled)", id);
+        }
     }
 
     fn analysis(&self, id: &BenchmarkId, _: &ReportContext) {

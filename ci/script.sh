@@ -18,12 +18,10 @@ elif [ "$DOCS" = "yes" ]; then
     travis-cargo doc-upload || true
 elif [ "$COVERAGE" = "yes" ]; then
     cargo tarpaulin --all --no-count --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
-elif [ "$BENCHMARK" = "yes" ]; then
-    cargo bench --all $BUILD_ARGS
 elif [ "$RUSTFMT" = "yes" ]; then
     cargo fmt -- --write-mode diff
 else
-    cargo build $BUILD_ARGS
-    cargo test $BUILD_ARGS --all
-    cargo build $BUILD_ARGS --benches --all
+    cargo build $BUILD_ARGS --release
+    cargo test $BUILD_ARGS --all --release
+    cargo bench $BUILD_ARGS --all -- --test
 fi

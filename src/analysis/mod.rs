@@ -44,6 +44,13 @@ pub(crate) fn common<T>(
 ) {
     criterion.report.benchmark_start(id, report_context);
 
+    // In test mode, run the benchmark exactly once, then exit.
+    if criterion.test_mode {
+        routine.test(parameter);
+        criterion.report.terminated(id, report_context);
+        return;
+    }
+
     if let Baseline::Compare = criterion.baseline {
         if !base_dir_exists(
             id,

@@ -365,6 +365,7 @@ impl BenchmarkDefinition for Benchmark {
             output_directory: c.output_directory.clone(),
             plotting: c.plotting,
             plot_config: self.config.plot_config.clone(),
+            test_mode: c.test_mode,
         };
 
         let config = self.config.to_complete(&c.config);
@@ -403,7 +404,7 @@ impl BenchmarkDefinition for Benchmark {
             all_ids.push(id);
         }
 
-        if all_ids.len() > 1 && any_matched && !c.measure_only {
+        if all_ids.len() > 1 && any_matched && !c.measure_only && !c.test_mode {
             c.report.summarize(&report_context, &all_ids);
         }
         if any_matched {
@@ -611,6 +612,7 @@ where
             output_directory: c.output_directory.clone(),
             plotting: c.plotting,
             plot_config: self.config.plot_config.clone(),
+            test_mode: c.test_mode,
         };
 
         let config = self.config.to_complete(&c.config);
@@ -661,7 +663,7 @@ where
             }
         }
 
-        if all_ids.len() > 1 && any_matched && !c.measure_only {
+        if all_ids.len() > 1 && any_matched && !c.measure_only && !c.test_mode {
             c.report.summarize(&report_context, &all_ids);
         }
         if any_matched {

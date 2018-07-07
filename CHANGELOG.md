@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
     If the baseline does not exist for a benchmark, an error is given.
 - Added user-guide documentation for baselines, throughput measurements and
   plot configuration.
+- Added a flag, `--test`, which causes Criterion to execute the benchmarks once
+  without measuring or reporting the results. This is useful for checking that the
+  benchmarks run successfully in a CI setting.
 
 ### Fixed
 - The `sample_size` method on the `Criterion`, `Benchmark` and 

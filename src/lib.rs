@@ -507,6 +507,7 @@ pub struct Criterion {
     baseline_directory: String,
     baseline: Baseline,
     measure_only: bool,
+    test_mode: bool,
 }
 
 impl Default for Criterion {
@@ -557,6 +558,7 @@ impl Default for Criterion {
             baseline: Baseline::Save,
             output_directory: "target/criterion".to_owned(),
             measure_only: false,
+            test_mode: false,
         }
     }
 }
@@ -736,10 +738,15 @@ impl Criterion {
     /// Generate the final summary at the end of a run.
     #[doc(hidden)]
     pub fn final_summary(&self) {
+        if self.measure_only || self.test_mode {
+            return;
+        }
+
         let report_context = ReportContext {
             output_directory: self.output_directory.clone(),
             plotting: self.plotting,
             plot_config: PlotConfiguration::default(),
+            test_mode: self.test_mode,
         };
         self.report.final_summary(&report_context);
     }
@@ -782,6 +789,9 @@ impl Criterion {
             .arg(Arg::with_name("measure-only")
                 .long("measure-only")
                 .help("Only perform measurements; do no analysis or storage of results. This is useful eg. when profiling the benchmarks, to reduce clutter in the profiling data."))
+            .arg(Arg::with_name("test")
+                .long("test")
+                .help("Run the benchmarks once, to verify that they execute successfully, but do not measure or report the results."))
             //Ignored but always passed to benchmark executables
             .arg(Arg::with_name("bench")
                 .hidden(true)
@@ -843,6 +853,7 @@ scripts alongside the generated plots.
         )));
 
         self.measure_only = matches.is_present("measure-only");
+        self.test_mode = matches.is_present("test");
         #[cfg(feature = "html_reports")]
         {
             if !self.measure_only {

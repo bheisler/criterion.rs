@@ -17,6 +17,11 @@ pub trait Routine<T> {
         -> (u64, u64);
 
     /// PRIVATE
+    fn test(&mut self, parameter: &T) {
+        let mut m = self.start(parameter);
+        self.bench(&mut m, &[1u64], parameter);
+    }
+
     fn sample(
         &mut self,
         id: &BenchmarkId,
