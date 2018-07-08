@@ -1,16 +1,16 @@
-use stats::bivariate::regression::Slope;
 use stats::bivariate::Data;
+use stats::bivariate::regression::Slope;
 use stats::univariate::outliers::tukey::LabeledSample;
 
+use Estimate;
 use estimate::{Distributions, Estimates, Statistic};
 use format;
-use stats::univariate::Sample;
 use stats::Distribution;
+use stats::univariate::Sample;
 use std::cell::Cell;
 use std::fmt;
-use std::io::stdout;
 use std::io::Write;
-use Estimate;
+use std::io::stdout;
 use {PlotConfiguration, Plotting, Throughput};
 
 pub(crate) struct ComparisonData {

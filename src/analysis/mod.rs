@@ -1,18 +1,18 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use stats::bivariate::regression::Slope;
 use stats::bivariate::Data;
-use stats::univariate::outliers::tukey::{self, LabeledSample};
+use stats::bivariate::regression::Slope;
 use stats::univariate::Sample;
+use stats::univariate::outliers::tukey::{self, LabeledSample};
 use stats::{Distribution, Tails};
 
 use benchmark::BenchmarkConfig;
 use estimate::{Distributions, Estimates, Statistic};
 use report::{BenchmarkId, ReportContext};
 use routine::Routine;
-use {format, fs};
 use {Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
+use {format, fs};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => {{
