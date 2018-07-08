@@ -168,26 +168,28 @@ pub struct ReportContext {
 }
 
 pub(crate) trait Report {
-    fn benchmark_start(&self, id: &BenchmarkId, context: &ReportContext);
-    fn warmup(&self, id: &BenchmarkId, context: &ReportContext, warmup_ns: f64);
-    fn terminated(&self, id: &BenchmarkId, context: &ReportContext);
-    fn analysis(&self, id: &BenchmarkId, context: &ReportContext);
+    fn benchmark_start(&self, _id: &BenchmarkId, _context: &ReportContext) {}
+    fn warmup(&self, _id: &BenchmarkId, _context: &ReportContext, _warmup_ns: f64) {}
+    fn terminated(&self, _id: &BenchmarkId, _context: &ReportContext) {}
+    fn analysis(&self, _id: &BenchmarkId, _context: &ReportContext) {}
     fn measurement_start(
         &self,
-        id: &BenchmarkId,
-        context: &ReportContext,
-        sample_count: u64,
-        estimate_ns: f64,
-        iter_count: u64,
-    );
+        _id: &BenchmarkId,
+        _context: &ReportContext,
+        _sample_count: u64,
+        _estimate_ns: f64,
+        _iter_count: u64,
+    ) {
+    }
     fn measurement_complete(
         &self,
-        id: &BenchmarkId,
-        context: &ReportContext,
-        measurements: &MeasurementData,
-    );
-    fn summarize(&self, context: &ReportContext, all_ids: &[BenchmarkId]);
-    fn final_summary(&self, context: &ReportContext);
+        _id: &BenchmarkId,
+        _context: &ReportContext,
+        _measurements: &MeasurementData,
+    ) {
+    }
+    fn summarize(&self, _context: &ReportContext, _all_ids: &[BenchmarkId]) {}
+    fn final_summary(&self, _context: &ReportContext) {}
 }
 
 pub(crate) struct Reports {
@@ -565,9 +567,6 @@ impl Report for CliReport {
             );
         }
     }
-
-    fn summarize(&self, _: &ReportContext, _: &[BenchmarkId]) {}
-    fn final_summary(&self, _: &ReportContext) {}
 }
 
 enum ComparisonResult {
