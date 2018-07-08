@@ -9,12 +9,14 @@ The plots and saved data are stored under `target/criterion/$BENCHMARK_NAME/`. H
 ```
 $BENCHMARK/
 ├── base/
+│  ├── raw.csv
 │  ├── estimates.json
 │  ├── sample.json
 │  └── tukey.json
 ├── change/
 │  └── estimates.json
 ├── new/
+│  ├── raw.csv
 │  ├── estimates.json
 │  ├── sample.json
 │  └── tukey.json
@@ -40,7 +42,7 @@ $BENCHMARK/
    └── slope.svg
 ```
 
-The `new` folder contains the statistics for the last benchmarking run, while the `base` folder contains those for the previous run. The plots are in the `report` folder. Criterion.rs only keeps historical data for two runs. The `report/both` folder contains plots which show both runs on one plot, while the `report/change` folder contains plots showing the differences between the two runs. This example shows the plots produced by the default `bench_function` benchmark method. Other methods may produce additional charts, which will be detailed in their respective pages.
+The `new` folder contains the statistics for the last benchmarking run, while the `base` folder contains those for the last run on the `base` baseline (see [Command-Line Options](/user_guide/command_line_options.html#baselines) for more information on baselines). The plots are in the `report` folder. Criterion.rs only keeps historical data for the last run. The `report/both` folder contains plots which show both runs on one plot, while the `report/change` folder contains plots showing the differences between the last two runs. This example shows the plots produced by the default `bench_function` benchmark method. Other methods may produce additional charts, which will be detailed in their respective pages.
 
 ## MAD/Mean/Median/SD/Slope
 
