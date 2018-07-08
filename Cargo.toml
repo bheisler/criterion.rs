@@ -26,6 +26,7 @@ serde_derive = "1.0"
 atty = "0.2"
 clap = "2.29"
 handlebars = { version = "0.32", optional = true }
+csv = "1.0"
 
 [dev-dependencies]
 walkdir = "2.1"

@@ -23,6 +23,7 @@
 extern crate atty;
 extern crate clap;
 extern crate criterion_stats as stats;
+extern crate csv;
 extern crate failure;
 extern crate itertools;
 extern crate itertools_num;
@@ -55,6 +56,7 @@ mod macros_private;
 #[macro_use]
 mod analysis;
 mod benchmark;
+mod csv_report;
 mod error;
 mod estimate;
 mod format;
@@ -83,6 +85,7 @@ use std::{fmt, mem};
 
 use benchmark::BenchmarkConfig;
 use benchmark::NamedRoutine;
+use csv_report::FileCsvReport;
 use estimate::{Distributions, Estimates, Statistic};
 use plotting::Plotting;
 use report::{CliReport, Report, ReportContext, Reports};
@@ -528,6 +531,7 @@ impl Default for Criterion {
 
         let mut reports: Vec<Box<Report>> = vec![];
         reports.push(Box::new(CliReport::new(false, false, false)));
+        reports.push(Box::new(FileCsvReport));
 
         #[cfg(feature = "html_reports")]
         {
@@ -851,6 +855,7 @@ scripts alongside the generated plots.
             enable_text_coloring,
             verbose,
         )));
+        reports.push(Box::new(FileCsvReport));
 
         self.measure_only = matches.is_present("measure-only");
         self.test_mode = matches.is_present("test");

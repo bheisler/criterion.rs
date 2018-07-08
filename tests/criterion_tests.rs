@@ -104,10 +104,11 @@ fn verify_html(dir: &PathBuf, path: &str) {
     verify_file(dir, path);
 }
 
-fn verify_json_stats(dir: &PathBuf, baseline: &str) {
+fn verify_stats(dir: &PathBuf, baseline: &str) {
     verify_json(&dir, &format!("{}/estimates.json", baseline));
     verify_json(&dir, &format!("{}/sample.json", baseline));
     verify_json(&dir, &format!("{}/tukey.json", baseline));
+    verify_file(&dir, &format!("{}/raw.csv", baseline));
 }
 
 fn verify_not_exists(dir: &PathBuf, path: &str) {
@@ -167,7 +168,7 @@ fn test_save_baseline() {
         .bench_function("test_save_baseline", |b| b.iter(|| 10));
 
     let dir = dir.path().join("test_save_baseline");
-    verify_json_stats(&dir, "some-baseline");
+    verify_stats(&dir, "some-baseline");
 
     verify_not_exists(&dir, "base");
 }
@@ -400,6 +401,7 @@ fn test_throughput() {
 #[test]
 fn test_output_files() {
     let tempdir = temp_dir();
+    // Run benchmarks twice to produce comparisons
     for _ in 0..2 {
         short_benchmark(&tempdir).bench(
             "test_output",
@@ -408,11 +410,8 @@ fn test_output_files() {
                 .with_function("output_\\/.*\"?", |b| b.iter(|| 30)),
         );
     }
-    for entry in WalkDir::new(&tempdir.path()) {
-        let entry = entry.unwrap();
-        println!("{:?}", entry);
-    }
 
+    // For each benchmark, assert that the expected files are present.
     for x in 0..3 {
         let dir = if x == 2 {
             // Check that certain special characters are replaced with underscores
@@ -421,7 +420,8 @@ fn test_output_files() {
             tempdir.path().join(format!("test_output/output_{}", x + 1))
         };
 
-        verify_json_stats(&dir, "new");
+        verify_stats(&dir, "new");
+        verify_stats(&dir, "base");
         verify_json(&dir, "change/estimates.json");
 
         if short_benchmark(&tempdir).can_plot() && cfg!(feature = "html_reports") {
@@ -446,6 +446,7 @@ fn test_output_files() {
         }
     }
 
+    // Check for overall report files
     if short_benchmark(&tempdir).can_plot() && cfg!(feature = "html_reports") {
         let dir = tempdir.path().join("test_output");
 
@@ -453,8 +454,8 @@ fn test_output_files() {
         verify_html(&dir, "report/index.html");
     }
 
+    // Run the final summary process and check for the report that produces
     short_benchmark(&tempdir).final_summary();
-
     if short_benchmark(&tempdir).can_plot() && cfg!(feature = "html_reports") {
         let dir = tempdir.path().to_owned();
 
