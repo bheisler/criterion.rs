@@ -1,16 +1,16 @@
-use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
+use stats::bivariate::Data;
 use stats::univariate::outliers::tukey::LabeledSample;
 
-use Estimate;
 use estimate::{Distributions, Estimates, Statistic};
 use format;
-use stats::Distribution;
 use stats::univariate::Sample;
+use stats::Distribution;
 use std::cell::Cell;
 use std::fmt;
-use std::io::Write;
 use std::io::stdout;
+use std::io::Write;
+use Estimate;
 use {PlotConfiguration, Plotting, Throughput};
 
 pub(crate) struct ComparisonData {
@@ -94,8 +94,6 @@ impl BenchmarkId {
             }
             (&None, &None) => group_id.clone(),
         };
-
-        println!("Expected directory is {}", directory_name);
 
         BenchmarkId {
             group_id,

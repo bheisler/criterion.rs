@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added a flag, `--test`, which causes Criterion to execute the benchmarks once
   without measuring or reporting the results. This is useful for checking that the
   benchmarks run successfully in a CI setting.
+- Added a `raw.csv` file to the output which contains a stable, machine-readable
+  representation of the measurements taken by benchmarks. This enables users to
+  perform their own analysis or keep historical information without depending on
+  private implementation details.
 
 ### Fixed
 - The `sample_size` method on the `Criterion`, `Benchmark` and 

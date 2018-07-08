@@ -1,18 +1,18 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
-use stats::univariate::Sample;
+use stats::bivariate::Data;
 use stats::univariate::outliers::tukey::{self, LabeledSample};
+use stats::univariate::Sample;
 use stats::{Distribution, Tails};
 
 use benchmark::BenchmarkConfig;
 use estimate::{Distributions, Estimates, Statistic};
 use report::{BenchmarkId, ReportContext};
 use routine::Routine;
-use {Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
 use {format, fs};
+use {Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => {{
@@ -292,4 +292,5 @@ fn copy_new_dir_to_base(id: &str, baseline: &str, output_directory: &str) {
         &new_dir.join("tukey.json"),
         &base_dir.join("tukey.json")
     ));
+    try_else_return!(fs::cp(&new_dir.join("raw.csv"), &base_dir.join("raw.csv")));
 }
