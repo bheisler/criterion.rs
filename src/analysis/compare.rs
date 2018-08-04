@@ -87,6 +87,14 @@ fn t_test(
         mixed::bootstrap(avg_times, base_avg_times, nresamples, |a, b| (a.t(b),))
     ).0;
 
+    // HACK: Filter out non-finite numbers, which can happen sometimes when sample size is very small.
+    // Downstream code doesn't like non-finite values here.
+    let t_distribution = Distribution::from(t_distribution.as_slice().iter()
+        .filter(|a| a.is_finite())
+        .cloned()
+        .collect::<Vec<_>>()
+        .into_boxed_slice());
+
     (t_statistic, t_distribution)
 }
 

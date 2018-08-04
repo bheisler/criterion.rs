@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   file and log an error message.
 - Fixed case where running `cargo clean; cargo bench -- <filter>` would cause Criterion.rs to log
   an error message.
+- Fixed a GNUplot error message when sample size is very small.
 
 ## [0.2.4]
 ### Added
