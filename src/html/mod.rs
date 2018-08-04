@@ -267,7 +267,7 @@ impl Report for Html {
         let group_id = &all_ids[0].group_id;
 
         let mut function_ids = BTreeSet::new();
-        for id in all_ids.iter() {
+        for id in &all_ids {
             if let Some(ref function_id) = id.function_id {
                 function_ids.insert(function_id);
             }
