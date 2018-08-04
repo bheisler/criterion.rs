@@ -65,7 +65,7 @@ impl IndividualBenchmark {
     fn from_id(path_prefix: &str, id: &BenchmarkId) -> IndividualBenchmark {
         IndividualBenchmark {
             name: id.id().to_owned(),
-            path: format!("{}/{}", path_prefix, id.id()),
+            path: format!("{}/{}", path_prefix, id.as_directory_name()),
         }
     }
 }
@@ -557,7 +557,7 @@ impl Html {
         all_ids
             .iter()
             .filter_map(|id| {
-                let entry = output_dir.join(id.id()).join("new");
+                let entry = output_dir.join(id.as_directory_name()).join("new");
 
                 let (iters, times): (Vec<f64>, Vec<f64>) =
                     try_else_return!(fs::load(&entry.join("sample.json")), || None);
