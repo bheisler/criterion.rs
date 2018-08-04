@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed links from generated report files to documentation.
 - Fixed formatting for very large percentage changes (>1000%)
 - Sorted the sub-benchmarks by name
+- Fixed case where benchmark ID with special characters would cause Criterion.rs to open the wrong 
+  file and log an error message.
+- Fixed case where running `cargo clean; cargo bench -- <filter>` would cause Criterion.rs to log
+  an error message.
 
 ## [0.2.4]
 ### Added

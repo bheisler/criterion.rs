@@ -251,6 +251,11 @@ impl Report for Html {
             return;
         }
 
+        let all_ids = all_ids.iter()
+            .filter(|id| fs::is_dir(&format!("{}/{}", context.output_directory, id.as_directory_name())))
+            .cloned()
+            .collect::<Vec<_>>();
+
         let mut all_plots = vec![];
         let group_id = &all_ids[0].group_id;
 
@@ -262,7 +267,7 @@ impl Report for Html {
         }
 
         let data: Vec<(BenchmarkId, Vec<f64>)> =
-            self.load_summary_data(&context.output_directory, all_ids);
+            self.load_summary_data(&context.output_directory, &all_ids);
 
         for function_id in function_ids {
             let samples_with_function: Vec<_> = data.iter()
