@@ -18,7 +18,7 @@ fn short(n: f64) -> String {
     } else if n < 10000.0 {
         format!("{:.1}", n)
     } else {
-        format!("{}", n)
+        format!("{:.0}", n)
     }
 }
 
@@ -31,8 +31,10 @@ fn signed_short(n: f64) -> String {
         format!("{:+.3}", n)
     } else if n_abs < 1000.0 {
         format!("{:+.2}", n)
+    } else if n_abs < 10000.0 {
+        format!("{:+.1}", n)
     } else {
-        format!("{:+}", n)
+        format!("{:+.0}", n)
     }
 }
 
@@ -109,5 +111,32 @@ pub fn iter_count(iterations: u64) -> String {
             "{:.0}B iterations",
             (iterations as f64) / (1000.0 * 1000.0 * 1000.0)
         )
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn short_max_len() {
+        let mut float = 1.0;
+        while float < 999999.9 {
+            let string = short(float);
+            println!("{}", string);
+            assert!(string.len() <= 6);
+            float *= 2.0;
+        }
+    }
+
+    #[test]
+    fn signed_short_max_len() {
+        let mut float = -1.0;
+        while float > -999999.9 {
+            let string = signed_short(float);
+            println!("{}", string);
+            assert!(string.len() <= 7);
+            float *= 2.0;
+        }
     }
 }
