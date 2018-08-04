@@ -89,11 +89,15 @@ fn t_test(
 
     // HACK: Filter out non-finite numbers, which can happen sometimes when sample size is very small.
     // Downstream code doesn't like non-finite values here.
-    let t_distribution = Distribution::from(t_distribution.as_slice().iter()
-        .filter(|a| a.is_finite())
-        .cloned()
-        .collect::<Vec<_>>()
-        .into_boxed_slice());
+    let t_distribution = Distribution::from(
+        t_distribution
+            .as_slice()
+            .iter()
+            .filter(|a| a.is_finite())
+            .cloned()
+            .collect::<Vec<_>>()
+            .into_boxed_slice(),
+    );
 
     (t_statistic, t_distribution)
 }

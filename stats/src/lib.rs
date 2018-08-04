@@ -45,6 +45,11 @@ impl<A> Distribution<A>
 where
     A: Float,
 {
+    /// Create a distribution from the given values
+    pub fn from(values: Box<[A]>) -> Distribution<A> {
+        Distribution(values)
+    }
+
     /// Computes the confidence interval of the population parameter using percentiles
     ///
     /// # Panics

@@ -251,8 +251,15 @@ impl Report for Html {
             return;
         }
 
-        let all_ids = all_ids.iter()
-            .filter(|id| fs::is_dir(&format!("{}/{}", context.output_directory, id.as_directory_name())))
+        let all_ids = all_ids
+            .iter()
+            .filter(|id| {
+                fs::is_dir(&format!(
+                    "{}/{}",
+                    context.output_directory,
+                    id.as_directory_name()
+                ))
+            })
             .cloned()
             .collect::<Vec<_>>();
 
