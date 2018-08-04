@@ -308,10 +308,11 @@ impl Report for Html {
                 .file_name()
                 .map(|name| name.to_string_lossy())
                 .unwrap();
-            let sub_benchmarks = fs::list_existing_reports(&base_dir)?
+            let mut sub_benchmarks = fs::list_existing_reports(&base_dir)?
                 .into_iter()
                 .map(|sub_path| path_to_individual_benchmark(&sub_path, output_directory))
                 .collect::<Result<Vec<_>>>()?;
+            sub_benchmarks.sort_unstable_by_key(|k| k.name.clone());
             Ok(IndexBenchmark {
                 name: name.to_string(),
                 path: path.join("index.html")
