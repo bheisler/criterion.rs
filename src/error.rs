@@ -14,8 +14,8 @@ pub struct AccessError {
 pub type Result<T> = ::std::result::Result<T, Error>;
 
 pub(crate) fn log_error(e: &Error) {
-    error!("error: {}", e.cause());
-    for cause in e.causes() {
+    error!("error: {}", e.as_fail());
+    for cause in e.iter_chain() {
         error!("caused by: {}", cause);
     }
 
