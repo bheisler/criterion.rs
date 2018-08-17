@@ -75,7 +75,6 @@ impl BenchmarkId {
                 .replace("\"", "_")
                 .replace("/", "_")
                 .replace("\\", "_")
-                .replace(".", "_")
                 .replace("*", "_")
         }
 
