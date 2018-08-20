@@ -79,7 +79,6 @@ pub fn line_comparison(
         .group_by(|&&&(ref id, _)| &id.function_id)
     {
         let mut tuples: Vec<_> = group
-            .into_iter()
             .map(|&&(ref id, ref sample)| {
                 // Unwrap is fine here because it will only fail if the assumptions above are not true
                 // ie. programmer error.

@@ -286,7 +286,7 @@ impl Report for Html {
                 let subgroup_id = BenchmarkId::new(group_id.clone(), Some(function_id), None, None);
 
                 all_plots.extend(self.generate_summary(
-                    subgroup_id,
+                    &subgroup_id,
                     &*samples_with_function,
                     context,
                     false,
@@ -295,7 +295,7 @@ impl Report for Html {
         }
 
         all_plots.extend(self.generate_summary(
-            BenchmarkId::new(group_id, None, None, None),
+            &BenchmarkId::new(group_id, None, None, None),
             &*(data.iter().by_ref().collect::<Vec<_>>()),
             context,
             true,
@@ -588,7 +588,7 @@ impl Html {
 
     fn generate_summary(
         &self,
-        id: BenchmarkId,
+        id: &BenchmarkId,
         data: &[&(BenchmarkId, Vec<f64>)],
         report_context: &ReportContext,
         full_summary: bool,
