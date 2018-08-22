@@ -11,6 +11,15 @@ pub struct AccessError {
     pub inner: io::Error,
 }
 
+#[derive(Debug, Fail)]
+#[fail(display = "Failed to copy file {:?} to {:?}: {}", from, to, inner)]
+pub struct CopyError {
+    pub from: PathBuf,
+    pub to: PathBuf,
+    #[cause]
+    pub inner: io::Error,
+}
+
 pub type Result<T> = ::std::result::Result<T, Error>;
 
 pub(crate) fn log_error(e: &Error) {

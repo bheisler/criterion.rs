@@ -1,11 +1,11 @@
-use serde::Serialize;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use serde_json;
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-use error::{AccessError, Result};
+use error::{AccessError, CopyError, Result};
 
 pub fn load<A, P: ?Sized>(path: &P) -> Result<A>
 where
@@ -35,12 +35,19 @@ pub fn mkdirp<P>(path: &P) -> Result<()>
 where
     P: AsRef<Path>,
 {
-    fs::create_dir_all(path.as_ref())?;
+    fs::create_dir_all(path.as_ref()).map_err(|inner| AccessError {
+        inner,
+        path: path.as_ref().to_owned(),
+    })?;
     Ok(())
 }
 
 pub fn cp(from: &Path, to: &Path) -> Result<()> {
-    fs::copy(from, to)?;
+    fs::copy(from, to).map_err(|inner| CopyError {
+        inner,
+        from: from.to_owned(),
+        to: to.to_owned(),
+    })?;
     Ok(())
 }
 
@@ -74,7 +81,11 @@ where
     P: AsRef<Path>,
 {
     let mut paths = vec![];
-    for entry in fs::read_dir(directory)? {
+    let directory_iter = fs::read_dir(directory).map_err(|inner| AccessError {
+        inner,
+        path: directory.as_ref().to_owned(),
+    })?;
+    for entry in directory_iter {
         let path = entry?.path().join("report");
         if path.is_dir() && path.join("index.html").is_file() {
             paths.push(path.to_owned());
