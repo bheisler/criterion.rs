@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   an error message.
 - Fixed a GNUplot error message when sample size is very small.
 - Fixed several cases where Criterion.rs would generate invalid path names.
+- Fixed a bug where Criterion.rs would print an error if run with a filter that allowed no benchmarks and a clean target directory.
 
 ## [0.2.4]
 ### Added
