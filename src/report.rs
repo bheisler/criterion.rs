@@ -75,7 +75,6 @@ impl BenchmarkId {
                 .replace("\"", "_")
                 .replace("/", "_")
                 .replace("\\", "_")
-                .replace(".", "_")
                 .replace("*", "_")
         }
 
@@ -92,7 +91,7 @@ impl BenchmarkId {
             (&None, &Some(ref val)) => {
                 format!("{}/{}", directory_safe(&group_id), directory_safe(val))
             }
-            (&None, &None) => group_id.clone(),
+            (&None, &None) => directory_safe(&group_id),
         };
 
         BenchmarkId {
