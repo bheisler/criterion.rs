@@ -1,7 +1,8 @@
 use report::{BenchmarkId, MeasurementData, Report, ReportContext};
-use stats::bivariate::regression::Slope;
 use stats::bivariate::Data;
+use stats::bivariate::regression::Slope;
 
+use Estimate;
 use criterion_plot::Size;
 use error::Result;
 use estimate::Statistic;
@@ -13,7 +14,6 @@ use stats::univariate::Sample;
 use std::collections::BTreeSet;
 use std::path::Path;
 use std::process::Child;
-use Estimate;
 
 const THUMBNAIL_SIZE: Size = Size(450, 300);
 
