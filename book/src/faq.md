@@ -36,12 +36,18 @@ benchmarks that detect performance regressions should not cause the build to
 fail, and apparent performance regressions should be verified manually before
 rejecting a pull request.
 
-### `cargo bench -- --verbose` Panics
+### `cargo bench` Gives "Unrecognized Option" Errors for Valid Command-line Options
 
-This occurs because the `libtest` benchmark harness implicitly added to your
-crate is executing before the Criterion.rs benchmarks, and it panics when
-presented with a command-line argument it doesn't expect. There are two ways to
-work around this at present:
+By default, Cargo implicitly adds a `libtest` benchmark harness to your crate when benchmarking, to
+handle any `#[bench]` functions, even if you have none. It compiles and runs this executable first,
+before any of the other benchmarks. Normally, this is fine - it detects that there are no `libtest`
+benchmarks to execute and exits, allowing Cargo to move on to the real benchmarks. Unfortunately,
+it checks the command-line arguments first, and panics when it finds one it doesn't understand.
+This causes Cargo to stop benchmarking early, and it never executes the Criterion.rs benchmarks.
+
+This will occur when running `cargo bench` with any argument that Criterion.rs supports but `libtest`
+does not. For example, `--verbose` and `--save-baseline` will cause this issue, while `--help` will
+not. There are two ways to work around this at present:
 
 You could run only your Criterion benchmark, like so:
 
