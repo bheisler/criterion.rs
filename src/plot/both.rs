@@ -78,7 +78,7 @@ pub(crate) fn regression(
         })
         .configure(Axis::LeftY, |a| {
             a.configure(Grid::Major, |g| g.show())
-                .set(Label(format!("Total time ({}s)", prefix)))
+                .set(Label(format!("Total sample time ({}s)", prefix)))
                 .set(ScaleFactor(y_scale))
         })
         .configure(Key, |k| {
@@ -92,23 +92,23 @@ pub(crate) fn regression(
         .plot(
             FilledCurve {
                 x: &[0., max_iters],
-                y1: &[0., base_lb],
-                y2: &[0., base_ub],
+                y1: &[0., base_lb * max_iters],
+                y2: &[0., base_ub * max_iters],
             },
             |c| c.set(DARK_RED).set(Opacity(0.25)),
         )
         .plot(
             FilledCurve {
                 x: &[0., max_iters],
-                y1: &[0., lb],
-                y2: &[0., ub],
+                y1: &[0., lb * max_iters],
+                y2: &[0., ub * max_iters],
             },
             |c| c.set(DARK_BLUE).set(Opacity(0.25)),
         )
         .plot(
             Lines {
                 x: &[0., max_iters],
-                y: &[0., base_point],
+                y: &[0., base_point * max_iters],
             },
             |c| {
                 c.set(DARK_RED)
@@ -120,7 +120,7 @@ pub(crate) fn regression(
         .plot(
             Lines {
                 x: &[0., max_iters],
-                y: &[0., point],
+                y: &[0., point * max_iters],
             },
             |c| {
                 c.set(DARK_BLUE)

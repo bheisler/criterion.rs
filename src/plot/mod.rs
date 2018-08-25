@@ -360,7 +360,7 @@ pub fn regression(
         })
         .configure(Axis::LeftY, |a| {
             a.configure(Grid::Major, |g| g.show())
-                .set(Label(format!("Total time ({}s)", prefix)))
+                .set(Label(format!("Total sample time ({}s)", prefix)))
                 .set(ScaleFactor(y_scale))
         })
         .plot(
