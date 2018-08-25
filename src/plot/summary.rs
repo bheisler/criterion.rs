@@ -68,8 +68,22 @@ pub fn line_comparison(
                 .set(axis_scale.to_gnuplot())
         });
 
-    let mut max = 0.0;
     let mut i = 0;
+
+    let max = all_curves
+        .iter()
+        .map(|(_id, data)| Sample::new(data).mean())
+        .fold(::std::f64::NAN, f64::max);
+
+    let (scale, prefix) = scale_time(max);
+
+    f.configure(Axis::LeftY, |a| {
+        a.configure(Grid::Major, |g| g.show())
+            .configure(Grid::Minor, |g| g.hide())
+            .set(Label(format!("Average time ({}s)", prefix)))
+            .set(axis_scale.to_gnuplot())
+            .set(ScaleFactor(scale))
+    });
 
     // This assumes the curves are sorted. It also assumes that the benchmark IDs all have numeric
     // values or throughputs and that value is sensible (ie. not a mix of bytes and elements
@@ -84,10 +98,6 @@ pub fn line_comparison(
                 // ie. programmer error.
                 let x = id.as_number().unwrap();
                 let y = Sample::new(sample).mean();
-
-                if y > max {
-                    max = y;
-                }
 
                 (x, y)
             })
@@ -112,16 +122,6 @@ pub fn line_comparison(
 
         i += 1;
     }
-
-    let (scale, prefix) = scale_time(max);
-
-    f.configure(Axis::LeftY, |a| {
-        a.configure(Grid::Major, |g| g.show())
-            .configure(Grid::Minor, |g| g.hide())
-            .set(Label(format!("Average time ({}s)", prefix)))
-            .set(axis_scale.to_gnuplot())
-            .set(ScaleFactor(scale))
-    });
 
     debug_script(&path, &f);
     f.set(Output(path)).draw().unwrap()
