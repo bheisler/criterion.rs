@@ -5,7 +5,6 @@ use stats::univariate::outliers::tukey::LabeledSample;
 use Estimate;
 use estimate::{Distributions, Estimates, Statistic};
 use format;
-use serde::{self, Deserialize, Serialize};
 use stats::Distribution;
 use stats::univariate::Sample;
 use std::cell::Cell;
@@ -13,6 +12,8 @@ use std::fmt;
 use std::io::Write;
 use std::io::stdout;
 use {PlotConfiguration, Plotting, Throughput};
+
+const MAX_DIRECTORY_NAME_LEN: usize = 64;
 
 pub(crate) struct ComparisonData {
     pub p_value: f64,
@@ -46,17 +47,6 @@ pub enum ValueType {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-struct BenchmarkIdSerialized<'a> {
-    #[serde(borrow)]
-    pub group_id: &'a str,
-    #[serde(borrow)]
-    pub function_id: Option<&'a str>,
-    #[serde(borrow)]
-    pub value_str: Option<&'a str>,
-    pub throughput: Option<Throughput>,
-}
-
-#[derive(Clone)]
 pub struct BenchmarkId {
     pub group_id: String,
     pub function_id: Option<String>,
@@ -64,6 +54,30 @@ pub struct BenchmarkId {
     pub throughput: Option<Throughput>,
     full_id: String,
     directory_name: String,
+}
+
+fn make_filename_safe(string: &str) -> String {
+    let mut string = string
+        .to_owned()
+        .replace("?", "_")
+        .replace("\"", "_")
+        .replace("/", "_")
+        .replace("\\", "_")
+        .replace("*", "_");
+
+    // On Windows, file names are not case-sensitive, so lowercase everything.
+    if cfg!(target_os = "windows") {
+        string = string.to_lowercase();
+    }
+
+    // Truncate to last character boundary before max length...
+    let mut boundary = MAX_DIRECTORY_NAME_LEN.min(string.len());
+    while !string.is_char_boundary(boundary) {
+        boundary -= 1;
+    }
+    string.truncate(boundary);
+
+    string
 }
 
 impl BenchmarkId {
@@ -80,30 +94,24 @@ impl BenchmarkId {
             (&None, &None) => group_id.clone(),
         };
 
-        fn directory_safe(string: &str) -> String {
-            string
-                .to_owned()
-                .replace("?", "_")
-                .replace("\"", "_")
-                .replace("/", "_")
-                .replace("\\", "_")
-                .replace("*", "_")
-        }
-
         let directory_name = match (&function_id, &value_str) {
             (&Some(ref func), &Some(ref val)) => format!(
                 "{}/{}/{}",
-                directory_safe(&group_id),
-                directory_safe(func),
-                directory_safe(val)
+                make_filename_safe(&group_id),
+                make_filename_safe(func),
+                make_filename_safe(val)
             ),
-            (&Some(ref func), &None) => {
-                format!("{}/{}", directory_safe(&group_id), directory_safe(func))
-            }
-            (&None, &Some(ref val)) => {
-                format!("{}/{}", directory_safe(&group_id), directory_safe(val))
-            }
-            (&None, &None) => directory_safe(&group_id),
+            (&Some(ref func), &None) => format!(
+                "{}/{}",
+                make_filename_safe(&group_id),
+                make_filename_safe(func)
+            ),
+            (&None, &Some(ref val)) => format!(
+                "{}/{}",
+                make_filename_safe(&group_id),
+                make_filename_safe(val)
+            ),
+            (&None, &None) => make_filename_safe(&group_id),
         };
 
         BenchmarkId {
@@ -166,35 +174,6 @@ impl fmt::Debug for BenchmarkId {
             format_opt(&self.value_str),
             self.throughput,
         )
-    }
-}
-impl Serialize for BenchmarkId {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let id = BenchmarkIdSerialized {
-            group_id: &self.group_id,
-            function_id: self.function_id.as_ref().map(|a| &**a),
-            value_str: self.value_str.as_ref().map(|a| &**a),
-            throughput: self.throughput.clone(),
-        };
-        id.serialize(serializer)
-    }
-}
-impl<'de> Deserialize<'de> for BenchmarkId {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let id = BenchmarkIdSerialized::deserialize(deserializer)?;
-        let id = BenchmarkId::new(
-            id.group_id.to_owned(),
-            id.function_id.map(|a| a.to_owned()),
-            id.value_str.map(|a| a.to_owned()),
-            id.throughput,
-        );
-        Ok(id)
     }
 }
 
@@ -624,5 +603,32 @@ fn compare_to_threshold(estimate: &Estimate, noise: f64) -> ComparisonResult {
         ComparisonResult::Regressed
     } else {
         ComparisonResult::NonSignificant
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_make_filename_safe_replaces_characters() {
+        let input = "?/\\*\"";
+        let safe = make_filename_safe(input);
+        assert_eq!("_____", &safe);
+    }
+
+    #[test]
+    fn test_make_filename_safe_truncates_long_strings() {
+        let input = "This is a very long string. It is too long to be safe as a directory name, and so it needs to be truncated. What a long string this is.";
+        let safe = make_filename_safe(input);
+        assert!(input.len() > MAX_DIRECTORY_NAME_LEN);
+        assert_eq!(&input[0..MAX_DIRECTORY_NAME_LEN], &safe);
+    }
+
+    #[test]
+    fn test_make_filename_safe_respects_character_boundaries() {
+        let input = "✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓";
+        let safe = make_filename_safe(input);
+        assert!(safe.len() < MAX_DIRECTORY_NAME_LEN);
     }
 }
