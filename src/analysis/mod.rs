@@ -167,6 +167,15 @@ pub(crate) fn common<T>(
         .report
         .measurement_complete(id, report_context, &measurement_data);
 
+    log_if_err!(fs::save(
+        &id,
+        &format!(
+            "{}/{}/new/benchmark.json",
+            criterion.output_directory,
+            id.as_directory_name()
+        )
+    ));
+
     if let Baseline::Save = criterion.baseline {
         copy_new_dir_to_base(
             id.as_directory_name(),
@@ -291,6 +300,10 @@ fn copy_new_dir_to_base(id: &str, baseline: &str, output_directory: &str) {
     try_else_return!(fs::cp(
         &new_dir.join("tukey.json"),
         &base_dir.join("tukey.json")
+    ));
+    try_else_return!(fs::cp(
+        &new_dir.join("benchmark.json"),
+        &base_dir.join("benchmark.json")
     ));
     try_else_return!(fs::cp(&new_dir.join("raw.csv"), &base_dir.join("raw.csv")));
 }

@@ -752,6 +752,7 @@ impl Criterion {
             plot_config: PlotConfiguration::default(),
             test_mode: self.test_mode,
         };
+
         self.report.final_summary(&report_context);
     }
 
@@ -1171,7 +1172,7 @@ impl Estimate {
 /// Enum representing different ways of measuring the throughput of benchmarked code.
 /// If the throughput setting is configured for a benchmark then the estimated throughput will
 /// be reported as well as the time per iteration.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Throughput {
     /// Measure throughput in terms of bytes/second. The value should be the number of bytes
     /// processed by one iteration of the benchmarked code. Typically, this would be the length of

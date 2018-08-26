@@ -5,6 +5,7 @@ use stats::univariate::outliers::tukey::LabeledSample;
 use Estimate;
 use estimate::{Distributions, Estimates, Statistic};
 use format;
+use serde::{self, Deserialize, Serialize};
 use stats::Distribution;
 use stats::univariate::Sample;
 use std::cell::Cell;
@@ -42,6 +43,17 @@ pub enum ValueType {
     Bytes,
     Elements,
     Value,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+struct BenchmarkIdSerialized<'a> {
+    #[serde(borrow)]
+    pub group_id: &'a str,
+    #[serde(borrow)]
+    pub function_id: Option<&'a str>,
+    #[serde(borrow)]
+    pub value_str: Option<&'a str>,
+    pub throughput: Option<Throughput>,
 }
 
 #[derive(Clone)]
@@ -154,6 +166,35 @@ impl fmt::Debug for BenchmarkId {
             format_opt(&self.value_str),
             self.throughput,
         )
+    }
+}
+impl Serialize for BenchmarkId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let id = BenchmarkIdSerialized {
+            group_id: &self.group_id,
+            function_id: self.function_id.as_ref().map(|a| &**a),
+            value_str: self.value_str.as_ref().map(|a| &**a),
+            throughput: self.throughput.clone(),
+        };
+        id.serialize(serializer)
+    }
+}
+impl<'de> Deserialize<'de> for BenchmarkId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let id = BenchmarkIdSerialized::deserialize(deserializer)?;
+        let id = BenchmarkId::new(
+            id.group_id.to_owned(),
+            id.function_id.map(|a| a.to_owned()),
+            id.value_str.map(|a| a.to_owned()),
+            id.throughput,
+        );
+        Ok(id)
     }
 }
 
