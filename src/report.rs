@@ -8,6 +8,7 @@ use format;
 use stats::Distribution;
 use stats::univariate::Sample;
 use std::cell::Cell;
+use std::collections::HashSet;
 use std::fmt;
 use std::io::Write;
 use std::io::stdout;
@@ -149,6 +150,22 @@ impl BenchmarkId {
                 .as_ref()
                 .and_then(|string| string.parse::<f64>().ok())
                 .map(|_| ValueType::Value),
+        }
+    }
+
+    pub fn ensure_directory_name_unique(&mut self, existing_directories: &HashSet<String>) {
+        if !existing_directories.contains(self.as_directory_name()) {
+            return;
+        }
+
+        let mut counter = 2;
+        loop {
+            let new_dir_name = format!("{}_{}", self.as_directory_name(), counter);
+            if !existing_directories.contains(&new_dir_name) {
+                self.directory_name = new_dir_name;
+                return;
+            }
+            counter += 1;
         }
     }
 }
@@ -630,5 +647,27 @@ mod test {
         let input = "✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓";
         let safe = make_filename_safe(input);
         assert!(safe.len() < MAX_DIRECTORY_NAME_LEN);
+    }
+
+    #[test]
+    fn test_benchmark_id_make_directory_name_unique() {
+        let existing_id = BenchmarkId::new(
+            "Group".to_owned(),
+            Some("Function".to_owned()),
+            Some("Value".to_owned()),
+            None,
+        );
+        let mut directories = HashSet::new();
+        directories.insert(existing_id.as_directory_name().to_owned());
+
+        let mut new_id = existing_id.clone();
+        new_id.ensure_directory_name_unique(&directories);
+        assert_eq!("Group/Function/Value_2", new_id.as_directory_name());
+        directories.insert(new_id.as_directory_name().to_owned());
+
+        new_id = existing_id.clone();
+        new_id.ensure_directory_name_unique(&directories);
+        assert_eq!("Group/Function/Value_3", new_id.as_directory_name());
+        directories.insert(new_id.as_directory_name().to_owned());
     }
 }
