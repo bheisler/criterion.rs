@@ -72,7 +72,7 @@ pub fn line_comparison(
 
     let max = all_curves
         .iter()
-        .map(|&(_id, data)| Sample::new(data).mean())
+        .map(|&&(_, ref data)| Sample::new(data).mean())
         .fold(::std::f64::NAN, f64::max);
 
     let (scale, prefix) = scale_time(max);
