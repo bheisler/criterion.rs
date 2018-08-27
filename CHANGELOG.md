@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed bug where some benchmarks didn't appear in the benchmark index report.
 - Criterion.rs now honors the `CARGO_TARGET_DIR` environment variable.
 
+### Added
+- Criterion.rs will generate a chart showing the effects of changes in input (or input size) for all
+  benchmarks with numeric inputs or throughput, not just for those which compare multiple functions.
+
 ## [0.2.4]
 ### Added
 - Added a pair of flags, `--save-baseline` and `--baseline`, which change
