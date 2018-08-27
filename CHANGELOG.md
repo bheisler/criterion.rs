@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Fixed links from generated report files to documentation.
 - Fixed formatting for very large percentage changes (>1000%)
-- Sorted the sub-benchmarks by name
+- Sorted the benchmarks in the index report by name
 - Fixed case where benchmark ID with special characters would cause Criterion.rs to open the wrong 
   file and log an error message.
 - Fixed case where running `cargo clean; cargo bench -- <filter>` would cause Criterion.rs to log
@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed a GNUplot error message when sample size is very small.
 - Fixed several cases where Criterion.rs would generate invalid path names.
 - Fixed a bug where Criterion.rs would print an error if run with a filter that allowed no benchmarks and a clean target directory.
+- Fixed bug where some benchmarks didn't appear in the benchmark index report.
+- Criterion.rs now honors the `CARGO_TARGET_DIR` environment variable.
 
 ## [0.2.4]
 ### Added
