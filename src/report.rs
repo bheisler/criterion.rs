@@ -8,6 +8,7 @@ use format;
 use stats::Distribution;
 use stats::univariate::Sample;
 use std::cell::Cell;
+use std::cmp;
 use std::collections::HashSet;
 use std::fmt;
 use std::io::Write;
@@ -72,7 +73,7 @@ fn make_filename_safe(string: &str) -> String {
     }
 
     // Truncate to last character boundary before max length...
-    let mut boundary = MAX_DIRECTORY_NAME_LEN.min(string.len());
+    let mut boundary = cmp::min(MAX_DIRECTORY_NAME_LEN, string.len());
     while !string.is_char_boundary(boundary) {
         boundary -= 1;
     }
