@@ -30,6 +30,7 @@ extern crate itertools_num;
 extern crate serde;
 extern crate serde_json;
 extern crate simplelog;
+extern crate walkdir;
 
 #[cfg(feature = "html_reports")]
 extern crate criterion_plot;

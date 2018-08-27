@@ -1,11 +1,14 @@
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json;
+use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+use walkdir::{DirEntry, WalkDir};
 
 use error::{AccessError, CopyError, Result};
+use report::BenchmarkId;
 
 pub fn load<A, P: ?Sized>(path: &P) -> Result<A>
 where
@@ -76,20 +79,27 @@ where
     Ok(())
 }
 
-pub fn list_existing_reports<P>(directory: &P) -> Result<Vec<PathBuf>>
+pub fn list_existing_benchmarks<P>(directory: &P) -> Result<Vec<BenchmarkId>>
 where
     P: AsRef<Path>,
 {
-    let mut paths = vec![];
-    let directory_iter = fs::read_dir(directory).map_err(|inner| AccessError {
-        inner,
-        path: directory.as_ref().to_owned(),
-    })?;
-    for entry in directory_iter {
-        let path = entry?.path().join("report");
-        if path.is_dir() && path.join("index.html").is_file() {
-            paths.push(path.to_owned());
-        }
+    fn is_benchmark(entry: &DirEntry) -> bool {
+        // Look for benchmark.json files inside folders named "new" (because we want to ignore
+        // the baselines)
+        entry.file_name() == OsStr::new("benchmark.json")
+            && entry.path().parent().unwrap().file_name().unwrap() == OsStr::new("new")
     }
-    Ok(paths)
+
+    let mut ids = vec![];
+
+    for entry in WalkDir::new(directory).into_iter()
+        // Ignore errors.
+        .filter_map(|e| e.ok())
+        .filter(is_benchmark)
+    {
+        let id: BenchmarkId = load(entry.path())?;
+        ids.push(id);
+    }
+
+    Ok(ids)
 }

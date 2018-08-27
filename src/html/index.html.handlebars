@@ -56,17 +56,29 @@
         <ul>
         {{#each benchmarks}}
             <li>
+                {{#if this.path}}
                 <a href="../{{this.path}}">{{this.name}}</a>
+                {{else}}
+                {{this.name}}
+                {{/if}}
                 {{#if this.sub_benchmarks}}
                 <ul>
                     {{#each this.sub_benchmarks}}
                     <li>
+                        {{#if this.path}}
                         <a href="../{{this.path}}">{{this.name}}</a>
+                        {{else}}
+                        {{this.name}}
+                        {{/if}}
                         {{#if this.sub_benchmarks}}
                         <ul>
                             {{#each this.sub_benchmarks}}
                             <li>
+                                {{#if this.path}}
                                 <a href="../{{this.path}}">{{this.name}}</a>
+                                {{else}}
+                                {{this.name}}
+                                {{/if}}
                             </li>
                             {{/each}}
                         </ul>

@@ -27,9 +27,9 @@ atty = "0.2"
 clap = "2.29"
 handlebars = { version = "0.32", optional = true }
 csv = "1.0"
+walkdir = "2.2"
 
 [dev-dependencies]
-walkdir = "2.1"
 tempdir = "0.3"
 
 [badges]
