@@ -4,7 +4,6 @@ use stats::bivariate::regression::Slope;
 
 use Estimate;
 use criterion_plot::Size;
-use error::Result;
 use estimate::Statistic;
 use format;
 use fs;
@@ -12,7 +11,7 @@ use handlebars::Handlebars;
 use plot;
 use stats::univariate::Sample;
 use std::collections::BTreeSet;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Child;
 
 const THUMBNAIL_SIZE: Size = Size(450, 300);
@@ -118,8 +117,27 @@ struct Comparison {
 #[derive(Serialize)]
 struct IndexBenchmark {
     name: String,
-    path: String,
+    path: Option<String>,
     sub_benchmarks: Vec<IndexBenchmark>,
+}
+impl IndexBenchmark {
+    fn add(&mut self, names: &[&str], idb: IndexBenchmark) {
+        if names.is_empty() {
+            if !self.sub_benchmarks.iter().any(|sub| sub.name == idb.name) {
+                self.sub_benchmarks.push(idb);
+            }
+            return;
+        }
+
+        let name = names[0];
+
+        for sub in &mut self.sub_benchmarks {
+            if sub.name == name {
+                sub.add(&names[1..], idb);
+                break;
+            }
+        }
+    }
 }
 #[derive(Serialize)]
 struct IndexContext {
@@ -264,25 +282,27 @@ impl Report for Html {
             .collect::<Vec<_>>();
 
         let mut all_plots = vec![];
-        let group_id = &all_ids[0].group_id;
-
-        let mut function_ids = BTreeSet::new();
-        for id in &all_ids {
-            if let Some(ref function_id) = id.function_id {
-                function_ids.insert(function_id);
-            }
-        }
+        let group_id = all_ids[0].group_id.clone();
 
         let data: Vec<(BenchmarkId, Vec<f64>)> =
             self.load_summary_data(&context.output_directory, &all_ids);
 
+        let mut function_ids = BTreeSet::new();
+        for id in all_ids {
+            if let Some(function_id) = id.function_id {
+                function_ids.insert(function_id);
+            }
+        }
+
         for function_id in function_ids {
             let samples_with_function: Vec<_> = data.iter()
                 .by_ref()
-                .filter(|&&(ref id, _)| id.function_id.as_ref() == Some(function_id))
+                .filter(|&&(ref id, _)| id.function_id.as_ref() == Some(&function_id))
                 .collect();
+
             if samples_with_function.len() > 1 {
-                let subgroup_id = format!("{}/{}", group_id, function_id);
+                let subgroup_id = BenchmarkId::new(group_id.clone(), Some(function_id), None, None);
+
                 all_plots.extend(self.generate_summary(
                     &subgroup_id,
                     &*samples_with_function,
@@ -293,7 +313,7 @@ impl Report for Html {
         }
 
         all_plots.extend(self.generate_summary(
-            group_id,
+            &BenchmarkId::new(group_id, None, None, None),
             &*(data.iter().by_ref().collect::<Vec<_>>()),
             context,
             true,
@@ -310,37 +330,59 @@ impl Report for Html {
         //generate this index.
 
         let output_directory = &report_context.output_directory;
-
-        fn path_to_individual_benchmark(
-            path: &Path,
-            output_directory: &str,
-        ) -> Result<IndexBenchmark> {
-            let base_dir = path.parent().unwrap();
-            let name = base_dir
-                .file_name()
-                .map(|name| name.to_string_lossy())
-                .unwrap();
-            let mut sub_benchmarks = fs::list_existing_reports(&base_dir)?
-                .into_iter()
-                .map(|sub_path| path_to_individual_benchmark(&sub_path, output_directory))
-                .collect::<Result<Vec<_>>>()?;
-            sub_benchmarks.sort_unstable_by_key(|k| k.name.clone());
-            Ok(IndexBenchmark {
-                name: name.to_string(),
-                path: path.join("index.html")
-                    .strip_prefix(output_directory)?
-                    .to_string_lossy()
-                    .to_string(),
-                sub_benchmarks,
-            })
+        if !fs::is_dir(&output_directory) {
+            return;
         }
 
-        let reports = try_else_return!(fs::list_existing_reports(&output_directory));
-        let benchmarks = reports
-            .iter()
-            .map(|path| path_to_individual_benchmark(path, output_directory))
-            .collect::<Result<Vec<_>>>();
-        let benchmarks = try_else_return!(benchmarks);
+        fn to_components(id: &BenchmarkId) -> Vec<&str> {
+            let mut components: Vec<&str> = vec![&id.group_id];
+            if let Some(ref name) = id.function_id {
+                components.push(&**name);
+            }
+            if let Some(ref name) = id.value_str {
+                components.push(&**name);
+            }
+            components
+        }
+
+        let mut found_ids = try_else_return!(fs::list_existing_benchmarks(&output_directory));
+        found_ids.sort_unstable_by_key(|id| id.id().to_owned());
+
+        let mut root_id = IndexBenchmark {
+            name: "".to_owned(),
+            path: None,
+            sub_benchmarks: vec![],
+        };
+
+        for id in found_ids {
+            let mut name_components = vec![];
+            let mut path = PathBuf::new();
+            for (name_component, path_component) in to_components(&id)
+                .into_iter()
+                .zip(id.as_directory_name().split('/'))
+            {
+                path.push(path_component);
+
+                let report_path = Some(path.join("report/index.html"))
+                    .filter(|p| {
+                        let full_path = PathBuf::from(output_directory).join(p);
+                        full_path.is_file()
+                    })
+                    .map(|p| p.to_string_lossy().to_string());
+
+                let sub_benchmark = IndexBenchmark {
+                    name: name_component.to_owned(),
+                    path: report_path,
+                    sub_benchmarks: vec![],
+                };
+
+                root_id.add(&name_components, sub_benchmark);
+
+                name_components.push(name_component);
+            }
+        }
+
+        let benchmarks = root_id.sub_benchmarks;
 
         try_else_return!(fs::mkdirp(&format!("{}/report/", output_directory)));
 
@@ -586,7 +628,7 @@ impl Html {
 
     fn generate_summary(
         &self,
-        group_id: &str,
+        id: &BenchmarkId,
         data: &[&(BenchmarkId, Vec<f64>)],
         report_context: &ReportContext,
         full_summary: bool,
@@ -596,17 +638,19 @@ impl Html {
         try_else_return!(
             fs::mkdirp(&format!(
                 "{}/{}/report/",
-                report_context.output_directory, group_id
+                report_context.output_directory,
+                id.as_directory_name()
             )),
             || gnuplots
         );
 
         let violin_path = format!(
             "{}/{}/report/violin.svg",
-            report_context.output_directory, group_id
+            report_context.output_directory,
+            id.as_directory_name()
         );
         gnuplots.push(plot::summary::violin(
-            group_id,
+            id.id(),
             data,
             &violin_path,
             report_context.plot_config.summary_scale,
@@ -622,11 +666,12 @@ impl Html {
             if let Some(value_type) = value_types[0] {
                 let path = format!(
                     "{}/{}/report/lines.svg",
-                    report_context.output_directory, group_id
+                    report_context.output_directory,
+                    id.as_directory_name()
                 );
 
                 gnuplots.push(plot::summary::line_comparison(
-                    group_id,
+                    id.id(),
                     data,
                     &path,
                     value_type,
@@ -643,7 +688,7 @@ impl Html {
             .collect();
 
         let context = SummaryContext {
-            group_id: group_id.to_owned(),
+            group_id: id.id().to_owned(),
 
             thumbnail_width: THUMBNAIL_SIZE.0,
             thumbnail_height: THUMBNAIL_SIZE.1,
@@ -662,7 +707,8 @@ impl Html {
                 &text,
                 &format!(
                     "{}/{}/report/index.html",
-                    report_context.output_directory, group_id
+                    report_context.output_directory,
+                    id.as_directory_name()
                 ),
             ),
             || gnuplots

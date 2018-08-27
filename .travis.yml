@@ -54,9 +54,6 @@ matrix:
       env: CLIPPY=yes
       rust: nightly-2018-06-25
     - os: linux
-      env: COVERAGE=yes GNUPLOT=yes
-      sudo: required
-    - os: linux
       env: RUSTFMT=yes
       rust: nightly-2018-03-29
     - os: linux

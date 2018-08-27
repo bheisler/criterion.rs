@@ -30,6 +30,7 @@ extern crate itertools_num;
 extern crate serde;
 extern crate serde_json;
 extern crate simplelog;
+extern crate walkdir;
 
 #[cfg(feature = "html_reports")]
 extern crate criterion_plot;
@@ -545,6 +546,11 @@ impl Default for Criterion {
             reports.push(Box::new(Html::new()));
         }
 
+        let output_directory = match std::env::vars().find(|(key, _)| key == "CARGO_TARGET_DIR") {
+            Some((_, value)) => format!("{}/criterion", value),
+            None => "target/criterion".to_owned(),
+        };
+
         Criterion {
             config: BenchmarkConfig {
                 confidence_level: 0.95,
@@ -560,9 +566,9 @@ impl Default for Criterion {
             report: Box::new(Reports::new(reports)),
             baseline_directory: "base".to_owned(),
             baseline: Baseline::Save,
-            output_directory: "target/criterion".to_owned(),
             measure_only: false,
             test_mode: false,
+            output_directory,
         }
     }
 }
@@ -752,6 +758,7 @@ impl Criterion {
             plot_config: PlotConfiguration::default(),
             test_mode: self.test_mode,
         };
+
         self.report.final_summary(&report_context);
     }
 
@@ -1171,7 +1178,7 @@ impl Estimate {
 /// Enum representing different ways of measuring the throughput of benchmarked code.
 /// If the throughput setting is configured for a benchmark then the estimated throughput will
 /// be reported as well as the time per iteration.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Throughput {
     /// Measure throughput in terms of bytes/second. The value should be the number of bytes
     /// processed by one iteration of the benchmarked code. Typically, this would be the length of
