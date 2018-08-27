@@ -662,7 +662,7 @@ impl Html {
 
         let mut line_path = None;
 
-        if value_types.iter().all(|x| x == &value_types[0]) && function_types.len() > 1 {
+        if value_types.iter().all(|x| x == &value_types[0]) && function_types.len() > 0 {
             if let Some(value_type) = value_types[0] {
                 let path = format!(
                     "{}/{}/report/lines.svg",
