@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.2.5]
 ### Fixed
 - Fixed links from generated report files to documentation.
 - Fixed formatting for very large percentage changes (>1000%)
@@ -171,3 +173,4 @@ more details
 [0.2.2]: https://github.com/japaric/criterion.rs/compare/0.2.1...0.2.2
 [0.2.3]: https://github.com/japaric/criterion.rs/compare/0.2.2...0.2.3
 [0.2.4]: https://github.com/japaric/criterion.rs/compare/0.2.3...0.2.4
+[0.2.5]: https://github.com/japaric/criterion.rs/compare/0.2.4...0.2.5
