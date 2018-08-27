@@ -657,12 +657,9 @@ impl Html {
         ));
 
         let value_types: Vec<_> = data.iter().map(|&&(ref id, _)| id.value_type()).collect();
-        let function_types: BTreeSet<_> =
-            data.iter().map(|&&(ref id, _)| &id.function_id).collect();
-
         let mut line_path = None;
 
-        if value_types.iter().all(|x| x == &value_types[0]) && function_types.len() > 0 {
+        if value_types.iter().all(|x| x == &value_types[0]) {
             if let Some(value_type) = value_types[0] {
                 let path = format!(
                     "{}/{}/report/lines.svg",
