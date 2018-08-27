@@ -546,6 +546,11 @@ impl Default for Criterion {
             reports.push(Box::new(Html::new()));
         }
 
+        let output_directory = match std::env::vars().find(|(key, _)| key == "CARGO_TARGET_DIR") {
+            Some((_, value)) => format!("{}/criterion", value),
+            None => "target/criterion".to_owned(),
+        };
+
         Criterion {
             config: BenchmarkConfig {
                 confidence_level: 0.95,
@@ -561,9 +566,9 @@ impl Default for Criterion {
             report: Box::new(Reports::new(reports)),
             baseline_directory: "base".to_owned(),
             baseline: Baseline::Save,
-            output_directory: "target/criterion".to_owned(),
             measure_only: false,
             test_mode: false,
+            output_directory,
         }
     }
 }
