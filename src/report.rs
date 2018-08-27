@@ -637,7 +637,7 @@ mod test {
 
     #[test]
     fn test_make_filename_safe_truncates_long_strings() {
-        let input = "This is a very long string. It is too long to be safe as a directory name, and so it needs to be truncated. What a long string this is.";
+        let input = "this is a very long string. it is too long to be safe as a directory name, and so it needs to be truncated. what a long string this is.";
         let safe = make_filename_safe(input);
         assert!(input.len() > MAX_DIRECTORY_NAME_LEN);
         assert_eq!(&input[0..MAX_DIRECTORY_NAME_LEN], &safe);
@@ -653,9 +653,9 @@ mod test {
     #[test]
     fn test_benchmark_id_make_directory_name_unique() {
         let existing_id = BenchmarkId::new(
-            "Group".to_owned(),
-            Some("Function".to_owned()),
-            Some("Value".to_owned()),
+            "group".to_owned(),
+            Some("function".to_owned()),
+            Some("value".to_owned()),
             None,
         );
         let mut directories = HashSet::new();
@@ -663,12 +663,12 @@ mod test {
 
         let mut new_id = existing_id.clone();
         new_id.ensure_directory_name_unique(&directories);
-        assert_eq!("Group/Function/Value_2", new_id.as_directory_name());
+        assert_eq!("group/function/value_2", new_id.as_directory_name());
         directories.insert(new_id.as_directory_name().to_owned());
 
         new_id = existing_id.clone();
         new_id.ensure_directory_name_unique(&directories);
-        assert_eq!("Group/Function/Value_3", new_id.as_directory_name());
+        assert_eq!("group/function/value_3", new_id.as_directory_name());
         directories.insert(new_id.as_directory_name().to_owned());
     }
 }
