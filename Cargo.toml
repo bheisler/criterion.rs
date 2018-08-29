@@ -27,7 +27,7 @@ serde_json = "1.0"
 serde_derive = "1.0.75"
 atty = "0.2.5"
 clap = "2.29"
-handlebars = { version="1.0.2", optional = true }
+handlebars = { version="1.0.3", optional = true }
 csv = "1.0"
 walkdir = "2.2.3"
 
