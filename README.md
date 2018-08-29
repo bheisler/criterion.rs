@@ -105,7 +105,8 @@ See the [Getting Started](https://japaric.github.io/criterion.rs/book/getting_st
 
 The primary goal of Criterion.<span></span>rs is to provide a powerful and statistically rigorous tool for measuring the performance of code, preventing performance regressions and accurately measuring optimizations. Additionally, it should be as programmer-friendly as possible and make it easy to create reliable, useful benchmarks, even for programmers without an advanced background in statistics.
 
-The statistical analysis is mostly solid already; the next few releases will focus mostly on improving ease of use.
+Criterion.<span></span>rs is currently in maintenance mode. New features are not currently being developed. If there's something you feel 
+Criterion.<span></span>rs is missing, feel free to raise an issue and submit a pull request.
 
 ### Contributing
 

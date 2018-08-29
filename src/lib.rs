@@ -546,10 +546,11 @@ impl Default for Criterion {
             reports.push(Box::new(Html::new()));
         }
 
-        let output_directory = match std::env::vars().find(|(key, _)| key == "CARGO_TARGET_DIR") {
-            Some((_, value)) => format!("{}/criterion", value),
-            None => "target/criterion".to_owned(),
-        };
+        let output_directory =
+            match std::env::vars().find(|&(ref key, _)| key == "CARGO_TARGET_DIR") {
+                Some((_, value)) => format!("{}/criterion", value),
+                None => "target/criterion".to_owned(),
+            };
 
         Criterion {
             config: BenchmarkConfig {

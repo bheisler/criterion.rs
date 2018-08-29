@@ -363,12 +363,12 @@ impl Report for Html {
             {
                 path.push(path_component);
 
-                let report_path = Some(path.join("report/index.html"))
-                    .filter(|p| {
-                        let full_path = PathBuf::from(output_directory).join(p);
-                        full_path.is_file()
-                    })
-                    .map(|p| p.to_string_lossy().to_string());
+                let report_path = path.join("report/index.html");
+                let report_path = if PathBuf::from(output_directory).join(&report_path).is_file() {
+                    Some(report_path.to_string_lossy().to_string())
+                } else {
+                    None
+                };
 
                 let sub_benchmark = IndexBenchmark {
                     name: name_component.to_owned(),
@@ -657,12 +657,9 @@ impl Html {
         ));
 
         let value_types: Vec<_> = data.iter().map(|&&(ref id, _)| id.value_type()).collect();
-        let function_types: BTreeSet<_> =
-            data.iter().map(|&&(ref id, _)| &id.function_id).collect();
-
         let mut line_path = None;
 
-        if value_types.iter().all(|x| x == &value_types[0]) && function_types.len() > 1 {
+        if value_types.iter().all(|x| x == &value_types[0]) {
             if let Some(value_type) = value_types[0] {
                 let path = format!(
                     "{}/{}/report/lines.svg",
