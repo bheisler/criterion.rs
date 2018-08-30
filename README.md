@@ -57,12 +57,12 @@ In order to generate plots, you must have [gnuplot](http://www.gnuplot.info/) in
 To start with Criterion.<span></span>rs, add the following to your `Cargo.toml` file:
 
 ```toml
-    [dev-dependencies]
-    criterion = "0.2"
+[dev-dependencies]
+criterion = "0.2"
 
-    [[bench]]
-    name = "my_benchmark"
-    harness = false
+[[bench]]
+name = "my_benchmark"
+harness = false
 ```
 
 Next, define a benchmark by creating a file at `$PROJECT/benches/my_benchmark.rs` with the following contents.
