@@ -12,25 +12,27 @@ categories = ["development-tools::profiling"]
 license = "Apache-2.0/MIT"
 
 [dependencies]
+backtrace = "0.3.5" # required only for minimal-versions. brought in by failure.
+chrono = "0.4.6" # required only for minimal-versions. brought in by simplelog.
 criterion-plot = { path="plot", version="0.2.5", optional = true }
 criterion-stats = { path="stats", version="0.2.5" }
-failure = "0.1.1"
+failure = "0.1.2"
 failure_derive = "0.1.1"
 itertools = "0.7"
 itertools-num = "0.1"
 log = "0.4"
-simplelog = "^0.5.0"
+simplelog = "0.5.1"
 serde = "1.0"
 serde_json = "1.0"
-serde_derive = "1.0"
-atty = "0.2"
+serde_derive = "1.0.75"
+atty = "0.2.5"
 clap = "2.29"
-handlebars = { version = "0.32", optional = true }
+handlebars = { version="1.0.3", optional = true }
 csv = "1.0"
-walkdir = "2.2"
+walkdir = "2.2.3"
 
 [dev-dependencies]
-tempdir = "0.3"
+tempdir = "0.3.7"
 
 [badges]
 travis-ci = { repository = "japaric/criterion.rs" }
