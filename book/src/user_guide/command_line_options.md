@@ -14,6 +14,10 @@ would only run benchmarks whose ID contains the string `fib_20`
 * To save a baseline, use `cargo bench -- --save-baseline <name>`. To compare against an existing baseline, use `cargo bench -- --baseline <name>`. For more on baselines, see below.
 * To test that the benchmarks run successfully without performing the measurement or analysis (eg. in a CI setting), use `cargo bench -- --test`.
 
+### Note:
+
+If `cargo bench` fails with an error message about an unknown argument, see [the FAQ](../faq.html#cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options).
+
 ## Baselines
 
 By default, Criterion.rs will compare the measurements against the previous run (if any). Sometimes it's useful to keep a set of measurements around for several runs. For example, you might want to make multiple changes to the code while comparing against the master branch. For this situation, Criterion.rs supports custom baselines.
