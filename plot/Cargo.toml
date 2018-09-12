@@ -17,7 +17,7 @@ itertools = "0.7"
 
 [dev-dependencies]
 itertools-num = "0.1"
-num-complex = { version = "0.1", default-features = false }
+num-complex = { version = "0.2", default-features = false }
 rand = "0.4"
 
 [badges]
