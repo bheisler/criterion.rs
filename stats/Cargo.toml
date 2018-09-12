@@ -18,7 +18,7 @@ rand = "0.4"
 thread-scoped = "1.0.2"
 
 [dev-dependencies]
-approx = "0.1.1"
+approx = "0.3"
 itertools-num = "0.1"
 quickcheck = { version = "0.7", default-features = false }
 criterion = { path="..", version="0.2.1", default-features = false }
