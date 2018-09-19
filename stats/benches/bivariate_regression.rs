@@ -11,8 +11,8 @@ macro_rules! bench {
     ($ty:ident) => {
         pub mod $ty {
             use criterion::Criterion;
-            use stats::bivariate::Data;
             use stats::bivariate::regression::{Slope, StraightLine};
+            use stats::bivariate::Data;
 
             pub fn slope(c: &mut Criterion) {
                 let x = ::common_bench::vec::<$ty>();

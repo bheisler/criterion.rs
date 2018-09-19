@@ -371,11 +371,9 @@ fn test_timing_loops() {
         Benchmark::new("iter", |b| b.iter(|| 10))
             .with_function("iter_with_setup", |b| {
                 b.iter_with_setup(|| vec![10], |v| v[0])
-            })
-            .with_function("iter_with_large_setup", |b| {
+            }).with_function("iter_with_large_setup", |b| {
                 b.iter_with_large_setup(|| vec![10], ::std::mem::drop)
-            })
-            .with_function("iter_with_large_drop", |b| {
+            }).with_function("iter_with_large_drop", |b| {
                 b.iter_with_large_drop(|| vec![10; 100])
             }),
     );

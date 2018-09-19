@@ -46,8 +46,8 @@ fn compare_fibonaccis_builder(c: &mut Criterion) {
 }
 
 fn compare_looped(c: &mut Criterion) {
-    use criterion::ParameterizedBenchmark;
     use criterion::black_box;
+    use criterion::ParameterizedBenchmark;
 
     c.bench(
         "small",

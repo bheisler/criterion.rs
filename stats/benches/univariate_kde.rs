@@ -10,9 +10,9 @@ macro_rules! bench {
     ($ty:ident) => {
         pub mod $ty {
             use criterion::Criterion;
-            use stats::univariate::Sample;
             use stats::univariate::kde::kernel::Gaussian;
             use stats::univariate::kde::{Bandwidth, Kde};
+            use stats::univariate::Sample;
 
             const KDE_POINTS: usize = 100;
             const SAMPLE_SIZE: usize = 100_000;

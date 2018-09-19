@@ -1,8 +1,7 @@
 use report::{BenchmarkId, MeasurementData, Report, ReportContext};
-use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
+use stats::bivariate::Data;
 
-use Estimate;
 use criterion_plot::Size;
 use estimate::Statistic;
 use format;
@@ -13,6 +12,7 @@ use stats::univariate::Sample;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::Child;
+use Estimate;
 
 const THUMBNAIL_SIZE: Size = Size(450, 300);
 
@@ -157,8 +157,7 @@ impl Html {
             .register_template_string(
                 "summary_report",
                 include_str!("summary_report.html.handlebars"),
-            )
-            .expect("Unable to parse summary report template.");
+            ).expect("Unable to parse summary report template.");
         handlebars
             .register_template_string("index", include_str!("index.html.handlebars"))
             .expect("Unable to parse index report template.");
@@ -251,7 +250,8 @@ impl Report for Html {
             comparison: self.comparison(measurements),
         };
 
-        let text = self.handlebars
+        let text = self
+            .handlebars
             .render("report", &context)
             .expect("Failed to render benchmark report template");
         try_else_return!(fs::save_string(
@@ -277,8 +277,7 @@ impl Report for Html {
                     context.output_directory,
                     id.as_directory_name()
                 ))
-            })
-            .cloned()
+            }).cloned()
             .collect::<Vec<_>>();
 
         let mut all_plots = vec![];
@@ -295,7 +294,8 @@ impl Report for Html {
         }
 
         for function_id in function_ids {
-            let samples_with_function: Vec<_> = data.iter()
+            let samples_with_function: Vec<_> = data
+                .iter()
                 .by_ref()
                 .filter(|&&(ref id, _)| id.function_id.as_ref() == Some(&function_id))
                 .collect();
@@ -388,7 +388,8 @@ impl Report for Html {
 
         let context = IndexContext { benchmarks };
 
-        let text = self.handlebars
+        let text = self
+            .handlebars
             .render("index", &context)
             .expect("Failed to render index template");
         try_else_return!(fs::save_string(
@@ -622,8 +623,7 @@ impl Html {
                     .collect::<Vec<_>>();
 
                 Some((id.clone(), avg_times))
-            })
-            .collect::<Vec<_>>()
+            }).collect::<Vec<_>>()
     }
 
     fn generate_summary(
@@ -680,7 +680,8 @@ impl Html {
         }
 
         let path_prefix = if full_summary { "../.." } else { "../../.." };
-        let benchmarks = data.iter()
+        let benchmarks = data
+            .iter()
             .map(|&&(ref id, _)| IndividualBenchmark::from_id(path_prefix, id))
             .collect();
 
@@ -696,7 +697,8 @@ impl Html {
             benchmarks,
         };
 
-        let text = self.handlebars
+        let text = self
+            .handlebars
             .render("summary_report", &context)
             .expect("Failed to render summary report template");
         try_else_return!(

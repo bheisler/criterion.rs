@@ -4,8 +4,8 @@ macro_rules! test {
         mod $ty {
             use quickcheck::TestResult;
 
-            use bivariate::Data;
             use bivariate::regression::Slope;
+            use bivariate::Data;
 
             quickcheck!{
                 fn means(size: usize, start: usize,

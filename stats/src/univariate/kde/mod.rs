@@ -59,7 +59,8 @@ where
                 ys.set_len(n);
 
                 {
-                    let _ = ys.chunks_mut(granularity)
+                    let _ = ys
+                        .chunks_mut(granularity)
                         .enumerate()
                         .map(|(i, ys)| {
                             let offset = i * granularity;
@@ -69,8 +70,7 @@ where
                                     ptr::write(y, self.estimate(*xs.get_unchecked(offset + i)))
                                 }
                             })
-                        })
-                        .collect::<Vec<_>>();
+                        }).collect::<Vec<_>>();
                 }
 
                 ys.into_boxed_slice()
@@ -134,9 +134,9 @@ macro_rules! test {
         mod $ty {
             use quickcheck::TestResult;
 
-            use univariate::Sample;
             use univariate::kde::kernel::Gaussian;
             use univariate::kde::{Bandwidth, Kde};
+            use univariate::Sample;
 
             // The [-inf inf] integral of the estimated PDF should be one
             quickcheck!{

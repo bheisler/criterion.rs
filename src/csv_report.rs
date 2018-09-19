@@ -17,7 +17,8 @@ struct CsvReportWriter<W: Write> {
 }
 impl<W: Write> CsvReportWriter<W> {
     fn write_data(&mut self, id: &BenchmarkId, data: &MeasurementData) -> Result<()> {
-        for (count, time) in data.iter_counts
+        for (count, time) in data
+            .iter_counts
             .as_slice()
             .iter()
             .zip(data.sample_times.as_slice())

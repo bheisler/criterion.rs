@@ -4,8 +4,8 @@ use std::marker::PhantomData;
 use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, Stdio};
 use std::time::{Duration, Instant};
 
-use DurationExt;
 use routine::Routine;
+use DurationExt;
 
 // A two-way channel to the standard streams of a child process
 pub struct Program {
@@ -87,8 +87,7 @@ impl Program {
 
                 let elapsed: u64 = msg.parse().expect("Couldn't parse program output");
                 elapsed as f64
-            })
-            .collect()
+            }).collect()
     }
 
     fn warm_up(&mut self, how_long_ns: Duration) -> (u64, u64) {

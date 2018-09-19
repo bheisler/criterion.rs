@@ -12,7 +12,12 @@ pub struct AccessError {
 }
 
 #[derive(Debug, Fail)]
-#[fail(display = "Failed to copy file {:?} to {:?}: {}", from, to, inner)]
+#[fail(
+    display = "Failed to copy file {:?} to {:?}: {}",
+    from,
+    to,
+    inner
+)]
 pub struct CopyError {
     pub from: PathBuf,
     pub to: PathBuf,

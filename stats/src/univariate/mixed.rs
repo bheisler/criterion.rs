@@ -7,8 +7,8 @@ use num_cpus;
 use thread_scoped as thread;
 
 use tuple::{Tuple, TupledDistributionsBuilder};
-use univariate::Sample;
 use univariate::resamples::Resamples;
+use univariate::Sample;
 
 /// Performs a *mixed* two-sample bootstrap
 pub fn bootstrap<A, T, S>(
@@ -58,8 +58,7 @@ where
                         }
                         sub_distributions
                     })
-                })
-                .collect::<Vec<_>>();
+                }).collect::<Vec<_>>();
 
             let mut builder: T::Builder = TupledDistributionsBuilder::new(nresamples);
             for chunk in chunks {

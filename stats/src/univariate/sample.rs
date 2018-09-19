@@ -6,8 +6,8 @@ use num_cpus;
 use thread_scoped as thread;
 
 use tuple::{Tuple, TupledDistributionsBuilder};
-use univariate::Percentiles;
 use univariate::resamples::Resamples;
+use univariate::Percentiles;
 
 /// A collection of data points drawn from a population
 ///
@@ -81,7 +81,8 @@ where
 
         // NB Although this operation can be SIMD accelerated, the gain is negligible because the
         // bottle neck is the sorting operation which is part of the computation of the median
-        let abs_devs = self.as_slice()
+        let abs_devs = self
+            .as_slice()
             .iter()
             .map(|&x| (x - median).abs())
             .collect::<Vec<_>>();
@@ -249,8 +250,7 @@ where
                             }
                             sub_distributions
                         })
-                    })
-                    .collect::<Vec<_>>();
+                    }).collect::<Vec<_>>();
 
                 let mut builder: T::Builder = TupledDistributionsBuilder::new(nresamples);
                 for chunk in chunks {

@@ -11,7 +11,7 @@ fn alloc(c: &mut Criterion) {
         Benchmark::new("alloc", |b| {
             b.iter_with_large_drop(|| (0..SIZE).map(|_| 0u8).collect::<Vec<_>>())
         }).warm_up_time(Duration::new(1, 0))
-            .throughput(Throughput::Bytes(SIZE as u32)),
+        .throughput(Throughput::Bytes(SIZE as u32)),
     );
 }
 

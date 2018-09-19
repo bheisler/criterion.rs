@@ -5,8 +5,10 @@ use std::iter::IntoIterator;
 
 use data::Matrix;
 use traits::{self, Data, Set};
-use {Axes, Color, CurveDefault, Display, Figure, Label, LineType, LineWidth, Plot, PointSize,
-     PointType, Script};
+use {
+    Axes, Color, CurveDefault, Display, Figure, Label, LineType, LineWidth, Plot, PointSize,
+    PointType, Script,
+};
 
 /// Properties common to simple "curve" like plots
 pub struct Properties {

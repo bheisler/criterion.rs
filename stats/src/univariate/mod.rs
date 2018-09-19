@@ -83,8 +83,7 @@ where
                         }
                         sub_distributions
                     })
-                })
-                .collect::<Vec<_>>();
+                }).collect::<Vec<_>>();
 
             let mut builder: T::Builder = TupledDistributionsBuilder::new(nresamples);
             for chunk in chunks {

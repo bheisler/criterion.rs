@@ -106,8 +106,7 @@ where
                 (*f)(&mut b, parameter);
                 b.assert_iterated();
                 b.elapsed.to_nanos() as f64
-            })
-            .collect()
+            }).collect()
     }
 
     fn warm_up(

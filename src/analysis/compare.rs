@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
-use stats::Distribution;
 use stats::univariate::Sample;
 use stats::univariate::{self, mixed};
+use stats::Distribution;
 
 use benchmark::BenchmarkConfig;
 use error::Result;

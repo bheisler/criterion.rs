@@ -64,8 +64,8 @@ mod test {
     use quickcheck::TestResult;
     use std::collections::HashSet;
 
-    use univariate::Sample;
     use univariate::resamples::Resamples;
+    use univariate::Sample;
 
     // FIXME
     // Check that the resample is a subset of the sample

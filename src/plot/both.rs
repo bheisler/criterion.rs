@@ -5,8 +5,8 @@ use criterion_plot::prelude::*;
 use stats::bivariate::Data;
 use stats::univariate::Sample;
 
-use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
 use super::{debug_script, escape_underscores, scale_time};
+use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
 use estimate::Estimates;
 use estimate::Statistic::Slope;
 use kde;
@@ -75,37 +75,32 @@ pub(crate) fn regression(
             a.configure(Grid::Major, |g| g.show())
                 .set(Label(x_label))
                 .set(ScaleFactor(x_scale))
-        })
-        .configure(Axis::LeftY, |a| {
+        }).configure(Axis::LeftY, |a| {
             a.configure(Grid::Major, |g| g.show())
                 .set(Label(format!("Total sample time ({}s)", prefix)))
                 .set(ScaleFactor(y_scale))
-        })
-        .configure(Key, |k| {
+        }).configure(Key, |k| {
             if thumbnail_mode {
                 k.hide();
             }
             k.set(Justification::Left)
                 .set(Order::SampleText)
                 .set(Position::Inside(Vertical::Top, Horizontal::Left))
-        })
-        .plot(
+        }).plot(
             FilledCurve {
                 x: &[0., max_iters],
                 y1: &[0., base_lb * max_iters],
                 y2: &[0., base_ub * max_iters],
             },
             |c| c.set(DARK_RED).set(Opacity(0.25)),
-        )
-        .plot(
+        ).plot(
             FilledCurve {
                 x: &[0., max_iters],
                 y1: &[0., lb * max_iters],
                 y2: &[0., ub * max_iters],
             },
             |c| c.set(DARK_BLUE).set(Opacity(0.25)),
-        )
-        .plot(
+        ).plot(
             Lines {
                 x: &[0., max_iters],
                 y: &[0., base_point * max_iters],
@@ -116,8 +111,7 @@ pub(crate) fn regression(
                     .set(Label("Base sample"))
                     .set(LineType::Solid)
             },
-        )
-        .plot(
+        ).plot(
             Lines {
                 x: &[0., max_iters],
                 y: &[0., point * max_iters],
@@ -165,8 +159,7 @@ pub fn pdfs(
         .configure(Axis::BottomX, |a| {
             a.set(Label(format!("Average time ({}s)", prefix)))
                 .set(ScaleFactor(x_scale))
-        })
-        .configure(Axis::LeftY, |a| a.set(Label("Density (a.u.)")))
+        }).configure(Axis::LeftY, |a| a.set(Label("Density (a.u.)")))
         .configure(Axis::RightY, |a| a.hide())
         .configure(Key, |k| {
             if thumbnail_mode {
@@ -175,31 +168,27 @@ pub fn pdfs(
             k.set(Justification::Left)
                 .set(Order::SampleText)
                 .set(Position::Outside(Vertical::Top, Horizontal::Right))
-        })
-        .plot(
+        }).plot(
             FilledCurve {
                 x: &*base_xs,
                 y1: &*base_ys,
                 y2: zeros.clone(),
             },
             |c| c.set(DARK_RED).set(Label("Base PDF")).set(Opacity(0.5)),
-        )
-        .plot(
+        ).plot(
             Lines {
                 x: &[base_mean, base_mean],
                 y: &[0., base_y_mean],
             },
             |c| c.set(DARK_RED).set(Label("Base Mean")).set(LINEWIDTH),
-        )
-        .plot(
+        ).plot(
             FilledCurve {
                 x: &*xs,
                 y1: &*ys,
                 y2: zeros,
             },
             |c| c.set(DARK_BLUE).set(Label("New PDF")).set(Opacity(0.5)),
-        )
-        .plot(
+        ).plot(
             Lines {
                 x: &[new_mean, new_mean],
                 y: &[0., y_mean],

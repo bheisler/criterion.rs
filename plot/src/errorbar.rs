@@ -5,8 +5,10 @@ use std::iter::IntoIterator;
 
 use data::Matrix;
 use traits::{self, Data, Set};
-use {Color, Display, ErrorBarDefault, Figure, Label, LineType, LineWidth, Plot, PointSize,
-     PointType, Script};
+use {
+    Color, Display, ErrorBarDefault, Figure, Label, LineType, LineWidth, Plot, PointSize,
+    PointType, Script,
+};
 
 /// Properties common to error bar plots
 pub struct Properties {

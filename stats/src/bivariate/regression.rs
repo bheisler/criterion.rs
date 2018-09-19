@@ -129,8 +129,8 @@ macro_rules! test {
         mod $ty {
             use quickcheck::TestResult;
 
-            use bivariate::Data;
             use bivariate::regression::StraightLine;
+            use bivariate::Data;
 
             quickcheck!{
                 fn r_squared(size: usize, start: usize, offset: usize) -> TestResult {

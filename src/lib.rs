@@ -1171,8 +1171,7 @@ impl Estimate {
                         standard_error: distribution.std_dev(None),
                     },
                 )
-            })
-            .collect()
+            }).collect()
     }
 }
 

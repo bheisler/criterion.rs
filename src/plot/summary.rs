@@ -10,8 +10,8 @@ use report::{BenchmarkId, ValueType};
 
 use itertools::Itertools;
 
-use super::{DARK_BLUE, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, POINT_SIZE, SIZE};
 use super::{debug_script, escape_underscores, scale_time};
+use super::{DARK_BLUE, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, POINT_SIZE, SIZE};
 use AxisScale;
 
 const NUM_COLORS: usize = 8;
@@ -58,12 +58,10 @@ pub fn line_comparison(
             k.set(Justification::Left)
                 .set(Order::SampleText)
                 .set(Position::Outside(Vertical::Top, Horizontal::Right))
-        })
-        .set(Title(format!(
+        }).set(Title(format!(
             "{}: Comparison",
             escape_underscores(group_id)
-        )))
-        .configure(Axis::BottomX, |a| {
+        ))).configure(Axis::BottomX, |a| {
             a.set(Label(format!("Input{}", input_suffix)))
                 .set(axis_scale.to_gnuplot())
         });
@@ -100,8 +98,7 @@ pub fn line_comparison(
                 let y = Sample::new(sample).mean();
 
                 (x, y)
-            })
-            .collect();
+            }).collect();
         tuples.sort_by(|&(ax, _), &(bx, _)| (ax.partial_cmp(&bx).unwrap_or(Ordering::Less)));
         let (xs, ys): (Vec<_>, Vec<_>) = tuples.into_iter().unzip();
 
@@ -147,9 +144,9 @@ pub fn violin(
             }
 
             (x, y)
-        })
-        .collect::<Vec<_>>();
-    let mut xs = kdes.iter()
+        }).collect::<Vec<_>>();
+    let mut xs = kdes
+        .iter()
         .flat_map(|&(ref x, _)| x.iter())
         .filter(|&&x| x > 0.);
     let (mut min, mut max) = {
@@ -173,15 +170,13 @@ pub fn violin(
         .set(Title(format!(
             "{}: Violin plot",
             escape_underscores(group_id)
-        )))
-        .configure(Axis::BottomX, |a| {
+        ))).configure(Axis::BottomX, |a| {
             a.configure(Grid::Major, |g| g.show())
                 .configure(Grid::Minor, |g| g.hide())
                 .set(Label(format!("Average time ({}s)", prefix)))
                 .set(axis_scale.to_gnuplot())
                 .set(ScaleFactor(scale))
-        })
-        .configure(Axis::LeftY, |a| {
+        }).configure(Axis::LeftY, |a| {
             a.set(Label("Input"))
                 .set(Range::Limits(0., all_curves.len() as f64))
                 .set(TicLabels {

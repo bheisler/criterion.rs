@@ -3,11 +3,11 @@ use std::path::PathBuf;
 use std::process::Child;
 
 use criterion_plot::prelude::*;
-use stats::Distribution;
-use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
-use stats::univariate::Sample;
+use stats::bivariate::Data;
 use stats::univariate::outliers::tukey::LabeledSample;
+use stats::univariate::Sample;
+use stats::Distribution;
 
 use estimate::{Distributions, Estimates};
 use kde;
@@ -77,12 +77,10 @@ pub fn pdf_small(sample: &Sample<f64>, path: String, size: Option<Size>) -> Chil
             a.set(Label(format!("Average time ({}s)", prefix)))
                 .set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale))
                 .set(ScaleFactor(x_scale))
-        })
-        .configure(Axis::LeftY, |a| {
+        }).configure(Axis::LeftY, |a| {
             a.set(Label("Density (a.u.)"))
                 .set(Range::Limits(0., y_limit))
-        })
-        .configure(Axis::RightY, |a| a.hide())
+        }).configure(Axis::RightY, |a| a.hide())
         .configure(Key, |k| k.hide())
         .plot(
             FilledCurve {
@@ -96,8 +94,7 @@ pub fn pdf_small(sample: &Sample<f64>, path: String, size: Option<Size>) -> Chil
                     .set(Label("PDF"))
                     .set(Opacity(0.25))
             },
-        )
-        .plot(
+        ).plot(
             Lines {
                 x: &[mean, mean],
                 y: &[0., mean_y],
@@ -120,7 +117,8 @@ pub fn pdf(
     let (x_scale, prefix) = scale_time(labeled_sample.max());
     let mean = labeled_sample.mean();
 
-    let &max_iters = data.x()
+    let &max_iters = data
+        .x()
         .as_slice()
         .iter()
         .max_by_key(|&&iters| iters as u64)
@@ -150,19 +148,16 @@ pub fn pdf(
             a.set(Label(format!("Average time ({}s)", prefix)))
                 .set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale))
                 .set(ScaleFactor(x_scale))
-        })
-        .configure(Axis::LeftY, |a| {
+        }).configure(Axis::LeftY, |a| {
             a.set(Label(y_label))
                 .set(Range::Limits(0., max_iters * y_scale))
                 .set(ScaleFactor(y_scale))
-        })
-        .configure(Axis::RightY, |a| a.set(Label("Density (a.u.)")))
+        }).configure(Axis::RightY, |a| a.set(Label("Density (a.u.)")))
         .configure(Key, |k| {
             k.set(Justification::Left)
                 .set(Order::SampleText)
                 .set(Position::Outside(Vertical::Top, Horizontal::Right))
-        })
-        .plot(
+        }).plot(
             FilledCurve {
                 x: &*xs,
                 y1: &*ys,
@@ -174,8 +169,7 @@ pub fn pdf(
                     .set(Label("PDF"))
                     .set(Opacity(0.25))
             },
-        )
-        .plot(
+        ).plot(
             Lines {
                 x: &[mean, mean],
                 y: vertical,
@@ -186,8 +180,7 @@ pub fn pdf(
                     .set(LineType::Dash)
                     .set(Label("Mean"))
             },
-        )
-        .plot(
+        ).plot(
             Points {
                 x: labeled_sample.iter().filter_map(|(t, label)| {
                     if label.is_outlier() {
@@ -215,8 +208,7 @@ pub fn pdf(
                     .set(PointType::FilledCircle)
                     .set(POINT_SIZE)
             },
-        )
-        .plot(
+        ).plot(
             Points {
                 x: labeled_sample.iter().filter_map(
                     |(x, label)| {
@@ -246,8 +238,7 @@ pub fn pdf(
                     .set(POINT_SIZE)
                     .set(PointType::FilledCircle)
             },
-        )
-        .plot(
+        ).plot(
             Points {
                 x: labeled_sample.iter().filter_map(
                     |(x, label)| {
@@ -277,29 +268,25 @@ pub fn pdf(
                     .set(POINT_SIZE)
                     .set(PointType::FilledCircle)
             },
-        )
-        .plot(
+        ).plot(
             Lines {
                 x: &[lomt, lomt],
                 y: vertical,
             },
             |c| c.set(DARK_ORANGE).set(LINEWIDTH).set(LineType::Dash),
-        )
-        .plot(
+        ).plot(
             Lines {
                 x: &[himt, himt],
                 y: vertical,
             },
             |c| c.set(DARK_ORANGE).set(LINEWIDTH).set(LineType::Dash),
-        )
-        .plot(
+        ).plot(
             Lines {
                 x: &[lost, lost],
                 y: vertical,
             },
             |c| c.set(DARK_RED).set(LINEWIDTH).set(LineType::Dash),
-        )
-        .plot(
+        ).plot(
             Lines {
                 x: &[hist, hist],
                 y: vertical,
@@ -352,18 +339,15 @@ pub fn regression(
             k.set(Justification::Left)
                 .set(Order::SampleText)
                 .set(Position::Inside(Vertical::Top, Horizontal::Left))
-        })
-        .configure(Axis::BottomX, |a| {
+        }).configure(Axis::BottomX, |a| {
             a.configure(Grid::Major, |g| g.show())
                 .set(Label(x_label))
                 .set(ScaleFactor(x_scale))
-        })
-        .configure(Axis::LeftY, |a| {
+        }).configure(Axis::LeftY, |a| {
             a.configure(Grid::Major, |g| g.show())
                 .set(Label(format!("Total sample time ({}s)", prefix)))
                 .set(ScaleFactor(y_scale))
-        })
-        .plot(
+        }).plot(
             Points {
                 x: data.x().as_slice(),
                 y: data.y().as_slice(),
@@ -374,8 +358,7 @@ pub fn regression(
                     .set(PointSize(0.5))
                     .set(PointType::FilledCircle)
             },
-        )
-        .plot(
+        ).plot(
             Lines {
                 x: &[0., max_iters],
                 y: &[0., point],
@@ -386,8 +369,7 @@ pub fn regression(
                     .set(Label("Linear regression"))
                     .set(LineType::Solid)
             },
-        )
-        .plot(
+        ).plot(
             FilledCurve {
                 x: &[0., max_iters],
                 y1: &[0., lb],
@@ -444,7 +426,8 @@ pub(crate) fn abs_distributions(
             let zero = iter::repeat(0);
 
             let start = xs.iter().enumerate().find(|&(_, &x)| x >= lb).unwrap().0;
-            let end = xs.iter()
+            let end = xs
+                .iter()
                 .enumerate()
                 .rev()
                 .find(|&(_, &x)| x <= ub)
@@ -460,27 +443,22 @@ pub(crate) fn abs_distributions(
                     "{}: {}",
                     escape_underscores(id.id()),
                     statistic
-                )))
-                .configure(Axis::BottomX, |a| {
+                ))).configure(Axis::BottomX, |a| {
                     a.set(Label(format!("Average time ({}s)", prefix)))
                         .set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale))
                         .set(ScaleFactor(x_scale))
-                })
-                .configure(Axis::LeftY, |a| {
+                }).configure(Axis::LeftY, |a| {
                     a.set(Label("Density (a.u.)")).set(ScaleFactor(y_scale))
-                })
-                .configure(Key, |k| {
+                }).configure(Key, |k| {
                     k.set(Justification::Left)
                         .set(Order::SampleText)
                         .set(Position::Outside(Vertical::Top, Horizontal::Right))
-                })
-                .plot(Lines { x: &*xs, y: &*ys }, |c| {
+                }).plot(Lines { x: &*xs, y: &*ys }, |c| {
                     c.set(DARK_BLUE)
                         .set(LINEWIDTH)
                         .set(Label("Bootstrap distribution"))
                         .set(LineType::Solid)
-                })
-                .plot(
+                }).plot(
                     FilledCurve {
                         x: xs.iter().skip(start).take(len),
                         y1: ys.iter().skip(start),
@@ -491,8 +469,7 @@ pub(crate) fn abs_distributions(
                             .set(Label("Confidence interval"))
                             .set(Opacity(0.25))
                     },
-                )
-                .plot(
+                ).plot(
                     Lines {
                         x: &[p, p],
                         y: &[0., y_p],
@@ -506,8 +483,7 @@ pub(crate) fn abs_distributions(
                 );
             debug_script(&path, &figure);
             figure.set(Output(path)).draw().unwrap()
-        })
-        .collect::<Vec<_>>()
+        }).collect::<Vec<_>>()
 }
 
 // TODO DRY: This is very similar to the `abs_distributions` method
@@ -558,7 +534,8 @@ pub(crate) fn rel_distributions(
             let zero = iter::repeat(0);
 
             let start = xs.iter().enumerate().find(|&(_, &x)| x >= lb).unwrap().0;
-            let end = xs.iter()
+            let end = xs
+                .iter()
                 .enumerate()
                 .rev()
                 .find(|&(_, &x)| x <= ub)
@@ -586,19 +563,16 @@ pub(crate) fn rel_distributions(
                     "{}: {}",
                     escape_underscores(id.id()),
                     statistic
-                )))
-                .configure(Axis::BottomX, |a| {
+                ))).configure(Axis::BottomX, |a| {
                     a.set(Label("Relative change (%)"))
                         .set(Range::Limits(x_min * 100., x_max * 100.))
                         .set(ScaleFactor(100.))
-                })
-                .plot(Lines { x: &*xs, y: &*ys }, |c| {
+                }).plot(Lines { x: &*xs, y: &*ys }, |c| {
                     c.set(DARK_BLUE)
                         .set(LINEWIDTH)
                         .set(Label("Bootstrap distribution"))
                         .set(LineType::Solid)
-                })
-                .plot(
+                }).plot(
                     FilledCurve {
                         x: xs.iter().skip(start).take(len),
                         y1: ys.iter().skip(start),
@@ -609,8 +583,7 @@ pub(crate) fn rel_distributions(
                             .set(Label("Confidence interval"))
                             .set(Opacity(0.25))
                     },
-                )
-                .plot(
+                ).plot(
                     Lines {
                         x: &[p, p],
                         y: &[0., y_p],
@@ -621,8 +594,7 @@ pub(crate) fn rel_distributions(
                             .set(Label("Point estimate"))
                             .set(LineType::Dash)
                     },
-                )
-                .plot(
+                ).plot(
                     FilledCurve {
                         x: &[fc_start, fc_end],
                         y1: one,
@@ -637,8 +609,7 @@ pub(crate) fn rel_distributions(
                 );
             debug_script(&path, &figure);
             figure.set(Output(path)).draw().unwrap()
-        })
-        .collect::<Vec<_>>()
+        }).collect::<Vec<_>>()
 }
 
 pub fn t_test(
@@ -663,15 +634,13 @@ pub fn t_test(
         .set(Title(format!(
             "{}: Welch t test",
             escape_underscores(id.id())
-        )))
-        .configure(Axis::BottomX, |a| a.set(Label("t score")))
+        ))).configure(Axis::BottomX, |a| a.set(Label("t score")))
         .configure(Axis::LeftY, |a| a.set(Label("Density")))
         .configure(Key, |k| {
             k.set(Justification::Left)
                 .set(Order::SampleText)
                 .set(Position::Outside(Vertical::Top, Horizontal::Right))
-        })
-        .plot(
+        }).plot(
             FilledCurve {
                 x: &*xs,
                 y1: &*ys,
@@ -682,8 +651,7 @@ pub fn t_test(
                     .set(Label("t distribution"))
                     .set(Opacity(0.25))
             },
-        )
-        .plot(
+        ).plot(
             Lines {
                 x: &[t, t],
                 y: &[0, 1],
