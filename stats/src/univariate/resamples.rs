@@ -1,8 +1,8 @@
 use std::mem;
 
 use float::Float;
-use rand::distributions::{IndependentSample, Range};
-use rand::{Rng, XorShiftRng};
+use rand::distributions::{Distribution, Range};
+use rand::{rngs::SmallRng, FromEntropy};
 
 use univariate::Sample;
 
@@ -11,7 +11,7 @@ where
     A: 'a + Float,
 {
     range: Range<usize>,
-    rng: XorShiftRng,
+    rng: SmallRng,
     sample: &'a [A],
     stage: Option<Vec<A>>,
 }
@@ -25,7 +25,7 @@ where
 
         Resamples {
             range: Range::new(0, slice.len()),
-            rng: ::rand::thread_rng().gen(),
+            rng: SmallRng::from_entropy(),
             sample: slice,
             stage: None,
         }
@@ -40,13 +40,13 @@ where
                 let mut stage = Vec::with_capacity(n);
 
                 for _ in 0..n {
-                    stage.push(self.sample[self.range.ind_sample(rng)])
+                    stage.push(self.sample[self.range.sample(rng)])
                 }
 
                 self.stage = Some(stage);
             }
             Some(ref mut stage) => for elem in stage.iter_mut() {
-                *elem = self.sample[self.range.ind_sample(rng)]
+                *elem = self.sample[self.range.sample(rng)]
             },
         }
 
