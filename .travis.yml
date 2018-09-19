@@ -1,89 +1,77 @@
 sudo: false
-
 language: rust
 
-cache: cargo
-
-rust:
-  - stable
-
-os:
-  - linux
-  - osx
-
 matrix:
-  # Clear the whole matrix
-  exclude:
-    - os: linux
-    - os: osx
-  # Add each target manually
   include:
-    - os: linux
-      env: GNUPLOT=no
-    - os: linux
-      env: GNUPLOT=no
+    - name: "linux - stable rust - without gnuplot"
+      os: linux
+      rust: stable
+    - name: "linux - nightly rust - without gnuplot"
+      os: linux
       rust: nightly
-    - os: linux
-      env: GNUPLOT=yes
-      addons:
+    - name: "linux - stable rust - with gnuplot"
+      os: linux
+      addons: &gnuplot
         apt:
           packages:
             - gnuplot
-    - os: linux
-      env: GNUPLOT=yes
+    - name: "linux - nightly rust - with gnuplot"
+      os: linux
       rust: nightly
-      addons:
-        apt:
-          packages:
-            - gnuplot
-    - os: linux
-      env: GNUPLOT=yes
+      addons: *gnuplot
+    - name: "linux - stable rust 1.23.0 - with gnuplot"
+      os: linux
       rust: 1.23.0
-      addons:
-        apt:
-          packages:
-            - gnuplot
-    - os: linux
-      env: HTML_REPORTS=no GNUPLOT=yes
+      addons: *gnuplot
+    - name: "linux - stable rust 1.20.0 - with gnuplot, no HTML reports"
+      os: linux
+      env: BUILD_ARGS="--no-default-features" # Disables HTML reports
       rust: 1.20.0
-      addons:
-        apt:
-          packages:
-            - gnuplot
-    - os: linux
-      env: CLIPPY=yes
-      rust: nightly-2018-06-25
-    - os: linux
-      env: RUSTFMT=yes
-      rust: nightly-2018-03-29
-    - os: linux
-      env: DOCS=yes
-    - os: osx
-      env: GNUPLOT=no
-    - os: osx
-      env: GNUPLOT=yes
-    - os: osx
-      env: GNUPLOT=no
+      addons: *gnuplot
+    - name: "clippy"
+      os: linux
+      rust: nightly-2018-09-18
+      before_install: rustup component add clippy-preview
+      script: cargo clippy -- -D clippy::pedantic
+    - name: "rustfmt"
+      os: linux
+      rust: nightly-2018-09-18
+      before_install: rustup component add rustfmt-preview
+      script: cargo fmt --all -- --check
+    - name: "Documentation"
+      rust: stable
+      os: linux
+      install:
+        - pip install 'travis-cargo<0.2' --user;
+        - export PATH=$HOME/.local/bin:$PATH;
+        - cargo install mdbook --force
+      script:
+        - cargo doc --all --no-deps
+        - cd book && mdbook build && cd ..
+        - cp -r book/book/ target/doc/book/
+        - travis-cargo doc-upload || true
+    - name: "osx - stable rust - without gnuplot"
+      os: osx
+      rust: stable
+    - name: "osx - stable rust - with gnuplot"
+      os: osx
+      rust: stable
+      install: brew install gnuplot
+    - name: "osx - nigthly rust - without gnuplot"
+      os: osx
       rust: nightly
-    - os: osx
-      env: GNUPLOT=yes
+    - name: "osx - nightly rust - with gnuplot"
+      os: osx
       rust: nightly
-
-before_script:
-  - if [ "$DOCS" = "yes" ]; then
-      pip install 'travis-cargo<0.2' --user;
-      export PATH=$HOME/.local/bin:$PATH;
-    fi
-
-install:
-  - sh ci/install.sh
+      install: brew install gnuplot
 
 script:
-  - sh ci/script.sh
+  - cargo build $BUILD_ARGS --release
+  - cargo test $BUILD_ARGS --all --release
+  - cargo bench $BUILD_ARGS --all -- --test
 
 env:
   global:
-    - CLIPPY_VERSION=0.0.210
     - secure: "f/HaMzQu7d6ochSjE5lUjJbXYWlhbzslyTuWq+Lub/r2TTL4hVlT9koC4RT7W73V3WDrwYIqEGmwvscVffnijZRebl/PV+6WlOlYJEdAgKxGROpFGDIJGRGAc/f3s6OcJ+Hr8rmRF70fYEl45hs6J53X8s+CVRuty+r/UdilRpM="
 
 branches:
