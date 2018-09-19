@@ -38,7 +38,7 @@ pub mod axis {
     }
 
     impl<T> Map<T> {
-        pub fn new() -> Map<T> {
+        pub fn new() -> Self {
             Map([None, None, None, None])
         }
 
@@ -75,7 +75,7 @@ pub mod axis {
     where
         T: Clone,
     {
-        fn clone(&self) -> Map<T> {
+        fn clone(&self) -> Self {
             Map([
                 self.0[0].clone(),
                 self.0[1].clone(),
@@ -118,7 +118,7 @@ pub mod grid {
     pub struct Map<T>([Option<T>; LENGTH]);
 
     impl<T> Map<T> {
-        pub fn new() -> Map<T> {
+        pub fn new() -> Self {
             Map([None, None])
         }
 
@@ -155,7 +155,7 @@ pub mod grid {
     where
         T: Clone,
     {
-        fn clone(&self) -> Map<T> {
+        fn clone(&self) -> Self {
             Map([self.0[0].clone(), self.0[1].clone()])
         }
     }

@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::stutter))]
+
 use std::io;
 use std::path::PathBuf;
 

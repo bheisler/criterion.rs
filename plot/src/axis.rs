@@ -20,8 +20,8 @@ pub struct Properties {
 }
 
 impl Default for Properties {
-    fn default() -> Properties {
-        Properties {
+    fn default() -> Self {
+        Self {
             grids: map::grid::Map::new(),
             hidden: false,
             label: None,
@@ -37,7 +37,7 @@ impl Properties {
     /// Hides the axis
     ///
     /// **Note** The `TopX` and `RightY` axes are hidden by default
-    pub fn hide(&mut self) -> &mut Properties {
+    pub fn hide(&mut self) -> &mut Self {
         self.hidden = true;
         self
     }
@@ -45,7 +45,7 @@ impl Properties {
     /// Makes the axis visible
     ///
     /// **Note** The `BottomX` and `LeftY` axes are visible by default
-    pub fn show(&mut self) -> &mut Properties {
+    pub fn show(&mut self) -> &mut Self {
         self.hidden = false;
         self
     }
@@ -55,9 +55,9 @@ impl Configure<Grid> for Properties {
     type Properties = grid::Properties;
 
     /// Configures the gridlines
-    fn configure<F>(&mut self, grid: Grid, configure: F) -> &mut Properties
+    fn configure<F>(&mut self, grid: Grid, configure: F) -> &mut Self
     where
-        F: FnOnce(&mut grid::Properties) -> &mut grid::Properties,
+        F: FnOnce(&mut Self::Properties) -> &mut Self::Properties,
     {
         if self.grids.contains_key(grid) {
             configure(self.grids.get_mut(grid).unwrap());
@@ -73,7 +73,7 @@ impl Configure<Grid> for Properties {
 
 impl Set<Label> for Properties {
     /// Attaches a label to the axis
-    fn set(&mut self, label: Label) -> &mut Properties {
+    fn set(&mut self, label: Label) -> &mut Self {
         self.label = Some(label.0);
         self
     }
@@ -83,7 +83,7 @@ impl Set<Range> for Properties {
     /// Changes the range of the axis that will be shown
     ///
     /// **Note** All axes are auto-scaled by default
-    fn set(&mut self, range: Range) -> &mut Properties {
+    fn set(&mut self, range: Range) -> &mut Self {
         self.hidden = false;
 
         match range {
@@ -99,7 +99,7 @@ impl Set<Scale> for Properties {
     /// Sets the scale of the axis
     ///
     /// **Note** All axes use a linear scale by default
-    fn set(&mut self, scale: Scale) -> &mut Properties {
+    fn set(&mut self, scale: Scale) -> &mut Self {
         self.hidden = false;
 
         match scale {
@@ -118,7 +118,7 @@ impl Set<ScaleFactor> for Properties {
     /// this factor before being plotted.
     ///
     /// **Note** The default scale factor is `1`.
-    fn set(&mut self, factor: ScaleFactor) -> &mut Properties {
+    fn set(&mut self, factor: ScaleFactor) -> &mut Self {
         self.scale_factor = factor.0;
 
         self
@@ -133,7 +133,7 @@ where
     P::Item: Data,
 {
     /// Attaches labels to the tics of an axis
-    fn set(&mut self, tics: TicLabels<P, L>) -> &mut Properties {
+    fn set(&mut self, tics: TicLabels<P, L>) -> &mut Self {
         let TicLabels { positions, labels } = tics;
 
         let pairs = positions

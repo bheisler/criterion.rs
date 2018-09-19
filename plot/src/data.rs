@@ -35,7 +35,7 @@ pub struct Matrix {
 }
 
 impl Matrix {
-    pub fn new<I>(rows: I, scale: <I::Item as Row>::Scale) -> Matrix
+    pub fn new<I>(rows: I, scale: <I::Item as Row>::Scale) -> Self
     where
         I: Iterator,
         I::Item: Row,
@@ -50,7 +50,7 @@ impl Matrix {
             row.append_to(&mut bytes, scale);
         }
 
-        Matrix {
+        Self {
             bytes,
             ncols,
             nrows,
@@ -154,7 +154,6 @@ where
 {
     type Scale = (f64, f64, f64, f64, f64);
 
-    #[cfg_attr(feature = "cargo-clippy", allow(many_single_char_names))]
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64, f64, f64)) {
         let (a, b, c, d, e) = self;
 

@@ -19,7 +19,7 @@ pub trait Routine<T> {
     /// PRIVATE
     fn test(&mut self, parameter: &T) {
         let mut m = self.start(parameter);
-        self.bench(&mut m, &[1u64], parameter);
+        self.bench(&mut m, &[1_u64], parameter);
     }
 
     fn sample(
@@ -74,8 +74,8 @@ impl<F, T> Function<F, T>
 where
     F: FnMut(&mut Bencher, &T),
 {
-    pub fn new(f: F) -> Function<F, T> {
-        Function {
+    pub fn new(f: F) -> Self {
+        Self {
             f,
             _phantom: PhantomData,
         }

@@ -19,6 +19,16 @@
 #![deny(missing_docs)]
 #![cfg_attr(feature = "real_blackbox", feature(test))]
 #![cfg_attr(not(feature = "html_reports"), allow(dead_code))]
+#![cfg_attr(feature = "cargo-clippy", feature(tool_lints))]
+#![cfg_attr(feature = "cargo-clippy", allow(
+    clippy::similar_names,
+    clippy::cast_precision_loss,
+    clippy::cast_sign_loss,
+    clippy::cast_possible_truncation,
+    // FIXME: blocked on https://github.com/rust-lang-nursery/rust-clippy/issues/3200
+    // FIXME: blocked on https://github.com/rust-lang-nursery/rust-clippy/issues/3198
+    clippy::shadow_unrelated,
+))]
 
 extern crate atty;
 extern crate clap;
@@ -150,7 +160,7 @@ where
     I: fmt::Debug + 'static,
 {
     /// Create a new `Fun` given a name and a closure
-    pub fn new<F>(name: &str, f: F) -> Fun<I>
+    pub fn new<F>(name: &str, f: F) -> Self
     where
         F: FnMut(&mut Bencher, &I) + 'static,
     {
@@ -159,7 +169,7 @@ where
             f: Box::new(RefCell::new(Function::new(f))),
         };
 
-        Fun { f: routine }
+        Self { f: routine }
     }
 }
 
@@ -478,7 +488,7 @@ impl Bencher {
     }
 }
 
-/// Baseline describes how the baseline_directory is handled.
+/// Baseline describes how the `baseline_directory` is handled.
 pub enum Baseline {
     /// Compare ensures a previous saved version of the baseline
     /// exists and runs comparison against that.
@@ -526,7 +536,7 @@ impl Default for Criterion {
     /// - Significance level: 0.05
     /// - Plotting: enabled (if gnuplot is available)
     /// - No filter
-    fn default() -> Criterion {
+    fn default() -> Self {
         #[allow(unused_mut, unused_assignments)]
         let mut plotting = Plotting::NotAvailable;
 
@@ -552,7 +562,7 @@ impl Default for Criterion {
                 None => "target/criterion".to_owned(),
             };
 
-        Criterion {
+        Self {
             config: BenchmarkConfig {
                 confidence_level: 0.95,
                 measurement_time: Duration::new(5, 0),
@@ -585,7 +595,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if set to zero or one
-    pub fn sample_size(mut self, n: usize) -> Criterion {
+    pub fn sample_size(mut self, n: usize) -> Self {
         assert!(n >= 2);
 
         self.config.sample_size = n;
@@ -597,7 +607,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the input duration is zero
-    pub fn warm_up_time(mut self, dur: Duration) -> Criterion {
+    pub fn warm_up_time(mut self, dur: Duration) -> Self {
         assert!(dur.to_nanos() > 0);
 
         self.config.warm_up_time = dur;
@@ -614,7 +624,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the input duration in zero
-    pub fn measurement_time(mut self, dur: Duration) -> Criterion {
+    pub fn measurement_time(mut self, dur: Duration) -> Self {
         assert!(dur.to_nanos() > 0);
 
         self.config.measurement_time = dur;
@@ -632,7 +642,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the number of resamples is set to zero
-    pub fn nresamples(mut self, n: usize) -> Criterion {
+    pub fn nresamples(mut self, n: usize) -> Self {
         assert!(n > 0);
 
         self.config.nresamples = n;
@@ -649,7 +659,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics is the threshold is set to a negative value
-    pub fn noise_threshold(mut self, threshold: f64) -> Criterion {
+    pub fn noise_threshold(mut self, threshold: f64) -> Self {
         assert!(threshold >= 0.0);
 
         self.config.noise_threshold = threshold;
@@ -665,7 +675,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the confidence level is set to a value outside the `(0, 1)` range
-    pub fn confidence_level(mut self, cl: f64) -> Criterion {
+    pub fn confidence_level(mut self, cl: f64) -> Self {
         assert!(cl > 0.0 && cl < 1.0);
 
         self.config.confidence_level = cl;
@@ -681,7 +691,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the significance level is set to a value outside the `(0, 1)` range
-    pub fn significance_level(mut self, sl: f64) -> Criterion {
+    pub fn significance_level(mut self, sl: f64) -> Self {
         assert!(sl > 0.0 && sl < 1.0);
 
         self.config.significance_level = sl;
@@ -689,7 +699,7 @@ impl Criterion {
     }
 
     /// Enables plotting
-    pub fn with_plots(mut self) -> Criterion {
+    pub fn with_plots(mut self) -> Self {
         match self.plotting {
             Plotting::NotAvailable => {}
             _ => self.plotting = Plotting::Enabled,
@@ -699,7 +709,7 @@ impl Criterion {
     }
 
     /// Disables plotting
-    pub fn without_plots(mut self) -> Criterion {
+    pub fn without_plots(mut self) -> Self {
         match self.plotting {
             Plotting::NotAvailable => {}
             _ => self.plotting = Plotting::Disabled,
@@ -717,14 +727,14 @@ impl Criterion {
     }
 
     /// Names an explicit baseline and enables overwriting the previous results.
-    pub fn save_baseline(mut self, baseline: String) -> Criterion {
+    pub fn save_baseline(mut self, baseline: String) -> Self {
         self.baseline_directory = baseline;
         self.baseline = Baseline::Save;
         self
     }
 
     /// Names an explicit baseline and disables overwriting the previous results.
-    pub fn retain_baseline(mut self, baseline: String) -> Criterion {
+    pub fn retain_baseline(mut self, baseline: String) -> Self {
         self.baseline_directory = baseline;
         self.baseline = Baseline::Compare;
         self
@@ -732,7 +742,7 @@ impl Criterion {
 
     /// Filters the benchmarks. Only benchmarks with names that contain the
     /// given string will be executed.
-    pub fn with_filter<S: Into<String>>(mut self, filter: S) -> Criterion {
+    pub fn with_filter<S: Into<String>>(mut self, filter: S) -> Self {
         self.filter = Some(filter.into());
 
         self
@@ -740,7 +750,7 @@ impl Criterion {
 
     /// Set the output directory (currently for testing only)
     #[doc(hidden)]
-    pub fn output_directory(mut self, path: &std::path::Path) -> Criterion {
+    pub fn output_directory(mut self, path: &std::path::Path) -> Self {
         self.output_directory = path.to_string_lossy().into_owned();
 
         self
@@ -765,7 +775,7 @@ impl Criterion {
 
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
-    pub fn configure_from_args(mut self) -> Criterion {
+    pub fn configure_from_args(mut self) -> Self {
         use clap::{App, Arg};
         let matches = App::new("Criterion Benchmark")
             .arg(Arg::with_name("FILTER")
@@ -907,7 +917,7 @@ scripts alongside the generated plots.
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion
+    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Self
     where
         F: FnMut(&mut Bencher) + 'static,
     {
@@ -943,14 +953,14 @@ scripts alongside the generated plots.
     ///     let sequential_fib = Fun::new("Sequential", bench_seq_fib);
     ///     let parallel_fib = Fun::new("Parallel", bench_par_fib);
     ///     let funs = vec![sequential_fib, parallel_fib];
-    ///   
+    ///
     ///     c.bench_functions("Fibonacci", funs, 14);
     /// }
     ///
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    pub fn bench_functions<I>(&mut self, id: &str, funs: Vec<Fun<I>>, input: I) -> &mut Criterion
+    pub fn bench_functions<I>(&mut self, id: &str, funs: Vec<Fun<I>>, input: I) -> &mut Self
     where
         I: fmt::Debug + 'static,
     {
@@ -985,7 +995,7 @@ scripts alongside the generated plots.
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    pub fn bench_function_over_inputs<I, F>(&mut self, id: &str, f: F, inputs: I) -> &mut Criterion
+    pub fn bench_function_over_inputs<I, F>(&mut self, id: &str, f: F, inputs: I) -> &mut Self
     where
         I: IntoIterator,
         I::Item: fmt::Debug + 'static,
@@ -1036,7 +1046,7 @@ scripts alongside the generated plots.
     ///     }
     /// }
     /// ```
-    pub fn bench_program(&mut self, id: &str, program: Command) -> &mut Criterion {
+    pub fn bench_program(&mut self, id: &str, program: Command) -> &mut Self {
         self.bench(id, Benchmark::new_external(id, program))
     }
 
@@ -1049,7 +1059,7 @@ scripts alongside the generated plots.
         id: &str,
         mut program: F,
         inputs: I,
-    ) -> &mut Criterion
+    ) -> &mut Self
     where
         F: FnMut() -> Command + 'static,
         I: IntoIterator,
@@ -1094,11 +1104,7 @@ scripts alongside the generated plots.
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    pub fn bench<B: BenchmarkDefinition>(
-        &mut self,
-        group_id: &str,
-        benchmark: B,
-    ) -> &mut Criterion {
+    pub fn bench<B: BenchmarkDefinition>(&mut self, group_id: &str, benchmark: B) -> &mut Self {
         benchmark.run(group_id, self);
         self
     }
@@ -1161,7 +1167,7 @@ impl Estimate {
 
                 (
                     statistic,
-                    Estimate {
+                    Self {
                         confidence_interval: ConfidenceInterval {
                             confidence_level: cl,
                             lower_bound: lb,
@@ -1220,8 +1226,8 @@ pub struct PlotConfiguration {
 }
 
 impl Default for PlotConfiguration {
-    fn default() -> PlotConfiguration {
-        PlotConfiguration {
+    fn default() -> Self {
+        Self {
             summary_scale: AxisScale::Linear,
         }
     }
@@ -1231,7 +1237,7 @@ impl PlotConfiguration {
     /// Set the axis scale (linear or logarithmic) for the summary plots. Typically, you would
     /// set this to logarithmic if benchmarking over a range of inputs which scale exponentially.
     /// Defaults to linear.
-    pub fn summary_scale(mut self, new_scale: AxisScale) -> PlotConfiguration {
+    pub fn summary_scale(mut self, new_scale: AxisScale) -> Self {
         self.summary_scale = new_scale;
         self
     }

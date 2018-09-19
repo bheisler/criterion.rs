@@ -18,7 +18,7 @@ where
     /// squares
     ///
     /// - Time: `O(length)`
-    pub fn fit(data: Data<A, A>) -> Slope<A> {
+    pub fn fit(data: Data<A, A>) -> Self {
         let xs = data.0;
         let ys = data.1;
 
@@ -72,8 +72,7 @@ where
     /// Fits the data to a straight line using ordinary least squares
     ///
     /// - Time: `O(length)`
-    #[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
-    pub fn fit(data: Data<A, A>) -> StraightLine<A> {
+    pub fn fit(data: Data<A, A>) -> Self {
         let xs = data.0;
         let ys = data.1;
 
@@ -95,7 +94,7 @@ where
 
         let intercept = y_bar - slope * x_bar;
 
-        StraightLine { intercept, slope }
+        Self { intercept, slope }
     }
 
     /// Computes the goodness of fit (coefficient of determination) for this data set

@@ -21,16 +21,16 @@ fn escape_underscores(string: &str) -> String {
 }
 
 fn scale_time(ns: f64) -> (f64, &'static str) {
-    if ns < 10f64.powi(0) {
-        (10f64.powi(3), "p")
-    } else if ns < 10f64.powi(3) {
-        (10f64.powi(0), "n")
-    } else if ns < 10f64.powi(6) {
-        (10f64.powi(-3), "u")
-    } else if ns < 10f64.powi(9) {
-        (10f64.powi(-6), "m")
+    if ns < 10_f64.powi(0) {
+        (10_f64.powi(3), "p")
+    } else if ns < 10_f64.powi(3) {
+        (10_f64.powi(0), "n")
+    } else if ns < 10_f64.powi(6) {
+        (10_f64.powi(-3), "u")
+    } else if ns < 10_f64.powi(9) {
+        (10_f64.powi(-6), "m")
     } else {
-        (10f64.powi(-9), "")
+        (10_f64.powi(-9), "")
     }
 }
 
@@ -124,7 +124,7 @@ pub fn pdf(
         .max_by_key(|&&iters| iters as u64)
         .unwrap();
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
-    let y_scale = 10f64.powi(-exponent);
+    let y_scale = 10_f64.powi(-exponent);
 
     let y_label = if exponent == 0 {
         "Iterations".to_owned()
@@ -315,7 +315,7 @@ pub fn regression(
     let (y_scale, prefix) = scale_time(max_elapsed);
 
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
-    let x_scale = 10f64.powi(-exponent);
+    let x_scale = 10_f64.powi(-exponent);
 
     let x_label = if exponent == 0 {
         "Iterations".to_owned()
@@ -676,7 +676,7 @@ trait Append<T> {
 
 // NB I wish this was in the standard library
 impl<T> Append<T> for Vec<T> {
-    fn append_(mut self, item: T) -> Vec<T> {
+    fn append_(mut self, item: T) -> Self {
         self.push(item);
         self
     }

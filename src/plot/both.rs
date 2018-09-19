@@ -14,7 +14,7 @@ use report::BenchmarkId;
 use std::process::Child;
 use {ConfidenceInterval, Estimate};
 
-#[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
 pub(crate) fn regression(
     base_data: Data<f64, f64>,
     base_estimates: &Estimates,
@@ -33,7 +33,7 @@ pub(crate) fn regression(
     let (y_scale, prefix) = scale_time(max_elapsed);
 
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
-    let x_scale = 10f64.powi(-exponent);
+    let x_scale = 10_f64.powi(-exponent);
 
     let x_label = if exponent == 0 {
         "Iterations".to_owned()

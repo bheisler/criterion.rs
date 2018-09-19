@@ -23,8 +23,8 @@ pub struct Properties {
 }
 
 impl CurveDefault<Style> for Properties {
-    fn default(style: Style) -> Properties {
-        Properties {
+    fn default(style: Style) -> Self {
+        Self {
             axes: None,
             color: None,
             label: None,
@@ -80,7 +80,7 @@ impl Set<Axes> for Properties {
     /// Select the axes to plot against
     ///
     /// **Note** By default, the `BottomXLeftY` axes are used
-    fn set(&mut self, axes: Axes) -> &mut Properties {
+    fn set(&mut self, axes: Axes) -> &mut Self {
         self.axes = Some(axes);
         self
     }
@@ -88,7 +88,7 @@ impl Set<Axes> for Properties {
 
 impl Set<Color> for Properties {
     /// Sets the line color
-    fn set(&mut self, color: Color) -> &mut Properties {
+    fn set(&mut self, color: Color) -> &mut Self {
         self.color = Some(color);
         self
     }
@@ -96,7 +96,7 @@ impl Set<Color> for Properties {
 
 impl Set<Label> for Properties {
     /// Sets the legend label
-    fn set(&mut self, label: Label) -> &mut Properties {
+    fn set(&mut self, label: Label) -> &mut Self {
         self.label = Some(label.0);
         self
     }
@@ -106,7 +106,7 @@ impl Set<LineType> for Properties {
     /// Changes the line type
     ///
     /// **Note** By default `Solid` lines are used
-    fn set(&mut self, lt: LineType) -> &mut Properties {
+    fn set(&mut self, lt: LineType) -> &mut Self {
         self.line_type = lt;
         self
     }
@@ -118,7 +118,7 @@ impl Set<LineWidth> for Properties {
     /// # Panics
     ///
     /// Panics if `width` is a non-positive value
-    fn set(&mut self, lw: LineWidth) -> &mut Properties {
+    fn set(&mut self, lw: LineWidth) -> &mut Self {
         let lw = lw.0;
 
         assert!(lw > 0.);
@@ -134,7 +134,7 @@ impl Set<PointSize> for Properties {
     /// # Panics
     ///
     /// Panics if `size` is a non-positive value
-    fn set(&mut self, ps: PointSize) -> &mut Properties {
+    fn set(&mut self, ps: PointSize) -> &mut Self {
         let ps = ps.0;
 
         assert!(ps > 0.);
@@ -146,7 +146,7 @@ impl Set<PointSize> for Properties {
 
 impl Set<PointType> for Properties {
     /// Changes the point type
-    fn set(&mut self, pt: PointType) -> &mut Properties {
+    fn set(&mut self, pt: PointType) -> &mut Self {
         self.point_type = Some(pt);
         self
     }
@@ -243,7 +243,7 @@ where
 {
     type Properties = Properties;
 
-    fn plot<F>(&mut self, curve: Curve<X, Y>, configure: F) -> &mut Figure
+    fn plot<F>(&mut self, curve: Curve<X, Y>, configure: F) -> &mut Self
     where
         F: FnOnce(&mut Properties) -> &mut Properties,
     {

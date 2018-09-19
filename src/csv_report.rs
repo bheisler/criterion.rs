@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::stutter))]
+
 use csv::Writer;
 use error::Result;
 use report::{BenchmarkId, MeasurementData, Report, ReportContext};

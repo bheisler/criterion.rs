@@ -26,7 +26,15 @@ pub use self::sample::Sample;
 /// - Multithreaded
 /// - Time: `O(nresamples)`
 /// - Memory: `O(nresamples)`
-#[cfg_attr(feature = "cargo-clippy", allow(cast_lossless))]
+#[cfg_attr(
+    feature = "cargo-clippy",
+    allow(
+        clippy::cast_lossless,
+        clippy::cast_possible_truncation,
+        clippy::cast_precision_loss,
+        clippy::cast_sign_loss
+    )
+)]
 pub fn bootstrap<A, B, T, S>(
     a: &Sample<A>,
     b: &Sample<B>,

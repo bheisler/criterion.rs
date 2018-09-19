@@ -9,8 +9,8 @@ pub struct Properties {
 }
 
 impl Default for Properties {
-    fn default() -> Properties {
-        Properties { hidden: true }
+    fn default() -> Self {
+        Self { hidden: true }
     }
 }
 
@@ -19,13 +19,13 @@ impl Properties {
     /// Hides the gridlines
     ///
     /// **Note** Both `Major` and `Minor` gridlines are hidden by default
-    pub fn hide(&mut self) -> &mut Properties {
+    pub fn hide(&mut self) -> &mut Self {
         self.hidden = true;
         self
     }
 
     /// Shows the gridlines
-    pub fn show(&mut self) -> &mut Properties {
+    pub fn show(&mut self) -> &mut Self {
         self.hidden = false;
         self
     }

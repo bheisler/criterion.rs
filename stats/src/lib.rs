@@ -7,12 +7,14 @@
 
 #![deny(missing_docs)]
 #![deny(warnings)]
+#![cfg_attr(feature = "cargo-clippy", feature(tool_lints))]
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
-        used_underscore_binding,
-        just_underscores_and_digits,
-        transmute_ptr_to_ptr
+        clippy::similar_names,
+        clippy::just_underscores_and_digits,
+        clippy::used_underscore_binding,
+        clippy::transmute_ptr_to_ptr
     )
 )]
 
@@ -52,7 +54,7 @@ where
     A: Float,
 {
     /// Create a distribution from the given values
-    pub fn from(values: Box<[A]>) -> Distribution<A> {
+    pub fn from(values: Box<[A]>) -> Self {
         Distribution(values)
     }
 

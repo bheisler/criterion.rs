@@ -61,8 +61,8 @@ struct IndividualBenchmark {
     path: String,
 }
 impl IndividualBenchmark {
-    fn from_id(path_prefix: &str, id: &BenchmarkId) -> IndividualBenchmark {
-        IndividualBenchmark {
+    fn from_id(path_prefix: &str, id: &BenchmarkId) -> Self {
+        Self {
             name: id.id().to_owned(),
             path: format!("{}/{}", path_prefix, id.as_directory_name()),
         }
@@ -95,8 +95,8 @@ struct Plot {
     url: String,
 }
 impl Plot {
-    fn new(name: &str, url: &str) -> Plot {
-        Plot {
+    fn new(name: &str, url: &str) -> Self {
+        Self {
             name: name.to_owned(),
             url: url.to_owned(),
         }
@@ -121,7 +121,7 @@ struct IndexBenchmark {
     sub_benchmarks: Vec<IndexBenchmark>,
 }
 impl IndexBenchmark {
-    fn add(&mut self, names: &[&str], idb: IndexBenchmark) {
+    fn add(&mut self, names: &[&str], idb: Self) {
         if names.is_empty() {
             if !self.sub_benchmarks.iter().any(|sub| sub.name == idb.name) {
                 self.sub_benchmarks.push(idb);
@@ -148,7 +148,7 @@ pub struct Html {
     handlebars: Handlebars,
 }
 impl Html {
-    pub fn new() -> Html {
+    pub fn new() -> Self {
         let mut handlebars = Handlebars::new();
         handlebars
             .register_template_string("report", include_str!("benchmark_report.html.handlebars"))
@@ -161,7 +161,7 @@ impl Html {
         handlebars
             .register_template_string("index", include_str!("index.html.handlebars"))
             .expect("Unable to parse index report template.");
-        Html { handlebars }
+        Self { handlebars }
     }
 }
 impl Report for Html {
@@ -171,6 +171,14 @@ impl Report for Html {
         report_context: &ReportContext,
         measurements: &MeasurementData,
     ) {
+        fn time_interval(est: &Estimate) -> ConfidenceInterval {
+            ConfidenceInterval {
+                lower: format::time(est.confidence_interval.lower_bound),
+                point: format::time(est.point_estimate),
+                upper: format::time(est.confidence_interval.upper_bound),
+            }
+        }
+
         if !report_context.plotting.is_enabled() {
             return;
         }
@@ -182,14 +190,6 @@ impl Report for Html {
         )));
 
         let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
-
-        fn time_interval(est: &Estimate) -> ConfidenceInterval {
-            ConfidenceInterval {
-                lower: format::time(est.confidence_interval.lower_bound),
-                point: format::time(est.point_estimate),
-                upper: format::time(est.confidence_interval.upper_bound),
-            }
-        }
 
         let data = Data::new(
             measurements.iter_counts.as_slice(),
@@ -322,6 +322,17 @@ impl Report for Html {
     }
 
     fn final_summary(&self, report_context: &ReportContext) {
+        fn to_components(id: &BenchmarkId) -> Vec<&str> {
+            let mut components: Vec<&str> = vec![&id.group_id];
+            if let Some(ref name) = id.function_id {
+                components.push(&**name);
+            }
+            if let Some(ref name) = id.value_str {
+                components.push(&**name);
+            }
+            components
+        }
+
         if !report_context.plotting.is_enabled() {
             return;
         }
@@ -332,17 +343,6 @@ impl Report for Html {
         let output_directory = &report_context.output_directory;
         if !fs::is_dir(&output_directory) {
             return;
-        }
-
-        fn to_components(id: &BenchmarkId) -> Vec<&str> {
-            let mut components: Vec<&str> = vec![&id.group_id];
-            if let Some(ref name) = id.function_id {
-                components.push(&**name);
-            }
-            if let Some(ref name) = id.value_str {
-                components.push(&**name);
-            }
-            components
         }
 
         let mut found_ids = try_else_return!(fs::list_existing_benchmarks(&output_directory));
@@ -405,9 +405,7 @@ impl Html {
             let mean_est = comp.relative_estimates[&Statistic::Mean];
             let explanation_str: String;
 
-            if !different_mean {
-                explanation_str = "No change in performance detected.".to_owned();
-            } else {
+            if different_mean {
                 let comparison = compare_to_threshold(&mean_est, comp.noise_threshold);
                 match comparison {
                     ComparisonResult::Improved => {
@@ -420,6 +418,8 @@ impl Html {
                         explanation_str = "Change within noise threshold.".to_owned();
                     }
                 }
+            } else {
+                explanation_str = "No change in performance detected.".to_owned();
             }
 
             let comp = Comparison {

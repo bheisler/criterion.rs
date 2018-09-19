@@ -16,8 +16,8 @@ pub struct Properties {
 }
 
 impl Default for Properties {
-    fn default() -> Properties {
-        Properties {
+    fn default() -> Self {
+        Self {
             color: None,
             label: None,
             line_type: LineType::Solid,
@@ -54,7 +54,7 @@ impl Script for Properties {
 
 impl Set<Color> for Properties {
     /// Sets the line color
-    fn set(&mut self, color: Color) -> &mut Properties {
+    fn set(&mut self, color: Color) -> &mut Self {
         self.color = Some(color);
         self
     }
@@ -62,7 +62,7 @@ impl Set<Color> for Properties {
 
 impl Set<Label> for Properties {
     /// Sets the legend label
-    fn set(&mut self, label: Label) -> &mut Properties {
+    fn set(&mut self, label: Label) -> &mut Self {
         self.label = Some(label.0);
         self
     }
@@ -72,7 +72,7 @@ impl Set<LineType> for Properties {
     /// Changes the line type
     ///
     /// **Note** By default `Solid` lines are used
-    fn set(&mut self, lt: LineType) -> &mut Properties {
+    fn set(&mut self, lt: LineType) -> &mut Self {
         self.line_type = lt;
         self
     }
@@ -84,7 +84,7 @@ impl Set<LineWidth> for Properties {
     /// # Panics
     ///
     /// Panics if `width` is a non-positive value
-    fn set(&mut self, lw: LineWidth) -> &mut Properties {
+    fn set(&mut self, lw: LineWidth) -> &mut Self {
         let lw = lw.0;
 
         assert!(lw > 0.);
@@ -123,11 +123,7 @@ where
 {
     type Properties = Properties;
 
-    fn plot<F>(
-        &mut self,
-        candlesticks: Candlesticks<X, WM, BM, BH, WH>,
-        configure: F,
-    ) -> &mut Figure
+    fn plot<F>(&mut self, candlesticks: Candlesticks<X, WM, BM, BH, WH>, configure: F) -> &mut Self
     where
         F: FnOnce(&mut Properties) -> &mut Properties,
     {

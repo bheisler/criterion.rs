@@ -39,7 +39,7 @@ where
     /// # Panics
     ///
     /// Panics if `slice` contains any `NaN` or if `slice` has less than two elements
-    pub fn new(slice: &[A]) -> &Sample<A> {
+    pub fn new(slice: &[A]) -> &Self {
         assert!(slice.len() > 1 && slice.iter().all(|x| !x.is_nan()));
 
         unsafe { mem::transmute(slice) }
@@ -87,7 +87,7 @@ where
             .map(|&x| (x - median).abs())
             .collect::<Vec<_>>();
 
-        let abs_devs: &Sample<A> = unsafe { mem::transmute(&*abs_devs) };
+        let abs_devs: &Self = unsafe { mem::transmute(&*abs_devs) };
 
         abs_devs.percentiles().median() * A::cast(1.4826)
     }
@@ -183,7 +183,7 @@ where
     /// Returns the t score between these two samples
     ///
     /// - Time: `O(length)`
-    pub fn t(&self, other: &Sample<A>) -> A {
+    pub fn t(&self, other: &Self) -> A {
         let (x_bar, y_bar) = (self.mean(), other.mean());
         let (s2_x, s2_y) = (self.var(Some(x_bar)), other.var(Some(y_bar)));
         let n_x = A::cast(self.as_slice().len());
@@ -221,7 +221,7 @@ where
     /// - Memory: `O(nresamples)`
     pub fn bootstrap<T, S>(&self, nresamples: usize, statistic: S) -> T::Distributions
     where
-        S: Fn(&Sample<A>) -> T,
+        S: Fn(&Self) -> T,
         S: Sync,
         T: Tuple,
         T: Send,

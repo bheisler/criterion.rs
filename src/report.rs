@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::stutter))]
+
 use stats::bivariate::regression::Slope;
 use stats::bivariate::Data;
 use stats::univariate::outliers::tukey::LabeledSample;
@@ -88,7 +90,7 @@ impl BenchmarkId {
         function_id: Option<String>,
         value_str: Option<String>,
         throughput: Option<Throughput>,
-    ) -> BenchmarkId {
+    ) -> Self {
         let full_id = match (&function_id, &value_str) {
             (&Some(ref func), &Some(ref val)) => format!("{}/{}/{}", group_id, func, val),
             (&Some(ref func), &None) => format!("{}/{}", group_id, func),
@@ -116,7 +118,7 @@ impl BenchmarkId {
             (&None, &None) => make_filename_safe(&group_id),
         };
 
-        BenchmarkId {
+        Self {
             group_id,
             function_id,
             value_str,
@@ -233,8 +235,8 @@ pub(crate) struct Reports {
     reports: Vec<Box<Report>>,
 }
 impl Reports {
-    pub fn new(reports: Vec<Box<Report>>) -> Reports {
-        Reports { reports }
+    pub fn new(reports: Vec<Box<Report>>) -> Self {
+        Self { reports }
     }
 }
 impl Report for Reports {
@@ -307,12 +309,8 @@ pub(crate) struct CliReport {
     last_line_len: Cell<usize>,
 }
 impl CliReport {
-    pub fn new(
-        enable_text_overwrite: bool,
-        enable_text_coloring: bool,
-        verbose: bool,
-    ) -> CliReport {
-        CliReport {
+    pub fn new(enable_text_overwrite: bool, enable_text_coloring: bool, verbose: bool) -> Self {
+        Self {
             enable_text_overwrite,
             enable_text_coloring,
             verbose,
@@ -332,7 +330,10 @@ impl CliReport {
     }
 
     //Passing a String is the common case here.
-    #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
+    #[cfg_attr(
+        feature = "cargo-clippy",
+        allow(clippy::needless_pass_by_value)
+    )]
     fn print_overwritable(&self, s: String) {
         if self.enable_text_overwrite {
             self.last_line_len.set(s.len());
@@ -526,9 +527,7 @@ impl Report for CliReport {
             let mut point_estimate_str = format::change(point_estimate, true);
             let explanation_str: String;
 
-            if !different_mean {
-                explanation_str = "No change in performance detected.".to_owned();
-            } else {
+            if different_mean {
                 let comparison = compare_to_threshold(&mean_est, comp.noise_threshold);
                 match comparison {
                     ComparisonResult::Improved => {
@@ -545,6 +544,8 @@ impl Report for CliReport {
                         explanation_str = "Change within noise threshold.".to_owned();
                     }
                 }
+            } else {
+                explanation_str = "No change in performance detected.".to_owned();
             }
 
             println!(
@@ -569,9 +570,6 @@ impl Report for CliReport {
         self.outliers(&meas.avg_times);
 
         if self.verbose {
-            let data = Data::new(meas.iter_counts.as_slice(), meas.sample_times.as_slice());
-            let slope_estimate = &meas.absolute_estimates[&Statistic::Slope];
-
             fn format_short_estimate(estimate: &Estimate) -> String {
                 format!(
                     "[{} {}]",
@@ -579,6 +577,9 @@ impl Report for CliReport {
                     format::time(estimate.confidence_interval.upper_bound)
                 )
             }
+
+            let data = Data::new(meas.iter_counts.as_slice(), meas.sample_times.as_slice());
+            let slope_estimate = &meas.absolute_estimates[&Statistic::Slope];
 
             println!(
                 "{:<7}{} {:<15}[{:0.7} {:0.7}]",

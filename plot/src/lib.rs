@@ -390,11 +390,14 @@
 
 #![deny(missing_docs)]
 #![deny(warnings)]
-// This lint has lots of false positives ATM, see
-// https://github.com/Manishearth/rust-clippy/issues/761
-#![cfg_attr(feature = "cargo-clippy", allow(new_without_default))]
-// False positives with images
-#![cfg_attr(feature = "cargo-clippy", allow(doc_markdown))]
+#![cfg_attr(feature = "cargo-clippy", feature(tool_lints))]
+#![cfg_attr(feature = "cargo-clippy", allow(
+    clippy::similar_names,
+    // FIXME: blocked on https://github.com/rust-lang-nursery/rust-clippy/issues/3198
+    clippy::many_single_char_names,
+    // FIXME: blocked on https://github.com/rust-lang-nursery/rust-clippy/issues/3199
+    clippy::new_without_default
+))]
 
 extern crate byteorder;
 extern crate cast;
@@ -445,8 +448,8 @@ pub struct Figure {
 
 impl Figure {
     /// Creates an empty figure
-    pub fn new() -> Figure {
-        Figure {
+    pub fn new() -> Self {
+        Self {
             alpha: None,
             axes: map::axis::Map::new(),
             box_width: None,
@@ -573,7 +576,7 @@ impl Figure {
     }
 
     /// Dumps the script required to produce the figure into `sink`
-    pub fn dump<W>(&mut self, sink: &mut W) -> io::Result<&mut Figure>
+    pub fn dump<W>(&mut self, sink: &mut W) -> io::Result<&mut Self>
     where
         W: io::Write,
     {
@@ -582,10 +585,10 @@ impl Figure {
     }
 
     /// Saves the script required to produce the figure to `path`
-    pub fn save(&self, path: &Path) -> io::Result<&Figure> {
+    pub fn save(&self, path: &Path) -> io::Result<&Self> {
         use std::io::Write;
 
-        try!((try!(File::create(path))).write_all(&self.script()));
+        File::create(path)?.write_all(&self.script())?;
         Ok(self)
     }
 }
@@ -594,7 +597,7 @@ impl Configure<Axis> for Figure {
     type Properties = axis::Properties;
 
     /// Configures an axis
-    fn configure<F>(&mut self, axis: Axis, configure: F) -> &mut Figure
+    fn configure<F>(&mut self, axis: Axis, configure: F) -> &mut Self
     where
         F: FnOnce(&mut axis::Properties) -> &mut axis::Properties,
     {
@@ -613,7 +616,7 @@ impl Configure<Key> for Figure {
     type Properties = key::Properties;
 
     /// Configures the key (legend)
-    fn configure<F>(&mut self, _: Key, configure: F) -> &mut Figure
+    fn configure<F>(&mut self, _: Key, configure: F) -> &mut Self
     where
         F: FnOnce(&mut key::Properties) -> &mut key::Properties,
     {
@@ -636,7 +639,7 @@ impl Set<BoxWidth> for Figure {
     /// # Panics
     ///
     /// Panics if `width` is a negative value
-    fn set(&mut self, width: BoxWidth) -> &mut Figure {
+    fn set(&mut self, width: BoxWidth) -> &mut Self {
         let width = width.0;
 
         assert!(width >= 0.);
@@ -648,7 +651,7 @@ impl Set<BoxWidth> for Figure {
 
 impl Set<Font> for Figure {
     /// Changes the font
-    fn set(&mut self, font: Font) -> &mut Figure {
+    fn set(&mut self, font: Font) -> &mut Self {
         self.font = Some(font.0);
         self
     }
@@ -660,7 +663,7 @@ impl Set<FontSize> for Figure {
     /// # Panics
     ///
     /// Panics if `size` is a non-positive value
-    fn set(&mut self, size: FontSize) -> &mut Figure {
+    fn set(&mut self, size: FontSize) -> &mut Self {
         let size = size.0;
 
         assert!(size >= 0.);
@@ -674,7 +677,7 @@ impl Set<Output> for Figure {
     /// Changes the output file
     ///
     /// **Note** The default output file is `output.plot`
-    fn set(&mut self, output: Output) -> &mut Figure {
+    fn set(&mut self, output: Output) -> &mut Self {
         self.output = output.0;
         self
     }
@@ -682,7 +685,7 @@ impl Set<Output> for Figure {
 
 impl Set<Size> for Figure {
     /// Changes the figure size
-    fn set(&mut self, size: Size) -> &mut Figure {
+    fn set(&mut self, size: Size) -> &mut Self {
         self.size = Some((size.0, size.1));
         self
     }
@@ -692,7 +695,7 @@ impl Set<Terminal> for Figure {
     /// Changes the output terminal
     ///
     /// **Note** By default, the terminal is set to `Svg`
-    fn set(&mut self, terminal: Terminal) -> &mut Figure {
+    fn set(&mut self, terminal: Terminal) -> &mut Self {
         self.terminal = terminal;
         self
     }
@@ -700,7 +703,7 @@ impl Set<Terminal> for Figure {
 
 impl Set<Title> for Figure {
     /// Sets the title
-    fn set(&mut self, title: Title) -> &mut Figure {
+    fn set(&mut self, title: Title) -> &mut Self {
         self.title = Some(title.0);
         self
     }
@@ -793,7 +796,7 @@ pub enum Axis {
 }
 
 impl Axis {
-    fn next(self) -> Option<Axis> {
+    fn next(self) -> Option<Self> {
         use Axis::*;
 
         match self {
@@ -835,7 +838,7 @@ pub enum Grid {
 }
 
 impl Grid {
-    fn next(self) -> Option<Grid> {
+    fn next(self) -> Option<Self> {
         use Grid::*;
 
         match self {
@@ -931,11 +934,11 @@ struct Plot {
 }
 
 impl Plot {
-    fn new<S>(data: Matrix, script: &S) -> Plot
+    fn new<S>(data: Matrix, script: &S) -> Self
     where
         S: Script,
     {
-        Plot {
+        Self {
             data,
             script: script.script(),
         }

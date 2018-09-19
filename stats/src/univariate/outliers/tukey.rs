@@ -46,8 +46,6 @@ use float::Float;
 
 use univariate::Sample;
 
-use self::Label::*;
-
 /// A classified/labeled sample.
 ///
 /// The labeled data can be accessed using the indexing operator. The order of the data points is
@@ -72,25 +70,24 @@ where
     /// Returns the number of data points per label
     ///
     /// - Time: `O(length)`
-    #[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
     pub fn count(&self) -> (usize, usize, usize, usize, usize) {
         let (mut los, mut lom, mut noa, mut him, mut his) = (0, 0, 0, 0, 0);
 
         for (_, label) in self {
             match label {
-                LowSevere => {
+                Label::LowSevere => {
                     los += 1;
                 }
-                LowMild => {
+                Label::LowMild => {
                     lom += 1;
                 }
-                NotAnOutlier => {
+                Label::NotAnOutlier => {
                     noa += 1;
                 }
-                HighMild => {
+                Label::HighMild => {
                     him += 1;
                 }
-                HighSevere => {
+                Label::HighSevere => {
                     his += 1;
                 }
             }
@@ -131,13 +128,12 @@ where
 {
     type Output = Label;
 
-    #[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
     fn index(&self, i: usize) -> &Label {
-        static LOW_SEVERE: Label = LowSevere;
-        static LOW_MILD: Label = LowMild;
-        static HIGH_MILD: Label = HighMild;
-        static HIGH_SEVERE: Label = HighSevere;
-        static NOT_AN_OUTLIER: Label = NotAnOutlier;
+        static LOW_SEVERE: Label = Label::LowSevere;
+        static LOW_MILD: Label = Label::LowMild;
+        static HIGH_MILD: Label = Label::HighMild;
+        static HIGH_SEVERE: Label = Label::HighSevere;
+        static NOT_AN_OUTLIER: Label = Label::NotAnOutlier;
 
         let x = self.sample.as_slice()[i];
         let (lost, lomt, himt, hist) = self.fences;
@@ -183,21 +179,20 @@ where
 {
     type Item = (A, Label);
 
-    #[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
     fn next(&mut self) -> Option<(A, Label)> {
         self.iter.next().map(|&x| {
             let (lost, lomt, himt, hist) = self.fences;
 
             let label = if x < lost {
-                LowSevere
+                Label::LowSevere
             } else if x > hist {
-                HighSevere
+                Label::HighSevere
             } else if x < lomt {
-                LowMild
+                Label::LowMild
             } else if x > himt {
-                HighMild
+                Label::HighMild
             } else {
-                NotAnOutlier
+                Label::NotAnOutlier
             };
 
             (x, label)
@@ -227,7 +222,7 @@ impl Label {
     /// Checks if the data point has an "unusually" high value
     pub fn is_high(&self) -> bool {
         match *self {
-            HighMild | HighSevere => true,
+            Label::HighMild | Label::HighSevere => true,
             _ => false,
         }
     }
@@ -235,7 +230,7 @@ impl Label {
     /// Checks if the data point is labeled as a "mild" outlier
     pub fn is_mild(&self) -> bool {
         match *self {
-            HighMild | LowMild => true,
+            Label::HighMild | Label::LowMild => true,
             _ => false,
         }
     }
@@ -243,7 +238,7 @@ impl Label {
     /// Checks if the data point has an "unusually" low value
     pub fn is_low(&self) -> bool {
         match *self {
-            LowMild | LowSevere => true,
+            Label::LowMild | Label::LowSevere => true,
             _ => false,
         }
     }
@@ -251,7 +246,7 @@ impl Label {
     /// Checks if the data point is labeled as an outlier
     pub fn is_outlier(&self) -> bool {
         match *self {
-            NotAnOutlier => false,
+            Label::NotAnOutlier => false,
             _ => true,
         }
     }
@@ -259,7 +254,7 @@ impl Label {
     /// Checks if the data point is labeled as a "severe" outlier
     pub fn is_severe(&self) -> bool {
         match *self {
-            HighSevere | LowSevere => true,
+            Label::HighSevere | Label::LowSevere => true,
             _ => false,
         }
     }

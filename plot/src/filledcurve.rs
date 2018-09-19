@@ -16,8 +16,8 @@ pub struct Properties {
 }
 
 impl Default for Properties {
-    fn default() -> Properties {
-        Properties {
+    fn default() -> Self {
+        Self {
             axes: None,
             color: None,
             label: None,
@@ -64,7 +64,7 @@ impl Set<Axes> for Properties {
     /// Select axes to plot against
     ///
     /// **Note** By default, the `BottomXLeftY` axes are used
-    fn set(&mut self, axes: Axes) -> &mut Properties {
+    fn set(&mut self, axes: Axes) -> &mut Self {
         self.axes = Some(axes);
         self
     }
@@ -72,7 +72,7 @@ impl Set<Axes> for Properties {
 
 impl Set<Color> for Properties {
     /// Sets the fill color
-    fn set(&mut self, color: Color) -> &mut Properties {
+    fn set(&mut self, color: Color) -> &mut Self {
         self.color = Some(color);
         self
     }
@@ -80,7 +80,7 @@ impl Set<Color> for Properties {
 
 impl Set<Label> for Properties {
     /// Sets the legend label
-    fn set(&mut self, label: Label) -> &mut Properties {
+    fn set(&mut self, label: Label) -> &mut Self {
         self.label = Some(label.0);
         self
     }
@@ -94,7 +94,7 @@ impl Set<Opacity> for Properties {
     /// # Panics
     ///
     /// Panics if `opacity` is outside the range `[0, 1]`
-    fn set(&mut self, opacity: Opacity) -> &mut Properties {
+    fn set(&mut self, opacity: Opacity) -> &mut Self {
         self.opacity = Some(opacity.0);
         self
     }
@@ -121,7 +121,7 @@ where
 {
     type Properties = Properties;
 
-    fn plot<F>(&mut self, fc: FilledCurve<X, Y1, Y2>, configure: F) -> &mut Figure
+    fn plot<F>(&mut self, fc: FilledCurve<X, Y1, Y2>, configure: F) -> &mut Self
     where
         F: FnOnce(&mut Properties) -> &mut Properties,
     {

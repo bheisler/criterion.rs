@@ -1,3 +1,6 @@
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::stutter))]
+
+
 use analysis;
 use program::CommandFactory;
 use report::{BenchmarkId, ReportContext};
@@ -35,7 +38,7 @@ struct PartialBenchmarkConfig {
 
 impl Default for PartialBenchmarkConfig {
     fn default() -> Self {
-        PartialBenchmarkConfig {
+        Self {
             confidence_level: None,
             measurement_time: None,
             noise_threshold: None,
@@ -217,7 +220,7 @@ macro_rules! benchmark_config {
 }
 
 impl Benchmark {
-    benchmark_config!(Benchmark);
+    benchmark_config!(Self);
 
     /// Create a new benchmark group and adds the given function to it.
     ///
@@ -240,12 +243,12 @@ impl Benchmark {
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    pub fn new<S, F>(id: S, f: F) -> Benchmark
+    pub fn new<S, F>(id: S, f: F) -> Self
     where
         S: Into<String>,
         F: FnMut(&mut Bencher) + 'static,
     {
-        Benchmark {
+        Self {
             config: PartialBenchmarkConfig::default(),
             routines: vec![],
             throughput: None,
@@ -293,11 +296,11 @@ impl Benchmark {
     ///         println!("{}", elapsed.to_nanos());
     ///     }
     /// }
-    pub fn new_external<S>(id: S, program: Command) -> Benchmark
+    pub fn new_external<S>(id: S, program: Command) -> Self
     where
         S: Into<String>,
     {
-        Benchmark {
+        Self {
             config: PartialBenchmarkConfig::default(),
             routines: vec![],
             throughput: None,
@@ -312,7 +315,7 @@ impl Benchmark {
     /// Benchmark::new("return 10", |b| b.iter(|| 10))
     ///     .with_function("return 20", |b| b.iter(|| 20));
     /// ```
-    pub fn with_function<S, F>(mut self, id: S, mut f: F) -> Benchmark
+    pub fn with_function<S, F>(mut self, id: S, mut f: F) -> Self
     where
         S: Into<String>,
         F: FnMut(&mut Bencher) + 'static,
@@ -334,7 +337,7 @@ impl Benchmark {
     /// Benchmark::new("internal", |b| b.iter(|| 10))
     ///     .with_program("external", Command::new("my_external_benchmark"));
     /// ```
-    pub fn with_program<S>(mut self, id: S, program: Command) -> Benchmark
+    pub fn with_program<S>(mut self, id: S, program: Command) -> Self
     where
         S: Into<String>,
     {
@@ -355,7 +358,7 @@ impl Benchmark {
     /// Benchmark::new("strlen", |b| b.iter(|| "foo".len()))
     ///     .throughput(Throughput::Bytes(3));
     /// ```
-    pub fn throughput(mut self, throughput: Throughput) -> Benchmark {
+    pub fn throughput(mut self, throughput: Throughput) -> Self {
         self.throughput = Some(throughput);
         self
     }
@@ -422,7 +425,7 @@ impl<T> ParameterizedBenchmark<T>
 where
     T: Debug + 'static,
 {
-    benchmark_config!(ParameterizedBenchmark);
+    benchmark_config!(Self);
 
     /// Create a new parameterized benchmark group and adds the given function
     /// to it.
@@ -453,13 +456,13 @@ where
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    pub fn new<S, F, I>(id: S, f: F, parameters: I) -> ParameterizedBenchmark<T>
+    pub fn new<S, F, I>(id: S, f: F, parameters: I) -> Self
     where
         S: Into<String>,
         F: FnMut(&mut Bencher, &T) + 'static,
         I: IntoIterator<Item = T>,
     {
-        ParameterizedBenchmark {
+        Self {
             config: PartialBenchmarkConfig::default(),
             values: parameters.into_iter().collect(),
             routines: vec![],
@@ -515,13 +518,13 @@ where
     ///     }
     /// }
     /// ```
-    pub fn new_external<S, F, I>(id: S, program: F, parameters: I) -> ParameterizedBenchmark<T>
+    pub fn new_external<S, F, I>(id: S, program: F, parameters: I) -> Self
     where
         S: Into<String>,
         F: FnMut(&T) -> Command + 'static,
         I: IntoIterator<Item = T>,
     {
-        ParameterizedBenchmark {
+        Self {
             config: PartialBenchmarkConfig::default(),
             routines: vec![],
             values: parameters.into_iter().collect(),
@@ -529,11 +532,8 @@ where
         }.with_program(id, program)
     }
 
-    pub(crate) fn with_functions(
-        functions: Vec<NamedRoutine<T>>,
-        parameters: Vec<T>,
-    ) -> ParameterizedBenchmark<T> {
-        ParameterizedBenchmark {
+    pub(crate) fn with_functions(functions: Vec<NamedRoutine<T>>, parameters: Vec<T>) -> Self {
+        Self {
             config: PartialBenchmarkConfig::default(),
             values: parameters,
             routines: functions,
@@ -550,7 +550,7 @@ where
     /// ParameterizedBenchmark::new("times 10", |b, i| b.iter(|| i * 10), vec![1, 2, 3])
     ///     .with_function("times 20", |b, i| b.iter(|| i * 20));
     /// ```
-    pub fn with_function<S, F>(mut self, id: S, f: F) -> ParameterizedBenchmark<T>
+    pub fn with_function<S, F>(mut self, id: S, f: F) -> Self
     where
         S: Into<String>,
         F: FnMut(&mut Bencher, &T) + 'static,
@@ -577,7 +577,7 @@ where
     ///         command
     ///     });
     /// ```
-    pub fn with_program<S, F>(mut self, id: S, program: F) -> ParameterizedBenchmark<T>
+    pub fn with_program<S, F>(mut self, id: S, program: F) -> Self
     where
         S: Into<String>,
         F: FnMut(&T) -> Command + 'static,
@@ -601,7 +601,7 @@ where
     /// ParameterizedBenchmark::new("strlen", |b, s| b.iter(|| s.len()), vec!["foo", "lorem ipsum"])
     ///     .throughput(|s| Throughput::Bytes(s.len() as u32));
     /// ```
-    pub fn throughput<F>(mut self, throughput: F) -> ParameterizedBenchmark<T>
+    pub fn throughput<F>(mut self, throughput: F) -> Self
     where
         F: Fn(&T) -> Throughput + 'static,
     {

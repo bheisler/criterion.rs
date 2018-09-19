@@ -18,7 +18,7 @@ pub struct Program {
 }
 
 impl Program {
-    pub fn spawn(cmd: &mut Command) -> Program {
+    pub fn spawn(cmd: &mut Command) -> Self {
         cmd.stderr(Stdio::piped());
         cmd.stdin(Stdio::piped());
         cmd.stdout(Stdio::piped());
@@ -28,7 +28,7 @@ impl Program {
             Ok(child) => child,
         };
 
-        Program {
+        Self {
             buffer: String::new(),
             stderr: child.stderr.take().unwrap(),
             stdin: child.stdin.take().unwrap(),
@@ -37,7 +37,7 @@ impl Program {
         }
     }
 
-    pub fn send<T>(&mut self, line: T) -> &mut Program
+    pub fn send<T>(&mut self, line: T) -> &mut Self
     where
         T: fmt::Display,
     {
@@ -58,13 +58,10 @@ impl Program {
             Err(e) => {
                 self.buffer.clear();
 
-                match self.stderr.read_to_string(&mut self.buffer) {
-                    Err(e) => {
-                        panic!("`read from child stderr`: {}", e);
-                    }
-                    Ok(_) => {
-                        println!("stderr:\n{}", self.buffer);
-                    }
+                if let Err(e) = self.stderr.read_to_string(&mut self.buffer) {
+                    panic!("`read from child stderr`: {}", e);
+                } else {
+                    println!("stderr:\n{}", self.buffer);
                 }
 
                 panic!("`read from child stdout`: {}", e);
@@ -141,8 +138,8 @@ impl<F, T> CommandFactory<F, T>
 where
     F: FnMut(&T) -> Command + 'static,
 {
-    pub fn new(f: F) -> CommandFactory<F, T> {
-        CommandFactory {
+    pub fn new(f: F) -> Self {
+        Self {
             f,
             _phantom: PhantomData,
         }
