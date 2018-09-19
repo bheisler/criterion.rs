@@ -395,8 +395,6 @@
     clippy::similar_names,
     // FIXME: blocked on https://github.com/rust-lang-nursery/rust-clippy/issues/3198
     clippy::many_single_char_names,
-    // FIXME: blocked on https://github.com/rust-lang-nursery/rust-clippy/issues/3199
-    clippy::new_without_default
 ))]
 
 extern crate byteorder;
@@ -446,6 +444,7 @@ pub struct Figure {
     title: Option<Cow<'static, str>>,
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::new_without_default))]
 impl Figure {
     /// Creates an empty figure
     pub fn new() -> Self {
