@@ -24,7 +24,7 @@ where
         Resamples {
             range: Range::new(0, data.0.len()),
             rng: SmallRng::from_entropy(),
-            data: (data.x().as_slice(), data.y().as_slice()),
+            data: (data.x(), data.y()),
             stage: None,
         }
     }

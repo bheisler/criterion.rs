@@ -191,10 +191,7 @@ impl Report for Html {
 
         let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
 
-        let data = Data::new(
-            measurements.iter_counts.as_slice(),
-            measurements.sample_times.as_slice(),
-        );
+        let data = Data::new(measurements.iter_counts, measurements.sample_times);
 
         elapsed!{
             "Generating plots",
@@ -452,10 +449,7 @@ impl Html {
         context: &ReportContext,
         measurements: &MeasurementData,
     ) {
-        let data = Data::new(
-            measurements.iter_counts.as_slice(),
-            measurements.sample_times.as_slice(),
-        );
+        let data = Data::new(measurements.iter_counts, measurements.sample_times);
         let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
         let point = Slope::fit(data);
         let slope_dist = &measurements.distributions[&Statistic::Slope];

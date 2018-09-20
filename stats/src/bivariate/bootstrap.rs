@@ -27,14 +27,14 @@ macro_rules! test {
 
                         TestResult::from_bool(
                             // Computed the correct number of resamples
-                            x_means.as_slice().len() == nresamples &&
-                            y_means.as_slice().len() == nresamples &&
+                            x_means.len() == nresamples &&
+                            y_means.len() == nresamples &&
                             // No uninitialized values
-                            x_means.as_slice().iter().all(|&x| {
+                            x_means.iter().all(|&x| {
                                 (x > x_min || relative_eq!(x, x_min)) &&
                                 (x < x_max || relative_eq!(x, x_max))
                             }) &&
-                            y_means.as_slice().iter().all(|&y| {
+                            y_means.iter().all(|&y| {
                                 (y > y_min || relative_eq!(y, y_min)) &&
                                 (y < y_max || relative_eq!(y, y_max))
                             })
@@ -60,9 +60,9 @@ macro_rules! test {
 
                         TestResult::from_bool(
                             // Computed the correct number of resamples
-                            slopes.as_slice().len() == nresamples &&
+                            slopes.len() == nresamples &&
                             // No uninitialized values
-                            slopes.as_slice().iter().all(|s| s.0 > 0.)
+                            slopes.iter().all(|s| s.0 > 0.)
                         )
                     } else {
                         TestResult::discard()

@@ -387,7 +387,7 @@ impl CliReport {
     pub fn outliers(&self, sample: &LabeledSample<f64>) {
         let (los, lom, _, him, his) = sample.count();
         let noutliers = los + lom + him + his;
-        let sample_size = sample.as_slice().len();
+        let sample_size = sample.len();
 
         if noutliers == 0 {
             return;
@@ -578,7 +578,7 @@ impl Report for CliReport {
                 )
             }
 
-            let data = Data::new(meas.iter_counts.as_slice(), meas.sample_times.as_slice());
+            let data = Data::new(meas.iter_counts, meas.sample_times);
             let slope_estimate = &meas.absolute_estimates[&Statistic::Slope];
 
             println!(

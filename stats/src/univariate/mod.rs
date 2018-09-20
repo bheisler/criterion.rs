@@ -55,7 +55,7 @@ where
     unsafe {
         // TODO need some sensible threshold to trigger the multi-threaded path
         if true {
-            //ncpus > 1 && nresamples > a.as_slice().len() + b.as_slice().len() {
+            //ncpus > 1 && nresamples > a.len() + b.len() {
             let granularity = nresamples / ncpus + 1;
             let granularity_sqrt = (granularity as f64).sqrt().ceil() as usize;
             let statistic = &statistic;

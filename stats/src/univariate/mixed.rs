@@ -25,11 +25,11 @@ where
     T::Builder: Send,
 {
     let ncpus = num_cpus::get();
-    let n_a = a.as_slice().len();
-    let n_b = b.as_slice().len();
+    let n_a = a.len();
+    let n_b = b.len();
     let mut c = Vec::with_capacity(n_a + n_b);
-    c.extend_from_slice(a.as_slice());
-    c.extend_from_slice(b.as_slice());
+    c.extend_from_slice(a);
+    c.extend_from_slice(b);
 
     unsafe {
         let c = Sample::new(&c);
@@ -50,7 +50,7 @@ where
                         let mut resamples = Resamples::new(c);
 
                         for _ in offset..end {
-                            let resample = resamples.next().as_slice();
+                            let resample = resamples.next();
                             let a: &Sample<A> = mem::transmute(&resample[..n_a]);
                             let b: &Sample<A> = mem::transmute(&resample[n_a..]);
 
@@ -70,7 +70,7 @@ where
             let mut distributions: T::Builder = TupledDistributionsBuilder::new(nresamples);
 
             for _ in 0..nresamples {
-                let resample = resamples.next().as_slice();
+                let resample = resamples.next();
                 let a: &Sample<A> = mem::transmute(&resample[..n_a]);
                 let b: &Sample<A> = mem::transmute(&resample[n_a..]);
 
