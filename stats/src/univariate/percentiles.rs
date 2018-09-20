@@ -19,6 +19,8 @@ where
     /// - Make sure that `p` is in the range `[0, 100]`
     unsafe fn at_unchecked(&self, p: A) -> A {
         let _100 = A::cast(100);
+        debug_assert!(p >= A::cast(0) && p <= _100);
+        debug_assert!(self.0.len() > 0);
         let len = self.0.len() - 1;
 
         if p == _100 {
@@ -45,6 +47,7 @@ where
         let _100 = A::cast(100);
 
         assert!(p >= _0 && p <= _100);
+        assert!(self.0.len() > 0);
 
         unsafe { self.at_unchecked(p) }
     }

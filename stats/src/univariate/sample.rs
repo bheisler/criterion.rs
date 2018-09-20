@@ -71,7 +71,7 @@ where
         // bottle neck is the sorting operation which is part of the computation of the median
         let abs_devs = self.iter().map(|&x| (x - median).abs()).collect::<Vec<_>>();
 
-        let abs_devs: &Self = unsafe { mem::transmute(&*abs_devs) };
+        let abs_devs: &Self = Self::new(&abs_devs);
 
         abs_devs.percentiles().median() * A::cast(1.4826)
     }
@@ -275,6 +275,6 @@ impl<A> ops::Deref for Sample<A> {
     type Target = [A];
 
     fn deref(&self) -> &[A] {
-        unsafe { mem::transmute(self) }
+        &self.0
     }
 }
