@@ -567,14 +567,12 @@ impl Figure {
     pub fn draw(&mut self) -> io::Result<Child> {
         use std::process::Stdio;
 
-        let mut gnuplot = try!{
-            Command::new("gnuplot").
-                stderr(Stdio::piped()).
-                stdin(Stdio::piped()).
-                stdout(Stdio::piped()).
-                spawn()
-        };
-        try!(self.dump(gnuplot.stdin.as_mut().unwrap()));
+        let mut gnuplot = Command::new("gnuplot")
+            .stderr(Stdio::piped())
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()?;
+        self.dump(gnuplot.stdin.as_mut().unwrap())?;
         Ok(gnuplot)
     }
 
@@ -583,7 +581,7 @@ impl Figure {
     where
         W: io::Write,
     {
-        try!(sink.write_all(&self.script()));
+        sink.write_all(&self.script())?;
         Ok(self)
     }
 
@@ -958,7 +956,7 @@ impl Plot {
 /// Returns `gnuplot` version
 // FIXME Parsing may fail
 pub fn version() -> io::Result<(usize, usize, usize)> {
-    let stdout = try!(Command::new("gnuplot").arg("--version").output()).stdout;
+    let stdout = Command::new("gnuplot").arg("--version").output()?.stdout;
     let mut words = str::from_utf8(&stdout).unwrap().split_whitespace().skip(1);
     let mut version = words.next().unwrap().split('.');
     let major = version.next().unwrap().parse().unwrap();
