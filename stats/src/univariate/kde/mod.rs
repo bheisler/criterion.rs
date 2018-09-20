@@ -87,7 +87,7 @@ where
     /// Estimates the probability density of `x`
     pub fn estimate(&self, x: A) -> A {
         let _0 = A::cast(0);
-        let slice = self.sample.as_slice();
+        let slice = self.sample;
         let h = self.bandwidth;
         let n = A::cast(slice.len());
 
@@ -119,7 +119,7 @@ where
             Bandwidth::Silverman => {
                 let factor = A::cast(4. / 3.);
                 let exponent = A::cast(1. / 5.);
-                let n = A::cast(sample.as_slice().len());
+                let n = A::cast(sample.len());
                 let sigma = sample.std_dev(None);
 
                 sigma * (factor / n).powf(exponent)

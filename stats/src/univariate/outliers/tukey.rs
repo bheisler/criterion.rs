@@ -108,7 +108,7 @@ where
     pub fn iter(&self) -> Iter<'a, A> {
         Iter {
             fences: self.fences,
-            iter: self.sample.as_slice().iter(),
+            iter: self.sample.iter(),
         }
     }
 }
@@ -139,7 +139,7 @@ where
         static HIGH_SEVERE: Label = HighSevere;
         static NOT_AN_OUTLIER: Label = NotAnOutlier;
 
-        let x = self.sample.as_slice()[i];
+        let x = self.sample[i];
         let (lost, lomt, himt, hist) = self.fences;
 
         if x < lost {

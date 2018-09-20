@@ -8,7 +8,7 @@ pub fn sweep(
     npoints: usize,
     range: Option<(f64, f64)>,
 ) -> (Box<[f64]>, Box<[f64]>) {
-    let (xs, ys, _) = sweep_and_estimate(sample, npoints, range, sample.as_slice()[0]);
+    let (xs, ys, _) = sweep_and_estimate(sample, npoints, range, sample[0]);
     (xs, ys)
 }
 

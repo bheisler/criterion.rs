@@ -22,7 +22,7 @@ where
     A: 'a + Float,
 {
     pub fn new(sample: &'a Sample<A>) -> Resamples<'a, A> {
-        let slice = sample.as_slice();
+        let slice = sample;
 
         Resamples {
             range: Range::new(0, slice.len()),
@@ -81,7 +81,7 @@ mod test {
 
                 TestResult::from_bool((0..nresamples).all(|_| {
                     let resample = resamples.next()
-                        .as_slice()
+
                         .iter()
                         .map(|&x| x as i64)
                         .collect::<HashSet<_>>();
