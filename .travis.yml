@@ -19,14 +19,14 @@ matrix:
       os: linux
       rust: nightly
       addons: *gnuplot
-    - name: "linux - stable rust 1.25.0 - with gnuplot"
+    - name: "linux - stable rust 1.28.0 - with gnuplot"
       os: linux
-      rust: 1.25.0
+      rust: 1.28.0
       addons: *gnuplot
-    - name: "linux - stable rust 1.25.0 - with gnuplot, no HTML reports"
+    - name: "linux - stable rust 1.28.0 - with gnuplot, no HTML reports"
       os: linux
       env: BUILD_ARGS="--no-default-features" # Disables HTML reports
-      rust: 1.25.0
+      rust: 1.28.0
       addons: *gnuplot
     - name: "clippy"
       os: linux
