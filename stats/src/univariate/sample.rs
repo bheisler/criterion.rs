@@ -31,7 +31,9 @@ where
     pub fn new(slice: &[A]) -> &Self {
         assert!(slice.len() > 1 && slice.iter().all(|x| !x.is_nan()));
 
-        unsafe { &*(slice as *const [A] as *const Sample<A>) }
+        // This is safe because Sample is repr(transparent) and slice is a
+        // reference therefore `*const Self` is always dereferenceable.
+        unsafe { &*(slice as *const [A] as *const Self) }
     }
 
     /// Returns the biggest element in the sample

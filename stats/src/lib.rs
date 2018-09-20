@@ -14,7 +14,6 @@
         clippy::similar_names,
         clippy::just_underscores_and_digits,
         clippy::used_underscore_binding,
-        clippy::transmute_ptr_to_ptr
     )
 )]
 
@@ -40,7 +39,6 @@ pub mod univariate;
 
 mod float;
 
-use std::mem;
 use std::ops::Deref;
 
 use float::Float;
@@ -103,9 +101,12 @@ impl<A> Deref for Distribution<A> {
     type Target = Sample<A>;
 
     fn deref(&self) -> &Sample<A> {
-        let slice: &[_] = &self.0;
-
-        unsafe { mem::transmute(slice) }
+        let slice = self.0.as_ref();
+        // FIXME: `Sample` requires 2 values, but then
+        // following assert is almost never satisfied:
+        // assert!(slice.len() > 1);
+        // The pointer dereference is always safe.
+        unsafe { &*(slice as *const _ as *const Sample<A>) }
     }
 }
 

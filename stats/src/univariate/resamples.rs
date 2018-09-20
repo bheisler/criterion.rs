@@ -1,5 +1,3 @@
-use std::mem;
-
 use float::Float;
 use rand::distributions::{Distribution, Range};
 use rand::{rngs::SmallRng, FromEntropy};
@@ -51,7 +49,7 @@ where
         }
 
         if let Some(ref v) = self.stage {
-            unsafe { mem::transmute::<&[_], _>(v) }
+            Sample::new(v)
         } else {
             unreachable!();
         }
