@@ -15,6 +15,7 @@ use univariate::Percentiles;
 ///
 /// - The sample contains at least 2 data points
 /// - The sample contains no `NaN`s
+#[repr(transparent)]
 pub struct Sample<A>([A]);
 
 // TODO(rust-lang/rfcs#735) move this `impl` into a private percentiles module
@@ -30,7 +31,7 @@ where
     pub fn new(slice: &[A]) -> &Self {
         assert!(slice.len() > 1 && slice.iter().all(|x| !x.is_nan()));
 
-        unsafe { mem::transmute(slice) }
+        unsafe { &*(slice as *const [A] as *const Sample<A>) }
     }
 
     /// Returns the biggest element in the sample
