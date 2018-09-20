@@ -41,6 +41,9 @@ extern crate handlebars;
 #[cfg(feature = "real_blackbox")]
 extern crate test;
 
+#[cfg(feature = "ctf")]
+extern crate criterion_macro;
+
 #[macro_use]
 extern crate log;
 
@@ -76,6 +79,9 @@ mod plot;
 #[cfg(feature = "html_reports")]
 mod html;
 
+#[cfg(feature = "ctf")]
+mod runner;
+
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::default::Default;
@@ -94,6 +100,12 @@ use routine::Function;
 
 #[cfg(feature = "html_reports")]
 use html::Html;
+
+#[cfg(feature = "ctf")]
+pub use runner::{CtfBenchmark, runner};
+
+#[cfg(feature = "ctf")]
+pub use criterion_macro::criterion;
 
 pub use benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
 
@@ -943,7 +955,7 @@ scripts alongside the generated plots.
     ///     let sequential_fib = Fun::new("Sequential", bench_seq_fib);
     ///     let parallel_fib = Fun::new("Parallel", bench_par_fib);
     ///     let funs = vec![sequential_fib, parallel_fib];
-    ///   
+    ///
     ///     c.bench_functions("Fibonacci", funs, 14);
     /// }
     ///

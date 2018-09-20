@@ -16,6 +16,7 @@ backtrace = "0.3.5" # required only for minimal-versions. brought in by failure.
 chrono = "0.4.6" # required only for minimal-versions. brought in by simplelog.
 criterion-plot = { path="plot", version="0.2.5", optional = true }
 criterion-stats = { path="stats", version="0.2.5" }
+criterion-macro = { path="macro", version="0.2.5", optional = true }
 failure = "0.1.2"
 failure_derive = "0.1.1"
 itertools = "0.7"
@@ -44,6 +45,7 @@ maintenance = { status = "passively-maintained" }
 real_blackbox = []
 html_reports = ["handlebars", "criterion-plot"]
 default = ["html_reports"]
+ctf = [ "criterion-macro" ]
 
 [workspace]
 

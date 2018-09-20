@@ -1,0 +1,13 @@
+[package]
+name = "criterion-macro"
+version = "0.2.5"
+authors = ["Gonzalo Brito Gadeschi <gonzalobg88@gmail.com>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+path = "lib.rs"
+
+[dependencies]
+proc-macro2 = { version = "0.4", features = ["nightly"] }
+quote = "0.6"
