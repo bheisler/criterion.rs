@@ -1,6 +1,6 @@
 //! Mixed bootstrap
 
-use std::{cmp, mem};
+use std::cmp;
 
 use float::Float;
 use num_cpus;
@@ -51,8 +51,8 @@ where
 
                         for _ in offset..end {
                             let resample = resamples.next();
-                            let a: &Sample<A> = mem::transmute(&resample[..n_a]);
-                            let b: &Sample<A> = mem::transmute(&resample[n_a..]);
+                            let a: &Sample<A> = Sample::new(&resample[..n_a]);
+                            let b: &Sample<A> = Sample::new(&resample[n_a..]);
 
                             sub_distributions.push(statistic(a, b))
                         }
@@ -72,8 +72,8 @@ where
 
             for _ in 0..nresamples {
                 let resample = resamples.next();
-                let a: &Sample<A> = mem::transmute(&resample[..n_a]);
-                let b: &Sample<A> = mem::transmute(&resample[n_a..]);
+                let a: &Sample<A> = Sample::new(&resample[..n_a]);
+                let b: &Sample<A> = Sample::new(&resample[n_a..]);
 
                 distributions.push(statistic(a, b))
             }

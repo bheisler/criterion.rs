@@ -5,7 +5,7 @@ mod resamples;
 
 pub mod regression;
 
-use std::{cmp, mem};
+use std::cmp;
 
 use float::Float;
 use num_cpus;
@@ -130,12 +130,12 @@ where
 
     /// Returns a view into the `X` data
     pub fn x(&self) -> &'a Sample<X> {
-        unsafe { mem::transmute(self.0) }
+        Sample::new(&self.0)
     }
 
     /// Returns a view into the `Y` data
     pub fn y(&self) -> &'a Sample<Y> {
-        unsafe { mem::transmute(self.1) }
+        Sample::new(&self.1)
     }
 }
 
@@ -153,6 +153,9 @@ impl<'a, X, Y> Iterator for Pairs<'a, X, Y> {
             let i = self.state;
             self.state += 1;
 
+            // This is safe because i will always be < self.data.{0,1}.len()
+            debug_assert!(i < self.data.0.len());
+            debug_assert!(i < self.data.1.len());
             unsafe { Some((self.data.0.get_unchecked(i), self.data.1.get_unchecked(i))) }
         } else {
             None
