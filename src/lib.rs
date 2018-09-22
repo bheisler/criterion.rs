@@ -79,10 +79,10 @@ mod html;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::default::Default;
-use std::iter::IntoIterator;
+use std::iter::{repeat_with, IntoIterator};
 use std::process::Command;
 use std::time::{Duration, Instant};
-use std::{fmt, mem};
+use std::fmt;
 
 use benchmark::BenchmarkConfig;
 use benchmark::NamedRoutine;
@@ -315,15 +315,13 @@ impl Bencher {
         self.iterated = true;
         self.elapsed = Duration::from_secs(0);
         for _ in 0..self.iters {
-            let input = setup();
+            let input = black_box(setup());
 
             let start = Instant::now();
-            let output = black_box(routine(black_box(input)));
-            let elapsed = start.elapsed();
+            let output = routine(input);
+            self.elapsed += start.elapsed();
 
-            mem::drop(output);
-
-            self.elapsed += elapsed;
+            drop(black_box(output));
         }
     }
 
@@ -381,20 +379,17 @@ impl Bencher {
     /// ```
     ///
     #[inline(never)]
-    pub fn iter_with_large_drop<O, R>(&mut self, mut routine: R)
+    pub fn iter_with_large_drop<O, R>(&mut self, routine: R)
     where
         R: FnMut() -> O,
     {
         self.iterated = true;
-        let mut outputs = Vec::with_capacity(self.iters as usize);
 
         let start = Instant::now();
-        for _ in 0..self.iters {
-            outputs.push(black_box(routine()));
-        }
+        let outputs: Vec<_> = repeat_with(routine).take(self.iters as _).collect();
         self.elapsed = start.elapsed();
 
-        mem::drop(outputs);
+        drop(black_box(outputs));
     }
 
     /// Times a `routine` that needs to consume its input by first creating a pool of inputs.
@@ -453,17 +448,17 @@ impl Bencher {
     /// criterion_main!(benches);
     /// ```
     #[inline(never)]
-    pub fn iter_with_large_setup<I, O, S, R>(&mut self, mut setup: S, mut routine: R)
+    pub fn iter_with_large_setup<I, O, S, R>(&mut self, setup: S, mut routine: R)
     where
         S: FnMut() -> I,
         R: FnMut(I) -> O,
     {
         self.iterated = true;
-        let inputs = (0..self.iters).map(|_| setup()).collect::<Vec<_>>();
+        let inputs = black_box(repeat_with(setup).take(self.iters as _).collect::<Vec<_>>());
 
         let start = Instant::now();
         for input in inputs {
-            black_box(routine(black_box(input)));
+            black_box(routine(input));
         }
         self.elapsed = start.elapsed();
     }
