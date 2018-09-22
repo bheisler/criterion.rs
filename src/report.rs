@@ -59,13 +59,10 @@ pub struct BenchmarkId {
 }
 
 fn make_filename_safe(string: &str) -> String {
-    let mut string = string
-        .to_owned()
-        .replace("?", "_")
-        .replace("\"", "_")
-        .replace("/", "_")
-        .replace("\\", "_")
-        .replace("*", "_");
+    let mut string = string.replace(
+        &['?', '"', '/', '\\', '*', '<', '>', ':', '|', '^'][..],
+        "_",
+    );
 
     // On Windows, file names are not case-sensitive, so lowercase everything.
     if cfg!(target_os = "windows") {
