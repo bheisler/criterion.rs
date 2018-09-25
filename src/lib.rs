@@ -453,17 +453,17 @@ impl Bencher {
     /// criterion_main!(benches);
     /// ```
     #[inline(never)]
-    pub fn iter_with_large_setup<I, S, R>(&mut self, mut setup: S, mut routine: R)
+    pub fn iter_with_large_setup<I, O, S, R>(&mut self, mut setup: S, mut routine: R)
     where
         S: FnMut() -> I,
-        R: FnMut(I),
+        R: FnMut(I) -> O,
     {
         self.iterated = true;
         let inputs = (0..self.iters).map(|_| setup()).collect::<Vec<_>>();
 
         let start = Instant::now();
         for input in inputs {
-            routine(black_box(input));
+            black_box(routine(black_box(input)));
         }
         self.elapsed = start.elapsed();
     }
@@ -943,7 +943,7 @@ scripts alongside the generated plots.
     ///     let sequential_fib = Fun::new("Sequential", bench_seq_fib);
     ///     let parallel_fib = Fun::new("Parallel", bench_par_fib);
     ///     let funs = vec![sequential_fib, parallel_fib];
-    ///   
+    ///
     ///     c.bench_functions("Fibonacci", funs, 14);
     /// }
     ///
