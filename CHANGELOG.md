@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Functions passed to `Bencher::iter_with_large_setup` can now return output. This is necessary to prevent the compiler from optimizing away the benchmark. This is technically a breaking change - that function requires a new type parameter.
 
 ## [0.2.5]
 ### Fixed
@@ -165,7 +167,7 @@ more details
 - Initial release on Crates.io.
 
 
-[Unreleased]: https://github.com/japaric/criterion.rs/compare/0.2.0...HEAD
+[Unreleased]: https://github.com/japaric/criterion.rs/compare/0.2.5...HEAD
 [0.1.1]: https://github.com/japaric/criterion.rs/compare/0.1.0...0.1.1
 [0.1.2]: https://github.com/japaric/criterion.rs/compare/0.1.1...0.1.2
 [0.2.0]: https://github.com/japaric/criterion.rs/compare/0.1.2...0.2.0
