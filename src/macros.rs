@@ -62,7 +62,7 @@
 macro_rules! criterion_group {
     (name = $name:ident; config = $config:expr; targets = $( $target:path ),+ $(,)*) => {
         pub fn $name() {
-            let mut criterion: Criterion = $config
+            let mut criterion: $crate::Criterion = $config
                 .configure_from_args();
             $(
                 $target(&mut criterion);
@@ -72,7 +72,7 @@ macro_rules! criterion_group {
     ($name:ident, $( $target:path ),+ $(,)*) => {
         criterion_group!{
             name = $name;
-            config = Criterion::default();
+            config = $crate::Criterion::default();
             targets = $( $target ),+
         }
     }
@@ -117,12 +117,12 @@ macro_rules! criterion_group {
 macro_rules! criterion_main {
     ( $( $group:path ),+ $(,)* ) => {
         fn main() {
-            criterion::init_logging();
+            $crate::init_logging();
             $(
                 $group();
             )+
 
-            criterion::Criterion::default()
+            $crate::Criterion::default()
                 .configure_from_args()
                 .final_summary();
         }
