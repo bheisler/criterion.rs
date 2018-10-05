@@ -5,14 +5,31 @@ use std::time::Duration;
 
 const SIZE: usize = 1024 * 1024;
 
-fn alloc(c: &mut Criterion) {
+fn large_drop(c: &mut Criterion) {
     c.bench(
-        "alloc",
-        Benchmark::new("alloc", |b| {
-            b.iter_with_large_drop(|| (0..SIZE).map(|_| 0u8).collect::<Vec<_>>())
-        }).warm_up_time(Duration::new(1, 0))
-            .throughput(Throughput::Bytes(SIZE as u32)),
+        "iter_with_large_drop",
+        Benchmark::new("large_drop", |b| {
+            let v: Vec<_> = (0..SIZE).map(|i| i as u8).collect();
+            b.iter_with_large_drop(|| v.clone());
+        }).throughput(Throughput::Bytes(SIZE as u32)),
     );
 }
 
-criterion_group!{benches, alloc}
+fn small_drop(c: &mut Criterion) {
+    c.bench(
+        "iter_with_large_drop",
+        Benchmark::new("small_drop", |b| {
+            b.iter_with_large_drop(|| SIZE);
+        }),
+    );
+}
+
+fn short_warmup() -> Criterion {
+    Criterion::default().warm_up_time(Duration::new(1, 0))
+}
+
+criterion_group!{
+    name = benches;
+    config = short_warmup();
+    targets = large_drop, small_drop
+}
