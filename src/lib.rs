@@ -507,6 +507,7 @@ pub struct Criterion {
     baseline: Baseline,
     measure_only: bool,
     test_mode: bool,
+    list_mode: bool,
 }
 
 impl Default for Criterion {
@@ -564,6 +565,7 @@ impl Default for Criterion {
             baseline: Baseline::Save,
             measure_only: false,
             test_mode: false,
+            list_mode: false,
             output_directory,
         }
     }
@@ -793,6 +795,9 @@ impl Criterion {
                 .takes_value(true)
                 .conflicts_with("save-baseline")
                 .help("Compare to a named baseline."))
+            .arg(Arg::with_name("list")
+                .long("list")
+                .help("List all benchmarks"))
             .arg(Arg::with_name("measure-only")
                 .long("measure-only")
                 .help("Only perform measurements; do no analysis or storage of results. This is useful eg. when profiling the benchmarks, to reduce clutter in the profiling data."))
@@ -862,6 +867,11 @@ scripts alongside the generated plots.
 
         self.measure_only = matches.is_present("measure-only");
         self.test_mode = matches.is_present("test");
+        if matches.is_present("list") {
+            self.test_mode = true;
+            self.list_mode = true;
+        }
+
         #[cfg(feature = "html_reports")]
         {
             if !self.measure_only {
