@@ -42,6 +42,10 @@ pub(crate) fn common<T>(
     parameter: &T,
     throughput: Option<Throughput>,
 ) {
+    if criterion.list_mode {
+        println!("{}: bench", id);
+        return
+    }
     criterion.report.benchmark_start(id, report_context);
 
     // In test mode, run the benchmark exactly once, then exit.
