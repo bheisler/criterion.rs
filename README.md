@@ -28,6 +28,10 @@
     <a href="https://coveralls.io/github/japaric/criterion.rs?branch=master">
         <img src="https://coveralls.io/repos/github/japaric/criterion.rs/badge.svg?branch=master" alt="Coverage Status">
     </a>
+    |
+    <a href="https://deps.rs/repo/github/japaric/criterion.rs">
+        <img src="https://deps.rs/repo/github/japaric/criterion.rs/status.svg" alt="dependency status">
+    </a>
 </div>
 
 Criterion.<span></span>rs helps you write fast code by detecting and measuring performance improvements or regressions, even small ones, quickly and accurately. You can optimize with confidence, knowing how each change affects the performance of your code.
