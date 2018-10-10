@@ -952,8 +952,13 @@ impl Plot {
 /// Returns `gnuplot` version
 // FIXME Parsing may fail
 pub fn version() -> io::Result<(usize, usize, usize)> {
-    let stdout = try!(Command::new("gnuplot").arg("--version").output()).stdout;
-    let mut words = str::from_utf8(&stdout).unwrap().split_whitespace().skip(1);
+    let command_output = try!(Command::new("gnuplot").arg("--version").output());
+    if !command_output.status.success() {
+        let error = str::from_utf8(&command_output.stderr).unwrap();
+        eprintln!("`gnuplot --version` returned an error\n{}", error);
+        return Err(io::Error::new(io::ErrorKind::Other, error));
+    }
+    let mut words = str::from_utf8(&command_output.stdout).unwrap().split_whitespace().skip(1);
     let mut version = words.next().unwrap().split('.');
     let major = version.next().unwrap().parse().unwrap();
     let minor = version.next().unwrap().parse().unwrap();
