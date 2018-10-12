@@ -982,7 +982,6 @@ pub fn version() -> Result<(usize, usize, usize), Error> {
     if !command_output.status.success() {
         let error = String::from_utf8(command_output.stderr)
             .map_err(|_| VersionError::OutputError)?;
-        eprintln!("`gnuplot --version` returned an error\n{}", error);
         return Err(VersionError::Error(error).into());
     }
 

@@ -532,12 +532,17 @@ impl Default for Criterion {
 
         #[cfg(feature = "html_reports")]
         {
-            plotting = if criterion_plot::version().is_ok() {
-                Plotting::Enabled
-            } else {
-                println!("Gnuplot not found, disabling plotting");
-
-                Plotting::NotAvailable
+            use criterion_plot::VersionError;
+            plotting = match criterion_plot::version() {
+                Ok(_) => Plotting::Enabled,
+                Err(e) => {
+                    match e.downcast::<VersionError>() {
+                        Ok(VersionError::Exec(_)) => println!("Gnuplot not found, disabling plotting"),
+                        Ok(e) => println!("Gnuplot not found or not usable, disabling plotting\n{}", e),
+                        Err(_) => println!("Gnuplot not found or not usable, disabling plotting"),
+                    }
+                    Plotting::NotAvailable
+                },
             };
             reports.push(Box::new(Html::new()));
         }
