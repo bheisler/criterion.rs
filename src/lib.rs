@@ -456,11 +456,14 @@ impl Bencher {
         self.iterated = true;
         let inputs = black_box(repeat_with(setup).take(self.iters as _).collect::<Vec<_>>());
 
-        let start = Instant::now();
+        self.elapsed = Duration::from_secs(0);
         for input in inputs {
-            black_box(routine(input));
+            let start = Instant::now();
+            let output = routine(input);
+            self.elapsed += start.elapsed();
+
+            drop(black_box(output));
         }
-        self.elapsed = start.elapsed();
     }
 
     // Benchmarks must actually call one of the iter methods. This causes benchmarks to fail loudly
