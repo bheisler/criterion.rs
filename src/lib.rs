@@ -535,8 +535,8 @@ impl Default for Criterion {
             plotting = if criterion_plot::version().is_ok() {
                 Plotting::Enabled
             } else {
-                println!("Gnuplot not found, disabling plotting");
-
+                info!("Gnuplot not found while creating default \
+                       settings, disabling!");
                 Plotting::NotAvailable
             };
             reports.push(Box::new(Html::new()));
@@ -688,7 +688,8 @@ impl Criterion {
     /// Enables plotting
     pub fn with_plots(mut self) -> Criterion {
         match self.plotting {
-            Plotting::NotAvailable => {}
+            Plotting::NotAvailable => panic!("Plotting explicitely requested \
+              but gnuplot was not found!"),
             _ => self.plotting = Plotting::Enabled,
         }
 
