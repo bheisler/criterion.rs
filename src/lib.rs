@@ -352,7 +352,7 @@ impl Bencher {
     /// # Timing model
     ///
     /// ``` text
-    /// elapsed = Instant::now + iters * (routine + Vec::push + Range::next)
+    /// elapsed = Instant::now + iters * (routine) + Iterator::collect::<Vec<_>>
     /// ```
     ///
     /// # Example
@@ -419,7 +419,7 @@ impl Bencher {
     /// # Timing model
     ///
     /// ``` text
-    /// elapsed = Instant::now + iters * (routine + vec::IntoIter::next)
+    /// elapsed = iters * (Instant::now + routine)
     /// ```
     /// # Example
     ///
