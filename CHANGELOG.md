@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Reduced measurement overhead for the `iter_with_large_setup` and `iter_with_drop` methods.
 - `criterion_group` and `criterion_main` macros no longer require the `Criterion` struct to be
   explicitly imported.
+- Don't panic when `gnuplot --version` fails.
+
+### Changed
+- Reduced overhead in measurements using `iter_with_large_drop` and `iter_with_large_setup`
+- Changed timing model of `iter_with_large_setup` to exclude time spent dropping values returned
+  by the routine. Time measurements taken with 0.2.6 using these methods may differ from those taken
+  with 0.2.5.
 
 ## [0.2.5]
 ### Fixed
