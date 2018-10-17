@@ -401,12 +401,18 @@ extern crate cast;
 #[macro_use]
 extern crate itertools;
 
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
+
 use std::borrow::Cow;
 use std::fs::File;
 use std::io;
 use std::path::Path;
 use std::process::{Child, Command};
 use std::str;
+
+use failure::Error;
 
 use data::Matrix;
 use traits::{Configure, Set};
@@ -949,15 +955,46 @@ impl Plot {
         &self.script
     }
 }
+
+/// Possible errors when parsing gnuplot's version string
+#[derive(Debug, Fail)]
+pub enum VersionError {
+    /// The `gnuplot` command couldn't be executed
+    #[fail(display = "`gnuplot --version` failed: {}", _0)]
+    Exec(#[cause] io::Error),
+    /// The `gnuplot` command returned an error message
+    #[fail(display = "`gnuplot --version` failed with error message:\n{}", _0)]
+    Error(String),
+    /// The `gnuplot` command returned invalid utf-8
+    #[fail(display = "`gnuplot --version` returned invalid utf-8")]
+    OutputError,
+    /// The `gnuplot` command returned an unparseable string
+    #[fail(display = "`gnuplot --version` returned an unparseable version string: {}", _0)]
+    ParseError(String),
+}
+
 /// Returns `gnuplot` version
-// FIXME Parsing may fail
-pub fn version() -> io::Result<(usize, usize, usize)> {
-    let stdout = try!(Command::new("gnuplot").arg("--version").output()).stdout;
-    let mut words = str::from_utf8(&stdout).unwrap().split_whitespace().skip(1);
-    let mut version = words.next().unwrap().split('.');
-    let major = version.next().unwrap().parse().unwrap();
-    let minor = version.next().unwrap().parse().unwrap();
-    let patchlevel = words.nth(1).unwrap().parse().unwrap();
+pub fn version() -> Result<(usize, usize, usize), Error> {
+    use std::num::ParseIntError;
+
+    let command_output = Command::new("gnuplot").arg("--version").output()
+        .map_err(VersionError::Exec)?;
+    if !command_output.status.success() {
+        let error = String::from_utf8(command_output.stderr)
+            .map_err(|_| VersionError::OutputError)?;
+        return Err(VersionError::Error(error).into());
+    }
+
+    let output = String::from_utf8(command_output.stdout)
+        .map_err(|_| VersionError::OutputError)?;
+    let unwrap_none = || { VersionError::ParseError(output.clone()) };
+    let unwrap_err = |_: ParseIntError| { VersionError::ParseError(output.clone()) };
+
+    let mut words = output.split_whitespace().skip(1);
+    let mut version = words.next().ok_or_else(unwrap_none)?.split('.');
+    let major = version.next().ok_or_else(unwrap_none)?.parse().map_err(unwrap_err)?;
+    let minor = version.next().ok_or_else(unwrap_none)?.parse().map_err(unwrap_err)?;
+    let patchlevel = words.nth(1).ok_or_else(unwrap_none)?.parse().map_err(unwrap_err)?;
 
     Ok((major, minor, patchlevel))
 }
