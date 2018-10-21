@@ -15,7 +15,7 @@ byteorder = "1"
 cast = "0.2"
 itertools = "0.7"
 failure = "0.1.2"
-failure_derive = "0.1.1"
+failure_derive = "0.1.2"
 
 [dev-dependencies]
 itertools-num = "0.1"
