@@ -16,7 +16,7 @@ backtrace = "0.3.5" # required only for minimal-versions. brought in by failure.
 criterion-plot = { path="plot", version="0.2.5", optional = true }
 criterion-stats = { path="stats", version="0.2.5" }
 failure = "0.1.2"
-failure_derive = "0.1.1"
+failure_derive = "0.1.2"
 itertools = "0.7"
 itertools-num = "0.1"
 log = "0.4"
