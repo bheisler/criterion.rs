@@ -22,7 +22,8 @@ where
     fn evaluate(&self, x: A) -> A {
         use std::f32::consts::PI;
 
-        (x.powi(2).exp() * A::cast(2. * PI)).sqrt().recip()
+        // 1 / sqrt(e^(x^2) * 2 * pi) = e^(x^2 * -.5) * (1 / sqrt(2 * pi))
+        (x.powi(2) * A::cast(-0.5)).exp() * (A::cast(2. * PI)).sqrt().recip()
     }
 }
 
