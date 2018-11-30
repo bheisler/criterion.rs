@@ -519,6 +519,10 @@ impl Report for CliReport {
             let mean_est = comp.relative_estimates[&Statistic::Mean];
             let point_estimate = mean_est.point_estimate;
             let mut point_estimate_str = format::change(point_estimate, true);
+            // The change in throughput is related to the change in timing. Reducing the timing by
+            // 50% increases the througput by 100%.
+            let to_thrpt_estimate = |ratio: f64| 1.0/(1.0+ratio)-1.0;
+            let mut thrpt_point_estimate_str = format::change(to_thrpt_estimate(point_estimate), true);
             let explanation_str: String;
 
             if !different_mean {
@@ -528,11 +532,13 @@ impl Report for CliReport {
                 match comparison {
                     ComparisonResult::Improved => {
                         point_estimate_str = self.green(self.bold(point_estimate_str));
+                        thrpt_point_estimate_str = self.green(self.bold(thrpt_point_estimate_str));
                         explanation_str =
                             format!("Performance has {}.", self.green("improved".to_owned()));
                     }
                     ComparisonResult::Regressed => {
                         point_estimate_str = self.red(self.bold(point_estimate_str));
+                        thrpt_point_estimate_str = self.red(self.bold(thrpt_point_estimate_str));
                         explanation_str =
                             format!("Performance has {}.", self.red("regressed".to_owned()));
                     }
@@ -542,8 +548,10 @@ impl Report for CliReport {
                 }
             }
 
+            println!("{}change:", " ".repeat(17));
+
             println!(
-                "{}change: [{} {} {}] (p = {:.2} {} {:.2})",
+                "{}time:   [{} {} {}] (p = {:.2} {} {:.2})",
                 " ".repeat(24),
                 self.faint(format::change(
                     mean_est.confidence_interval.lower_bound,
@@ -558,6 +566,21 @@ impl Report for CliReport {
                 if different_mean { "<" } else { ">" },
                 comp.significance_threshold
             );
+            if meas.throughput.is_some() {
+                println!(
+                    "{}thrpt:  [{} {} {}]",
+                    " ".repeat(24),
+                    self.faint(format::change(
+                        to_thrpt_estimate(mean_est.confidence_interval.upper_bound),
+                        true
+                    )),
+                    thrpt_point_estimate_str,
+                    self.faint(format::change(
+                        to_thrpt_estimate(mean_est.confidence_interval.lower_bound),
+                        true
+                    )),
+                );
+            }
             println!("{}{}", " ".repeat(24), explanation_str);
         }
 
