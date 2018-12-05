@@ -220,12 +220,21 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Change</td>
+                            <td>Change in time</td>
                             <td class="ci-bound">{{comparison.change.lower}}</td>
                             <td>{{comparison.change.point}}</td>
                             <td class="ci-bound">{{comparison.change.upper}}</td>
                             <td>(p = {{comparison.p_value}} {{comparison.inequality}} {{comparison.significance_level}})</td>
                         </tr>
+                        {{#if comparison.thrpt_change}}
+                        <tr>
+                            <td>Change in throughput</td>
+                            <td class="ci-bound">{{comparison.thrpt_change.lower}}</td>
+                            <td>{{comparison.thrpt_change.point}}</td>
+                            <td class="ci-bound">{{comparison.thrpt_change.upper}}</td>
+                            <td></td>
+                        </tr>
+                        {{/if}}
                     </tbody>
                 </table>
                 {{comparison.explanation}}

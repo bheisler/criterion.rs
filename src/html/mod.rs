@@ -111,6 +111,7 @@ struct Comparison {
     explanation: String,
 
     change: ConfidenceInterval,
+    thrpt_change: Option<ConfidenceInterval>,
     additional_plots: Vec<Plot>,
 }
 
@@ -432,6 +433,18 @@ impl Html {
                     lower: format::change(mean_est.confidence_interval.lower_bound, true),
                     upper: format::change(mean_est.confidence_interval.upper_bound, true),
                 },
+
+                thrpt_change: measurements
+                    .throughput
+                    .as_ref()
+                    .map(|_| {
+                        let to_thrpt_estimate = |ratio: f64| 1.0/(1.0+ratio)-1.0;
+                        ConfidenceInterval {
+                            point: format::change(to_thrpt_estimate(mean_est.point_estimate), true),
+                            lower: format::change(to_thrpt_estimate(mean_est.confidence_interval.lower_bound), true),
+                            upper: format::change(to_thrpt_estimate(mean_est.confidence_interval.upper_bound), true)
+                        }
+                    }),
 
                 additional_plots: vec![
                     Plot::new("Change in mean", "change/mean.svg"),
