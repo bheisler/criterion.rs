@@ -1,7 +1,7 @@
 set -ex
 
 if [ "$CLIPPY" = "yes" ]; then
-  cargo install clippy --force --vers $CLIPPY_VERSION
+    rustup component add clippy-preview
 fi
 
 if [ "$DOCS" = "yes" ]; then

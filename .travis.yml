@@ -52,10 +52,10 @@ matrix:
             - gnuplot
     - os: linux
       env: CLIPPY=yes
-      rust: nightly-2018-06-25
+      rust: stable
     - os: linux
       env: RUSTFMT=yes
-      rust: nightly-2018-03-29
+      rust: stable
     - os: linux
       env: DOCS=yes
     - os: osx
@@ -83,7 +83,6 @@ script:
 
 env:
   global:
-    - CLIPPY_VERSION=0.0.210
     - secure: "f/HaMzQu7d6ochSjE5lUjJbXYWlhbzslyTuWq+Lub/r2TTL4hVlT9koC4RT7W73V3WDrwYIqEGmwvscVffnijZRebl/PV+6WlOlYJEdAgKxGROpFGDIJGRGAc/f3s6OcJ+Hr8rmRF70fYEl45hs6J53X8s+CVRuty+r/UdilRpM="
 
 branches:
