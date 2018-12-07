@@ -63,7 +63,9 @@ where
     /// Creates a new data set from two existing slices
     pub fn new(xs: &'a [X], ys: &'a [Y]) -> Data<'a, X, Y> {
         assert!(
-            xs.len() == ys.len() && xs.len() > 1 && xs.iter().all(|x| !x.is_nan())
+            xs.len() == ys.len()
+                && xs.len() > 1
+                && xs.iter().all(|x| !x.is_nan())
                 && ys.iter().all(|y| !y.is_nan())
         );
 

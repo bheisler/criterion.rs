@@ -394,7 +394,8 @@ fn test_throughput() {
             "veclen",
             |b, v| b.iter(|| v.len()),
             vec![vec![1], vec![1, 2, 3]],
-        ).throughput(|v| Throughput::Elements(v.len() as u32)),
+        )
+        .throughput(|v| Throughput::Elements(v.len() as u32)),
     );
 }
 

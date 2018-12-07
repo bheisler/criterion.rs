@@ -7,5 +7,7 @@ pub use filledcurve::FilledCurve;
 pub use key::{Boxed, Horizontal, Justification, Order, Position, Stacked, Vertical};
 pub use proxy::{Font, Label, Output, Title};
 pub use traits::{Configure, Plot, Set};
-pub use {Axes, Axis, BoxWidth, Color, Figure, FontSize, Grid, Key, LineType, LineWidth, Opacity,
-         PointSize, PointType, Range, Scale, ScaleFactor, Size, Terminal, TicLabels};
+pub use {
+    Axes, Axis, BoxWidth, Color, Figure, FontSize, Grid, Key, LineType, LineWidth, Opacity,
+    PointSize, PointType, Range, Scale, ScaleFactor, Size, Terminal, TicLabels,
+};

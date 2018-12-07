@@ -4,10 +4,10 @@ macro_rules! test {
         mod $ty {
             use quickcheck::TestResult;
 
-            use bivariate::Data;
             use bivariate::regression::Slope;
+            use bivariate::Data;
 
-            quickcheck!{
+            quickcheck! {
                 fn means(size: usize, start: usize,
                          offset: usize, nresamples: usize) -> TestResult {
                     if let Some(x) = ::test::vec::<$ty>(size, start) {
@@ -45,7 +45,7 @@ macro_rules! test {
                 }
             }
 
-            quickcheck!{
+            quickcheck! {
                 fn slope(size: usize, start: usize,
                          offset: usize, nresamples: usize) -> TestResult {
                     if let Some(x) = ::test::vec::<$ty>(size, start) {

@@ -11,7 +11,8 @@ fn large_drop(c: &mut Criterion) {
         Benchmark::new("large_drop", |b| {
             let v: Vec<_> = (0..SIZE).map(|i| i as u8).collect();
             b.iter_with_large_drop(|| v.clone());
-        }).throughput(Throughput::Bytes(SIZE as u32)),
+        })
+        .throughput(Throughput::Bytes(SIZE as u32)),
     );
 }
 
@@ -28,7 +29,7 @@ fn short_warmup() -> Criterion {
     Criterion::default().warm_up_time(Duration::new(1, 0))
 }
 
-criterion_group!{
+criterion_group! {
     name = benches;
     config = short_warmup();
     targets = large_drop, small_drop

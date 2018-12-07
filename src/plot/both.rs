@@ -5,8 +5,8 @@ use criterion_plot::prelude::*;
 use stats::bivariate::Data;
 use stats::univariate::Sample;
 
-use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
 use super::{debug_script, escape_underscores, scale_time};
+use super::{DARK_BLUE, DARK_RED, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, SIZE};
 use estimate::Estimates;
 use estimate::Statistic::Slope;
 use kde;

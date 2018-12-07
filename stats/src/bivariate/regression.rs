@@ -129,10 +129,10 @@ macro_rules! test {
         mod $ty {
             use quickcheck::TestResult;
 
-            use bivariate::Data;
             use bivariate::regression::StraightLine;
+            use bivariate::Data;
 
-            quickcheck!{
+            quickcheck! {
                 fn r_squared(size: usize, start: usize, offset: usize) -> TestResult {
                     if let Some(x) = ::test::vec::<$ty>(size, start) {
                         let y = ::test::vec::<$ty>(size + offset, start + offset).unwrap();

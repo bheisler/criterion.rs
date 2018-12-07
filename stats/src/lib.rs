@@ -7,8 +7,14 @@
 
 #![deny(missing_docs)]
 #![deny(warnings)]
-#![cfg_attr(feature = "cargo-clippy",
-            allow(used_underscore_binding, just_underscores_and_digits, transmute_ptr_to_ptr))]
+#![cfg_attr(
+    feature = "cargo-clippy",
+    allow(
+        used_underscore_binding,
+        just_underscores_and_digits,
+        transmute_ptr_to_ptr
+    )
+)]
 
 extern crate cast;
 extern crate num_cpus;

@@ -3,11 +3,11 @@ use std::path::PathBuf;
 use std::process::Child;
 
 use criterion_plot::prelude::*;
-use stats::Distribution;
-use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
-use stats::univariate::Sample;
+use stats::bivariate::Data;
 use stats::univariate::outliers::tukey::LabeledSample;
+use stats::univariate::Sample;
+use stats::Distribution;
 
 use estimate::{Distributions, Estimates};
 use kde;
@@ -120,7 +120,8 @@ pub fn pdf(
     let (x_scale, prefix) = scale_time(labeled_sample.max());
     let mean = labeled_sample.mean();
 
-    let &max_iters = data.x()
+    let &max_iters = data
+        .x()
         .as_slice()
         .iter()
         .max_by_key(|&&iters| iters as u64)
@@ -444,7 +445,8 @@ pub(crate) fn abs_distributions(
             let zero = iter::repeat(0);
 
             let start = xs.iter().enumerate().find(|&(_, &x)| x >= lb).unwrap().0;
-            let end = xs.iter()
+            let end = xs
+                .iter()
                 .enumerate()
                 .rev()
                 .find(|&(_, &x)| x <= ub)
@@ -558,7 +560,8 @@ pub(crate) fn rel_distributions(
             let zero = iter::repeat(0);
 
             let start = xs.iter().enumerate().find(|&(_, &x)| x >= lb).unwrap().0;
-            let end = xs.iter()
+            let end = xs
+                .iter()
                 .enumerate()
                 .rev()
                 .find(|&(_, &x)| x <= ub)

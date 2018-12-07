@@ -46,9 +46,11 @@ where
 
                 self.stage = Some(stage);
             }
-            Some(ref mut stage) => for elem in stage.iter_mut() {
-                *elem = self.sample[self.range.ind_sample(rng)]
-            },
+            Some(ref mut stage) => {
+                for elem in stage.iter_mut() {
+                    *elem = self.sample[self.range.ind_sample(rng)]
+                }
+            }
         }
 
         if let Some(ref v) = self.stage {
@@ -64,12 +66,12 @@ mod test {
     use quickcheck::TestResult;
     use std::collections::HashSet;
 
-    use univariate::Sample;
     use univariate::resamples::Resamples;
+    use univariate::Sample;
 
     // FIXME
     // Check that the resample is a subset of the sample
-    quickcheck!{
+    quickcheck! {
         fn subset(size: usize, nresamples: usize) -> TestResult {
             if size > 1 {
                 let v: Vec<_> = (0..size).map(|i| i as f32).collect();

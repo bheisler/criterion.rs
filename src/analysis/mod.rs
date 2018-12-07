@@ -1,18 +1,18 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use stats::bivariate::Data;
 use stats::bivariate::regression::Slope;
-use stats::univariate::Sample;
+use stats::bivariate::Data;
 use stats::univariate::outliers::tukey::{self, LabeledSample};
+use stats::univariate::Sample;
 use stats::{Distribution, Tails};
 
 use benchmark::BenchmarkConfig;
 use estimate::{Distributions, Estimates, Statistic};
 use report::{BenchmarkId, ReportContext};
 use routine::Routine;
-use {Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
 use {format, fs};
+use {Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => {{
@@ -44,7 +44,7 @@ pub(crate) fn common<T>(
 ) {
     if criterion.list_mode {
         println!("{}: bench", id);
-        return
+        return;
     }
     criterion.report.benchmark_start(id, report_context);
 
@@ -195,7 +195,8 @@ fn base_dir_exists(id: &BenchmarkId, baseline: &str, output_directory: &str) -> 
         output_directory,
         id.as_directory_name(),
         baseline
-    )).exists()
+    ))
+    .exists()
 }
 
 // Performs a simple linear regression on the sample
@@ -205,7 +206,8 @@ fn regression(data: Data<f64, f64>, config: &BenchmarkConfig) -> (Distribution<f
     let distribution = elapsed!(
         "Bootstrapped linear regression",
         data.bootstrap(config.nresamples, |d| (Slope::fit(d).0,))
-    ).0;
+    )
+    .0;
 
     let point = Slope::fit(data);
     let (lb, ub) = distribution.confidence_interval(config.confidence_level);

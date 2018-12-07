@@ -4,7 +4,7 @@ extern crate walkdir;
 
 mod benchmarks;
 
-criterion_main!{
+criterion_main! {
     benchmarks::compare_functions::fibonaccis,
     benchmarks::external_process::benches,
     benchmarks::iter_with_large_drop::benches,

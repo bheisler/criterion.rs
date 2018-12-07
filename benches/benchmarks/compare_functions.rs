@@ -41,13 +41,14 @@ fn compare_fibonaccis_builder(c: &mut Criterion) {
             "Recursive",
             |b, i| b.iter(|| fibonacci_slow(*i)),
             vec![20u64, 21u64],
-        ).with_function("Iterative", |b, i| b.iter(|| fibonacci_fast(*i))),
+        )
+        .with_function("Iterative", |b, i| b.iter(|| fibonacci_fast(*i))),
     );
 }
 
 fn compare_looped(c: &mut Criterion) {
-    use criterion::ParameterizedBenchmark;
     use criterion::black_box;
+    use criterion::ParameterizedBenchmark;
 
     c.bench(
         "small",

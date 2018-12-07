@@ -10,8 +10,8 @@ use report::{BenchmarkId, ValueType};
 
 use itertools::Itertools;
 
-use super::{DARK_BLUE, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, POINT_SIZE, SIZE};
 use super::{debug_script, escape_underscores, scale_time};
+use super::{DARK_BLUE, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, POINT_SIZE, SIZE};
 use AxisScale;
 
 const NUM_COLORS: usize = 8;
@@ -114,7 +114,8 @@ pub fn line_comparison(
             c.set(LINEWIDTH)
                 .set(LineType::Solid)
                 .set(COMPARISON_COLORS[i % NUM_COLORS])
-        }).plot(Points { x: &xs, y: &ys }, |p| {
+        })
+        .plot(Points { x: &xs, y: &ys }, |p| {
             p.set(PointType::FilledCircle)
                 .set(POINT_SIZE)
                 .set(COMPARISON_COLORS[i % NUM_COLORS])
@@ -149,7 +150,8 @@ pub fn violin(
             (x, y)
         })
         .collect::<Vec<_>>();
-    let mut xs = kdes.iter()
+    let mut xs = kdes
+        .iter()
         .flat_map(|&(ref x, _)| x.iter())
         .filter(|&&x| x > 0.);
     let (mut min, mut max) = {

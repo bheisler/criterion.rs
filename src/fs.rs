@@ -1,5 +1,5 @@
-use serde::Serialize;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use serde_json;
 use std::ffi::OsStr;
 use std::fs::{self, File};
@@ -92,7 +92,8 @@ where
 
     let mut ids = vec![];
 
-    for entry in WalkDir::new(directory).into_iter()
+    for entry in WalkDir::new(directory)
+        .into_iter()
         // Ignore errors.
         .filter_map(|e| e.ok())
         .filter(is_benchmark)

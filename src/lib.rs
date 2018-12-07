@@ -79,10 +79,10 @@ mod html;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::default::Default;
+use std::fmt;
 use std::iter::{repeat_with, IntoIterator};
 use std::process::Command;
 use std::time::{Duration, Instant};
-use std::fmt;
 
 use benchmark::BenchmarkConfig;
 use benchmark::NamedRoutine;
@@ -540,12 +540,16 @@ impl Default for Criterion {
                 Ok(_) => Plotting::Enabled,
                 Err(e) => {
                     match e.downcast::<VersionError>() {
-                        Ok(VersionError::Exec(_)) => println!("Gnuplot not found, disabling plotting"),
-                        Ok(e) => println!("Gnuplot not found or not usable, disabling plotting\n{}", e),
+                        Ok(VersionError::Exec(_)) => {
+                            println!("Gnuplot not found, disabling plotting")
+                        }
+                        Ok(e) => {
+                            println!("Gnuplot not found or not usable, disabling plotting\n{}", e)
+                        }
                         Err(_) => println!("Gnuplot not found or not usable, disabling plotting"),
                     }
                     Plotting::NotAvailable
-                },
+                }
             };
             reports.push(Box::new(Html::new()));
         }

@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
-use stats::Distribution;
 use stats::univariate::Sample;
 use stats::univariate::{self, mixed};
+use stats::Distribution;
 
 use benchmark::BenchmarkConfig;
 use error::Result;
@@ -85,7 +85,8 @@ fn t_test(
     let t_distribution = elapsed!(
         "Bootstrapping the T distribution",
         mixed::bootstrap(avg_times, base_avg_times, nresamples, |a, b| (a.t(b),))
-    ).0;
+    )
+    .0;
 
     // HACK: Filter out non-finite numbers, which can happen sometimes when sample size is very small.
     // Downstream code doesn't like non-finite values here.

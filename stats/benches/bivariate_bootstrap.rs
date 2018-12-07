@@ -11,8 +11,8 @@ macro_rules! bench {
     ($ty:ident) => {
         pub mod $ty {
             use criterion::Criterion;
-            use stats::bivariate::Data;
             use stats::bivariate::regression::{Slope, StraightLine};
+            use stats::bivariate::Data;
 
             const NRESAMPLES: usize = 100_000;
             const SAMPLE_SIZE: usize = 100;

@@ -194,7 +194,8 @@ impl<A, B, C, D> TupledDistributions
         Distribution<B>,
         Distribution<C>,
         Distribution<D>,
-    ) where
+    )
+where
     A: Copy,
     B: Copy,
     C: Copy,

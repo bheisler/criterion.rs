@@ -103,7 +103,7 @@ macro_rules! bench {
             );
             stat_none!($ty <- median_abs_dev, std_dev, var);
 
-            criterion_group!{
+            criterion_group! {
                 name = benches;
                 config = ::common_bench::reduced_samples();
                 targets = iqr, max, mean, median, median_abs_dev_pct, min,
@@ -119,7 +119,7 @@ macro_rules! bench {
                     (std_dev, mean),
                     (var, mean)
                 );
-                criterion_group!{
+                criterion_group! {
                     name = benches;
                     config = ::common_bench::reduced_samples();
                     targets = median_abs_dev, std_dev, var

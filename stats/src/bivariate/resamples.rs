@@ -47,12 +47,14 @@ where
 
                 self.stage = Some(stage);
             }
-            Some(ref mut stage) => for i in 0..n {
-                let j = self.range.ind_sample(rng);
+            Some(ref mut stage) => {
+                for i in 0..n {
+                    let j = self.range.ind_sample(rng);
 
-                stage.0[i] = self.data.0[j];
-                stage.1[i] = self.data.1[j];
-            },
+                    stage.0[i] = self.data.0[j];
+                    stage.1[i] = self.data.1[j];
+                }
+            }
         }
 
         if let Some((ref x, ref y)) = self.stage {

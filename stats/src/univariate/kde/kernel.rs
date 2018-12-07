@@ -35,14 +35,14 @@ macro_rules! test {
 
                 use univariate::kde::kernel::{Gaussian, Kernel};
 
-                quickcheck!{
+                quickcheck! {
                     fn symmetric(x: $ty) -> bool {
                         relative_eq!(Gaussian.evaluate(-x), Gaussian.evaluate(x))
                     }
                 }
 
                 // Any [a b] integral should be in the range [0 1]
-                quickcheck!{
+                quickcheck! {
                     fn integral(a: $ty, b: $ty) -> TestResult {
                         const DX: $ty = 1e-3;
 

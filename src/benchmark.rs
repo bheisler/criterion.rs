@@ -56,7 +56,8 @@ impl PartialBenchmarkConfig {
             noise_threshold: self.noise_threshold.unwrap_or(defaults.noise_threshold),
             nresamples: self.nresamples.unwrap_or(defaults.nresamples),
             sample_size: self.sample_size.unwrap_or(defaults.sample_size),
-            significance_level: self.significance_level
+            significance_level: self
+                .significance_level
                 .unwrap_or(defaults.significance_level),
             warm_up_time: self.warm_up_time.unwrap_or(defaults.warm_up_time),
         }
@@ -99,7 +100,7 @@ macro_rules! benchmark_config {
         ///
         /// A bigger sample should yield more accurate results if paired with a sufficiently large
         /// measurement time.
-        /// 
+        ///
         /// Sample size must be at least 2.
         ///
         /// # Panics
@@ -248,7 +249,8 @@ impl Benchmark {
             config: PartialBenchmarkConfig::default(),
             routines: vec![],
             throughput: None,
-        }.with_function(id, f)
+        }
+        .with_function(id, f)
     }
 
     /// Create a new benchmark group and add the given program to it.
@@ -300,7 +302,8 @@ impl Benchmark {
             config: PartialBenchmarkConfig::default(),
             routines: vec![],
             throughput: None,
-        }.with_program(id, program)
+        }
+        .with_program(id, program)
     }
 
     /// Add a function to the benchmark group.
@@ -463,7 +466,8 @@ where
             values: parameters.into_iter().collect(),
             routines: vec![],
             throughput: None,
-        }.with_function(id, f)
+        }
+        .with_function(id, f)
     }
 
     /// Create a new parameterized benchmark group and add the given program to it.
@@ -525,7 +529,8 @@ where
             routines: vec![],
             values: parameters.into_iter().collect(),
             throughput: None,
-        }.with_program(id, program)
+        }
+        .with_program(id, program)
     }
 
     pub(crate) fn with_functions(

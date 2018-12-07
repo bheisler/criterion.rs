@@ -1,7 +1,7 @@
 use itertools_num;
-use stats::univariate::Sample;
 use stats::univariate::kde::kernel::Gaussian;
 use stats::univariate::kde::{Bandwidth, Kde};
+use stats::univariate::Sample;
 
 pub fn sweep(
     sample: &Sample<f64>,

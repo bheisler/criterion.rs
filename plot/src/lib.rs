@@ -408,10 +408,10 @@ extern crate failure_derive;
 use std::borrow::Cow;
 use std::fs::File;
 use std::io;
+use std::num::ParseIntError;
 use std::path::Path;
 use std::process::{Child, Command};
 use std::str;
-use std::num::ParseIntError;
 
 use failure::Error;
 
@@ -568,7 +568,7 @@ impl Figure {
     pub fn draw(&mut self) -> io::Result<Child> {
         use std::process::Stdio;
 
-        let mut gnuplot = try!{
+        let mut gnuplot = try! {
             Command::new("gnuplot").
                 stderr(Stdio::piped()).
                 stdin(Stdio::piped()).
@@ -970,24 +970,28 @@ pub enum VersionError {
     #[fail(display = "`gnuplot --version` returned invalid utf-8")]
     OutputError,
     /// The `gnuplot` command returned an unparseable string
-    #[fail(display = "`gnuplot --version` returned an unparseable version string: {}", _0)]
+    #[fail(
+        display = "`gnuplot --version` returned an unparseable version string: {}",
+        _0
+    )]
     ParseError(String),
 }
 
 /// Returns `gnuplot` version
 pub fn version() -> Result<(usize, usize, usize), Error> {
-    let command_output = Command::new("gnuplot").arg("--version").output()
+    let command_output = Command::new("gnuplot")
+        .arg("--version")
+        .output()
         .map_err(VersionError::Exec)?;
     if !command_output.status.success() {
-        let error = String::from_utf8(command_output.stderr)
-            .map_err(|_| VersionError::OutputError)?;
+        let error =
+            String::from_utf8(command_output.stderr).map_err(|_| VersionError::OutputError)?;
         return Err(VersionError::Error(error).into());
     }
 
-    let output = String::from_utf8(command_output.stdout)
-        .map_err(|_| VersionError::OutputError)?;
+    let output = String::from_utf8(command_output.stdout).map_err(|_| VersionError::OutputError)?;
 
-    parse_version(&output).map_err(|_| { VersionError::ParseError(output.clone()).into() })
+    parse_version(&output).map_err(|_| VersionError::ParseError(output.clone()).into())
 }
 
 fn parse_version(version_str: &str) -> Result<(usize, usize, usize), Option<ParseIntError>> {
@@ -1058,7 +1062,7 @@ mod test {
             "gnuplot 50 patchlevel 7",
             "gnuplot 5.0 patchlevel",
             "gnuplot 5.0 patchlevel foo",
-            "gnuplot foo.bar patchlevel 7"
+            "gnuplot foo.bar patchlevel 7",
         ];
         for string in &strings {
             assert!(super::parse_version(string).is_err());
