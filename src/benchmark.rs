@@ -223,7 +223,7 @@ impl Benchmark {
     /// # Example
     ///
     /// ```rust
-    /// # #![macro_use] extern crate criterion;
+    /// # #[macro_use] extern crate criterion;
     /// # use criterion::*;
     ///
     /// fn bench(c: &mut Criterion) {
@@ -430,7 +430,7 @@ where
     /// # Example
     ///
     /// ```rust
-    /// # #![macro_use] extern crate criterion;
+    /// # #[macro_use] extern crate criterion;
     /// # use criterion::*;
     ///
     /// fn bench(c: &mut Criterion) {

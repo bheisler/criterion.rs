@@ -212,7 +212,7 @@ impl Bencher {
     /// # Example
     ///
     /// ```rust
-    /// #![macro_use] extern crate criterion;
+    /// #[macro_use] extern crate criterion;
     ///
     /// use criterion::*;
     ///
@@ -252,7 +252,7 @@ impl Bencher {
     /// # Example
     ///
     /// ```rust
-    /// #![macro_use] extern crate criterion;
+    /// #[macro_use] extern crate criterion;
     ///
     /// use criterion::*;
     ///
@@ -358,7 +358,7 @@ impl Bencher {
     /// # Example
     ///
     /// ```rust
-    /// #![macro_use] extern crate criterion;
+    /// #[macro_use] extern crate criterion;
     ///
     /// use criterion::*;
     ///
@@ -424,7 +424,7 @@ impl Bencher {
     /// # Example
     ///
     /// ```rust
-    /// #![macro_use] extern crate criterion;
+    /// #[macro_use] extern crate criterion;
     ///
     /// use criterion::*;
     ///
@@ -904,7 +904,7 @@ scripts alongside the generated plots.
     /// # Example
     ///
     /// ```rust
-    /// # #![macro_use] extern crate criterion;
+    /// # #[macro_use] extern crate criterion;
     /// # use self::criterion::*;
     ///
     /// fn bench(c: &mut Criterion) {
@@ -935,7 +935,7 @@ scripts alongside the generated plots.
     /// # Example
     ///
     /// ``` rust
-    /// # #![macro_use] extern crate criterion;
+    /// # #[macro_use] extern crate criterion;
     /// # use self::criterion::*;
     /// # fn seq_fib(i: &u32) {}
     /// # fn par_fib(i: &u32) {}
@@ -983,7 +983,7 @@ scripts alongside the generated plots.
     /// # Example
     ///
     /// ```rust
-    /// # #![macro_use] extern crate criterion;
+    /// # #[macro_use] extern crate criterion;
     /// # use self::criterion::*;
     ///
     /// fn bench(c: &mut Criterion) {
@@ -1089,7 +1089,7 @@ scripts alongside the generated plots.
     /// information.
     ///
     /// ```rust
-    /// # #![macro_use] extern crate criterion;
+    /// # #[macro_use] extern crate criterion;
     /// # use criterion::*;
     /// # fn routine_1() {}
     /// # fn routine_2() {}
