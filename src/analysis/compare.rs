@@ -9,7 +9,7 @@ use error::Result;
 use estimate::Statistic;
 use estimate::{Distributions, Estimates};
 use report::BenchmarkId;
-use {format, fs, Criterion, build_estimates};
+use {build_estimates, format, fs, Criterion};
 
 // Common comparison procedure
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::type_complexity))]

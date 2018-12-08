@@ -1171,7 +1171,11 @@ struct Estimate {
     standard_error: f64,
 }
 
-fn build_estimates(distributions: &Distributions, points: &BTreeMap<Statistic, f64>, cl: f64) -> Estimates {
+fn build_estimates(
+    distributions: &Distributions,
+    points: &BTreeMap<Statistic, f64>,
+    cl: f64,
+) -> Estimates {
     distributions
         .iter()
         .map(|(&statistic, distribution)| {

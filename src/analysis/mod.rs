@@ -11,8 +11,8 @@ use benchmark::BenchmarkConfig;
 use estimate::{Distributions, Estimates, Statistic};
 use report::{BenchmarkId, ReportContext};
 use routine::Routine;
+use {build_estimates, Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
 use {format, fs};
-use {Baseline, ConfidenceInterval, Criterion, Throughput, Estimate, build_estimates};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => {{
