@@ -88,9 +88,6 @@ env:
   global:
     - secure: "f/HaMzQu7d6ochSjE5lUjJbXYWlhbzslyTuWq+Lub/r2TTL4hVlT9koC4RT7W73V3WDrwYIqEGmwvscVffnijZRebl/PV+6WlOlYJEdAgKxGROpFGDIJGRGAc/f3s6OcJ+Hr8rmRF70fYEl45hs6J53X8s+CVRuty+r/UdilRpM="
 
-branches:
-  only: master
-
 notifications:
   email:
     on_success: never

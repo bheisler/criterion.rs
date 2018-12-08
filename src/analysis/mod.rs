@@ -100,7 +100,7 @@ pub(crate) fn common<T>(
     distributions.insert(Statistic::Slope, distribution);
 
     log_if_err!(fs::save(
-        &(data.x().as_slice(), data.y().as_slice()),
+        &(data.x().as_ref(), data.y().as_ref()),
         &format!(
             "{}/{}/new/sample.json",
             criterion.output_directory,

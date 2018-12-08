@@ -25,7 +25,7 @@ where
         Resamples {
             range: Range::new(0, data.0.len()),
             rng: ::rand::thread_rng().gen(),
-            data: (data.x().as_slice(), data.y().as_slice()),
+            data: (data.x(), data.y()),
             stage: None,
         }
     }

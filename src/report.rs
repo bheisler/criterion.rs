@@ -383,7 +383,7 @@ impl CliReport {
     pub fn outliers(&self, sample: &LabeledSample<f64>) {
         let (los, lom, _, him, his) = sample.count();
         let noutliers = los + lom + him + his;
-        let sample_size = sample.as_slice().len();
+        let sample_size = sample.len();
 
         if noutliers == 0 {
             return;
@@ -566,9 +566,6 @@ impl Report for CliReport {
         self.outliers(&meas.avg_times);
 
         if self.verbose {
-            let data = Data::new(meas.iter_counts.as_slice(), meas.sample_times.as_slice());
-            let slope_estimate = &meas.absolute_estimates[&Statistic::Slope];
-
             fn format_short_estimate(estimate: &Estimate) -> String {
                 format!(
                     "[{} {}]",
@@ -576,6 +573,9 @@ impl Report for CliReport {
                     format::time(estimate.confidence_interval.upper_bound)
                 )
             }
+
+            let data = Data::new(meas.iter_counts, meas.sample_times);
+            let slope_estimate = &meas.absolute_estimates[&Statistic::Slope];
 
             println!(
                 "{:<7}{} {:<15}[{:0.7} {:0.7}]",

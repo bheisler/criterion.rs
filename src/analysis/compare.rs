@@ -92,7 +92,6 @@ fn t_test(
     // Downstream code doesn't like non-finite values here.
     let t_distribution = Distribution::from(
         t_distribution
-            .as_slice()
             .iter()
             .filter(|a| a.is_finite())
             .cloned()

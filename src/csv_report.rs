@@ -17,12 +17,7 @@ struct CsvReportWriter<W: Write> {
 }
 impl<W: Write> CsvReportWriter<W> {
     fn write_data(&mut self, id: &BenchmarkId, data: &MeasurementData) -> Result<()> {
-        for (count, time) in data
-            .iter_counts
-            .as_slice()
-            .iter()
-            .zip(data.sample_times.as_slice())
-        {
+        for (count, time) in data.iter_counts.iter().zip(data.sample_times.as_ref()) {
             let row = CsvRow {
                 group: id.group_id.as_str(),
                 function: id.function_id.as_ref().map(String::as_str),

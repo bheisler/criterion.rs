@@ -22,9 +22,9 @@ macro_rules! test {
 
                         TestResult::from_bool(
                             // Computed the correct number of resamples
-                            means.as_slice().len() == nresamples &&
+                            means.len() == nresamples &&
                             // No uninitialized values
-                            means.as_slice().iter().all(|&x| {
+                            means.iter().all(|&x| {
                                 (x > min || relative_eq!(x, min)) &&
                                 (x < max || relative_eq!(x, max))
                             })
@@ -51,14 +51,14 @@ macro_rules! test {
 
                         TestResult::from_bool(
                             // Computed the correct number of resamples
-                            means.as_slice().len() == nresamples &&
-                            medians.as_slice().len() == nresamples &&
+                            means.len() == nresamples &&
+                            medians.len() == nresamples &&
                             // No uninitialized values
-                            means.as_slice().iter().all(|&x| {
+                            means.iter().all(|&x| {
                                 (x > min || relative_eq!(x, min)) &&
                                 (x < max || relative_eq!(x, max))
                             }) &&
-                            medians.as_slice().iter().all(|&x| {
+                            medians.iter().all(|&x| {
                                 (x > min || relative_eq!(x, min)) &&
                                 (x < max || relative_eq!(x, max))
                             })
@@ -92,9 +92,9 @@ macro_rules! test {
 
                         TestResult::from_bool(
                             // Computed the correct number of resamples
-                            distribution.as_slice().len() == nresamples &&
+                            distribution.len() == nresamples &&
                             // No uninitialized values
-                            distribution.as_slice().iter().all(|&x| {
+                            distribution.iter().all(|&x| {
                                 (x > min || relative_eq!(x, min)) &&
                                 (x < max || relative_eq!(x, max))
                             })
@@ -127,17 +127,17 @@ macro_rules! test {
                         let max = <$ty>::max(a.max() - b.min(), b.max() - a.min());
 
                         // Computed the correct number of resamples
-                        let pass = distribution.as_slice().len() == nresamples &&
+                        let pass = distribution.len() == nresamples &&
                             // No uninitialized values
-                            distribution.as_slice().iter().all(|&x| {
+                            distribution.iter().all(|&x| {
                                 (x > min || relative_eq!(x, min)) &&
                                 (x < max || relative_eq!(x, max))
                             });
 
                         if !pass {
-                            println!("A: {:?} (len={})", a.as_slice(), a.as_slice().len());
-                            println!("B: {:?} (len={})", b.as_slice(), b.as_slice().len());
-                            println!("Dist: {:?} (len={})", distribution.as_slice(), distribution.as_slice().len());
+                            println!("A: {:?} (len={})", a.as_ref(), a.len());
+                            println!("B: {:?} (len={})", b.as_ref(), b.len());
+                            println!("Dist: {:?} (len={})", distribution.as_ref(), distribution.len());
                             println!("Min: {}, Max: {}, nresamples: {}",
                                 min, max, nresamples);
                         }

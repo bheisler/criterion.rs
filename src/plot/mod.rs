@@ -120,12 +120,7 @@ pub fn pdf(
     let (x_scale, prefix) = scale_time(labeled_sample.max());
     let mean = labeled_sample.mean();
 
-    let &max_iters = data
-        .x()
-        .as_slice()
-        .iter()
-        .max_by_key(|&&iters| iters as u64)
-        .unwrap();
+    let &max_iters = data.x().iter().max_by_key(|&&iters| iters as u64).unwrap();
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
     let y_scale = 10f64.powi(-exponent);
 
@@ -199,7 +194,7 @@ pub fn pdf(
                 }),
                 y: labeled_sample
                     .iter()
-                    .zip(data.x().as_slice().iter())
+                    .zip(data.x().iter())
                     .filter_map(
                         |((_, label), i)| {
                             if label.is_outlier() {
@@ -230,7 +225,7 @@ pub fn pdf(
                 ),
                 y: labeled_sample
                     .iter()
-                    .zip(data.x().as_slice().iter())
+                    .zip(data.x().iter())
                     .filter_map(
                         |((_, label), i)| {
                             if label.is_mild() {
@@ -261,7 +256,7 @@ pub fn pdf(
                 ),
                 y: labeled_sample
                     .iter()
-                    .zip(data.x().as_slice().iter())
+                    .zip(data.x().iter())
                     .filter_map(
                         |((_, label), i)| {
                             if label.is_severe() {
@@ -366,8 +361,8 @@ pub fn regression(
         })
         .plot(
             Points {
-                x: data.x().as_slice(),
-                y: data.y().as_slice(),
+                x: data.x().as_ref(),
+                y: data.y().as_ref(),
             },
             |c| {
                 c.set(DARK_BLUE)

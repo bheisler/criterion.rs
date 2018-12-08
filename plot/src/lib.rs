@@ -569,14 +569,12 @@ impl Figure {
     pub fn draw(&mut self) -> io::Result<Child> {
         use std::process::Stdio;
 
-        let mut gnuplot = try! {
-            Command::new("gnuplot").
+        let mut gnuplot = Command::new("gnuplot").
                 stderr(Stdio::piped()).
                 stdin(Stdio::piped()).
                 stdout(Stdio::piped()).
-                spawn()
-        };
-        try!(self.dump(gnuplot.stdin.as_mut().unwrap()));
+                spawn()?;
+        self.dump(gnuplot.stdin.as_mut().unwrap())?;
         Ok(gnuplot)
     }
 
@@ -585,7 +583,7 @@ impl Figure {
     where
         W: io::Write,
     {
-        try!(sink.write_all(&self.script()));
+        sink.write_all(&self.script())?;
         Ok(self)
     }
 
@@ -593,7 +591,7 @@ impl Figure {
     pub fn save(&self, path: &Path) -> io::Result<&Figure> {
         use std::io::Write;
 
-        try!((try!(File::create(path))).write_all(&self.script()));
+        File::create(path)?.write_all(&self.script())?;
         Ok(self)
     }
 }
