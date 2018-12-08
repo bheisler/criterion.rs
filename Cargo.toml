@@ -12,6 +12,7 @@ categories = ["development-tools::profiling"]
 license = "Apache-2.0/MIT"
 
 [dependencies]
+lazy_static = "=1.0.2" # Required to ensure compatibility with rustc 1.20
 backtrace = "0.3.5" # required only for minimal-versions. brought in by failure.
 criterion-plot = { path="plot", version="0.2.5", optional = true }
 criterion-stats = { path="stats", version="0.2.5" }
