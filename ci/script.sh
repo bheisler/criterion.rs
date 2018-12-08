@@ -19,7 +19,7 @@ elif [ "$DOCS" = "yes" ]; then
 elif [ "$COVERAGE" = "yes" ]; then
     cargo tarpaulin --all --no-count --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
 elif [ "$RUSTFMT" = "yes" ]; then
-    cargo fmt -- --write-mode diff
+    cargo fmt --all -- --check
 else
     cargo build $BUILD_ARGS --release
     cargo test $BUILD_ARGS --all --release
