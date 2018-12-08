@@ -5,20 +5,24 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added `--list` command line option, which lists the benchmarks but does not run them, to match
+  `cargo test -- --list`.
+
 ### Fixed
 - Functions passed to `Bencher::iter_with_large_setup` can now return output. This is necessary to prevent the compiler from optimizing away the benchmark. This is technically a breaking change - that function requires a new type parameter.
 - Reduced measurement overhead for the `iter_with_large_setup` and `iter_with_drop` methods.
 - `criterion_group` and `criterion_main` macros no longer require the `Criterion` struct to be
   explicitly imported.
 - Don't panic when `gnuplot --version` fails.
+- Criterion macros no longer require user to `use criterion::Criterion;`
 
 ### Changed
-- Reduced overhead in measurements using `iter_with_large_drop` and `iter_with_large_setup`
 - Changed timing model of `iter_with_large_setup` to exclude time spent dropping values returned
   by the routine. Time measurements taken with 0.2.6 using these methods may differ from those taken
   with 0.2.5.
 
-## [0.2.5]
+## [0.2.5] - 2018-08-27
 ### Fixed
 - Fixed links from generated report files to documentation.
 - Fixed formatting for very large percentage changes (>1000%)
@@ -37,7 +41,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Criterion.rs will generate a chart showing the effects of changes in input (or input size) for all
   benchmarks with numeric inputs or throughput, not just for those which compare multiple functions.
 
-## [0.2.4]
+## [0.2.4] 2018-07-08
 ### Added
 - Added a pair of flags, `--save-baseline` and `--baseline`, which change
   how benchmark results are stored and compared. This is useful for
@@ -67,7 +71,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Certain characters will now be replaced with underscores when creating benchmark
   directory paths, to avoid generating invalid or unexpected paths.
 
-## [0.2.3]
+## [0.2.3] - 2018-04-14
 ### Fixed
 - Criterion.rs will now panic with a clear error message if the user attempts to run
   a benchmark which doesn't call the `Bencher::iter` function or a related function,
@@ -82,12 +86,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added an index report file at "target/criterion/report/index.html" which links to
   the other reports for easy navigation.
 
-## [0.2.2]
+## [0.2.2] - 2018-03-25
 ### Fixed
 - Fixed broken links in some summary reports.
 - Work around apparent rustc bug in >= 1.24.0.
 
-## [0.2.1]
+## [0.2.1] - 2018-02-24
 ### Added
 - HTML reports are now a default Cargo feature. If you wish to disable HTML reports,
   disable Criterion.rs' default features. Doing so will allow compatibility with
@@ -103,7 +107,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Underscores in benchmark names will no longer cause subscripted characters to
   appear in generated plots.
 
-## [0.2.0]
+## [0.2.0] - 2018-02-05
 ### Added
 - Added `Criterion.bench` function, which accepts either a `Benchmark` or
   `ParameterizedBenchmark`. These new structures allow for custom per-benchmark
@@ -138,7 +142,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed the relative mean and median reports.
 - Fixed panic while summarizing benchmarks.
 
-## [0.1.2]
+## [0.1.2] - 2018-01-12
 ### Changed
 - Criterion.rs is now stable-compatible!
 - Criterion.rs now includes its own stable-compatible `black_box` function.
@@ -162,7 +166,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Removed
 - Generated plots will no longer use log-scale.
 
-## [0.1.1]
+## [0.1.1] - 2017-12-12
 ### Added
 - A changelog file.
 - Added a chapter to the book on how Criterion.rs collects and analyzes data.
