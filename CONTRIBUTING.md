@@ -8,6 +8,12 @@ Issues, ideas, requests and questions should be posted on the issue tracker at:
 
 https://github.com/japaric/criterion.rs/issues
 
+## A Note on Dependency Updates
+
+Criterion.<span></span>rs does not accept pull requests to update dependencies unless specifically
+requested by the maintaner(s). Dependencies are updated manually by the maintainer(s) before each
+new release.
+
 ## Code
 
 Pull requests are welcome, though please raise an issue for discussion first if none exists. We're happy to assist new contributors.
