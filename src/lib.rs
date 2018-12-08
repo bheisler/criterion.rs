@@ -29,7 +29,6 @@ extern crate itertools;
 extern crate itertools_num;
 extern crate serde;
 extern crate serde_json;
-extern crate simplelog;
 extern crate walkdir;
 
 #[cfg(feature = "html_reports")]
@@ -40,9 +39,6 @@ extern crate handlebars;
 
 #[cfg(feature = "real_blackbox")]
 extern crate test;
-
-#[macro_use]
-extern crate log;
 
 #[macro_use]
 extern crate failure_derive;
@@ -99,20 +95,6 @@ pub use benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
 
 fn debug_enabled() -> bool {
     std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG")
-}
-
-/// Initialize the logging for a Criterion benchmark. This should be called
-/// first before executing Criterion benchmarks, unless the user provides their
-/// own logging infrastructure.
-pub fn init_logging() {
-    use simplelog::*;
-    let filter = if debug_enabled() {
-        LevelFilter::max()
-    } else {
-        LevelFilter::Warn
-    };
-
-    SimpleLogger::init(filter, Config::default()).unwrap();
 }
 
 /// A function that is opaque to the optimizer, used to prevent the compiler from

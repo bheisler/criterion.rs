@@ -28,5 +28,5 @@ pub(crate) fn log_error(e: &Error) {
         error!("caused by: {}", cause);
     }
 
-    debug!("backtrace: {}", e.backtrace());
+    info!("backtrace: {}", e.backtrace());
 }

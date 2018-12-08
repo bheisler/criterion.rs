@@ -117,7 +117,6 @@ macro_rules! criterion_group {
 macro_rules! criterion_main {
     ( $( $group:path ),+ $(,)* ) => {
         fn main() {
-            $crate::init_logging();
             $(
                 $group();
             )+
