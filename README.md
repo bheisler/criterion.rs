@@ -48,11 +48,10 @@ Criterion.<span></span>rs helps you write fast code by detecting and measuring p
 - __Statistics__: Statistical analysis detects if, and by how much, performance has changed since the last benchmark run
 - __Charts__: Uses [gnuplot](http://www.gnuplot.info/) to generate detailed graphs of benchmark results.
 - __Stable-compatible__: Benchmark your code without installing nightly Rust.
-- Benchmark external programs written in any language.
 
 ### Quickstart
 
-In order to generate plots, you must have [gnuplot](http://www.gnuplot.info/) installed. See the gnuplot website for installation instructions. Criterion.rs also currently requires Rust 1.25 or later (see [Compatibility Policy](#compatibility-policy) for more details).
+In order to generate plots, you must have [gnuplot](http://www.gnuplot.info/) installed. See the gnuplot website for installation instructions. Criterion.rs also currently requires Rust 1.28 or later (see [Compatibility Policy](#compatibility-policy) for more details).
 
 To start with Criterion.<span></span>rs, add the following to your `Cargo.toml` file:
 
@@ -105,9 +104,6 @@ See the [Getting Started](https://japaric.github.io/criterion.rs/book/getting_st
 
 The primary goal of Criterion.<span></span>rs is to provide a powerful and statistically rigorous tool for measuring the performance of code, preventing performance regressions and accurately measuring optimizations. Additionally, it should be as programmer-friendly as possible and make it easy to create reliable, useful benchmarks, even for programmers without an advanced background in statistics.
 
-Criterion.<span></span>rs is currently in maintenance mode. New features are not currently being developed. If there's something you feel 
-Criterion.<span></span>rs is missing, feel free to raise an issue and submit a pull request.
-
 ### Contributing
 
 First, thank you for contributing.
@@ -125,7 +121,7 @@ For more details, see the [CONTRIBUTING.md file](https://github.com/japaric/crit
 ### Compatibility Policy
 
 Criterion.<span></span>rs supports the last three stable minor releases of Rust. At time of
-writing, this means Rust 1.25 or later. Older versions may work, but are not tested or guaranteed.
+writing, this means Rust 1.28 or later. Older versions may work, but are not tested or guaranteed.
 
 Currently, the oldest version of Rust believed to work is 1.23. Future versions of Criterion.rs may
 break support for such old versions, and this will not be considered a breaking change. If you
