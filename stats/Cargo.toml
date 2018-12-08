@@ -14,7 +14,7 @@ license = "MIT/Apache-2.0"
 cast = "0.2"
 num-traits = "0.2"
 num_cpus = "1"
-rand = "0.4"
+rand = "~0.4"
 thread-scoped = "1.0.2"
 
 [dev-dependencies]
