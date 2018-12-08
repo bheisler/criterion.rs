@@ -329,7 +329,7 @@ impl CliReport {
     }
 
     //Passing a String is the common case here.
-    #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::needless_pass_by_value))]
     fn print_overwritable(&self, s: String) {
         if self.enable_text_overwrite {
             self.last_line_len.set(s.len());

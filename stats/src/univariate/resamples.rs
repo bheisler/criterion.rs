@@ -16,7 +16,7 @@ where
     stage: Option<Vec<A>>,
 }
 
-#[cfg_attr(feature = "cargo-clippy", allow(should_implement_trait))]
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::should_implement_trait))]
 impl<'a, A> Resamples<'a, A>
 where
     A: 'a + Float,

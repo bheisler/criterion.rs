@@ -35,7 +35,7 @@ impl AxisScale {
     }
 }
 
-#[cfg_attr(feature = "cargo-clippy", allow(explicit_counter_loop))]
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::explicit_counter_loop))]
 pub fn line_comparison(
     group_id: &str,
     all_curves: &[&(BenchmarkId, Vec<f64>)],

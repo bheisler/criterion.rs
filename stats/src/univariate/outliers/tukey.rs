@@ -72,7 +72,7 @@ where
     /// Returns the number of data points per label
     ///
     /// - Time: `O(length)`
-    #[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::similar_names))]
     pub fn count(&self) -> (usize, usize, usize, usize, usize) {
         let (mut los, mut lom, mut noa, mut him, mut his) = (0, 0, 0, 0, 0);
 
@@ -131,7 +131,7 @@ where
 {
     type Output = Label;
 
-    #[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::similar_names))]
     fn index(&self, i: usize) -> &Label {
         static LOW_SEVERE: Label = LowSevere;
         static LOW_MILD: Label = LowMild;
@@ -183,7 +183,7 @@ where
 {
     type Item = (A, Label);
 
-    #[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::similar_names))]
     fn next(&mut self) -> Option<(A, Label)> {
         self.iter.next().map(|&x| {
             let (lost, lomt, himt, hist) = self.fences;

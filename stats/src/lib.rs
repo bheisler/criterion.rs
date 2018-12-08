@@ -10,9 +10,9 @@
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
-        used_underscore_binding,
-        just_underscores_and_digits,
-        transmute_ptr_to_ptr
+        clippy::used_underscore_binding,
+        clippy::just_underscores_and_digits,
+        clippy::transmute_ptr_to_ptr
     )
 )]
 

@@ -28,7 +28,7 @@ where
 
 impl<'a, X, Y> Copy for Data<'a, X, Y> {}
 
-#[cfg_attr(feature = "cargo-clippy", allow(expl_impl_clone_on_copy))]
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::expl_impl_clone_on_copy))]
 impl<'a, X, Y> Clone for Data<'a, X, Y> {
     fn clone(&self) -> Data<'a, X, Y> {
         *self

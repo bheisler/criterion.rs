@@ -6,7 +6,7 @@ use std::borrow::Cow;
 use std::path::Path;
 
 /// Generic constructor for `Font`
-#[cfg_attr(feature = "cargo-clippy", allow(inline_always))]
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::inline_always))]
 #[inline(always)]
 pub fn Font<S>(string: S) -> ::Font
 where
@@ -16,7 +16,7 @@ where
 }
 
 /// Generic constructor for `Label`
-#[cfg_attr(feature = "cargo-clippy", allow(inline_always))]
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::inline_always))]
 #[inline(always)]
 pub fn Label<S>(string: S) -> ::Label
 where
@@ -26,7 +26,7 @@ where
 }
 
 /// Generic constructor for `Title`
-#[cfg_attr(feature = "cargo-clippy", allow(inline_always))]
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::inline_always))]
 #[inline(always)]
 pub fn Title<S>(string: S) -> ::Title
 where
@@ -36,7 +36,7 @@ where
 }
 
 /// Generic constructor for `Output`
-#[cfg_attr(feature = "cargo-clippy", allow(inline_always))]
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::inline_always))]
 #[inline(always)]
 pub fn Output<P>(path: P) -> ::Output
 where
