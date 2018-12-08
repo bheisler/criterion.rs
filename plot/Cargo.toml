@@ -4,7 +4,7 @@ name = "criterion-plot"
 version = "0.2.5"
 
 description = "Criterion's plotting library"
-repository = "https://github.com/japaric/criterion.rs"
+repository = "https://github.com/bheisler/criterion.rs"
 readme = "README.md"
 keywords = ["plotting", "gnuplot", "criterion"]
 categories = ["visualization"]
@@ -23,6 +23,6 @@ num-complex = { version = "0.2", default-features = false, features = ["std"] }
 rand = "0.4" # 0.4 is required to maintain compatibility with Rust 1.23
 
 [badges]
-travis-ci = { repository = "japaric/criterion.rs" }
-appveyor = { repository = "japaric/criterion.rs", id = "4255ads9ctpupcl2" }
+travis-ci = { repository = "bheisler/criterion.rs" }
+appveyor = { repository = "bheisler/criterion.rs", id = "4255ads9ctpupcl2" }
 maintenance = { status = "passively-maintained" }

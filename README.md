@@ -3,21 +3,21 @@
 <div align="center">Statistics-driven Microbenchmarking in Rust</div>
 
 <div align="center">
-	<a href="https://japaric.github.io/criterion.rs/book/getting_started.html">Getting Started</a>
+	<a href="https://bheisler.github.io/criterion.rs/book/getting_started.html">Getting Started</a>
     |
-    <a href="https://japaric.github.io/criterion.rs/book/index.html">User Guide</a>
+    <a href="https://bheisler.github.io/criterion.rs/book/index.html">User Guide</a>
     |
-    <a href="https://japaric.github.io/criterion.rs/criterion/">API Documentation</a>
+    <a href="https://bheisler.github.io/criterion.rs/criterion/">API Documentation</a>
     |
-    <a href="https://github.com/japaric/criterion.rs/blob/master/CHANGELOG.md">Changelog</a>
+    <a href="https://github.com/bheisler/criterion.rs/blob/master/CHANGELOG.md">Changelog</a>
 </div>
 
 <div align="center">
-	<a href="https://travis-ci.org/japaric/criterion.rs">
-        <img src="https://travis-ci.org/japaric/criterion.rs.svg?branch=master" alt="Travis-CI">
+	<a href="https://travis-ci.org/bheisler/criterion.rs">
+        <img src="https://travis-ci.org/bheisler/criterion.rs.svg?branch=master" alt="Travis-CI">
     </a>
     |
-    <a href="https://ci.appveyor.com/project/japaric/criterion-rs-vt9fl">
+    <a href="https://ci.appveyor.com/project/bheisler/criterion-rs-vt9fl">
         <img src="https://ci.appveyor.com/api/projects/status/4255ads9ctpupcl2?svg=true" alt="Appveyor">
     </a>
     |
@@ -94,7 +94,7 @@ Found 11 outliers among 99 measurements (11.11%)
   5 (5.05%) high severe
 ```
 
-See the [Getting Started](https://japaric.github.io/criterion.rs/book/getting_started.html) guide for more details.
+See the [Getting Started](https://bheisler.github.io/criterion.rs/book/getting_started.html) guide for more details.
 
 ### Goals
 
@@ -108,11 +108,11 @@ One great way to contribute to Criterion.<span></span>rs is to use it for your o
 
 Code or documentation improvements in the form of pull requests are also welcome. If you're not
 sure what to work on, try checking the 
-[Beginner label](https://github.com/japaric/criterion.rs/issues?q=is%3Aissue+is%3Aopen+label%3ABeginner)
+[Beginner label](https://github.com/bheisler/criterion.rs/issues?q=is%3Aissue+is%3Aopen+label%3ABeginner)
 
 If your issues or pull requests have no response after a few days, feel free to ping me (@bheisler)
 
-For more details, see the [CONTRIBUTING.md file](https://github.com/japaric/criterion.rs/blob/master/CONTRIBUTING.md)
+For more details, see the [CONTRIBUTING.md file](https://github.com/bheisler/criterion.rs/blob/master/CONTRIBUTING.md)
 
 ### Compatibility Policy
 

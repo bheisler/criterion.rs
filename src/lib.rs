@@ -5,7 +5,7 @@
 //! improvements and regressions, whle also being easy to use.
 //!
 //! See
-//! [the user guide](https://japaric.github.io/criterion.rs/book/index.html)
+//! [the user guide](https://bheisler.github.io/criterion.rs/book/index.html)
 //! for examples as well as details on the measurement and analysis process,
 //! and the output.
 //!
@@ -811,7 +811,7 @@ impl Criterion {
                 .long("version"))
             .after_help("
 This executable is a Criterion.rs benchmark.
-See https://github.com/japaric/criterion.rs for more details.
+See https://github.com/bheisler/criterion.rs for more details.
 
 To enable debug output, define the environment variable CRITERION_DEBUG.
 Criterion.rs will output more debug information and will save the gnuplot

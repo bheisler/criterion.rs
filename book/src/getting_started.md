@@ -75,7 +75,7 @@ extern crate criterion;
 use criterion::Criterion;
 ```
 
-First, we declare the criterion crate and import the [Criterion type](http://japaric.github.io/criterion.rs/criterion/struct.Criterion.html). Criterion is the main type for the Criterion.rs library. It provides methods to configure and define groups of benchmarks.
+First, we declare the criterion crate and import the [Criterion type](http://bheisler.github.io/criterion.rs/criterion/struct.Criterion.html). Criterion is the main type for the Criterion.rs library. It provides methods to configure and define groups of benchmarks.
 
 ```rust
 fn fibonacci(n: u64) -> u64 {
@@ -100,14 +100,14 @@ Here we create a function to contain our benchmark code. The name of the benchma
 }
 ```
 
-This is where the real work happens. The `bench_function` method defines a benchmark with a name and a closure. The name should be unique among all of the benchmarks for your project. The closure must accept one argument, a [Bencher](http://japaric.github.io/criterion.rs/criterion/struct.Bencher.html). The bencher performs the benchmark - in this case, it simply calls our `fibonacci` function in a loop. There are a number of other benchmark functions, including the option to benchmark with arguments, to benchmark external programs and to compare the performance of two functions. See the API documentation for details on all of the different benchmarking options.
+This is where the real work happens. The `bench_function` method defines a benchmark with a name and a closure. The name should be unique among all of the benchmarks for your project. The closure must accept one argument, a [Bencher](http://bheisler.github.io/criterion.rs/criterion/struct.Bencher.html). The bencher performs the benchmark - in this case, it simply calls our `fibonacci` function in a loop. There are a number of other benchmark functions, including the option to benchmark with arguments, to benchmark external programs and to compare the performance of two functions. See the API documentation for details on all of the different benchmarking options.
 
 ```rust
 criterion_group!(benches, criterion_benchmark);
 criterion_main!(benches);
 ```
 
-Here we invoke the `criterion_group!` [(link)](http://japaric.github.io/criterion.rs/criterion/macro.criterion_group.html) macro to generate a benchmark group called benches, containing the `criterion_benchmark` function defined earlier. Finally, we invoke the `criterion_main!` [(link)](http://japaric.github.io/criterion.rs/criterion/macro.criterion_main.html) macro to generate a main function which executes the `benches` group. See the API documentation for more information on these macros.
+Here we invoke the `criterion_group!` [(link)](http://bheisler.github.io/criterion.rs/criterion/macro.criterion_group.html) macro to generate a benchmark group called benches, containing the `criterion_benchmark` function defined earlier. Finally, we invoke the `criterion_main!` [(link)](http://bheisler.github.io/criterion.rs/criterion/macro.criterion_main.html) macro to generate a main function which executes the `benches` group. See the API documentation for more information on these macros.
 
 ### Step 4 - Optimize ###
 

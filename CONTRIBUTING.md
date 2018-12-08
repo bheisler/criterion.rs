@@ -6,7 +6,7 @@ The easiest way to contribute to Criterion.<span></span>rs is to use it and repo
 
 Issues, ideas, requests and questions should be posted on the issue tracker at:
 
-https://github.com/japaric/criterion.rs/issues
+https://github.com/bheisler/criterion.rs/issues
 
 ## A Note on Dependency Updates
 
@@ -18,7 +18,7 @@ new release.
 
 Pull requests are welcome, though please raise an issue for discussion first if none exists. We're happy to assist new contributors.
 
-If you're not sure what to work on, try checking the [Beginner label](https://github.com/japaric/criterion.rs/issues?q=is%3Aissue+is%3Aopen+label%3ABeginner)
+If you're not sure what to work on, try checking the [Beginner label](https://github.com/bheisler/criterion.rs/issues?q=is%3Aissue+is%3Aopen+label%3ABeginner)
 
 To make changes to the code, fork the repo and clone it:
 

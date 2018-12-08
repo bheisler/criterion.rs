@@ -29,7 +29,7 @@ fn fibonacci_fast(n: u64) -> u64 {
 }
 ```
 
-These are the same two fibonacci functions from the [Getting Started](./getting_started.html) page. The difference here is that we import the [Fun type](http://japaric.github.io/criterion.rs/criterion/struct.Fun.html) as well.
+These are the same two fibonacci functions from the [Getting Started](./getting_started.html) page. The difference here is that we import the [Fun type](http://bheisler.github.io/criterion.rs/criterion/struct.Fun.html) as well.
 
 ```rust
 fn fibonaccis(c: &mut Criterion) {
