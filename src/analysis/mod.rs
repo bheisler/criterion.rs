@@ -12,7 +12,7 @@ use estimate::{Distributions, Estimates, Statistic};
 use report::{BenchmarkId, ReportContext};
 use routine::Routine;
 use {format, fs};
-use {Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
+use {Baseline, ConfidenceInterval, Criterion, Throughput, Estimate, build_estimates};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => {{
@@ -277,7 +277,7 @@ fn estimates(avg_times: &Sample<f64>, config: &BenchmarkConfig) -> (Distribution
     distributions.insert(Statistic::Median, dist_median);
     distributions.insert(Statistic::MedianAbsDev, dist_mad);
 
-    let estimates = Estimate::new(&distributions, &point_estimates, cl);
+    let estimates = build_estimates(&distributions, &point_estimates, cl);
 
     (distributions, estimates)
 }

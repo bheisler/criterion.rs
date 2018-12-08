@@ -9,7 +9,7 @@ use error::Result;
 use estimate::Statistic;
 use estimate::{Distributions, Estimates};
 use report::BenchmarkId;
-use {format, fs, Criterion, Estimate};
+use {format, fs, Criterion, build_estimates};
 
 // Common comparison procedure
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::type_complexity))]
@@ -135,7 +135,7 @@ fn estimates(
     point_estimates.insert(Statistic::Mean, mean);
     point_estimates.insert(Statistic::Median, median);
 
-    let estimates = Estimate::new(&distributions, &point_estimates, cl);
+    let estimates = build_estimates(&distributions, &point_estimates, cl);
 
     {
         log_if_err!(fs::save(

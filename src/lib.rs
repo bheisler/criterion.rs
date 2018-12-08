@@ -1171,29 +1171,27 @@ struct Estimate {
     standard_error: f64,
 }
 
-impl Estimate {
-    fn new(distributions: &Distributions, points: &BTreeMap<Statistic, f64>, cl: f64) -> Estimates {
-        distributions
-            .iter()
-            .map(|(&statistic, distribution)| {
-                let point_estimate = points[&statistic];
-                let (lb, ub) = distribution.confidence_interval(cl);
+fn build_estimates(distributions: &Distributions, points: &BTreeMap<Statistic, f64>, cl: f64) -> Estimates {
+    distributions
+        .iter()
+        .map(|(&statistic, distribution)| {
+            let point_estimate = points[&statistic];
+            let (lb, ub) = distribution.confidence_interval(cl);
 
-                (
-                    statistic,
-                    Estimate {
-                        confidence_interval: ConfidenceInterval {
-                            confidence_level: cl,
-                            lower_bound: lb,
-                            upper_bound: ub,
-                        },
-                        point_estimate,
-                        standard_error: distribution.std_dev(None),
+            (
+                statistic,
+                Estimate {
+                    confidence_interval: ConfidenceInterval {
+                        confidence_level: cl,
+                        lower_bound: lb,
+                        upper_bound: ub,
                     },
-                )
-            })
-            .collect()
-    }
+                    point_estimate,
+                    standard_error: distribution.std_dev(None),
+                },
+            )
+        })
+        .collect()
 }
 
 /// Enum representing different ways of measuring the throughput of benchmarked code.
