@@ -114,7 +114,9 @@ First, thank you for contributing.
 
 One great way to contribute to Criterion.<span></span>rs is to use it for your own benchmarking needs and report your experiences, file and comment on issues, etc.
 
-Code or documentation improvements in the form of pull requests are also welcome.
+Code or documentation improvements in the form of pull requests are also welcome. If you're not
+sure what to work on, try checking the 
+[Beginner label](https://github.com/japaric/criterion.rs/issues?q=is%3Aissue+is%3Aopen+label%3ABeginner)
 
 If your issues or pull requests have no response after a few days, feel free to ping me (@bheisler)
 

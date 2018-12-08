@@ -12,7 +12,7 @@ https://github.com/japaric/criterion.rs/issues
 
 Pull requests are welcome, though please raise an issue for discussion first if none exists. We're happy to assist new contributors.
 
-If you're not sure what to work on, try checking the [good first issue label](https://github.com/japaric/criterion.rs/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+If you're not sure what to work on, try checking the [Beginner label](https://github.com/japaric/criterion.rs/issues?q=is%3Aissue+is%3Aopen+label%3ABeginner)
 
 To make changes to the code, fork the repo and clone it:
 
@@ -30,15 +30,15 @@ cargo bench
 It's a good idea to run clippy and fix any warnings as well:
 
 ```
-cargo +nightly install clippy
-cargo +nightly clippy --all
+rustup component add clippy-preview
+cargo clippy --all
 ```
 
 Finally, run Rustfmt to maintain a common code style:
 
 ```
-rustup component add rustfmt-preview --toolchain=nightly
-cargo +nightly fmt
+rustup component add rustfmt-preview
+cargo fmt --all
 ```
 
 Don't forget to update the CHANGELOG.md file and any appropriate documentation. Once you're finished, push to your fork and submit a pull request. We try to respond to new issues and pull requests quickly, so if there hasn't been any response for more than a few days feel free to ping @bheisler.
@@ -48,6 +48,22 @@ Some things that will increase the chance that your pull request is accepted:
 * Write tests
 * Clearly document public methods
 * Write a good commit message
+
+## Github Labels
+
+Criterion.<span></span>rs uses a simple set of labels to track issues. Most important are the 
+difficulty labels:
+
+* Beginner - Suitable for people new to Criterion.rs, or even new to Rust in general
+* Intermediate - More challenging, likely involves some non-trivial design decisions and/or knowledge
+  of Criterion.<span></span>rs' internals
+* Bigger Project - Large and/or complex project such as designing a complex new feature.
+
+Additionally, there are a few other noteworthy labels:
+
+* Breaking Change - Fixing this will have to wait until the next breaking-change release
+* Bug - Something isn't working right
+* Enhancement - Request to add a new feature or otherwise improve Criterion.<span></span>rs in some way
 
 ## Code of Conduct
 
