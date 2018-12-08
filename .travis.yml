@@ -68,6 +68,9 @@ matrix:
     - os: osx
       env: GNUPLOT=yes
       rust: nightly
+    - os: linux
+      env: MINIMAL_VERSIONS=yes
+      rust: nightly
 
 before_script:
   - if [ "$DOCS" = "yes" ]; then

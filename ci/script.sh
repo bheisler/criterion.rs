@@ -20,6 +20,9 @@ elif [ "$COVERAGE" = "yes" ]; then
     cargo tarpaulin --all --no-count --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
 elif [ "$RUSTFMT" = "yes" ]; then
     cargo fmt --all -- --check
+elif [ "$MINIMAL_VERSIONS" = "yes" ]; then
+    rm Cargo.lock || true
+    cargo build -Z minimal-versions
 else
     cargo build $BUILD_ARGS --release
 
