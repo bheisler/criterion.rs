@@ -19,7 +19,7 @@ failure_derive = "0.1.3"
 
 [dev-dependencies]
 itertools-num = "0.1"
-num-complex = { version = "0.2", default-features = false }
+num-complex = { version = "0.2", default-features = false, features = ["std"] }
 rand = "0.4" # 0.4 is required to maintain compatibility with Rust 1.23
 
 [badges]
