@@ -22,6 +22,13 @@ elif [ "$RUSTFMT" = "yes" ]; then
     cargo fmt --all -- --check
 else
     cargo build $BUILD_ARGS --release
-    cargo test $BUILD_ARGS --all --release
+
+    # TODO: Remove this hack once we no longer have to support 1.23 and 1.20
+    if [ "$TRAVIS_RUST_VERSION" = "stable" ]; then
+        cargo test $BUILD_ARGS --all --release
+    else
+        cargo test $BUILD_ARGS --all --release --tests
+    fi
+
     cargo bench $BUILD_ARGS --all -- --test
 fi
