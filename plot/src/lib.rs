@@ -569,11 +569,11 @@ impl Figure {
     pub fn draw(&mut self) -> io::Result<Child> {
         use std::process::Stdio;
 
-        let mut gnuplot = Command::new("gnuplot").
-                stderr(Stdio::piped()).
-                stdin(Stdio::piped()).
-                stdout(Stdio::piped()).
-                spawn()?;
+        let mut gnuplot = Command::new("gnuplot")
+            .stderr(Stdio::piped())
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()?;
         self.dump(gnuplot.stdin.as_mut().unwrap())?;
         Ok(gnuplot)
     }
