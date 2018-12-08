@@ -16,8 +16,6 @@ elif [ "$DOCS" = "yes" ]; then
     cd ..
     cp -r book/book/ target/doc/book/
     travis-cargo doc-upload || true
-elif [ "$COVERAGE" = "yes" ]; then
-    cargo tarpaulin --all --no-count --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
 elif [ "$RUSTFMT" = "yes" ]; then
     cargo fmt --all -- --check
 elif [ "$MINIMAL_VERSIONS" = "yes" ]; then

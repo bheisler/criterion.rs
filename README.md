@@ -24,10 +24,6 @@
     <a href="https://crates.io/crates/criterion">
         <img src="https://img.shields.io/crates/v/criterion.svg" alt="Crates.io">
     </a>
-    |
-    <a href="https://coveralls.io/github/japaric/criterion.rs?branch=master">
-        <img src="https://coveralls.io/repos/github/japaric/criterion.rs/badge.svg?branch=master" alt="Coverage Status">
-    </a>
 </div>
 
 Criterion.<span></span>rs helps you write fast code by detecting and measuring performance improvements or regressions, even small ones, quickly and accurately. You can optimize with confidence, knowing how each change affects the performance of your code.
