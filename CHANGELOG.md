@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Added `--list` command line option, which lists the benchmarks but does not run them, to match
   `cargo test -- --list`.
+- Added README/CONTRIBUTING/LICENSE files to sub-crates.
 
 ### Fixed
 - Functions passed to `Bencher::iter_with_large_setup` can now return output. This is necessary to prevent the compiler from optimizing away the benchmark. This is technically a breaking change - that function requires a new type parameter.
@@ -15,7 +16,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `criterion_group` and `criterion_main` macros no longer require the `Criterion` struct to be
   explicitly imported.
 - Don't panic when `gnuplot --version` fails.
-- Criterion macros no longer require user to `use criterion::Criterion;`
+- Criterion.rs macros no longer require user to `use criterion::Criterion;`
+- Criterion.rs no longer initializes a logger, meaning that it will no longer conflict with user
+  code which does.
 
 ### Changed
 - Changed timing model of `iter_with_large_setup` to exclude time spent dropping values returned
