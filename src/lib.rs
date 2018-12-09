@@ -512,32 +512,11 @@ impl Default for Criterion {
     /// - No filter
     fn default() -> Criterion {
         #[allow(unused_mut, unused_assignments)]
-        let mut plotting = Plotting::NotAvailable;
+        let mut plotting = Plotting::Unset;
 
         let mut reports: Vec<Box<Report>> = vec![];
         reports.push(Box::new(CliReport::new(false, false, false)));
         reports.push(Box::new(FileCsvReport));
-
-        #[cfg(feature = "html_reports")]
-        {
-            use criterion_plot::VersionError;
-            plotting = match criterion_plot::version() {
-                Ok(_) => Plotting::Enabled,
-                Err(e) => {
-                    match e.downcast::<VersionError>() {
-                        Ok(VersionError::Exec(_)) => {
-                            println!("Gnuplot not found, disabling plotting")
-                        }
-                        Ok(e) => {
-                            println!("Gnuplot not found or not usable, disabling plotting\n{}", e)
-                        }
-                        Err(_) => println!("Gnuplot not found or not usable, disabling plotting"),
-                    }
-                    Plotting::NotAvailable
-                }
-            };
-            reports.push(Box::new(Html::new()));
-        }
 
         let output_directory =
             match std::env::vars().find(|&(ref key, _)| key == "CARGO_TARGET_DIR") {
@@ -683,31 +662,50 @@ impl Criterion {
     }
 
     /// Enables plotting
+    #[cfg(feature = "html_reports")]
     pub fn with_plots(mut self) -> Criterion {
-        match self.plotting {
-            Plotting::NotAvailable => {}
-            _ => self.plotting = Plotting::Enabled,
-        }
+        use criterion_plot::VersionError;
+        self.plotting = match criterion_plot::version() {
+            Ok(_) => Plotting::Enabled,
+            Err(e) => {
+                match e.downcast::<VersionError>() {
+                    Ok(VersionError::Exec(_)) => println!("Gnuplot not found, disabling plotting"),
+                    Ok(e) => println!("Gnuplot not found or not usable, disabling plotting\n{}", e),
+                    Err(_) => println!("Gnuplot not found or not usable, disabling plotting"),
+                }
+                Plotting::NotAvailable
+            }
+        };
 
+        self
+    }
+
+    /// Enables plotting
+    #[cfg(not(feature = "html_reports"))]
+    pub fn with_plots(self) -> Criterion {
         self
     }
 
     /// Disables plotting
     pub fn without_plots(mut self) -> Criterion {
-        match self.plotting {
-            Plotting::NotAvailable => {}
-            _ => self.plotting = Plotting::Disabled,
-        }
-
+        self.plotting = Plotting::Disabled;
         self
     }
 
     /// Return true if generation of the plots is possible.
+    #[cfg(feature = "html_reports")]
     pub fn can_plot(&self) -> bool {
         match self.plotting {
             Plotting::NotAvailable => false,
-            _ => true,
+            Plotting::Enabled => true,
+            _ => criterion_plot::version().is_ok(),
         }
+    }
+
+    /// Return true if generation of the plots is possible.
+    #[cfg(not(feature = "html_reports"))]
+    pub fn can_plot(&self) -> bool {
+        false
     }
 
     /// Names an explicit baseline and enables overwriting the previous results.
@@ -838,11 +836,10 @@ scripts alongside the generated plots.
             _ => enable_text_coloring = cfg!(unix) && stdout_isatty,
         }
 
-        if matches.is_present("noplot") {
-            match self.plotting {
-                Plotting::NotAvailable => {}
-                _ => self.plotting = Plotting::Disabled,
-            }
+        if matches.is_present("noplot") || matches.is_present("test") {
+            self = self.without_plots();
+        } else {
+            self = self.with_plots();
         }
 
         if let Some(dir) = matches.value_of("save-baseline") {
@@ -1109,6 +1106,7 @@ scripts alongside the generated plots.
 mod plotting {
     #[derive(Debug, Clone, Copy)]
     pub enum Plotting {
+        Unset,
         Disabled,
         Enabled,
         NotAvailable,

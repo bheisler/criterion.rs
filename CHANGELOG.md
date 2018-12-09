@@ -19,8 +19,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Criterion.rs macros no longer require user to `use criterion::Criterion;`
 - Criterion.rs no longer initializes a logger, meaning that it will no longer conflict with user
   code which does.
-- Criterion.rs no longer fails to parse GNUPlot version numbers like 
+- Criterion.rs no longer fails to parse gnuplot version numbers like 
   `gnuplot 5.2 patchlevel 5a (Gentoo revision r0)`
+- Criterion.rs no longer prints an error message that `gnuplot` couldn't be found when chart 
+  generation is disabled (either by `Criterion::without_plots`, `--noplot` or disabling the 
+  HTML reports feature)
 
 ### Changed
 - Changed timing model of `iter_with_large_setup` to exclude time spent dropping values returned
