@@ -37,7 +37,7 @@ impl AxisScale {
 
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::explicit_counter_loop))]
 pub fn line_comparison(
-    group_id: &str,
+    title: &str,
     all_curves: &[&(BenchmarkId, Vec<f64>)],
     path: &str,
     value_type: ValueType,
@@ -59,10 +59,7 @@ pub fn line_comparison(
                 .set(Order::SampleText)
                 .set(Position::Outside(Vertical::Top, Horizontal::Right))
         })
-        .set(Title(format!(
-            "{}: Comparison",
-            escape_underscores(group_id)
-        )))
+        .set(Title(format!("{}: Comparison", escape_underscores(title))))
         .configure(Axis::BottomX, |a| {
             a.set(Label(format!("Input{}", input_suffix)))
                 .set(axis_scale.to_gnuplot())
@@ -129,7 +126,7 @@ pub fn line_comparison(
 }
 
 pub fn violin(
-    group_id: &str,
+    title: &str,
     all_curves: &[&(BenchmarkId, Vec<f64>)],
     path: &str,
     axis_scale: AxisScale,
@@ -172,10 +169,7 @@ pub fn violin(
     let mut f = Figure::new();
     f.set(Font(DEFAULT_FONT))
         .set(size)
-        .set(Title(format!(
-            "{}: Violin plot",
-            escape_underscores(group_id)
-        )))
+        .set(Title(format!("{}: Violin plot", escape_underscores(title))))
         .configure(Axis::BottomX, |a| {
             a.configure(Grid::Major, |g| g.show())
                 .configure(Grid::Minor, |g| g.hide())
@@ -190,7 +184,7 @@ pub fn violin(
                     positions: tics(),
                     labels: all_curves
                         .iter()
-                        .map(|&&(ref id, _)| escape_underscores(id.id())),
+                        .map(|&&(ref id, _)| escape_underscores(id.as_title())),
                 })
         });
 

@@ -16,6 +16,7 @@ use Estimate;
 use {PlotConfiguration, Plotting, Throughput};
 
 const MAX_DIRECTORY_NAME_LEN: usize = 64;
+const MAX_TITLE_LEN: usize = 100;
 
 pub(crate) struct ComparisonData {
     pub p_value: f64,
@@ -56,6 +57,15 @@ pub struct BenchmarkId {
     pub throughput: Option<Throughput>,
     full_id: String,
     directory_name: String,
+    title: String,
+}
+
+fn truncate_to_character_boundary(s: &mut String, max_len: usize) {
+    let mut boundary = cmp::min(max_len, s.len());
+    while !s.is_char_boundary(boundary) {
+        boundary -= 1;
+    }
+    s.truncate(boundary);
 }
 
 fn make_filename_safe(string: &str) -> String {
@@ -70,11 +80,7 @@ fn make_filename_safe(string: &str) -> String {
     }
 
     // Truncate to last character boundary before max length...
-    let mut boundary = cmp::min(MAX_DIRECTORY_NAME_LEN, string.len());
-    while !string.is_char_boundary(boundary) {
-        boundary -= 1;
-    }
-    string.truncate(boundary);
+    truncate_to_character_boundary(&mut string, MAX_DIRECTORY_NAME_LEN);
 
     string
 }
@@ -92,6 +98,12 @@ impl BenchmarkId {
             (&None, &Some(ref val)) => format!("{}/{}", group_id, val),
             (&None, &None) => group_id.clone(),
         };
+
+        let mut title = full_id.clone();
+        truncate_to_character_boundary(&mut title, MAX_TITLE_LEN);
+        if title != full_id {
+            title.push_str("...");
+        }
 
         let directory_name = match (&function_id, &value_str) {
             (&Some(ref func), &Some(ref val)) => format!(
@@ -120,11 +132,16 @@ impl BenchmarkId {
             throughput,
             full_id,
             directory_name,
+            title,
         }
     }
 
     pub fn id(&self) -> &str {
         &self.full_id
+    }
+
+    pub fn as_title(&self) -> &str {
+        &self.title
     }
 
     pub fn as_directory_name(&self) -> &str {
@@ -168,10 +185,26 @@ impl BenchmarkId {
             counter += 1;
         }
     }
+
+    pub fn ensure_title_unique(&mut self, existing_titles: &HashSet<String>) {
+        if !existing_titles.contains(self.as_title()) {
+            return;
+        }
+
+        let mut counter = 2;
+        loop {
+            let new_title = format!("{} #{}", self.as_title(), counter);
+            if !existing_titles.contains(&new_title) {
+                self.title = new_title;
+                return;
+            }
+            counter += 1;
+        }
+    }
 }
 impl fmt::Display for BenchmarkId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.id())
+        f.write_str(self.as_title())
     }
 }
 impl fmt::Debug for BenchmarkId {
@@ -475,13 +508,9 @@ impl Report for CliReport {
         let slope_estimate = meas.absolute_estimates[&Statistic::Slope];
 
         {
-            let mut id = id.id().to_owned();
+            let mut id = id.as_title().to_owned();
 
             if id.len() > 23 {
-                if id.len() > 80 {
-                    id.truncate(77);
-                    id.push_str("...");
-                }
                 println!("{}", self.green(id.clone()));
                 id.clear();
             }
@@ -523,8 +552,9 @@ impl Report for CliReport {
             let mut point_estimate_str = format::change(point_estimate, true);
             // The change in throughput is related to the change in timing. Reducing the timing by
             // 50% increases the througput by 100%.
-            let to_thrpt_estimate = |ratio: f64| 1.0/(1.0+ratio)-1.0;
-            let mut thrpt_point_estimate_str = format::change(to_thrpt_estimate(point_estimate), true);
+            let to_thrpt_estimate = |ratio: f64| 1.0 / (1.0 + ratio) - 1.0;
+            let mut thrpt_point_estimate_str =
+                format::change(to_thrpt_estimate(point_estimate), true);
             let explanation_str: String;
 
             if !different_mean {
@@ -582,8 +612,7 @@ impl Report for CliReport {
                         true
                     )),
                 );
-            }
-            else {
+            } else {
                 println!(
                     "{}change: [{} {} {}] (p = {:.2} {} {:.2})",
                     " ".repeat(24),

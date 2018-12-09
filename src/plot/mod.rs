@@ -302,7 +302,7 @@ pub fn pdf(
             },
             |c| c.set(DARK_RED).set(LINEWIDTH).set(LineType::Dash),
         );
-    figure.set(Title(escape_underscores(id.id())));
+    figure.set(Title(escape_underscores(id.as_title())));
 
     debug_script(&path, &figure);
     figure.set(Output(path)).draw().unwrap()
@@ -396,7 +396,7 @@ pub fn regression(
             },
         );
     if !thumbnail_mode {
-        figure.set(Title(escape_underscores(id.id())));
+        figure.set(Title(escape_underscores(id.as_title())));
     }
 
     debug_script(&path, &figure);
@@ -455,7 +455,7 @@ pub(crate) fn abs_distributions(
                 .set(SIZE)
                 .set(Title(format!(
                     "{}: {}",
-                    escape_underscores(id.id()),
+                    escape_underscores(id.as_title()),
                     statistic
                 )))
                 .configure(Axis::BottomX, |a| {
@@ -582,7 +582,7 @@ pub(crate) fn rel_distributions(
             figure
                 .set(Title(format!(
                     "{}: {}",
-                    escape_underscores(id.id()),
+                    escape_underscores(id.as_title()),
                     statistic
                 )))
                 .configure(Axis::BottomX, |a| {
@@ -660,7 +660,7 @@ pub fn t_test(
         .set(SIZE)
         .set(Title(format!(
             "{}: Welch t test",
-            escape_underscores(id.id())
+            escape_underscores(id.as_title())
         )))
         .configure(Axis::BottomX, |a| a.set(Label("t score")))
         .configure(Axis::LeftY, |a| a.set(Label("Density")))

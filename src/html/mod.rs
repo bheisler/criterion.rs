@@ -63,7 +63,7 @@ struct IndividualBenchmark {
 impl IndividualBenchmark {
     fn from_id(path_prefix: &str, id: &BenchmarkId) -> IndividualBenchmark {
         IndividualBenchmark {
-            name: id.id().to_owned(),
+            name: id.as_title().to_owned(),
             path: format!("{}/{}", path_prefix, id.as_directory_name()),
         }
     }
@@ -210,7 +210,7 @@ impl Report for Html {
             });
 
         let context = Context {
-            title: id.id().to_owned(),
+            title: id.as_title().to_owned(),
             confidence: format!("{:.2}", slope_estimate.confidence_interval.confidence_level),
 
             thumbnail_width: THUMBNAIL_SIZE.0,
@@ -434,17 +434,20 @@ impl Html {
                     upper: format::change(mean_est.confidence_interval.upper_bound, true),
                 },
 
-                thrpt_change: measurements
-                    .throughput
-                    .as_ref()
-                    .map(|_| {
-                        let to_thrpt_estimate = |ratio: f64| 1.0/(1.0+ratio)-1.0;
-                        ConfidenceInterval {
-                            point: format::change(to_thrpt_estimate(mean_est.point_estimate), true),
-                            lower: format::change(to_thrpt_estimate(mean_est.confidence_interval.lower_bound), true),
-                            upper: format::change(to_thrpt_estimate(mean_est.confidence_interval.upper_bound), true)
-                        }
-                    }),
+                thrpt_change: measurements.throughput.as_ref().map(|_| {
+                    let to_thrpt_estimate = |ratio: f64| 1.0 / (1.0 + ratio) - 1.0;
+                    ConfidenceInterval {
+                        point: format::change(to_thrpt_estimate(mean_est.point_estimate), true),
+                        lower: format::change(
+                            to_thrpt_estimate(mean_est.confidence_interval.lower_bound),
+                            true,
+                        ),
+                        upper: format::change(
+                            to_thrpt_estimate(mean_est.confidence_interval.upper_bound),
+                            true,
+                        ),
+                    }
+                }),
 
                 additional_plots: vec![
                     Plot::new("Change in mean", "change/mean.svg"),
@@ -660,7 +663,7 @@ impl Html {
             id.as_directory_name()
         );
         gnuplots.push(plot::summary::violin(
-            id.id(),
+            id.as_title(),
             data,
             &violin_path,
             report_context.plot_config.summary_scale,
@@ -678,7 +681,7 @@ impl Html {
                 );
 
                 gnuplots.push(plot::summary::line_comparison(
-                    id.id(),
+                    id.as_title(),
                     data,
                     &path,
                     value_type,
@@ -696,7 +699,7 @@ impl Html {
             .collect();
 
         let context = SummaryContext {
-            group_id: id.id().to_owned(),
+            group_id: id.as_title().to_owned(),
 
             thumbnail_width: THUMBNAIL_SIZE.0,
             thumbnail_height: THUMBNAIL_SIZE.1,

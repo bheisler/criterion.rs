@@ -65,7 +65,7 @@ pub(crate) fn regression(
 
     let mut figure = Figure::new();
     if !thumbnail_mode {
-        figure.set(Title(escape_underscores(id.id())));
+        figure.set(Title(escape_underscores(id.as_title())));
     }
 
     figure
@@ -157,7 +157,7 @@ pub fn pdfs(
 
     let mut figure = Figure::new();
     if !thumbnail_mode {
-        figure.set(Title(escape_underscores(id.id())));
+        figure.set(Title(escape_underscores(id.as_title())));
     }
     figure
         .set(Font(DEFAULT_FONT))

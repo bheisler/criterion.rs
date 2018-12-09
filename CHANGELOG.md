@@ -25,9 +25,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   code which does.
 - Criterion.rs no longer fails to parse gnuplot version numbers like 
   `gnuplot 5.2 patchlevel 5a (Gentoo revision r0)`
-- Criterion.rs no longer prints an error message that `gnuplot` couldn't be found when chart 
+- Criterion.rs no longer prints an error message that gnuplot couldn't be found when chart 
   generation is disabled (either by `Criterion::without_plots`, `--noplot` or disabling the 
   HTML reports feature)
+- Benchmark names are now automatically truncated to 100 characters and a number may be added to
+  make them unique. This fixes a problem where gnuplot would crash if the title was extremely long,
+  and also improves the general usability of Criterion.rs.
 
 ### Changed
 - Changed timing model of `iter_with_large_setup` to exclude time spent dropping values returned
