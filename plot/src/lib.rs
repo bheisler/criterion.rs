@@ -976,8 +976,18 @@ pub enum VersionError {
     ParseError(String),
 }
 
+/// Structure representing a gnuplot version number.
+pub struct Version {
+    /// The major version number
+    pub major: usize,
+    /// The minor version number
+    pub minor: usize,
+    /// The patch level
+    pub patch: String,
+}
+
 /// Returns `gnuplot` version
-pub fn version() -> Result<(usize, usize, usize), Error> {
+pub fn version() -> Result<Version, Error> {
     let command_output = Command::new("gnuplot")
         .arg("--version")
         .output()
@@ -993,14 +1003,18 @@ pub fn version() -> Result<(usize, usize, usize), Error> {
     parse_version(&output).map_err(|_| VersionError::ParseError(output.clone()).into())
 }
 
-fn parse_version(version_str: &str) -> Result<(usize, usize, usize), Option<ParseIntError>> {
+fn parse_version(version_str: &str) -> Result<Version, Option<ParseIntError>> {
     let mut words = version_str.split_whitespace().skip(1);
     let mut version = words.next().ok_or(None)?.split('.');
     let major = version.next().ok_or(None)?.parse()?;
     let minor = version.next().ok_or(None)?.parse()?;
-    let patchlevel = words.nth(1).ok_or(None)?.parse()?;
+    let patchlevel = words.nth(1).ok_or(None)?.to_owned();
 
-    Ok((major, minor, patchlevel))
+    Ok(Version {
+        major,
+        minor,
+        patch: patchlevel,
+    })
 }
 
 fn scale_factor(map: &map::axis::Map<axis::Properties>, axes: Axes) -> (f64, f64) {
@@ -1039,8 +1053,7 @@ mod test {
     #[test]
     fn version() {
         if let Ok(version) = super::version() {
-            let (major, _, _) = version;
-            assert!(major >= 4);
+            assert!(version.major >= 4);
         } else {
             println!("Gnuplot not installed.");
         }
@@ -1050,7 +1063,18 @@ mod test {
     fn test_parse_version_on_valid_string() {
         let string = "gnuplot 5.0 patchlevel 7";
         let version = super::parse_version(&string).unwrap();
-        assert_eq!((5, 0, 7), version);
+        assert_eq!(5, version.major);
+        assert_eq!(0, version.minor);
+        assert_eq!("7", &version.patch);
+    }
+
+    #[test]
+    fn test_parse_gentoo_version() {
+        let string = "gnuplot 5.2 patchlevel 5a (Gentoo revision r0)";
+        let version = super::parse_version(&string).unwrap();
+        assert_eq!(5, version.major);
+        assert_eq!(2, version.minor);
+        assert_eq!("5a", &version.patch);
     }
 
     #[test]
@@ -1060,7 +1084,6 @@ mod test {
             "foobar",
             "gnuplot 50 patchlevel 7",
             "gnuplot 5.0 patchlevel",
-            "gnuplot 5.0 patchlevel foo",
             "gnuplot foo.bar patchlevel 7",
         ];
         for string in &strings {
