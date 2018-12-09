@@ -666,7 +666,14 @@ impl Criterion {
     pub fn with_plots(mut self) -> Criterion {
         use criterion_plot::VersionError;
         self.plotting = match criterion_plot::version() {
-            Ok(_) => Plotting::Enabled,
+            Ok(_) => {
+                let mut reports: Vec<Box<Report>> = vec![];
+                reports.push(Box::new(CliReport::new(false, false, false)));
+                reports.push(Box::new(FileCsvReport));
+                reports.push(Box::new(Html::new()));
+                self.report = Box::new(Reports::new(reports));
+                Plotting::Enabled
+            },
             Err(e) => {
                 match e.downcast::<VersionError>() {
                     Ok(VersionError::Exec(_)) => println!("Gnuplot not found, disabling plotting"),
