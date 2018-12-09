@@ -32,6 +32,7 @@ fn short_benchmark(dir: &TempDir) -> Criterion {
         .warm_up_time(Duration::from_millis(250))
         .measurement_time(Duration::from_millis(500))
         .nresamples(1000)
+        .with_plots()
 }
 
 #[derive(Clone)]
