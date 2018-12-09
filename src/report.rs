@@ -550,25 +550,25 @@ impl Report for CliReport {
                 }
             }
 
-            println!("{}change:", " ".repeat(17));
-
-            println!(
-                "{}time:   [{} {} {}] (p = {:.2} {} {:.2})",
-                " ".repeat(24),
-                self.faint(format::change(
-                    mean_est.confidence_interval.lower_bound,
-                    true
-                )),
-                point_estimate_str,
-                self.faint(format::change(
-                    mean_est.confidence_interval.upper_bound,
-                    true
-                )),
-                comp.p_value,
-                if different_mean { "<" } else { ">" },
-                comp.significance_threshold
-            );
             if meas.throughput.is_some() {
+                println!("{}change:", " ".repeat(17));
+
+                println!(
+                    "{}time:   [{} {} {}] (p = {:.2} {} {:.2})",
+                    " ".repeat(24),
+                    self.faint(format::change(
+                        mean_est.confidence_interval.lower_bound,
+                        true
+                    )),
+                    point_estimate_str,
+                    self.faint(format::change(
+                        mean_est.confidence_interval.upper_bound,
+                        true
+                    )),
+                    comp.p_value,
+                    if different_mean { "<" } else { ">" },
+                    comp.significance_threshold
+                );
                 println!(
                     "{}thrpt:  [{} {} {}]",
                     " ".repeat(24),
@@ -583,6 +583,25 @@ impl Report for CliReport {
                     )),
                 );
             }
+            else {
+                println!(
+                    "{}change: [{} {} {}] (p = {:.2} {} {:.2})",
+                    " ".repeat(24),
+                    self.faint(format::change(
+                        mean_est.confidence_interval.lower_bound,
+                        true
+                    )),
+                    point_estimate_str,
+                    self.faint(format::change(
+                        mean_est.confidence_interval.upper_bound,
+                        true
+                    )),
+                    comp.p_value,
+                    if different_mean { "<" } else { ">" },
+                    comp.significance_threshold
+                );
+            }
+
             println!("{}{}", " ".repeat(24), explanation_str);
         }
 

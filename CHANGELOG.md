@@ -9,9 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added `--list` command line option, which lists the benchmarks but does not run them, to match
   `cargo test -- --list`.
 - Added README/CONTRIBUTING/LICENSE files to sub-crates.
+- Displays change in throughput in the command-line and HTML output as well as change in iteration 
+  time.
 
 ### Fixed
-- Functions passed to `Bencher::iter_with_large_setup` can now return output. This is necessary to prevent the compiler from optimizing away the benchmark. This is technically a breaking change - that function requires a new type parameter.
+- Functions passed to `Bencher::iter_with_large_setup` can now return output. This is necessary to 
+  prevent the compiler from optimizing away the benchmark. This is technically a breaking change - 
+  that function requires a new type parameter.
 - Reduced measurement overhead for the `iter_with_large_setup` and `iter_with_drop` methods.
 - `criterion_group` and `criterion_main` macros no longer require the `Criterion` struct to be
   explicitly imported.
