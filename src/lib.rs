@@ -673,7 +673,7 @@ impl Criterion {
                 reports.push(Box::new(Html::new()));
                 self.report = Box::new(Reports::new(reports));
                 Plotting::Enabled
-            },
+            }
             Err(e) => {
                 match e.downcast::<VersionError>() {
                     Ok(VersionError::Exec(_)) => println!("Gnuplot not found, disabling plotting"),
