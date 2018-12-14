@@ -1,0 +1,13 @@
+[package]
+name = "criterion_bencher_compat"
+version = "0.2.5"
+authors = ["Brook Heisler <redattack34@gmail.com>"]
+
+[dependencies]
+criterion = "0.2.5"
+
+[[bench]]
+name = "bencher_example"
+harness = false
+
+[workspace]
