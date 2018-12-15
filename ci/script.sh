@@ -33,5 +33,6 @@ else
 
     cargo bench $BUILD_ARGS --all -- --test
     cd bencher_compat
+    export CARGO_TARGET_DIR="../target"
     cargo bench $BUILD_ARGS -- --test
 fi
