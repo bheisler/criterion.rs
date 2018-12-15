@@ -1,0 +1,26 @@
+[package]
+name = "criterion_bencher_compat"
+version = "0.2.5"
+authors = ["Brook Heisler <redattack34@gmail.com>"]
+
+description = "Drop-in replacement for commonly-used parts of Bencher"
+homepage = "https://bheisler.github.io/criterion.rs/book/index.html"
+repository = "https://github.com/bheisler/criterion.rs"
+readme = "README.md"
+keywords = ["criterion", "benchmark"]
+categories = ["development-tools::profiling"]
+license = "Apache-2.0/MIT"
+
+[dependencies]
+criterion = { version = "0.2.5", path = "..", default-features = false }
+
+[features]
+real_blackbox = ["criterion/real_blackbox"]
+html_reports = ["criterion/html_reports"]
+default = ["html_reports"]
+
+[[bench]]
+name = "bencher_example"
+harness = false
+
+[workspace]

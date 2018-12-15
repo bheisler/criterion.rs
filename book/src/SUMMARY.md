@@ -14,5 +14,6 @@
     - [Benchmarking External Programs](./user_guide/external_programs.md)
     - [CSV Output](./user_guide/csv_output.md)
     - [Known Limitations](./user_guide/known_limitations.md)
+    - [Bencher Compatibility Layer](./user_guide/bencher_compatibility.md)
 - [Analysis Process](./analysis.md)
 - [Frequently Asked Questions](./faq.md)
