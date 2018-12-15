@@ -12,7 +12,7 @@ categories = ["development-tools::profiling"]
 license = "Apache-2.0/MIT"
 
 [dependencies]
-criterion = { version = "0.2.5", path = ".." }
+criterion = { version = "0.2.5", path = "..", default-features = false }
 
 [features]
 real_blackbox = ["criterion/real_blackbox"]
