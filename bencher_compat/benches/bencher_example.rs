@@ -1,6 +1,4 @@
 #[macro_use]
-extern crate criterion;
-#[macro_use]
 extern crate criterion_bencher_compat;
 
 use criterion_bencher_compat::Bencher;

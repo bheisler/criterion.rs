@@ -1,5 +1,8 @@
 extern crate criterion;
 
+pub use criterion::Criterion;
+pub use criterion::black_box;
+
 pub struct Bencher<'a> {
     pub bytes: u64,
     pub bencher: &'a mut ::criterion::Bencher,
@@ -16,7 +19,7 @@ impl<'a> Bencher<'a> {
 macro_rules! benchmark_group {
     ($group_name:ident, $($function:path),+) => {
         pub fn $group_name() {
-            use criterion::Criterion;
+            use $crate::Criterion;
             let mut criterion: Criterion = Criterion::default().configure_from_args();
 
             $(
@@ -39,7 +42,15 @@ macro_rules! benchmark_group {
 #[macro_export]
 macro_rules! benchmark_main {
     ($($group_name:path),+) => {
-        criterion_main!($($group_name,)+);
+        fn main() {
+            $(
+                $group_name();
+            )+
+
+            $crate::Criterion::default()
+                .configure_from_args()
+                .final_summary();
+        }
     };
     ($($group_name:path,)+) => {
         benchmark_main!($($group_name),+);
