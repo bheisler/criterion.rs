@@ -3,11 +3,13 @@ extern crate criterion;
 pub use criterion::Criterion;
 pub use criterion::black_box;
 
+/// Stand-in for `bencher::Bencher` which uses Criterion.rs to perform the benchmark instead.
 pub struct Bencher<'a> {
     pub bytes: u64,
     pub bencher: &'a mut ::criterion::Bencher,
 }
 impl<'a> Bencher<'a> {
+    /// Callback for benchmark functions to run to perform the benchmark
     pub fn iter<T, F>(&mut self, inner: F)
         where F: FnMut() -> T
     {
@@ -15,6 +17,7 @@ impl<'a> Bencher<'a> {
     }
 }
 
+/// Stand-in for `bencher::benchmark_group!` which performs benchmarks using Criterion.rs instead.
 #[macro_export]
 macro_rules! benchmark_group {
     ($group_name:ident, $($function:path),+) => {
@@ -39,6 +42,7 @@ macro_rules! benchmark_group {
     };
 }
 
+/// Stand-in for `bencher::benchmark_main!` which performs benchmarks using Criterion.rs instead.
 #[macro_export]
 macro_rules! benchmark_main {
     ($($group_name:path),+) => {
