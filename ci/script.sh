@@ -32,4 +32,6 @@ else
     fi
 
     cargo bench $BUILD_ARGS --all -- --test
+    cd bencher_compat
+    cargo bench $BUILD_ARGS -- --test
 fi
