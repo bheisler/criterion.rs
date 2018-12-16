@@ -475,12 +475,7 @@ impl Html {
             plot::regression(id, context, measurements, None),
             plot::regression_small(id, context, measurements, THUMBNAIL_SIZE),
         ];
-        gnuplots.extend(plot::abs_distributions(
-            &measurements.distributions,
-            &measurements.absolute_estimates,
-            id,
-            &context.output_directory,
-        ));
+        gnuplots.extend(plot::abs_distributions(id, context, measurements, None));
 
         if let Some(ref comp) = measurements.comparison {
             try_else_return!(fs::mkdirp(&format!(
@@ -529,11 +524,11 @@ impl Html {
                 &context.output_directory,
             ));
             gnuplots.extend(plot::rel_distributions(
-                &comp.relative_distributions,
-                &comp.relative_estimates,
                 id,
-                &context.output_directory,
-                comp.noise_threshold,
+                context,
+                measurements,
+                comp,
+                None,
             ));
             gnuplots.push(plot::both::regression(
                 &base_data,
