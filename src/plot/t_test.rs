@@ -59,7 +59,7 @@ pub(crate) fn t_test(
             },
         );
 
-    let path = context.change_report_path(id, "t-test.svg");
+    let path = context.report_path(id, "change/t-test.svg");
     debug_script(&path, &figure);
     figure.set(Output(path)).draw().unwrap()
 }

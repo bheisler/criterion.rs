@@ -8,7 +8,6 @@ use format;
 use fs;
 use handlebars::Handlebars;
 use plot;
-use stats::univariate::Sample;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::Child;
@@ -484,72 +483,33 @@ impl Html {
                 id.as_directory_name()
             )));
 
-            let base_data = Data::new(&comp.base_iter_counts, &comp.base_sample_times);
-
             try_else_return!(fs::mkdirp(&format!(
                 "{}/{}/report/both",
                 context.output_directory,
                 id.as_directory_name()
             )));
-            gnuplots.push(plot::both::regression(
-                &base_data,
-                &comp.base_estimates,
-                &measurements.data,
-                &measurements.absolute_estimates,
-                id,
-                format!(
-                    "{}/{}/report/both/regression.svg",
-                    context.output_directory,
-                    id.as_directory_name()
+
+            let base_data = Data::new(&comp.base_iter_counts, &comp.base_sample_times);
+            gnuplots.append(&mut vec![
+                plot::regression_comparison(id, context, measurements, comp, &base_data, None),
+                plot::regression_comparison_small(
+                    id,
+                    context,
+                    measurements,
+                    comp,
+                    &base_data,
+                    THUMBNAIL_SIZE,
                 ),
-                None,
-                false,
-            ));
-            gnuplots.push(plot::both::pdfs(
-                Sample::new(&comp.base_avg_times),
-                &*measurements.avg_times,
-                id,
-                format!(
-                    "{}/{}/report/both/pdf.svg",
-                    context.output_directory,
-                    id.as_directory_name()
-                ),
-                None,
-                false,
-            ));
-            gnuplots.push(plot::t_test(id, context, measurements, comp, None));
+                plot::pdf_comparison(id, context, measurements, comp, None),
+                plot::pdf_comparison_small(id, context, measurements, comp, THUMBNAIL_SIZE),
+                plot::t_test(id, context, measurements, comp, None),
+            ]);
             gnuplots.extend(plot::rel_distributions(
                 id,
                 context,
                 measurements,
                 comp,
                 None,
-            ));
-            gnuplots.push(plot::both::regression(
-                &base_data,
-                &comp.base_estimates,
-                &measurements.data,
-                &measurements.absolute_estimates,
-                id,
-                format!(
-                    "{}/{}/report/relative_regression_small.svg",
-                    context.output_directory,
-                    id.as_directory_name()
-                ),
-                THUMBNAIL_SIZE,
-                true,
-            ));
-            gnuplots.push(plot::both::pdfs(
-                Sample::new(&comp.base_avg_times),
-                &*measurements.avg_times,
-                id,
-                format!(
-                    "{}/{}/report/relative_pdf_small.svg",
-                    context.output_directory,
-                    id.as_directory_name()
-                ),
-                THUMBNAIL_SIZE,
-                true,
             ));
         }
 
@@ -604,7 +564,7 @@ impl Html {
             report_context.output_directory,
             id.as_directory_name()
         );
-        gnuplots.push(plot::summary::violin(
+        gnuplots.push(plot::violin(
             id.as_title(),
             data,
             &violin_path,
@@ -622,7 +582,7 @@ impl Html {
                     id.as_directory_name()
                 );
 
-                gnuplots.push(plot::summary::line_comparison(
+                gnuplots.push(plot::line_comparison(
                     id.as_title(),
                     data,
                     &path,

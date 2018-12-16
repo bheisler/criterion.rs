@@ -4,16 +4,15 @@ use std::path::PathBuf;
 use criterion_plot::prelude::*;
 use stats::univariate::Sample;
 
-pub mod both;
-pub mod summary;
-
 mod distributions;
 mod pdf;
 mod regression;
+mod summary;
 mod t_test;
 pub(crate) use self::distributions::*;
 pub(crate) use self::pdf::*;
 pub(crate) use self::regression::*;
+pub(crate) use self::summary::*;
 pub(crate) use self::t_test::*;
 
 fn escape_underscores(string: &str) -> String {
