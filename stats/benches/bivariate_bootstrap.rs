@@ -38,7 +38,7 @@ macro_rules! bench {
                     &format!("bivariate_bootstrap_slope_{}", stringify!($ty)),
                     move |b| {
                         let data = Data::new(&x, &y);
-                        b.iter(|| data.bootstrap(NRESAMPLES, |d| (Slope::fit(d),)))
+                        b.iter(|| data.bootstrap(NRESAMPLES, |d| (Slope::fit(&d),)))
                     },
                 );
             }

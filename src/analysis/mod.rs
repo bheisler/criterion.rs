@@ -93,7 +93,7 @@ pub(crate) fn common<T>(
 
     let data = Data::new(&iters, &times);
     let labeled_sample = outliers(id, &criterion.output_directory, avg_times);
-    let (distribution, slope) = regression(data, config);
+    let (distribution, slope) = regression(&data, config);
     let (mut distributions, mut estimates) = estimates(avg_times, config);
 
     estimates.insert(Statistic::Slope, slope);
@@ -158,8 +158,7 @@ pub(crate) fn common<T>(
     };
 
     let measurement_data = ::report::MeasurementData {
-        iter_counts: Sample::new(&*iters),
-        sample_times: Sample::new(&*times),
+        data: Data::new(&*iters, &*times),
         avg_times: labeled_sample,
         absolute_estimates: estimates.clone(),
         distributions,
@@ -200,16 +199,16 @@ fn base_dir_exists(id: &BenchmarkId, baseline: &str, output_directory: &str) -> 
 }
 
 // Performs a simple linear regression on the sample
-fn regression(data: Data<f64, f64>, config: &BenchmarkConfig) -> (Distribution<f64>, Estimate) {
+fn regression(data: &Data<f64, f64>, config: &BenchmarkConfig) -> (Distribution<f64>, Estimate) {
     let cl = config.confidence_level;
 
     let distribution = elapsed!(
         "Bootstrapped linear regression",
-        data.bootstrap(config.nresamples, |d| (Slope::fit(d).0,))
+        data.bootstrap(config.nresamples, |d| (Slope::fit(&d).0,))
     )
     .0;
 
-    let point = Slope::fit(data);
+    let point = Slope::fit(&data);
     let (lb, ub) = distribution.confidence_interval(config.confidence_level);
     let se = distribution.std_dev(None);
 
