@@ -252,6 +252,20 @@ impl ReportContext {
         path.push(file_name);
         path
     }
+
+    pub fn change_report_path<P: AsRef<Path> + ?Sized>(
+        &self,
+        id: &BenchmarkId,
+        file_name: &P,
+    ) -> PathBuf {
+        let mut path = PathBuf::from(format!(
+            "{}/{}/report/change",
+            self.output_directory,
+            id.as_directory_name()
+        ));
+        path.push(file_name);
+        path
+    }
 }
 
 pub(crate) trait Report {

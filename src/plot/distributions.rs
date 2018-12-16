@@ -248,7 +248,7 @@ fn rel_distribution(
             },
         );
 
-    let path = context.report_path(id, &format!("change/{}.svg", statistic));
+    let path = context.change_report_path(id, &format!("{}.svg", statistic));
     debug_script(&path, &figure);
     figure.set(Output(path)).draw().unwrap()
 }

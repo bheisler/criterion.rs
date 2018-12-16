@@ -517,12 +517,7 @@ impl Html {
                 None,
                 false,
             ));
-            gnuplots.push(plot::t_test(
-                comp.t_value,
-                &comp.t_distribution,
-                id,
-                &context.output_directory,
-            ));
+            gnuplots.push(plot::t_test(id, context, measurements, comp, None));
             gnuplots.extend(plot::rel_distributions(
                 id,
                 context,
