@@ -3,8 +3,6 @@ use std::path::PathBuf;
 use std::process::Child;
 
 use criterion_plot::prelude::*;
-use stats::bivariate::regression::Slope;
-use stats::bivariate::Data;
 use stats::univariate::Sample;
 use stats::Distribution;
 
@@ -17,6 +15,8 @@ pub mod summary;
 
 mod pdf;
 pub(crate) use self::pdf::*;
+mod regression;
+pub(crate) use self::regression::*;
 
 fn escape_underscores(string: &str) -> String {
     string.replace("_", "\\_")
@@ -57,101 +57,6 @@ fn debug_script(path: &PathBuf, figure: &Figure) {
             error!("Failed to write debug output: {}", e);
         }
     }
-}
-
-pub fn regression(
-    data: &Data<f64, f64>,
-    point: Slope<f64>,
-    (lb, ub): (Slope<f64>, Slope<f64>),
-    id: &BenchmarkId,
-    path: String,
-    size: Option<Size>,
-    thumbnail_mode: bool,
-) -> Child {
-    let path = PathBuf::from(path);
-
-    let (max_iters, max_elapsed) = (data.x().max(), data.y().max());
-
-    let (y_scale, prefix) = scale_time(max_elapsed);
-
-    let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
-    let x_scale = 10f64.powi(-exponent);
-
-    let x_label = if exponent == 0 {
-        "Iterations".to_owned()
-    } else {
-        format!("Iterations (x 10^{})", exponent)
-    };
-
-    let lb = lb.0 * max_iters;
-    let point = point.0 * max_iters;
-    let ub = ub.0 * max_iters;
-    let max_iters = max_iters;
-
-    let mut figure = Figure::new();
-    figure
-        .set(Font(DEFAULT_FONT))
-        .set(size.unwrap_or(SIZE))
-        .configure(Key, |k| {
-            if thumbnail_mode {
-                k.hide();
-            }
-            k.set(Justification::Left)
-                .set(Order::SampleText)
-                .set(Position::Inside(Vertical::Top, Horizontal::Left))
-        })
-        .configure(Axis::BottomX, |a| {
-            a.configure(Grid::Major, |g| g.show())
-                .set(Label(x_label))
-                .set(ScaleFactor(x_scale))
-        })
-        .configure(Axis::LeftY, |a| {
-            a.configure(Grid::Major, |g| g.show())
-                .set(Label(format!("Total sample time ({}s)", prefix)))
-                .set(ScaleFactor(y_scale))
-        })
-        .plot(
-            Points {
-                x: data.x().as_ref(),
-                y: data.y().as_ref(),
-            },
-            |c| {
-                c.set(DARK_BLUE)
-                    .set(Label("Sample"))
-                    .set(PointSize(0.5))
-                    .set(PointType::FilledCircle)
-            },
-        )
-        .plot(
-            Lines {
-                x: &[0., max_iters],
-                y: &[0., point],
-            },
-            |c| {
-                c.set(DARK_BLUE)
-                    .set(LINEWIDTH)
-                    .set(Label("Linear regression"))
-                    .set(LineType::Solid)
-            },
-        )
-        .plot(
-            FilledCurve {
-                x: &[0., max_iters],
-                y1: &[0., lb],
-                y2: &[0., ub],
-            },
-            |c| {
-                c.set(DARK_BLUE)
-                    .set(Label("Confidence interval"))
-                    .set(Opacity(0.25))
-            },
-        );
-    if !thumbnail_mode {
-        figure.set(Title(escape_underscores(id.as_title())));
-    }
-
-    debug_script(&path, &figure);
-    figure.set(Output(path)).draw().unwrap()
 }
 
 pub(crate) fn abs_distributions(

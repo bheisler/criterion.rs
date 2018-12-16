@@ -467,48 +467,19 @@ impl Html {
         context: &ReportContext,
         measurements: &MeasurementData,
     ) {
-        let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
-        let point = Slope::fit(&measurements.data);
-        let slope_dist = &measurements.distributions[&Statistic::Slope];
-        let (lb, ub) =
-            slope_dist.confidence_interval(slope_estimate.confidence_interval.confidence_level);
-        let (lb_, ub_) = (Slope(lb), Slope(ub));
-
-        let mut gnuplots = vec![];
-
-        gnuplots.push(plot::pdf(id, context, measurements, None));
-        gnuplots.push(plot::pdf_small(id, context, measurements, THUMBNAIL_SIZE));
+        let mut gnuplots = vec![
+            // Probability density plots
+            plot::pdf(id, context, measurements, None),
+            plot::pdf_small(id, context, measurements, THUMBNAIL_SIZE),
+            // Linear regression plots
+            plot::regression(id, context, measurements, None),
+            plot::regression_small(id, context, measurements, THUMBNAIL_SIZE),
+        ];
         gnuplots.extend(plot::abs_distributions(
             &measurements.distributions,
             &measurements.absolute_estimates,
             id,
             &context.output_directory,
-        ));
-        gnuplots.push(plot::regression(
-            &measurements.data,
-            point,
-            (lb_, ub_),
-            id,
-            format!(
-                "{}/{}/report/regression.svg",
-                context.output_directory,
-                id.as_directory_name()
-            ),
-            None,
-            false,
-        ));
-        gnuplots.push(plot::regression(
-            &measurements.data,
-            point,
-            (lb_, ub_),
-            id,
-            format!(
-                "{}/{}/report/regression_small.svg",
-                context.output_directory,
-                id.as_directory_name()
-            ),
-            THUMBNAIL_SIZE,
-            true,
         ));
 
         if let Some(ref comp) = measurements.comparison {
