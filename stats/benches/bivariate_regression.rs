@@ -22,7 +22,7 @@ macro_rules! bench {
                     &format!("bivariate_regression_slope_{}", stringify!($ty)),
                     move |b| {
                         let data = Data::new(&x, &y);
-                        b.iter(|| Slope::fit(data))
+                        b.iter(|| Slope::fit(&data))
                     },
                 );
             }

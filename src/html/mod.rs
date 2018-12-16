@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use std::process::Child;
 use Estimate;
 
-const THUMBNAIL_SIZE: Size = Size(450, 300);
+const THUMBNAIL_SIZE: Option<Size> = Some(Size(450, 300));
 
 fn wait_on_gnuplot(children: Vec<Child>) {
     let start = ::std::time::Instant::now();
@@ -193,7 +193,7 @@ impl Report for Html {
             }
         }
 
-        let data = Data::new(measurements.iter_counts, measurements.sample_times);
+        let data = measurements.data;
 
         elapsed! {
             "Generating plots",
@@ -213,8 +213,8 @@ impl Report for Html {
             title: id.as_title().to_owned(),
             confidence: format!("{:.2}", slope_estimate.confidence_interval.confidence_level),
 
-            thumbnail_width: THUMBNAIL_SIZE.0,
-            thumbnail_height: THUMBNAIL_SIZE.1,
+            thumbnail_width: THUMBNAIL_SIZE.unwrap().0,
+            thumbnail_height: THUMBNAIL_SIZE.unwrap().1,
 
             slope: time_interval(slope_estimate),
             mean: time_interval(&measurements.absolute_estimates[&Statistic::Mean]),
@@ -226,15 +226,15 @@ impl Report for Html {
             r2: ConfidenceInterval {
                 lower: format!(
                     "{:0.7}",
-                    Slope(slope_estimate.confidence_interval.lower_bound).r_squared(data)
+                    Slope(slope_estimate.confidence_interval.lower_bound).r_squared(&data)
                 ),
                 upper: format!(
                     "{:0.7}",
-                    Slope(slope_estimate.confidence_interval.upper_bound).r_squared(data)
+                    Slope(slope_estimate.confidence_interval.upper_bound).r_squared(&data)
                 ),
                 point: format!(
                     "{:0.7}",
-                    Slope(slope_estimate.point_estimate).r_squared(data)
+                    Slope(slope_estimate.point_estimate).r_squared(&data)
                 ),
             },
 
@@ -467,9 +467,8 @@ impl Html {
         context: &ReportContext,
         measurements: &MeasurementData,
     ) {
-        let data = Data::new(measurements.iter_counts, measurements.sample_times);
         let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
-        let point = Slope::fit(data);
+        let point = Slope::fit(&measurements.data);
         let slope_dist = &measurements.distributions[&Statistic::Slope];
         let (lb, ub) =
             slope_dist.confidence_interval(slope_estimate.confidence_interval.confidence_level);
@@ -477,17 +476,8 @@ impl Html {
 
         let mut gnuplots = vec![];
 
-        gnuplots.push(plot::pdf(
-            data,
-            measurements.avg_times,
-            id,
-            format!(
-                "{}/{}/report/pdf.svg",
-                context.output_directory,
-                id.as_directory_name()
-            ),
-            None,
-        ));
+        gnuplots.push(plot::pdf(id, context, measurements, None));
+        gnuplots.push(plot::pdf_small(id, context, measurements, THUMBNAIL_SIZE));
         gnuplots.extend(plot::abs_distributions(
             &measurements.distributions,
             &measurements.absolute_estimates,
@@ -495,7 +485,7 @@ impl Html {
             &context.output_directory,
         ));
         gnuplots.push(plot::regression(
-            data,
+            &measurements.data,
             point,
             (lb_, ub_),
             id,
@@ -507,17 +497,8 @@ impl Html {
             None,
             false,
         ));
-        gnuplots.push(plot::pdf_small(
-            &*measurements.avg_times,
-            format!(
-                "{}/{}/report/pdf_small.svg",
-                context.output_directory,
-                id.as_directory_name()
-            ),
-            Some(THUMBNAIL_SIZE),
-        ));
         gnuplots.push(plot::regression(
-            data,
+            &measurements.data,
             point,
             (lb_, ub_),
             id,
@@ -526,7 +507,7 @@ impl Html {
                 context.output_directory,
                 id.as_directory_name()
             ),
-            Some(THUMBNAIL_SIZE),
+            THUMBNAIL_SIZE,
             true,
         ));
 
@@ -545,9 +526,9 @@ impl Html {
                 id.as_directory_name()
             )));
             gnuplots.push(plot::both::regression(
-                base_data,
+                &base_data,
                 &comp.base_estimates,
-                data,
+                &measurements.data,
                 &measurements.absolute_estimates,
                 id,
                 format!(
@@ -584,9 +565,9 @@ impl Html {
                 comp.noise_threshold,
             ));
             gnuplots.push(plot::both::regression(
-                base_data,
+                &base_data,
                 &comp.base_estimates,
-                data,
+                &measurements.data,
                 &measurements.absolute_estimates,
                 id,
                 format!(
@@ -594,7 +575,7 @@ impl Html {
                     context.output_directory,
                     id.as_directory_name()
                 ),
-                Some(THUMBNAIL_SIZE),
+                THUMBNAIL_SIZE,
                 true,
             ));
             gnuplots.push(plot::both::pdfs(
@@ -606,7 +587,7 @@ impl Html {
                     context.output_directory,
                     id.as_directory_name()
                 ),
-                Some(THUMBNAIL_SIZE),
+                THUMBNAIL_SIZE,
                 true,
             ));
         }
@@ -701,8 +682,8 @@ impl Html {
         let context = SummaryContext {
             group_id: id.as_title().to_owned(),
 
-            thumbnail_width: THUMBNAIL_SIZE.0,
-            thumbnail_height: THUMBNAIL_SIZE.1,
+            thumbnail_width: THUMBNAIL_SIZE.unwrap().0,
+            thumbnail_height: THUMBNAIL_SIZE.unwrap().1,
 
             violin_plot: Some(violin_path),
             line_chart: line_path,

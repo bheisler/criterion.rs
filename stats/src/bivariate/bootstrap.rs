@@ -53,7 +53,7 @@ macro_rules! test {
                         let data = Data::new(&x[start..], &y[start+offset..]);
 
                         let slopes = if nresamples > 0 {
-                            data.bootstrap(nresamples, |d| (Slope::fit(d),)).0
+                            data.bootstrap(nresamples, |d| (Slope::fit(&d),)).0
                         } else {
                             return TestResult::discard();
                         };

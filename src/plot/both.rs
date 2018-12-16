@@ -16,9 +16,9 @@ use {ConfidenceInterval, Estimate};
 
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
 pub(crate) fn regression(
-    base_data: Data<f64, f64>,
+    base_data: &Data<f64, f64>,
     base_estimates: &Estimates,
-    data: Data<f64, f64>,
+    data: &Data<f64, f64>,
     estimates: &Estimates,
     id: &BenchmarkId,
     path: String,

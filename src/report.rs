@@ -12,6 +12,7 @@ use std::collections::HashSet;
 use std::fmt;
 use std::io::stdout;
 use std::io::Write;
+use std::path::{Path, PathBuf};
 use Estimate;
 use {PlotConfiguration, Plotting, Throughput};
 
@@ -33,13 +34,21 @@ pub(crate) struct ComparisonData {
 }
 
 pub(crate) struct MeasurementData<'a> {
-    pub iter_counts: &'a Sample<f64>,
-    pub sample_times: &'a Sample<f64>,
+    pub data: Data<'a, f64, f64>,
     pub avg_times: LabeledSample<'a, f64>,
     pub absolute_estimates: Estimates,
     pub distributions: Distributions,
     pub comparison: Option<ComparisonData>,
     pub throughput: Option<Throughput>,
+}
+impl<'a> MeasurementData<'a> {
+    pub fn iter_counts(&self) -> &Sample<f64> {
+        self.data.x()
+    }
+
+    pub fn sample_times(&self) -> &Sample<f64> {
+        self.data.y()
+    }
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -232,6 +241,17 @@ pub struct ReportContext {
     pub plotting: Plotting,
     pub plot_config: PlotConfiguration,
     pub test_mode: bool,
+}
+impl ReportContext {
+    pub fn report_path<P: AsRef<Path> + ?Sized>(&self, id: &BenchmarkId, file_name: &P) -> PathBuf {
+        let mut path = PathBuf::from(format!(
+            "{}/{}/report",
+            self.output_directory,
+            id.as_directory_name()
+        ));
+        path.push(file_name);
+        path
+    }
 }
 
 pub(crate) trait Report {
@@ -645,7 +665,7 @@ impl Report for CliReport {
                 )
             }
 
-            let data = Data::new(meas.iter_counts, meas.sample_times);
+            let data = &meas.data;
             let slope_estimate = &meas.absolute_estimates[&Statistic::Slope];
 
             println!(
