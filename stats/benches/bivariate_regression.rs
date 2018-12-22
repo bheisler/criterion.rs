@@ -50,7 +50,7 @@ mod bench {
 
 criterion_group!(
     name = benches;
-    config = common_bench::reduced_samples();
+    config = Criterion::default();
     targets = bench::f32::slope, bench::f32::straight_line,
               bench::f64::slope, bench::f64::straight_line);
 criterion_main!(benches);

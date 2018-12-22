@@ -19,7 +19,3 @@ where
 
     Some((0..size).map(|_| rng.gen()).collect())
 }
-
-pub fn reduced_samples() -> Criterion {
-    Criterion::default().sample_size(20)
-}

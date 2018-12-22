@@ -105,7 +105,7 @@ macro_rules! bench {
 
             criterion_group! {
                 name = benches;
-                config = ::common_bench::reduced_samples();
+                config = Criterion::default();
                 targets = iqr, max, mean, median, median_abs_dev_pct, min,
                             std_dev_pct, sum, median_abs_dev, std_dev, var
             }
@@ -121,7 +121,7 @@ macro_rules! bench {
                 );
                 criterion_group! {
                     name = benches;
-                    config = ::common_bench::reduced_samples();
+                    config = Criterion::default();
                     targets = median_abs_dev, std_dev, var
                 }
             }

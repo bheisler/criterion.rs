@@ -38,6 +38,6 @@ mod bench {
 
 criterion_group!(
     name = benches;
-    config = common_bench::reduced_samples();
+    config = Criterion::default();
     targets = bench::f32::mean, bench::f64::mean);
 criterion_main!(benches);
