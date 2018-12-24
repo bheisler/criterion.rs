@@ -38,7 +38,7 @@ impl AxisScale {
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::explicit_counter_loop))]
 pub fn line_comparison(
     title: &str,
-    all_curves: &[&(BenchmarkId, Vec<f64>)],
+    all_curves: &[&(&BenchmarkId, Vec<f64>)],
     path: &str,
     value_type: ValueType,
     axis_scale: AxisScale,
@@ -127,13 +127,13 @@ pub fn line_comparison(
 
 pub fn violin(
     title: &str,
-    all_curves: &[&(BenchmarkId, Vec<f64>)],
+    all_curves: &[&(&BenchmarkId, Vec<f64>)],
     path: &str,
     axis_scale: AxisScale,
 ) -> Child {
     let path = PathBuf::from(&path);
     let all_curves_vec = all_curves.iter().rev().cloned().collect::<Vec<_>>();
-    let all_curves: &[&(BenchmarkId, Vec<f64>)] = &*all_curves_vec;
+    let all_curves: &[&(&BenchmarkId, Vec<f64>)] = &*all_curves_vec;
 
     let kdes = all_curves
         .iter()

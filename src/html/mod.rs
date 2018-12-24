@@ -276,18 +276,16 @@ impl Report for Html {
                     id.as_directory_name()
                 ))
             })
-            .cloned()
             .collect::<Vec<_>>();
 
         let mut all_plots = vec![];
         let group_id = all_ids[0].group_id.clone();
 
-        let data: Vec<(BenchmarkId, Vec<f64>)> =
-            self.load_summary_data(&context.output_directory, &all_ids);
+        let data = self.load_summary_data(&context.output_directory, &all_ids);
 
         let mut function_ids = BTreeSet::new();
         for id in all_ids {
-            if let Some(function_id) = id.function_id {
+            if let Some(ref function_id) = &id.function_id {
                 function_ids.insert(function_id);
             }
         }
@@ -300,7 +298,8 @@ impl Report for Html {
                 .collect();
 
             if samples_with_function.len() > 1 {
-                let subgroup_id = BenchmarkId::new(group_id.clone(), Some(function_id), None, None);
+                let subgroup_id =
+                    BenchmarkId::new(group_id.clone(), Some(function_id.clone()), None, None);
 
                 all_plots.extend(self.generate_summary(
                     &subgroup_id,
@@ -516,11 +515,11 @@ impl Html {
         wait_on_gnuplot(gnuplots);
     }
 
-    fn load_summary_data(
+    fn load_summary_data<'a>(
         &self,
         output_directory: &str,
-        all_ids: &[BenchmarkId],
-    ) -> Vec<(BenchmarkId, Vec<f64>)> {
+        all_ids: &[&'a BenchmarkId],
+    ) -> Vec<(&'a BenchmarkId, Vec<f64>)> {
         let output_dir = Path::new(output_directory);
 
         all_ids
@@ -536,7 +535,7 @@ impl Html {
                     .map(|(iters, time)| time / iters)
                     .collect::<Vec<_>>();
 
-                Some((id.clone(), avg_times))
+                Some((*id, avg_times))
             })
             .collect::<Vec<_>>()
     }
@@ -544,7 +543,7 @@ impl Html {
     fn generate_summary(
         &self,
         id: &BenchmarkId,
-        data: &[&(BenchmarkId, Vec<f64>)],
+        data: &[&(&BenchmarkId, Vec<f64>)],
         report_context: &ReportContext,
         full_summary: bool,
     ) -> Vec<Child> {
