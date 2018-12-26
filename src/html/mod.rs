@@ -115,13 +115,13 @@ struct Comparison {
 }
 
 #[derive(Serialize)]
-struct IndexBenchmark {
-    name: String,
+struct IndexBenchmark<'a> {
+    name: &'a str,
     path: Option<String>,
-    sub_benchmarks: Vec<IndexBenchmark>,
+    sub_benchmarks: Vec<IndexBenchmark<'a>>,
 }
-impl IndexBenchmark {
-    fn add(&mut self, names: &[&str], idb: IndexBenchmark) {
+impl<'a> IndexBenchmark<'a> {
+    fn add(&mut self, names: &[&str], idb: IndexBenchmark<'a>) {
         if names.is_empty() {
             if !self.sub_benchmarks.iter().any(|sub| sub.name == idb.name) {
                 self.sub_benchmarks.push(idb);
@@ -140,8 +140,8 @@ impl IndexBenchmark {
     }
 }
 #[derive(Serialize)]
-struct IndexContext {
-    benchmarks: Vec<IndexBenchmark>,
+struct IndexContext<'a> {
+    benchmarks: Vec<IndexBenchmark<'a>>,
 }
 
 pub struct Html {
@@ -347,12 +347,12 @@ impl Report for Html {
         found_ids.sort_unstable_by_key(|id| id.id().to_owned());
 
         let mut root_id = IndexBenchmark {
-            name: "".to_owned(),
+            name: "",
             path: None,
             sub_benchmarks: vec![],
         };
 
-        for id in found_ids {
+        for id in found_ids.iter() {
             let mut name_components = vec![];
             let mut path = PathBuf::new();
             for (name_component, path_component) in to_components(&id)
@@ -369,7 +369,7 @@ impl Report for Html {
                 };
 
                 let sub_benchmark = IndexBenchmark {
-                    name: name_component.to_owned(),
+                    name: &name_component,
                     path: report_path,
                     sub_benchmarks: vec![],
                 };
