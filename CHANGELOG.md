@@ -11,11 +11,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added README/CONTRIBUTING/LICENSE files to sub-crates.
 - Displays change in throughput in the command-line and HTML output as well as change in iteration 
   time.
+- Benchmarks with multiple functions and multiple values will now generate a per-value summary
+  report file in addition to the existing per-function one.
 
 ### Fixed
 - Functions passed to `Bencher::iter_with_large_setup` can now return output. This is necessary to 
   prevent the compiler from optimizing away the benchmark. This is technically a breaking change - 
-  that function requires a new type parameter.
+  that function requires a new type parameter. It's so unlikely to break existing code that I
+  decided not to delay this for a breaking-change release.
 - Reduced measurement overhead for the `iter_with_large_setup` and `iter_with_drop` methods.
 - `criterion_group` and `criterion_main` macros no longer require the `Criterion` struct to be
   explicitly imported.
@@ -36,6 +39,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Changed timing model of `iter_with_large_setup` to exclude time spent dropping values returned
   by the routine. Time measurements taken with 0.2.6 using these methods may differ from those taken
   with 0.2.5.
+- Benchmarks with multiple functions and multiple values will now appear as a table rather than a
+  tree in the benchmark index. This is to accommodate the new per-value summary reports.
 
 ## [0.2.5] - 2018-08-27
 ### Fixed
