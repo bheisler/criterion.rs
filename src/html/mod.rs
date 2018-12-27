@@ -424,10 +424,10 @@ impl Report for Html {
         let mut function_ids = BTreeSet::new();
         let mut value_strs = Vec::with_capacity(all_ids.len());
         for id in all_ids {
-            if let Some(ref function_id) = &id.function_id {
+            if let Some(ref function_id) = id.function_id {
                 function_ids.insert(function_id);
             }
-            if let Some(ref value_str) = &id.value_str {
+            if let Some(ref value_str) = id.value_str {
                 value_strs.push(value_str);
             }
         }
