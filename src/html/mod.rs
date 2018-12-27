@@ -244,11 +244,7 @@ impl<'a> BenchmarkGroup<'a> {
         for value in values.iter() {
             let row = function_ids
                 .iter()
-                .map(|f| {
-                    individual_links
-                        .remove(&(f.clone(), value.clone()))
-                        .unwrap()
-                })
+                .map(|f| individual_links.remove(&(*f, *value)).unwrap())
                 .collect::<Vec<_>>();
             value_groups.push(BenchmarkValueGroup {
                 value: value.map(|s| ReportLink::value(output_directory, group_id, s)),
@@ -426,10 +422,33 @@ impl Report for Html {
         let data = self.load_summary_data(&context.output_directory, &all_ids);
 
         let mut function_ids = BTreeSet::new();
+        let mut value_strs = Vec::with_capacity(all_ids.len());
         for id in all_ids {
             if let Some(ref function_id) = &id.function_id {
                 function_ids.insert(function_id);
             }
+            if let Some(ref value_str) = &id.value_str {
+                value_strs.push(value_str);
+            }
+        }
+
+        fn try_parse(s: &str) -> Option<f64> {
+            s.parse::<f64>().ok()
+        }
+
+        // If all of the value strings can be parsed into a number, sort/dedupe
+        // numerically. Otherwise sort lexicographically.
+        if value_strs.iter().all(|os| try_parse(&*os).is_some()) {
+            value_strs.sort_unstable_by(|v1, v2| {
+                let num1 = try_parse(&v1);
+                let num2 = try_parse(&v2);
+
+                num1.partial_cmp(&num2).unwrap_or(Ordering::Less)
+            });
+            value_strs.dedup_by_key(|os| try_parse(&os).unwrap());
+        } else {
+            value_strs.sort_unstable();
+            value_strs.dedup();
         }
 
         for function_id in function_ids {
@@ -452,6 +471,26 @@ impl Report for Html {
             }
         }
 
+        for value_str in value_strs {
+            let samples_with_value: Vec<_> = data
+                .iter()
+                .by_ref()
+                .filter(|&&(ref id, _)| id.value_str.as_ref() == Some(&value_str))
+                .collect();
+
+            if samples_with_value.len() > 1 {
+                let subgroup_id =
+                    BenchmarkId::new(group_id.clone(), None, Some(value_str.clone()), None);
+
+                all_plots.extend(self.generate_summary(
+                    &subgroup_id,
+                    &*samples_with_value,
+                    context,
+                    false,
+                ));
+            }
+        }
+
         all_plots.extend(self.generate_summary(
             &BenchmarkId::new(group_id, None, None, None),
             &*(data.iter().by_ref().collect::<Vec<_>>()),
@@ -465,9 +504,6 @@ impl Report for Html {
         if !report_context.plotting.is_enabled() {
             return;
         }
-        //TODO: Once criterion.rs moves to a proc-macro test harness, we should ensure that we have
-        //all of the test IDs together in one place so we don't have to scan the file system to
-        //generate this index.
 
         let output_directory = &report_context.output_directory;
         if !fs::is_dir(&output_directory) {
@@ -686,21 +722,24 @@ impl Html {
 
         if value_types.iter().all(|x| x == &value_types[0]) {
             if let Some(value_type) = value_types[0] {
-                let path = format!(
-                    "{}/{}/report/lines.svg",
-                    report_context.output_directory,
-                    id.as_directory_name()
-                );
+                let values: Vec<_> = data.iter().map(|&&(ref id, _)| id.as_number()).collect();
+                if values.iter().any(|x| x != &values[0]) {
+                    let path = format!(
+                        "{}/{}/report/lines.svg",
+                        report_context.output_directory,
+                        id.as_directory_name()
+                    );
 
-                gnuplots.push(plot::line_comparison(
-                    id.as_title(),
-                    data,
-                    &path,
-                    value_type,
-                    report_context.plot_config.summary_scale,
-                ));
+                    gnuplots.push(plot::line_comparison(
+                        id.as_title(),
+                        data,
+                        &path,
+                        value_type,
+                        report_context.plot_config.summary_scale,
+                    ));
 
-                line_path = Some(path);
+                    line_path = Some(path);
+                }
             }
         }
 

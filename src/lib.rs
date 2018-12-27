@@ -93,6 +93,7 @@ use html::Html;
 
 pub use benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
 
+// TODO: Shouldn't have to re-evaluate this repeatedly.
 fn debug_enabled() -> bool {
     std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG")
 }
