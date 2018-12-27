@@ -46,6 +46,14 @@
         #footer p {
             text-align: center
         }
+
+        table {
+            border-collapse: collapse;
+        }
+        
+        table, th, td {
+            border: 1px solid #888;
+        }
     </style>
 </head>
 
@@ -54,40 +62,43 @@
         <h2>Criterion.rs Benchmark Index</h2>
         See individual benchmark pages below for more details.
         <ul>
-        {{#each benchmarks}}
-            <li>
-                {{#if this.path}}
-                <a href="../{{this.path}}">{{this.name}}</a>
-                {{else}}
-                {{this.name}}
-                {{/if}}
-                {{#if this.sub_benchmarks}}
-                <ul>
-                    {{#each this.sub_benchmarks}}
-                    <li>
-                        {{#if this.path}}
-                        <a href="../{{this.path}}">{{this.name}}</a>
-                        {{else}}
-                        {{this.name}}
-                        {{/if}}
-                        {{#if this.sub_benchmarks}}
-                        <ul>
-                            {{#each this.sub_benchmarks}}
-                            <li>
-                                {{#if this.path}}
-                                <a href="../{{this.path}}">{{this.name}}</a>
-                                {{else}}
-                                {{this.name}}
-                                {{/if}}
-                            </li>
+        {{#each groups as |group|}}
+            <li>{{> report_link group_report }}</li>
+            {{#if function_ids }}
+                {{#if values }}
+                    {{! Function ids and values}}
+                    <ul><li><table>
+                        <tr>
+                            <th></th>
+                            {{#each function_ids as |func|}}
+                            <th>{{> report_link}}</th>
                             {{/each}}
-                        </ul>
-                        {{/if}}
-                    </li>
+                        </tr>
+                        {{#each individual_links as |row|}}
+                        <tr>
+                            <td>{{> report_link value}}</td>
+                            {{#each benchmarks as |bench|}}
+                            <td>{{> report_link }}</td>
+                            {{/each}}
+                        </tr>
+                        {{/each}}
+                    </table></li></ul>
+                {{else}}
+                    {{! Function IDs but not values }}
+                    <ul>
+                        {{#each function_ids as |func|}}
+                        <li>{{> report_link }}</li>
+                        {{/each}}
+                    </ul>
+                {{/if}}
+            {{else}}
+                {{! Values but not function ids }}
+                <ul>
+                    {{#each values as |val|}}
+                    <li>{{> report_link}}</li>
                     {{/each}}
                 </ul>
-                {{/if}}
-            </li>
+            {{/if}}
         {{/each}}
         </ul>
     </div>

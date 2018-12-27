@@ -1,4 +1,4 @@
-use report::{BenchmarkId, MeasurementData, Report, ReportContext};
+use report::{make_filename_safe, BenchmarkId, MeasurementData, Report, ReportContext};
 use stats::bivariate::regression::Slope;
 use stats::bivariate::Data;
 
@@ -8,7 +8,8 @@ use format;
 use fs;
 use handlebars::Handlebars;
 use plot;
-use std::collections::BTreeSet;
+use std::cmp::Ordering;
+use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::process::Child;
 use Estimate;
@@ -114,34 +115,155 @@ struct Comparison {
     additional_plots: Vec<Plot>,
 }
 
-#[derive(Serialize)]
-struct IndexBenchmark<'a> {
+fn if_exists(output_directory: &str, path: &Path) -> Option<String> {
+    let report_path = path.join("report/index.html");
+    if PathBuf::from(output_directory).join(&report_path).is_file() {
+        Some(report_path.to_string_lossy().to_string())
+    } else {
+        None
+    }
+}
+#[derive(Serialize, Debug)]
+struct ReportLink<'a> {
     name: &'a str,
     path: Option<String>,
-    sub_benchmarks: Vec<IndexBenchmark<'a>>,
 }
-impl<'a> IndexBenchmark<'a> {
-    fn add(&mut self, names: &[&str], idb: IndexBenchmark<'a>) {
-        if names.is_empty() {
-            if !self.sub_benchmarks.iter().any(|sub| sub.name == idb.name) {
-                self.sub_benchmarks.push(idb);
-            }
-            return;
+impl<'a> ReportLink<'a> {
+    // TODO: Would be nice if I didn't have to keep making these components filename-safe.
+    fn group(output_directory: &str, group_id: &'a str) -> ReportLink<'a> {
+        let path = PathBuf::from(make_filename_safe(group_id));
+
+        ReportLink {
+            name: group_id,
+            path: if_exists(output_directory, &path),
         }
+    }
 
-        let name = names[0];
+    fn function(output_directory: &str, group_id: &str, function_id: &'a str) -> ReportLink<'a> {
+        let mut path = PathBuf::from(make_filename_safe(group_id));
+        path.push(make_filename_safe(function_id));
 
-        for sub in &mut self.sub_benchmarks {
-            if sub.name == name {
-                sub.add(&names[1..], idb);
-                break;
-            }
+        ReportLink {
+            name: function_id,
+            path: if_exists(output_directory, &path),
+        }
+    }
+
+    fn value(output_directory: &str, group_id: &str, value_str: &'a str) -> ReportLink<'a> {
+        let mut path = PathBuf::from(make_filename_safe(group_id));
+        path.push(make_filename_safe(value_str));
+
+        ReportLink {
+            name: value_str,
+            path: if_exists(output_directory, &path),
+        }
+    }
+
+    fn individual(output_directory: &str, id: &'a BenchmarkId) -> ReportLink<'a> {
+        let path = PathBuf::from(id.as_directory_name());
+        ReportLink {
+            name: id.as_title(),
+            path: if_exists(output_directory, &path),
         }
     }
 }
+
+#[derive(Serialize)]
+struct BenchmarkValueGroup<'a> {
+    value: Option<ReportLink<'a>>,
+    benchmarks: Vec<ReportLink<'a>>,
+}
+
+#[derive(Serialize)]
+struct BenchmarkGroup<'a> {
+    group_report: ReportLink<'a>,
+
+    function_ids: Option<Vec<ReportLink<'a>>>,
+    values: Option<Vec<ReportLink<'a>>>,
+
+    individual_links: Vec<BenchmarkValueGroup<'a>>,
+}
+impl<'a> BenchmarkGroup<'a> {
+    fn new(output_directory: &str, ids: &[&'a BenchmarkId]) -> BenchmarkGroup<'a> {
+        let group_id = &ids[0].group_id;
+        let group_report = ReportLink::group(output_directory, group_id);
+
+        let mut function_ids = Vec::with_capacity(ids.len());
+        let mut values = Vec::with_capacity(ids.len());
+        let mut individual_links = HashMap::with_capacity(ids.len());
+
+        for id in ids.iter() {
+            let function_id = id.function_id.as_ref().map(|s| s.as_str());
+            let value = id.value_str.as_ref().map(|s| s.as_str());
+
+            let individual_link = ReportLink::individual(output_directory, id);
+
+            function_ids.push(function_id);
+            values.push(value);
+
+            individual_links.insert((function_id, value), individual_link);
+        }
+
+        fn parse_opt(os: &Option<&str>) -> Option<f64> {
+            os.and_then(|s| s.parse::<f64>().ok())
+        }
+
+        // If all of the value strings can be parsed into a number, sort/dedupe
+        // numerically. Otherwise sort lexicographically.
+        if values.iter().all(|os| parse_opt(os).is_some()) {
+            values.sort_unstable_by(|v1, v2| {
+                let num1 = parse_opt(&v1);
+                let num2 = parse_opt(&v2);
+
+                num1.partial_cmp(&num2).unwrap_or(Ordering::Less)
+            });
+            values.dedup_by_key(|os| parse_opt(&os).unwrap());
+        } else {
+            values.sort_unstable();
+            values.dedup();
+        }
+
+        // Sort and dedupe functions by name.
+        function_ids.sort_unstable();
+        function_ids.dedup();
+
+        let mut value_groups = Vec::with_capacity(values.len());
+        for value in values.iter() {
+            let row = function_ids
+                .iter()
+                .map(|f| {
+                    individual_links
+                        .remove(&(f.clone(), value.clone()))
+                        .unwrap()
+                })
+                .collect::<Vec<_>>();
+            value_groups.push(BenchmarkValueGroup {
+                value: value.map(|s| ReportLink::value(output_directory, group_id, s)),
+                benchmarks: row,
+            });
+        }
+
+        let function_ids = function_ids
+            .into_iter()
+            .map(|os| os.map(|s| ReportLink::function(output_directory, group_id, s)))
+            .collect::<Option<Vec<_>>>();
+        let values = values
+            .into_iter()
+            .map(|os| os.map(|s| ReportLink::value(output_directory, group_id, s)))
+            .collect::<Option<Vec<_>>>();
+
+        BenchmarkGroup {
+            group_report,
+            function_ids,
+            values,
+            individual_links: value_groups,
+        }
+    }
+}
+
 #[derive(Serialize)]
 struct IndexContext<'a> {
-    benchmarks: Vec<IndexBenchmark<'a>>,
+    groups: Vec<BenchmarkGroup<'a>>,
 }
 
 pub struct Html {
@@ -150,6 +272,11 @@ pub struct Html {
 impl Html {
     pub fn new() -> Html {
         let mut handlebars = Handlebars::new();
+
+        handlebars
+            .register_partial("report_link", include_str!("report_link.html.handlebars"))
+            .expect("Unable to parse report_link partial template.");
+
         handlebars
             .register_template_string("report", include_str!("benchmark_report.html.handlebars"))
             .expect("Unable to parse benchmark report template.");
@@ -162,6 +289,7 @@ impl Html {
         handlebars
             .register_template_string("index", include_str!("index.html.handlebars"))
             .expect("Unable to parse index report template.");
+        handlebars.set_strict_mode(true);
         Html { handlebars }
     }
 }
@@ -332,60 +460,28 @@ impl Report for Html {
             return;
         }
 
-        fn to_components(id: &BenchmarkId) -> Vec<&str> {
-            let mut components: Vec<&str> = vec![&id.group_id];
-            if let Some(ref name) = id.function_id {
-                components.push(&**name);
-            }
-            if let Some(ref name) = id.value_str {
-                components.push(&**name);
-            }
-            components
-        }
-
         let mut found_ids = try_else_return!(fs::list_existing_benchmarks(&output_directory));
         found_ids.sort_unstable_by_key(|id| id.id().to_owned());
 
-        let mut root_id = IndexBenchmark {
-            name: "",
-            path: None,
-            sub_benchmarks: vec![],
-        };
-
+        // Group IDs by group id
+        let mut id_groups: HashMap<&str, Vec<&BenchmarkId>> = HashMap::new();
         for id in found_ids.iter() {
-            let mut name_components = vec![];
-            let mut path = PathBuf::new();
-            for (name_component, path_component) in to_components(&id)
-                .into_iter()
-                .zip(id.as_directory_name().split('/'))
-            {
-                path.push(path_component);
-
-                let report_path = path.join("report/index.html");
-                let report_path = if PathBuf::from(output_directory).join(&report_path).is_file() {
-                    Some(report_path.to_string_lossy().to_string())
-                } else {
-                    None
-                };
-
-                let sub_benchmark = IndexBenchmark {
-                    name: &name_component,
-                    path: report_path,
-                    sub_benchmarks: vec![],
-                };
-
-                root_id.add(&name_components, sub_benchmark);
-
-                name_components.push(name_component);
-            }
+            id_groups
+                .entry(&id.group_id)
+                .or_insert_with(|| vec![])
+                .push(id);
         }
 
-        let benchmarks = root_id.sub_benchmarks;
+        let mut groups = id_groups
+            .into_iter()
+            .map(|(_, group)| BenchmarkGroup::new(output_directory, &group))
+            .collect::<Vec<BenchmarkGroup>>();
+        // TODO: Why do I have to clone here?
+        groups.sort_unstable_by_key(|g| g.group_report.name.clone());
 
         try_else_return!(fs::mkdirp(&format!("{}/report/", output_directory)));
 
-        let context = IndexContext { benchmarks };
-
+        let context = IndexContext { groups };
         let text = self
             .handlebars
             .render("index", &context)

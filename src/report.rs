@@ -77,7 +77,7 @@ fn truncate_to_character_boundary(s: &mut String, max_len: usize) {
     s.truncate(boundary);
 }
 
-fn make_filename_safe(string: &str) -> String {
+pub fn make_filename_safe(string: &str) -> String {
     let mut string = string.replace(
         &['?', '"', '/', '\\', '*', '<', '>', ':', '|', '^'][..],
         "_",
