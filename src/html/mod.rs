@@ -8,6 +8,7 @@ use format;
 use fs;
 use handlebars::Handlebars;
 use plot;
+use serde::Serialize;
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -32,6 +33,18 @@ fn wait_on_gnuplot(children: Vec<Child>) {
         child_count,
         ::format::time(::DurationExt::to_nanos(elapsed) as f64)
     );
+}
+
+fn debug_context<S: Serialize>(path: &str, context: &S) {
+    if ::debug_enabled() {
+        let mut context_path = PathBuf::from(path);
+        context_path.set_extension("json");
+        println!("Writing report context to {:?}", context_path);
+        let result = fs::save(context, &context_path);
+        if let Err(e) = result {
+            error!("Failed to write report context debug output: {}", e);
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -376,18 +389,19 @@ impl Report for Html {
             comparison: self.comparison(measurements),
         };
 
+        let report_path = &format!(
+            "{}/{}/report/index.html",
+            report_context.output_directory,
+            id.as_directory_name()
+        );
+
+        debug_context(&report_path, &context);
+
         let text = self
             .handlebars
             .render("report", &context)
             .expect("Failed to render benchmark report template");
-        try_else_return!(fs::save_string(
-            &text,
-            &format!(
-                "{}/{}/report/index.html",
-                report_context.output_directory,
-                id.as_directory_name()
-            ),
-        ));
+        try_else_return!(fs::save_string(&text, report_path,));
     }
 
     fn summarize(&self, context: &ReportContext, all_ids: &[BenchmarkId]) {
@@ -476,20 +490,21 @@ impl Report for Html {
             .into_iter()
             .map(|(_, group)| BenchmarkGroup::new(output_directory, &group))
             .collect::<Vec<BenchmarkGroup>>();
-        // TODO: Why do I have to clone here?
-        groups.sort_unstable_by_key(|g| g.group_report.name.clone());
+        groups.sort_unstable_by_key(|g| g.group_report.name);
 
         try_else_return!(fs::mkdirp(&format!("{}/report/", output_directory)));
 
+        let report_path = &format!("{}/report/index.html", output_directory);
+
         let context = IndexContext { groups };
+
+        debug_context(&report_path, &context);
+
         let text = self
             .handlebars
             .render("index", &context)
             .expect("Failed to render index template");
-        try_else_return!(fs::save_string(
-            &text,
-            &format!("{}/report/index.html", output_directory),
-        ));
+        try_else_return!(fs::save_string(&text, report_path,));
     }
 }
 impl Html {
@@ -707,21 +722,19 @@ impl Html {
             benchmarks,
         };
 
+        let report_path = &format!(
+            "{}/{}/report/index.html",
+            report_context.output_directory,
+            id.as_directory_name()
+        );
+
+        debug_context(&report_path, &context);
+
         let text = self
             .handlebars
             .render("summary_report", &context)
             .expect("Failed to render summary report template");
-        try_else_return!(
-            fs::save_string(
-                &text,
-                &format!(
-                    "{}/{}/report/index.html",
-                    report_context.output_directory,
-                    id.as_directory_name()
-                ),
-            ),
-            || gnuplots
-        );
+        try_else_return!(fs::save_string(&text, report_path,), || gnuplots);
 
         gnuplots
     }
