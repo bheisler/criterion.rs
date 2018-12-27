@@ -20,8 +20,10 @@
 #![cfg_attr(feature = "real_blackbox", feature(test))]
 #![cfg_attr(not(feature = "html_reports"), allow(dead_code))]
 
-extern crate atty;
+#[macro_use]
 extern crate clap;
+
+extern crate atty;
 extern crate criterion_stats as stats;
 extern crate csv;
 extern crate failure;
@@ -494,7 +496,7 @@ pub struct Criterion {
     output_directory: String,
     baseline_directory: String,
     baseline: Baseline,
-    measure_only: bool,
+    profile_time: Option<Duration>,
     test_mode: bool,
     list_mode: bool,
 }
@@ -540,7 +542,7 @@ impl Default for Criterion {
             report: Box::new(Reports::new(reports)),
             baseline_directory: "base".to_owned(),
             baseline: Baseline::Save,
-            measure_only: false,
+            profile_time: None,
             test_mode: false,
             list_mode: false,
             output_directory,
@@ -749,7 +751,7 @@ impl Criterion {
     /// Generate the final summary at the end of a run.
     #[doc(hidden)]
     pub fn final_summary(&self) {
-        if self.measure_only || self.test_mode {
+        if self.profile_time.is_some() || self.test_mode {
             return;
         }
 
@@ -803,7 +805,12 @@ impl Criterion {
                 .help("List all benchmarks"))
             .arg(Arg::with_name("measure-only")
                 .long("measure-only")
+                .hidden(true)
                 .help("Only perform measurements; do no analysis or storage of results. This is useful eg. when profiling the benchmarks, to reduce clutter in the profiling data."))
+            .arg(Arg::with_name("profile-time")
+                .long("profile-time")
+                .takes_value(true)
+                .help("Iterate each benchmark for approximately the given number of seconds, doing no analysis and without storing the results. Useful for running the benchmarks in a profiler."))
             .arg(Arg::with_name("test")
                 .long("test")
                 .help("Run the benchmarks once, to verify that they execute successfully, but do not measure or report the results."))
@@ -867,7 +874,24 @@ scripts alongside the generated plots.
         )));
         reports.push(Box::new(FileCsvReport));
 
-        self.measure_only = matches.is_present("measure-only");
+        // TODO: Remove this in 0.3.0
+        if matches.is_present("measure-only") {
+            println!("Warning: The '--measure-only' argument is deprecated and will be removed in Criterion.rs 0.3.0. Use '--profile-time' instead.");
+            self.profile_time = Some(Duration::from_secs(5));
+        }
+        if matches.is_present("profile-time") {
+            let num_seconds = value_t!(matches.value_of("profile-time"), u64).unwrap_or_else(|e| {
+                println!("{}", e);
+                std::process::exit(1)
+            });
+
+            if num_seconds < 1 {
+                println!("Profile time must be at least one second.");
+                std::process::exit(1);
+            }
+
+            self.profile_time = Some(Duration::from_secs(num_seconds));
+        }
         self.test_mode = matches.is_present("test");
         if matches.is_present("list") {
             self.test_mode = true;
@@ -876,7 +900,7 @@ scripts alongside the generated plots.
 
         #[cfg(feature = "html_reports")]
         {
-            if !self.measure_only {
+            if self.profile_time.is_none() {
                 reports.push(Box::new(Html::new()));
             }
         }

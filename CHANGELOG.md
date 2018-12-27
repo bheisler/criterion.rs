@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   time.
 - Benchmarks with multiple functions and multiple values will now generate a per-value summary
   report file in addition to the existing per-function one.
+- Added a `--profile-time` command-line argument which disables reporting and analysis and instead
+  simply iterates each benchmark for approximately the given number of seconds. This supersedes the
+  (now-deprecated) `--measure-only` argument.
 
 ### Fixed
 - Functions passed to `Bencher::iter_with_large_setup` can now return output. This is necessary to 
@@ -41,6 +44,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   with 0.2.5.
 - Benchmarks with multiple functions and multiple values will now appear as a table rather than a
   tree in the benchmark index. This is to accommodate the new per-value summary reports.
+
+### Deprecated
+- Deprecated the `--measure-only` command-line-argument in favor of `--profile-time`. This will be
+  removed in 0.3.0.
 
 ## [0.2.5] - 2018-08-27
 ### Fixed

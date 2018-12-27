@@ -415,7 +415,7 @@ impl BenchmarkDefinition for Benchmark {
             all_ids.push(id);
         }
 
-        if all_ids.len() > 1 && any_matched && !c.measure_only && !c.test_mode {
+        if all_ids.len() > 1 && any_matched && c.profile_time.is_none() && !c.test_mode {
             c.report.summarize(&report_context, &all_ids);
         }
         if any_matched {
@@ -682,7 +682,7 @@ where
             }
         }
 
-        if all_ids.len() > 1 && any_matched && !c.measure_only && !c.test_mode {
+        if all_ids.len() > 1 && any_matched && c.profile_time.is_none() && !c.test_mode {
             c.report.summarize(&report_context, &all_ids);
         }
         if any_matched {

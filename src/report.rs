@@ -256,6 +256,7 @@ impl ReportContext {
 
 pub(crate) trait Report {
     fn benchmark_start(&self, _id: &BenchmarkId, _context: &ReportContext) {}
+    fn profile(&self, _id: &BenchmarkId, _context: &ReportContext, _profile_ns: f64) {}
     fn warmup(&self, _id: &BenchmarkId, _context: &ReportContext, _warmup_ns: f64) {}
     fn terminated(&self, _id: &BenchmarkId, _context: &ReportContext) {}
     fn analysis(&self, _id: &BenchmarkId, _context: &ReportContext) {}
@@ -291,6 +292,12 @@ impl Report for Reports {
     fn benchmark_start(&self, id: &BenchmarkId, context: &ReportContext) {
         for report in &self.reports {
             report.benchmark_start(id, context);
+        }
+    }
+
+    fn profile(&self, id: &BenchmarkId, context: &ReportContext, profile_ns: f64) {
+        for report in &self.reports {
+            report.profile(id, context, profile_ns);
         }
     }
 
@@ -473,6 +480,15 @@ impl Report for CliReport {
         } else {
             self.print_overwritable(format!("Benchmarking {}", id));
         }
+    }
+
+    fn profile(&self, id: &BenchmarkId, _: &ReportContext, warmup_ns: f64) {
+        self.text_overwrite();
+        self.print_overwritable(format!(
+            "Benchmarking {}: Profiling for {}",
+            id,
+            format::time(warmup_ns)
+        ));
     }
 
     fn warmup(&self, id: &BenchmarkId, _: &ReportContext, warmup_ns: f64) {

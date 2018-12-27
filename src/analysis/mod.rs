@@ -68,13 +68,13 @@ pub(crate) fn common<T>(
         }
     }
 
-    let (iters, times) = routine.sample(id, config, criterion, report_context, parameter);
-
     // In profiling mode, skip all of the analysis.
-    if criterion.measure_only {
-        criterion.report.terminated(id, report_context);
+    if let Some(time) = criterion.profile_time {
+        routine.profile(id, criterion, report_context, time, parameter);
         return;
     }
+
+    let (iters, times) = routine.sample(id, config, criterion, report_context, parameter);
 
     criterion.report.analysis(id, report_context);
 

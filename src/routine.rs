@@ -22,6 +22,46 @@ pub trait Routine<T> {
         self.bench(&mut m, &[1u64], parameter);
     }
 
+    /// Iterates the benchmarked function for a fixed length of time, but takes no measurements.
+    /// This keeps the overall benchmark suite runtime constant-ish even when running under a
+    /// profiler with an unknown amount of overhead. Since no measurements are taken, it also
+    /// reduces the amount of time the execution spends in Criterion.rs code, which should help
+    /// show the performance of the benchmarked code more clearly as well.
+    fn profile(
+        &mut self,
+        id: &BenchmarkId,
+        criterion: &Criterion,
+        report_context: &ReportContext,
+        time: Duration,
+        parameter: &T,
+    ) {
+        criterion
+            .report
+            .profile(id, report_context, time.to_nanos() as f64);
+
+        let time = time.to_nanos();
+        let mut m = self.start(parameter);
+
+        // Get the warmup time for one second
+        let (wu_elapsed, wu_iters) = self.warm_up(&mut m, Duration::from_secs(1), parameter);
+        if wu_elapsed >= time {
+            return;
+        }
+
+        // Initial guess for the mean execution time
+        let met = wu_elapsed as f64 / wu_iters as f64;
+
+        // Guess how many iterations will be required for the remaining time
+        let remaining = (time - wu_elapsed) as f64;
+
+        let iters = remaining / met;
+        let iters = iters as u64;
+
+        self.bench(&mut m, &[iters], parameter);
+
+        criterion.report.terminated(id, report_context);
+    }
+
     fn sample(
         &mut self,
         id: &BenchmarkId,
