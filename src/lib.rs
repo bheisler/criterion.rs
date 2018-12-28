@@ -100,6 +100,19 @@ fn debug_enabled() -> bool {
     std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG")
 }
 
+// Fake function which shows a deprecation warning when compiled without the html_reports feature.
+#[cfg(not(feature = "html_reports"))]
+#[cfg_attr(not(feature = "html_reports"), doc(hidden))]
+pub fn deprecation_warning() {
+    #[deprecated(
+        since = "0.2.6",
+        note = "The html_reports cargo feature is deprecated. As of 0.3.0, HTML reports will no longer be optional."
+    )]
+    fn deprecation_warning_inner() {}
+
+    deprecation_warning_inner()
+}
+
 /// A function that is opaque to the optimizer, used to prevent the compiler from
 /// optimizing away computations in a benchmark.
 ///

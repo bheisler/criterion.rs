@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Deprecated the `--measure-only` command-line-argument in favor of `--profile-time`. This will be
   removed in 0.3.0.
 - External-program benchmarks are now deprecated. They will be removed in 0.3.0.
+- The `html_reports` cargo feature is now deprecated. This feature will become non-optional in 0.3.0.
 
 ## [0.2.5] - 2018-08-27
 ### Fixed
