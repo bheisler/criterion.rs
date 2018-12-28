@@ -1,7 +1,7 @@
 [package]
 authors = ["Jorge Aparicio <japaricious@gmail.com>", "Brook Heisler <brookheisler@gmail.com>"]
 name = "criterion"
-version = "0.2.5"
+version = "0.2.6"
 
 description = "Statistics-driven micro-benchmarking library"
 homepage = "https://bheisler.github.io/criterion.rs/book/index.html"
@@ -13,8 +13,8 @@ license = "Apache-2.0/MIT"
 
 [dependencies]
 lazy_static = "~1.1" # 1.1 is Required to ensure compatibility with rustc 1.20
-criterion-plot = { path="plot", version="0.2.5", optional = true }
-criterion-stats = { path="stats", version="0.2.5" }
+criterion-plot = { path="plot", version="0.2.6", optional = true }
+criterion-stats = { path="stats", version="0.2.6" }
 failure = "0.1.3"
 failure_derive = "0.1.3"
 itertools = "0.7"
