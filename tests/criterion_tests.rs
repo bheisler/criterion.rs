@@ -294,6 +294,7 @@ fn test_bench_function_over_inputs() {
 }
 
 #[test]
+#[allow(deprecated)]
 fn test_bench_program() {
     if !has_python3() {
         return;
@@ -304,6 +305,7 @@ fn test_bench_program() {
 }
 
 #[test]
+#[allow(deprecated)]
 fn test_bench_program_over_inputs() {
     if !has_python3() {
         return;

@@ -1067,6 +1067,11 @@ scripts alongside the generated plots.
     ///     }
     /// }
     /// ```
+    #[deprecated(
+        since = "0.2.6",
+        note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
+    )]
+    #[allow(deprecated)]
     pub fn bench_program(&mut self, id: &str, program: Command) -> &mut Criterion {
         self.bench(id, Benchmark::new_external(id, program))
     }
@@ -1075,6 +1080,11 @@ scripts alongside the generated plots.
     ///
     /// This is a convenience method to execute several related benchmarks. Each benchmark will
     /// receive the id: `${id}/${input}`.
+    #[deprecated(
+        since = "0.2.6",
+        note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
+    )]
+    #[allow(deprecated)]
     pub fn bench_program_over_inputs<I, F>(
         &mut self,
         id: &str,

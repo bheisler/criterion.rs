@@ -294,6 +294,11 @@ impl Benchmark {
     ///         println!("{}", elapsed.to_nanos());
     ///     }
     /// }
+    #[deprecated(
+        since = "0.2.6",
+        note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
+    )]
+    #[allow(deprecated)]
     pub fn new_external<S>(id: S, program: Command) -> Benchmark
     where
         S: Into<String>,
@@ -336,6 +341,10 @@ impl Benchmark {
     /// Benchmark::new("internal", |b| b.iter(|| 10))
     ///     .with_program("external", Command::new("my_external_benchmark"));
     /// ```
+    #[deprecated(
+        since = "0.2.6",
+        note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
+    )]
     pub fn with_program<S>(mut self, id: S, program: Command) -> Benchmark
     where
         S: Into<String>,
@@ -521,6 +530,11 @@ where
     ///     }
     /// }
     /// ```
+    #[deprecated(
+        since = "0.2.6",
+        note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
+    )]
+    #[allow(deprecated)]
     pub fn new_external<S, F, I>(id: S, program: F, parameters: I) -> ParameterizedBenchmark<T>
     where
         S: Into<String>,
@@ -584,6 +598,10 @@ where
     ///         command
     ///     });
     /// ```
+    #[deprecated(
+        since = "0.2.6",
+        note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
+    )]
     pub fn with_program<S, F>(mut self, id: S, program: F) -> ParameterizedBenchmark<T>
     where
         S: Into<String>,
