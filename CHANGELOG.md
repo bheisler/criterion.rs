@@ -50,6 +50,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   removed in 0.3.0.
 - External-program benchmarks are now deprecated. They will be removed in 0.3.0.
 - The `html_reports` cargo feature is now deprecated. This feature will become non-optional in 0.3.0.
+- Sample sizes less than 10 are deprecated and will be disallowed in 0.3.0.
+- This is not an exhaustive list - the full scope of changes in 0.3.0 is not yet determined. There
+  may be breaking changes that are not listed here.
 
 ## [0.2.5] - 2018-08-27
 ### Fixed

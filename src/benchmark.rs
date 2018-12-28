@@ -108,6 +108,9 @@ macro_rules! benchmark_config {
         /// Panics if set to zero or one.
         pub fn sample_size(mut self, n: usize) -> Self {
             assert!(n >= 2);
+            if n < 10 {
+                println!("Warning: Sample sizes < 10 will be disallowed in Criterion.rs 0.3.0.");
+            }
 
             self.config.sample_size = Some(n);
             self
