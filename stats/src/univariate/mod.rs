@@ -10,9 +10,8 @@ pub mod mixed;
 pub mod outliers;
 
 use float::Float;
-use num_cpus;
+use rayon::prelude::*;
 use std::cmp;
-use thread_scoped as thread;
 
 use tuple::{Tuple, TupledDistributionsBuilder};
 
@@ -38,83 +37,38 @@ where
     B: Float,
     S: Fn(&Sample<A>, &Sample<B>) -> T,
     S: Sync,
-    T: Tuple,
+    T: Tuple + Send,
     T::Distributions: Send,
     T::Builder: Send,
 {
-    let ncpus = num_cpus::get();
+    let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as usize;
+    let per_chunk = (nresamples + nresamples_sqrt - 1) / nresamples_sqrt;
 
-    unsafe {
-        // TODO need some sensible threshold to trigger the multi-threaded path
-        if true {
-            //ncpus > 1 && nresamples > a.len() + b.len() {
-            let granularity = nresamples / ncpus + 1;
-            let granularity_sqrt = (granularity as f64).sqrt().ceil() as usize;
-            let statistic = &statistic;
-            let mut cutoff = 0;
-
-            let chunks = (0..ncpus)
-                .map(|_| {
-                    let mut sub_distributions: T::Builder =
-                        TupledDistributionsBuilder::new(granularity);
-                    let start = cutoff;
-                    let end = cmp::min(start + granularity, nresamples);
-                    cutoff = end;
-
-                    thread::scoped(move || {
-                        let mut a_resamples = Resamples::new(a);
-                        let mut b_resamples = Resamples::new(b);
-                        let mut i = start;
-
-                        for _ in 0..granularity_sqrt {
-                            let a_resample = a_resamples.next();
-
-                            for _ in 0..granularity_sqrt {
-                                if i == end {
-                                    return sub_distributions;
-                                }
-
-                                let b_resample = b_resamples.next();
-
-                                sub_distributions.push(statistic(a_resample, b_resample));
-
-                                i += 1;
-                            }
-                        }
-                        sub_distributions
-                    })
-                })
-                .collect::<Vec<_>>();
-
-            let mut builder: T::Builder = TupledDistributionsBuilder::new(nresamples);
-            for chunk in chunks {
-                builder.extend(&mut (chunk.join()));
-            }
-            builder.complete()
-        } else {
-            let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as usize;
-            let mut a_resamples = Resamples::new(a);
-            let mut b_resamples = Resamples::new(b);
-            let mut distributions: T::Builder = TupledDistributionsBuilder::new(nresamples);
-
-            let mut i = 0;
-            'outer: for _ in 0..nresamples_sqrt {
+    (0..nresamples_sqrt)
+        .into_par_iter()
+        .map_init(
+            || (Resamples::new(a), Resamples::new(b)),
+            |(a_resamples, b_resamples), i| {
+                let start = i * per_chunk;
+                let end = cmp::min((i + 1) * per_chunk, nresamples);
                 let a_resample = a_resamples.next();
 
-                for _ in 0..nresamples_sqrt {
-                    if i == nresamples {
-                        break 'outer;
-                    }
+                let mut sub_distributions: T::Builder =
+                    TupledDistributionsBuilder::new(end - start);
 
+                for _ in start..end {
                     let b_resample = b_resamples.next();
-
-                    distributions.push(statistic(a_resample, b_resample));
-
-                    i += 1;
+                    sub_distributions.push(statistic(a_resample, b_resample));
                 }
-            }
-
-            distributions.complete()
-        }
-    }
+                sub_distributions
+            },
+        )
+        .reduce(
+            || T::Builder::new(0),
+            |mut a, mut b| {
+                a.extend(&mut b);
+                a
+            },
+        )
+        .complete()
 }

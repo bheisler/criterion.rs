@@ -1,9 +1,8 @@
-use std::{cmp, mem, ops};
+use std::{mem, ops};
 
 use cast;
 use float::Float;
-use num_cpus;
-use thread_scoped as thread;
+use rayon::prelude::*;
 
 use tuple::{Tuple, TupledDistributionsBuilder};
 use univariate::resamples::Resamples;
@@ -213,47 +212,27 @@ where
         T::Distributions: Send,
         T::Builder: Send,
     {
-        let ncpus = num_cpus::get();
-
-        unsafe {
-            // TODO need some sensible threshold to trigger the multi-threaded path
-            if ncpus > 1 && nresamples > self.len() {
-                let granularity = nresamples / ncpus + 1;
-                let statistic = &statistic;
-
-                let chunks = (0..ncpus)
-                    .map(|i| {
-                        // for now I'll make do with aliasing and careful non-overlapping indexing
-                        let mut sub_distributions: T::Builder =
-                            TupledDistributionsBuilder::new(granularity);
-                        let mut resamples = Resamples::new(self);
-                        let offset = i * granularity;
-
-                        thread::scoped(move || {
-                            for _ in offset..cmp::min(offset + granularity, nresamples) {
-                                sub_distributions.push(statistic(resamples.next()))
-                            }
-                            sub_distributions
-                        })
-                    })
-                    .collect::<Vec<_>>();
-
-                let mut builder: T::Builder = TupledDistributionsBuilder::new(nresamples);
-                for chunk in chunks {
-                    builder.extend(&mut (chunk.join()));
-                }
-                builder.complete()
-            } else {
-                let mut builder: T::Builder = TupledDistributionsBuilder::new(nresamples);
-                let mut resamples = Resamples::new(self);
-
-                for _ in 0..nresamples {
-                    builder.push(statistic(resamples.next()));
-                }
-
-                builder.complete()
-            }
-        }
+        (0..nresamples)
+            .into_par_iter()
+            .map_init(
+                || Resamples::new(self),
+                |resamples, _| statistic(resamples.next()),
+            )
+            .fold(
+                || T::Builder::new(0),
+                |mut sub_distributions, sample| {
+                    sub_distributions.push(sample);
+                    sub_distributions
+                },
+            )
+            .reduce(
+                || T::Builder::new(0),
+                |mut a, mut b| {
+                    a.extend(&mut b);
+                    a
+                },
+            )
+            .complete()
     }
 
     #[cfg(test)]

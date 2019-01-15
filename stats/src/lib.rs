@@ -17,10 +17,9 @@
 )]
 
 extern crate cast;
-extern crate num_cpus;
 extern crate num_traits;
 extern crate rand;
-extern crate thread_scoped;
+extern crate rayon;
 
 #[cfg(test)]
 #[macro_use]

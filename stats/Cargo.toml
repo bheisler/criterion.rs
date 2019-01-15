@@ -13,9 +13,8 @@ license = "MIT/Apache-2.0"
 [dependencies]
 cast = "0.2"
 num-traits = "0.2"
-num_cpus = "1"
 rand = "~0.4"   # 0.4 is required to maintain compatibility with Rust 1.20
-thread-scoped = "1.0.2"
+rayon = "1.0.3"
 
 [dev-dependencies]
 approx = "0.3"
