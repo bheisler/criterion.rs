@@ -131,7 +131,7 @@ where
         }
 
         let mut v = self.to_vec().into_boxed_slice();
-        v.sort_by(cmp);
+        v.par_sort_unstable_by(cmp);
 
         // NB :-1: to intra-crate privacy rules
         unsafe { mem::transmute(v) }
