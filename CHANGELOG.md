@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- Criterion.rs now uses `rayon` internally instead of manual `unsafe` code built on top thread-scoped.
+
 ## [0.2.6] - 2018-12-27
 ### Added
 - Added `--list` command line option, which lists the benchmarks but does not run them, to match

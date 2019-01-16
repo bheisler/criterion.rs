@@ -2,11 +2,8 @@
 
 pub mod kernel;
 
-use std::ptr;
-
 use float::Float;
-use num_cpus;
-use thread_scoped as thread;
+use rayon::prelude::*;
 
 use univariate::Sample;
 
@@ -47,41 +44,10 @@ where
     ///
     /// - Multihreaded
     pub fn map(&self, xs: &[A]) -> Box<[A]> {
-        let n = xs.len();
-        let ncpus = num_cpus::get();
-
-        // TODO need some sensible threshold to trigger the multi-threaded path
-        if ncpus > 1 && n > ncpus {
-            let granularity = n / ncpus + 1;
-
-            unsafe {
-                let mut ys = Vec::with_capacity(n);
-                ys.set_len(n);
-
-                {
-                    let _ = ys
-                        .chunks_mut(granularity)
-                        .enumerate()
-                        .map(|(i, ys)| {
-                            let offset = i * granularity;
-
-                            thread::scoped(move || {
-                                for (i, y) in ys.iter_mut().enumerate() {
-                                    ptr::write(y, self.estimate(*xs.get_unchecked(offset + i)))
-                                }
-                            })
-                        })
-                        .collect::<Vec<_>>();
-                }
-
-                ys.into_boxed_slice()
-            }
-        } else {
-            xs.iter()
-                .map(|&x| self.estimate(x))
-                .collect::<Vec<_>>()
-                .into_boxed_slice()
-        }
+        xs.par_iter()
+            .map(|&x| self.estimate(x))
+            .collect::<Vec<_>>()
+            .into_boxed_slice()
     }
 
     /// Estimates the probability density of `x`
