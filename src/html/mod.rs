@@ -289,9 +289,6 @@ impl Html {
             .expect("Unable to parse report_link partial template.");
 
         handlebars
-            .register_template_string("report", include_str!("benchmark_report.html.handlebars"))
-            .expect("Unable to parse benchmark report template.");
-        handlebars
             .register_template_string(
                 "summary_report",
                 include_str!("summary_report.html.handlebars"),
@@ -306,6 +303,9 @@ impl Html {
         templates
             .add_template("index", include_str!("index.html.tt"))
             .expect("Unable to parse index template.");
+        templates
+            .add_template("benchmark_report", include_str!("benchmark_report.html.tt"))
+            .expect("Unable to parse benchmark_report template");
 
         Html {
             handlebars,
@@ -405,8 +405,8 @@ impl Report for Html {
         debug_context(&report_path, &context);
 
         let text = self
-            .handlebars
-            .render("report", &context)
+            .templates
+            .render("benchmark_report", &context)
             .expect("Failed to render benchmark report template");
         try_else_return!(fs::save_string(&text, report_path,));
     }
