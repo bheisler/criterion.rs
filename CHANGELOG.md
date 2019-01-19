@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Criterion.rs now uses `rayon` internally instead of manual `unsafe` code built with thread-scoped.
 - Replaced handlebars templates with [TinyTemplate](https://github.com/bheisler/TinyTemplate)
+- Merged `criterion-stats` crate into `criterion` crate. `criterion-stats` will no longer receive
+  updates.
 
 ## [0.2.7] - 2018-12-29
 
