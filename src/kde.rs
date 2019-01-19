@@ -1,4 +1,3 @@
-use itertools_num;
 use stats::univariate::kde::kernel::Gaussian;
 use stats::univariate::kde::{Bandwidth, Kde};
 use stats::univariate::Sample;
@@ -29,7 +28,12 @@ pub fn sweep_and_estimate(
         None => (x_min - 3. * h, x_max + 3. * h),
     };
 
-    let xs: Vec<_> = itertools_num::linspace(start, end, npoints).collect();
+    let mut xs: Vec<f64> = Vec::with_capacity(npoints);
+    let step_size = (end - start) / (npoints - 1) as f64;
+    for n in 0..npoints {
+        xs.push(start + (step_size * n as f64));
+    }
+
     let ys = kde.map(&xs);
     let point_estimate = kde.estimate(point_to_estimate);
 

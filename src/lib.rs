@@ -28,7 +28,6 @@ extern crate criterion_stats as stats;
 extern crate csv;
 extern crate failure;
 extern crate itertools;
-extern crate itertools_num;
 extern crate serde;
 extern crate serde_json;
 extern crate walkdir;
