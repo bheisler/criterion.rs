@@ -6,13 +6,13 @@ use criterion_plot::Size;
 use estimate::Statistic;
 use format;
 use fs;
-use handlebars::Handlebars;
 use plot;
 use serde::Serialize;
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::process::Child;
+use tinytemplate::TinyTemplate;
 use Estimate;
 
 const THUMBNAIL_SIZE: Option<Size> = Some(Size(450, 300));
@@ -276,30 +276,25 @@ struct IndexContext<'a> {
 }
 
 pub struct Html {
-    handlebars: Handlebars,
+    templates: TinyTemplate<'static>,
 }
 impl Html {
     pub fn new() -> Html {
-        let mut handlebars = Handlebars::new();
+        let mut templates = TinyTemplate::new();
+        templates
+            .add_template("report_link", include_str!("report_link.html.tt"))
+            .expect("Unable to parse report_link template.");
+        templates
+            .add_template("index", include_str!("index.html.tt"))
+            .expect("Unable to parse index template.");
+        templates
+            .add_template("benchmark_report", include_str!("benchmark_report.html.tt"))
+            .expect("Unable to parse benchmark_report template");
+        templates
+            .add_template("summary_report", include_str!("summary_report.html.tt"))
+            .expect("Unable to parse summary_report template");
 
-        handlebars
-            .register_partial("report_link", include_str!("report_link.html.handlebars"))
-            .expect("Unable to parse report_link partial template.");
-
-        handlebars
-            .register_template_string("report", include_str!("benchmark_report.html.handlebars"))
-            .expect("Unable to parse benchmark report template.");
-        handlebars
-            .register_template_string(
-                "summary_report",
-                include_str!("summary_report.html.handlebars"),
-            )
-            .expect("Unable to parse summary report template.");
-        handlebars
-            .register_template_string("index", include_str!("index.html.handlebars"))
-            .expect("Unable to parse index report template.");
-        handlebars.set_strict_mode(true);
-        Html { handlebars }
+        Html { templates }
     }
 }
 impl Report for Html {
@@ -394,8 +389,8 @@ impl Report for Html {
         debug_context(&report_path, &context);
 
         let text = self
-            .handlebars
-            .render("report", &context)
+            .templates
+            .render("benchmark_report", &context)
             .expect("Failed to render benchmark report template");
         try_else_return!(fs::save_string(&text, report_path,));
     }
@@ -537,7 +532,7 @@ impl Report for Html {
         debug_context(&report_path, &context);
 
         let text = self
-            .handlebars
+            .templates
             .render("index", &context)
             .expect("Failed to render index template");
         try_else_return!(fs::save_string(&text, report_path,));
@@ -770,7 +765,7 @@ impl Html {
         debug_context(&report_path, &context);
 
         let text = self
-            .handlebars
+            .templates
             .render("summary_report", &context)
             .expect("Failed to render summary report template");
         try_else_return!(fs::save_string(&text, report_path,), || gnuplots);

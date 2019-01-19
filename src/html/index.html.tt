@@ -5,32 +5,32 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Index - Criterion.rs</title>
     <style type="text/css">
-        body {
+        body \{
             font: 14px Helvetica Neue;
             text-rendering: optimizelegibility;
         }
 
-        .body {
+        .body \{
             width: 960px;
             margin: auto;
         }
 
-        a:link {
+        a:link \{
             color: #1F78B4;
             text-decoration: none;
         }
 
-        h2 {
+        h2 \{
             font-size: 36px;
             font-weight: 300;
         }
 
-        h3 {
+        h3 \{
             font-size: 24px;
             font-weight: 300;
         }
 
-        #footer {
+        #footer \{
             height: 40px;
             background: #888;
             color: white;
@@ -38,22 +38,22 @@
             font-weight: 300;
         }
 
-        #footer a {
+        #footer a \{
             color: white;
             text-decoration: underline;
         }
 
-        #footer p {
+        #footer p \{
             text-align: center
         }
 
-        table {
+        table \{
             border-collapse: collapse;
         }
 
         table,
         th,
-        td {
+        td \{
             border: 1px solid #888;
         }
     </style>
@@ -64,48 +64,50 @@
         <h2>Criterion.rs Benchmark Index</h2>
         See individual benchmark pages below for more details.
         <ul>
-            {{~#each groups as |group|}}
-            <li>{{> report_link group_report }}</li>
-            {{~#if function_ids }}
-            {{~#if values }}
-            {{! Function ids and values}}
+            {{- for group in groups }}
+            <li>{{ call report_link with group.group_report }}</li>
+            {{- if group.function_ids }}
+            {{- if group.values }}
+            {# Function ids and values #}
             <ul>
                 <li>
                     <table>
                         <tr>
                             <th></th>
-                            {{~#each function_ids as |func|}}
-                            <th>{{> report_link}}</th>
-                            {{~/each}}
+                            {{- for func in group.function_ids }}
+                            <th>{{ call report_link with func }}</th>
+                            {{- endfor }}
                         </tr>
-                        {{~#each individual_links as |row|}}
+                        {{- for row in group.individual_links }}
                         <tr>
-                            <th>{{> report_link value}}</th>
-                            {{~#each benchmarks as |bench|}}
-                            <td>{{> report_link }}</td>
-                            {{~/each}}
+                            <th>{{ call report_link with row.value }}</th>
+                            {{- for bench in row.benchmarks }}
+                            <td>{{ call report_link with bench }}</td>
+                            {{- endfor }}
                         </tr>
-                        {{~/each}}
+                        {{- endfor }}
                     </table>
                 </li>
             </ul>
-            {{~else}}
-            {{! Function IDs but not values }}
+            {{- else }}
+            {# Function IDs but not values #}
             <ul>
-                {{~#each function_ids as |func|}}
-                <li>{{> report_link }}</li>
-                {{~/each}}
+                {{- for func in group.function_ids }}
+                <li>{{ call report_link with func }}</li>
+                {{- endfor }}
             </ul>
-            {{~/if}}
-            {{~else}}
-            {{! Values but not function ids }}
+            {{- endif }}
+            {{- else }}
+            {{- if group.values }}
+            {# Values but not function ids #}
             <ul>
-                {{~#each values as |val|}}
-                <li>{{> report_link}}</li>
-                {{~/each}}
+                {{- for val in group.values }}
+                <li>{{ call report_link with val }}</li>
+                {{- endfor }}
             </ul>
-            {{~/if}}
-            {{~/each}}
+            {{- endif }}
+            {{- endif }}
+            {{- endfor }}
         </ul>
     </div>
     <div id="footer">
@@ -114,5 +116,4 @@
             library in Rust.</p>
     </div>
 </body>
-
 </html>

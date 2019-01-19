@@ -37,7 +37,7 @@ extern crate walkdir;
 extern crate criterion_plot;
 
 #[cfg(feature = "html_reports")]
-extern crate handlebars;
+extern crate tinytemplate;
 
 #[cfg(feature = "real_blackbox")]
 extern crate test;
