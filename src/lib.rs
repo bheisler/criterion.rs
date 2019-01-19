@@ -38,6 +38,9 @@ extern crate quickcheck;
 #[macro_use]
 extern crate clap;
 
+#[macro_use]
+extern crate lazy_static;
+
 extern crate atty;
 extern crate cast;
 extern crate csv;
@@ -109,9 +112,12 @@ use html::Html;
 
 pub use benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
 
-// TODO: Shouldn't have to re-evaluate this repeatedly.
+lazy_static! {
+    static ref DEBUG_ENABLED: bool = { std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG") };
+}
+
 fn debug_enabled() -> bool {
-    std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG")
+    *DEBUG_ENABLED
 }
 
 // Fake function which shows a deprecation warning when compiled without the html_reports feature.
