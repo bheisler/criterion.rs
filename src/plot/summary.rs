@@ -86,7 +86,7 @@ pub fn line_comparison(
     // values or throughputs and that value is sensible (ie. not a mix of bytes and elements
     // or whatnot)
     for (key, group) in &all_curves
-        .into_iter()
+        .iter()
         .group_by(|&&&(ref id, _)| &id.function_id)
     {
         let mut tuples: Vec<_> = group
