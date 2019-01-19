@@ -27,6 +27,7 @@ clap = "2.32"
 handlebars = { version="~1.0.3", optional = true } # 1.0 is required to ensure compatibility with Rust 1.23
 csv = "1.0"
 walkdir = "2.2.7"
+tinytemplate = { version = "1.0", path = "../tiny_template", optional = true }
 
 [dev-dependencies]
 tempdir = "0.3.7"
@@ -38,7 +39,7 @@ maintenance = { status = "passively-maintained" }
 
 [features]
 real_blackbox = []
-html_reports = ["handlebars", "criterion-plot"]
+html_reports = ["handlebars", "criterion-plot", "tinytemplate"]
 default = ["html_reports"]
 
 [workspace]

@@ -13,6 +13,7 @@ use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::process::Child;
+use tinytemplate::TinyTemplate;
 use Estimate;
 
 const THUMBNAIL_SIZE: Option<Size> = Some(Size(450, 300));
@@ -277,6 +278,7 @@ struct IndexContext<'a> {
 
 pub struct Html {
     handlebars: Handlebars,
+    templates: TinyTemplate<'static>,
 }
 impl Html {
     pub fn new() -> Html {
@@ -295,11 +297,20 @@ impl Html {
                 include_str!("summary_report.html.handlebars"),
             )
             .expect("Unable to parse summary report template.");
-        handlebars
-            .register_template_string("index", include_str!("index.html.handlebars"))
-            .expect("Unable to parse index report template.");
         handlebars.set_strict_mode(true);
-        Html { handlebars }
+
+        let mut templates = TinyTemplate::new();
+        templates
+            .add_template("report_link", include_str!("report_link.html.tt"))
+            .expect("Unable to parse report_link template.");
+        templates
+            .add_template("index", include_str!("index.html.tt"))
+            .expect("Unable to parse index template.");
+
+        Html {
+            handlebars,
+            templates,
+        }
     }
 }
 impl Report for Html {
@@ -537,7 +548,7 @@ impl Report for Html {
         debug_context(&report_path, &context);
 
         let text = self
-            .handlebars
+            .templates
             .render("index", &context)
             .expect("Failed to render index template");
         try_else_return!(fs::save_string(&text, report_path,));
