@@ -5,12 +5,12 @@ mod resamples;
 
 pub mod regression;
 
-use float::Float;
 use rayon::prelude::*;
+use stats::float::Float;
 
-use bivariate::resamples::Resamples;
-use tuple::{Tuple, TupledDistributionsBuilder};
-use univariate::Sample;
+use stats::bivariate::resamples::Resamples;
+use stats::tuple::{Tuple, TupledDistributionsBuilder};
+use stats::univariate::Sample;
 
 /// Bivariate `(X, Y)` data
 ///
@@ -36,11 +36,6 @@ impl<'a, X, Y> Data<'a, X, Y> {
     /// Returns the length of the data set
     pub fn len(&self) -> usize {
         self.0.len()
-    }
-
-    /// Checks whether the data set is empty
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
     }
 
     /// Iterate over the data set

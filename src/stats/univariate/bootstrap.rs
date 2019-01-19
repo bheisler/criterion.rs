@@ -4,11 +4,11 @@ macro_rules! test {
         mod $ty {
             use quickcheck::TestResult;
 
-            use univariate::{Sample, mixed, self};
+            use stats::univariate::{Sample, mixed, self};
 
             quickcheck!{
                 fn mean(size: usize, start: usize, nresamples: usize) -> TestResult {
-                    if let Some(v) = ::test::vec::<$ty>(size, start) {
+                    if let Some(v) = ::stats::test::vec::<$ty>(size, start) {
                         let sample = Sample::new(&v[start..]);
 
                         let means = if nresamples > 0 {
@@ -37,7 +37,7 @@ macro_rules! test {
 
             quickcheck!{
                 fn mean_median(size: usize, start: usize, nresamples: usize) -> TestResult {
-                    if let Some(v) = ::test::vec::<$ty>(size, start) {
+                    if let Some(v) = ::stats::test::vec::<$ty>(size, start) {
                         let sample = Sample::new(&v[start..]);
 
                         let (means, medians) = if nresamples > 0 {
@@ -76,7 +76,7 @@ macro_rules! test {
                     nresamples: usize
                 ) -> TestResult {
                     if let (Some(a), Some(b)) =
-                        (::test::vec::<$ty>(a_size, a_start), ::test::vec::<$ty>(b_size, b_start))
+                        (::stats::test::vec::<$ty>(a_size, a_start), ::stats::test::vec::<$ty>(b_size, b_start))
                     {
                         let a = Sample::new(&a);
                         let b = Sample::new(&b);
@@ -112,7 +112,7 @@ macro_rules! test {
                     nresamples: usize
                 ) -> TestResult {
                     if let (Some(a), Some(b)) =
-                        (::test::vec::<$ty>(a_size, a_start), ::test::vec::<$ty>(b_size, b_start))
+                        (::stats::test::vec::<$ty>(a_size, a_start), ::stats::test::vec::<$ty>(b_size, b_start))
                     {
                         let a = Sample::new(&a[a_start..]);
                         let b = Sample::new(&b[b_start..]);

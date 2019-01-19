@@ -42,9 +42,9 @@ use std::ops::{Deref, Index};
 use std::slice;
 
 use cast;
-use float::Float;
+use stats::float::Float;
 
-use univariate::Sample;
+use stats::univariate::Sample;
 
 use self::Label::*;
 

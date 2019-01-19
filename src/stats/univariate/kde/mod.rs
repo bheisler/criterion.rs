@@ -2,10 +2,10 @@
 
 pub mod kernel;
 
-use float::Float;
 use rayon::prelude::*;
+use stats::float::Float;
 
-use univariate::Sample;
+use stats::univariate::Sample;
 
 use self::kernel::Kernel;
 
@@ -27,7 +27,7 @@ where
 {
     /// Creates a new kernel density estimator from the `sample`, using a kernel and estimating
     /// the bandwidth using the method `bw`
-    pub fn new(sample: &'a Sample<A>, kernel: K, bw: Bandwidth<A>) -> Kde<'a, A, K> {
+    pub fn new(sample: &'a Sample<A>, kernel: K, bw: Bandwidth) -> Kde<'a, A, K> {
         Kde {
             bandwidth: bw.estimate(sample),
             kernel,
@@ -66,21 +66,13 @@ where
 }
 
 /// Method to estimate the bandwidth
-pub enum Bandwidth<A>
-where
-    A: Float,
-{
-    /// Use this value as the bandwidth
-    Manual(A),
+pub enum Bandwidth {
     /// Use Silverman's rule of thumb to estimate the bandwidth from the sample
     Silverman,
 }
 
-impl<A> Bandwidth<A>
-where
-    A: Float,
-{
-    fn estimate(self, sample: &Sample<A>) -> A {
+impl Bandwidth {
+    fn estimate<A: Float>(self, sample: &Sample<A>) -> A {
         match self {
             Bandwidth::Silverman => {
                 let factor = A::cast(4. / 3.);
@@ -90,7 +82,6 @@ where
 
                 sigma * (factor / n).powf(exponent)
             }
-            Bandwidth::Manual(bw) => bw,
         }
     }
 }
@@ -101,16 +92,16 @@ macro_rules! test {
         mod $ty {
             use quickcheck::TestResult;
 
-            use univariate::kde::kernel::Gaussian;
-            use univariate::kde::{Bandwidth, Kde};
-            use univariate::Sample;
+            use stats::univariate::kde::kernel::Gaussian;
+            use stats::univariate::kde::{Bandwidth, Kde};
+            use stats::univariate::Sample;
 
             // The [-inf inf] integral of the estimated PDF should be one
             quickcheck! {
                 fn integral(size: usize, start: usize) -> TestResult {
                     const DX: $ty = 1e-3;
 
-                    if let Some(v) = ::test::vec::<$ty>(size, start) {
+                    if let Some(v) = ::stats::test::vec::<$ty>(size, start) {
                         let slice = &v[start..];
                         let data = Sample::new(slice);
                         let kde = Kde::new(data, Gaussian, Bandwidth::Silverman);

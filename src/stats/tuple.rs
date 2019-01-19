@@ -1,6 +1,6 @@
 //! Helper traits for tupling/untupling
 
-use Distribution;
+use stats::Distribution;
 
 /// Any tuple: `(A, B, ..)`
 pub trait Tuple: Sized {

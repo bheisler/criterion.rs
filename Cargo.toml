@@ -14,7 +14,6 @@ license = "Apache-2.0/MIT"
 [dependencies]
 lazy_static = "~1.1" # 1.1 is Required to ensure compatibility with rustc 1.20
 criterion-plot = { path="plot", version="0.3.0", optional = true }
-criterion-stats = { path="stats", version="0.3.0" }
 itertools = "0.7"
 serde = "1.0"
 serde_json = "1.0"
@@ -24,9 +23,16 @@ clap = { version = "2.32", default-features = false }
 csv = "1.0"
 walkdir = "2.2.7"
 tinytemplate = { version = "1.0.1", optional = true }
+cast = "0.2"
+num-traits = "0.2"
+rand = "~0.4"   # 0.4 is required to maintain compatibility with Rust 1.20
+rayon = "1.0.3"
 
 [dev-dependencies]
 tempdir = "0.3.7"
+approx = "0.3"
+itertools-num = "0.1"
+quickcheck = { version = "0.6", default-features = false } # 0.6 is required to maintain compatibility with Rust 1.20
 
 [badges]
 travis-ci = { repository = "bheisler/criterion.rs" }

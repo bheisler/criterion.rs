@@ -1,6 +1,6 @@
 //! Kernels
 
-use float::Float;
+use stats::float::Float;
 
 /// Kernel function
 pub trait Kernel<A>: Copy + Sync
@@ -33,7 +33,7 @@ macro_rules! test {
             mod gaussian {
                 use quickcheck::TestResult;
 
-                use univariate::kde::kernel::{Gaussian, Kernel};
+                use stats::univariate::kde::kernel::{Gaussian, Kernel};
 
                 quickcheck! {
                     fn symmetric(x: $ty) -> bool {

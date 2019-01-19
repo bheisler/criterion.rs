@@ -1,11 +1,11 @@
 //! Mixed bootstrap
 
-use float::Float;
 use rayon::prelude::*;
+use stats::float::Float;
 
-use tuple::{Tuple, TupledDistributionsBuilder};
-use univariate::resamples::Resamples;
-use univariate::Sample;
+use stats::tuple::{Tuple, TupledDistributionsBuilder};
+use stats::univariate::Resamples;
+use stats::univariate::Sample;
 
 /// Performs a *mixed* two-sample bootstrap
 pub fn bootstrap<A, T, S>(

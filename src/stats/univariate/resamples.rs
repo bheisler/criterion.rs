@@ -1,10 +1,10 @@
 use std::mem;
 
-use float::Float;
 use rand::distributions::{IndependentSample, Range};
 use rand::{Rng, XorShiftRng};
+use stats::float::Float;
 
-use univariate::Sample;
+use stats::univariate::Sample;
 
 pub struct Resamples<'a, A>
 where
@@ -66,8 +66,8 @@ mod test {
     use quickcheck::TestResult;
     use std::collections::HashSet;
 
-    use univariate::resamples::Resamples;
-    use univariate::Sample;
+    use stats::univariate::resamples::Resamples;
+    use stats::univariate::Sample;
 
     // FIXME
     // Check that the resample is a subset of the sample

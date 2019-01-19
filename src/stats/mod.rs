@@ -5,29 +5,6 @@
 //! **WARNING** This library is criterion's implementation detail and there no plans to stabilize
 //! it. In other words, the API may break at any time without notice.
 
-#![deny(missing_docs)]
-#![deny(warnings)]
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(
-        clippy::used_underscore_binding,
-        clippy::just_underscores_and_digits,
-        clippy::transmute_ptr_to_ptr
-    )
-)]
-
-extern crate cast;
-extern crate num_traits;
-extern crate rand;
-extern crate rayon;
-
-#[cfg(test)]
-#[macro_use]
-extern crate approx;
-#[cfg(test)]
-#[macro_use]
-extern crate quickcheck;
-
 #[cfg(test)]
 mod test;
 
@@ -40,8 +17,9 @@ mod float;
 use std::mem;
 use std::ops::Deref;
 
-use float::Float;
-use univariate::Sample;
+use cast;
+use stats::float::Float;
+use stats::univariate::Sample;
 
 /// The bootstrap distribution of some parameter
 pub struct Distribution<A>(Box<[A]>);

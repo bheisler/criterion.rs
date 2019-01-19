@@ -19,14 +19,32 @@
 #![deny(missing_docs)]
 #![cfg_attr(feature = "real_blackbox", feature(test))]
 #![cfg_attr(not(feature = "html_reports"), allow(dead_code))]
+#![cfg_attr(
+    feature = "cargo-clippy",
+    allow(
+        clippy::used_underscore_binding,
+        clippy::just_underscores_and_digits,
+        clippy::transmute_ptr_to_ptr
+    )
+)]
+
+#[cfg(test)]
+#[macro_use]
+extern crate approx;
+#[cfg(test)]
+#[macro_use]
+extern crate quickcheck;
 
 #[macro_use]
 extern crate clap;
 
 extern crate atty;
-extern crate criterion_stats as stats;
+extern crate cast;
 extern crate csv;
 extern crate itertools;
+extern crate num_traits;
+extern crate rand;
+extern crate rayon;
 extern crate serde;
 extern crate serde_json;
 extern crate walkdir;
@@ -59,6 +77,7 @@ mod macros;
 mod program;
 mod report;
 mod routine;
+mod stats;
 
 #[cfg(feature = "html_reports")]
 mod kde;

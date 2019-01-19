@@ -1,12 +1,12 @@
 use std::{mem, ops};
 
 use cast;
-use float::Float;
 use rayon::prelude::*;
+use stats::float::Float;
 
-use tuple::{Tuple, TupledDistributionsBuilder};
-use univariate::resamples::Resamples;
-use univariate::Percentiles;
+use stats::tuple::{Tuple, TupledDistributionsBuilder};
+use stats::univariate::Percentiles;
+use stats::univariate::Resamples;
 
 /// A collection of data points drawn from a population
 ///
@@ -161,7 +161,7 @@ where
     ///
     /// - Time: `O(length)`
     pub fn sum(&self) -> A {
-        ::sum(self)
+        ::stats::sum(self)
     }
 
     /// Returns the t score between these two samples

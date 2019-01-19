@@ -1,8 +1,8 @@
-use float::Float;
 use rand::distributions::{IndependentSample, Range};
 use rand::{Rng, XorShiftRng};
+use stats::float::Float;
 
-use bivariate::Data;
+use stats::bivariate::Data;
 
 pub struct Resamples<'a, X, Y>
 where
