@@ -13,12 +13,12 @@ license = "MIT/Apache-2.0"
 [dependencies]
 byteorder = "1"
 cast = "0.2"
-itertools = "0.7"
+itertools = "0.8"
 
 [dev-dependencies]
 itertools-num = "0.1"
 num-complex = { version = "0.2", default-features = false, features = ["std"] }
-rand = "0.4" # 0.4 is required to maintain compatibility with Rust 1.23
+rand = "0.4"
 
 [badges]
 travis-ci = { repository = "bheisler/criterion.rs" }
