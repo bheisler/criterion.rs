@@ -6,7 +6,6 @@ use criterion_plot::Size;
 use estimate::Statistic;
 use format;
 use fs;
-use handlebars::Handlebars;
 use plot;
 use serde::Serialize;
 use std::cmp::Ordering;
@@ -277,25 +276,10 @@ struct IndexContext<'a> {
 }
 
 pub struct Html {
-    handlebars: Handlebars,
     templates: TinyTemplate<'static>,
 }
 impl Html {
     pub fn new() -> Html {
-        let mut handlebars = Handlebars::new();
-
-        handlebars
-            .register_partial("report_link", include_str!("report_link.html.handlebars"))
-            .expect("Unable to parse report_link partial template.");
-
-        handlebars
-            .register_template_string(
-                "summary_report",
-                include_str!("summary_report.html.handlebars"),
-            )
-            .expect("Unable to parse summary report template.");
-        handlebars.set_strict_mode(true);
-
         let mut templates = TinyTemplate::new();
         templates
             .add_template("report_link", include_str!("report_link.html.tt"))
@@ -306,11 +290,11 @@ impl Html {
         templates
             .add_template("benchmark_report", include_str!("benchmark_report.html.tt"))
             .expect("Unable to parse benchmark_report template");
+        templates
+            .add_template("summary_report", include_str!("summary_report.html.tt"))
+            .expect("Unable to parse summary_report template");
 
-        Html {
-            handlebars,
-            templates,
-        }
+        Html { templates }
     }
 }
 impl Report for Html {
@@ -781,7 +765,7 @@ impl Html {
         debug_context(&report_path, &context);
 
         let text = self
-            .handlebars
+            .templates
             .render("summary_report", &context)
             .expect("Failed to render summary report template");
         try_else_return!(fs::save_string(&text, report_path,), || gnuplots);
