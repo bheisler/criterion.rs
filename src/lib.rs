@@ -693,10 +693,9 @@ impl Criterion {
                 Plotting::Enabled
             }
             Err(e) => {
-                match e.downcast::<VersionError>() {
-                    Ok(VersionError::Exec(_)) => println!("Gnuplot not found, disabling plotting"),
-                    Ok(e) => println!("Gnuplot not found or not usable, disabling plotting\n{}", e),
-                    Err(_) => println!("Gnuplot not found or not usable, disabling plotting"),
+                match e {
+                    VersionError::Exec(_) => println!("Gnuplot not found, disabling plotting"),
+                    e => println!("Gnuplot not found or not usable, disabling plotting\n{}", e),
                 }
                 Plotting::NotAvailable
             }

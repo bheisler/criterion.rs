@@ -402,19 +402,14 @@ extern crate cast;
 #[macro_use]
 extern crate itertools;
 
-extern crate failure;
-#[macro_use]
-extern crate failure_derive;
-
 use std::borrow::Cow;
+use std::fmt;
 use std::fs::File;
 use std::io;
 use std::num::ParseIntError;
 use std::path::Path;
 use std::process::{Child, Command};
 use std::str;
-
-use failure::Error;
 
 use data::Matrix;
 use traits::{Configure, Set};
@@ -957,23 +952,49 @@ impl Plot {
 }
 
 /// Possible errors when parsing gnuplot's version string
-#[derive(Debug, Fail)]
+#[derive(Debug)]
 pub enum VersionError {
     /// The `gnuplot` command couldn't be executed
-    #[fail(display = "`gnuplot --version` failed: {}", _0)]
-    Exec(#[cause] io::Error),
+    Exec(io::Error),
     /// The `gnuplot` command returned an error message
-    #[fail(display = "`gnuplot --version` failed with error message:\n{}", _0)]
     Error(String),
     /// The `gnuplot` command returned invalid utf-8
-    #[fail(display = "`gnuplot --version` returned invalid utf-8")]
     OutputError,
     /// The `gnuplot` command returned an unparseable string
-    #[fail(
-        display = "`gnuplot --version` returned an unparseable version string: {}",
-        _0
-    )]
     ParseError(String),
+}
+impl fmt::Display for VersionError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            VersionError::Exec(err) => write!(f, "`gnuplot --version` failed: {}", err),
+            VersionError::Error(msg) => {
+                write!(f, "`gnuplot --version` failed with error message:\n{}", msg)
+            }
+            VersionError::OutputError => write!(f, "`gnuplot --version` returned invalid utf-8"),
+            VersionError::ParseError(msg) => write!(
+                f,
+                "`gnuplot --version` returned an unparseable version string: {}",
+                msg
+            ),
+        }
+    }
+}
+impl ::std::error::Error for VersionError {
+    fn description(&self) -> &str {
+        match self {
+            VersionError::Exec(_) => "Execution Error",
+            VersionError::Error(_) => "Other Error",
+            VersionError::OutputError => "Output Error",
+            VersionError::ParseError(_) => "Parse Error",
+        }
+    }
+
+    fn cause(&self) -> Option<&::std::error::Error> {
+        match self {
+            VersionError::Exec(err) => Some(err),
+            _ => None,
+        }
+    }
 }
 
 /// Structure representing a gnuplot version number.
@@ -987,7 +1008,7 @@ pub struct Version {
 }
 
 /// Returns `gnuplot` version
-pub fn version() -> Result<Version, Error> {
+pub fn version() -> Result<Version, VersionError> {
     let command_output = Command::new("gnuplot")
         .arg("--version")
         .output()
@@ -995,12 +1016,12 @@ pub fn version() -> Result<Version, Error> {
     if !command_output.status.success() {
         let error =
             String::from_utf8(command_output.stderr).map_err(|_| VersionError::OutputError)?;
-        return Err(VersionError::Error(error).into());
+        return Err(VersionError::Error(error));
     }
 
     let output = String::from_utf8(command_output.stdout).map_err(|_| VersionError::OutputError)?;
 
-    parse_version(&output).map_err(|_| VersionError::ParseError(output.clone()).into())
+    parse_version(&output).map_err(|_| VersionError::ParseError(output.clone()))
 }
 
 fn parse_version(version_str: &str) -> Result<Version, Option<ParseIntError>> {
