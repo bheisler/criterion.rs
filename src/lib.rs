@@ -26,7 +26,6 @@ extern crate clap;
 extern crate atty;
 extern crate criterion_stats as stats;
 extern crate csv;
-extern crate failure;
 extern crate itertools;
 extern crate serde;
 extern crate serde_json;
@@ -40,9 +39,6 @@ extern crate tinytemplate;
 
 #[cfg(feature = "real_blackbox")]
 extern crate test;
-
-#[macro_use]
-extern crate failure_derive;
 
 #[macro_use]
 extern crate serde_derive;

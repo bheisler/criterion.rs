@@ -42,8 +42,7 @@ pub(crate) fn common(
         id.as_directory_name(),
         criterion.baseline_directory
     );
-    let base_estimates: Estimates = fs::load(&estimates_file)
-        .map_err(|e| e.context(format!("Failed to load {}!", &estimates_file)))?;
+    let base_estimates: Estimates = fs::load(&estimates_file)?;
 
     let base_avg_times: Vec<f64> = iters
         .iter()

@@ -7,7 +7,7 @@ use std::io::Read;
 use std::path::Path;
 use walkdir::{DirEntry, WalkDir};
 
-use error::{AccessError, CopyError, Result};
+use error::{Error, Result};
 use report::BenchmarkId;
 
 pub fn load<A, P: ?Sized>(path: &P) -> Result<A>
@@ -15,13 +15,17 @@ where
     A: DeserializeOwned,
     P: AsRef<Path>,
 {
-    let mut f = File::open(path).map_err(|inner| AccessError {
+    let path = path.as_ref();
+    let mut f = File::open(path).map_err(|inner| Error::AccessError {
         inner,
-        path: path.as_ref().to_owned(),
+        path: path.to_owned(),
     })?;
     let mut string = String::new();
     let _ = f.read_to_string(&mut string);
-    let result: A = serde_json::from_str(string.as_str())?;
+    let result: A = serde_json::from_str(string.as_str()).map_err(|inner| Error::SerdeError {
+        inner,
+        path: path.to_owned(),
+    })?;
 
     Ok(result)
 }
@@ -38,7 +42,7 @@ pub fn mkdirp<P>(path: &P) -> Result<()>
 where
     P: AsRef<Path>,
 {
-    fs::create_dir_all(path.as_ref()).map_err(|inner| AccessError {
+    fs::create_dir_all(path.as_ref()).map_err(|inner| Error::AccessError {
         inner,
         path: path.as_ref().to_owned(),
     })?;
@@ -46,7 +50,7 @@ where
 }
 
 pub fn cp(from: &Path, to: &Path) -> Result<()> {
-    fs::copy(from, to).map_err(|inner| CopyError {
+    fs::copy(from, to).map_err(|inner| Error::CopyError {
         inner,
         from: from.to_owned(),
         to: to.to_owned(),
@@ -59,7 +63,10 @@ where
     D: Serialize,
     P: AsRef<Path>,
 {
-    let buf = serde_json::to_string(&data)?;
+    let buf = serde_json::to_string(&data).map_err(|inner| Error::SerdeError {
+        path: path.as_ref().to_owned(),
+        inner,
+    })?;
     save_string(&buf, path)
 }
 
@@ -71,7 +78,7 @@ where
 
     File::create(path)
         .and_then(|mut f| f.write_all(data.as_bytes()))
-        .map_err(|inner| AccessError {
+        .map_err(|inner| Error::AccessError {
             inner,
             path: path.as_ref().to_owned(),
         })?;

@@ -1,32 +1,72 @@
+use csv::Error as CsvError;
+use serde_json::Error as SerdeError;
+use std::error::Error as StdError;
+use std::fmt;
 use std::io;
 use std::path::PathBuf;
 
-use failure::Error;
-
-#[derive(Debug, Fail)]
-#[fail(display = "Failed to access file {:?}: {}", path, inner)]
-pub struct AccessError {
-    pub path: PathBuf,
-    #[cause]
-    pub inner: io::Error,
+#[derive(Debug)]
+pub enum Error {
+    AccessError {
+        path: PathBuf,
+        inner: io::Error,
+    },
+    CopyError {
+        from: PathBuf,
+        to: PathBuf,
+        inner: io::Error,
+    },
+    SerdeError {
+        path: PathBuf,
+        inner: SerdeError,
+    },
+    CsvError(CsvError),
 }
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::AccessError { path, inner } => {
+                write!(f, "Failed to access file {:?}: {}", path, inner)
+            }
+            Error::CopyError { from, to, inner } => {
+                write!(f, "Failed to copy file {:?} to {:?}: {}", from, to, inner)
+            }
+            Error::SerdeError { path, inner } => write!(
+                f,
+                "Failed to read or write file {:?} due to serialization error: {}",
+                path, inner
+            ),
+            Error::CsvError(inner) => write!(f, "CSV error: {}", inner),
+        }
+    }
+}
+impl StdError for Error {
+    fn description(&self) -> &str {
+        match self {
+            Error::AccessError { .. } => "AccessError",
+            Error::CopyError { .. } => "CopyError",
+            Error::SerdeError { .. } => "SerdeError",
+            Error::CsvError(_) => "CsvError",
+        }
+    }
 
-#[derive(Debug, Fail)]
-#[fail(display = "Failed to copy file {:?} to {:?}: {}", from, to, inner)]
-pub struct CopyError {
-    pub from: PathBuf,
-    pub to: PathBuf,
-    #[cause]
-    pub inner: io::Error,
+    fn cause(&self) -> Option<&StdError> {
+        match self {
+            Error::AccessError { inner, .. } => Some(inner),
+            Error::CopyError { inner, .. } => Some(inner),
+            Error::SerdeError { inner, .. } => Some(inner),
+            Error::CsvError(inner) => Some(inner),
+        }
+    }
+}
+impl From<CsvError> for Error {
+    fn from(other: CsvError) -> Error {
+        Error::CsvError(other)
+    }
 }
 
 pub type Result<T> = ::std::result::Result<T, Error>;
 
 pub(crate) fn log_error(e: &Error) {
-    error!("error: {}", e.as_fail());
-    for cause in e.iter_chain() {
-        error!("caused by: {}", cause);
-    }
-
-    info!("backtrace: {}", e.backtrace());
+    error!("error: {}", e);
 }
