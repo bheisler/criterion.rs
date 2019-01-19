@@ -30,14 +30,14 @@ Criterion.<span></span>rs helps you write fast code by detecting and measuring p
 
 ## Table of Contents
 - [Table of Contents](#table-of-contents)
-    - [Features](#features)
-    - [Quickstart](#quickstart)
-    - [Goals](#goals)
-    - [Contributing](#contributing)
-    - [Compatibility Policy](#compatibility-policy)
-    - [Maintenance](#maintenance)
-    - [License](#license)
-    - [Related Projects](#related-projects)
+  - [Features](#features)
+  - [Quickstart](#quickstart)
+  - [Goals](#goals)
+  - [Contributing](#contributing)
+  - [Compatibility Policy](#compatibility-policy)
+  - [Maintenance](#maintenance)
+  - [License](#license)
+  - [Related Projects](#related-projects)
 
 ### Features
 
@@ -117,7 +117,7 @@ For more details, see the [CONTRIBUTING.md file](https://github.com/bheisler/cri
 ### Compatibility Policy
 
 Criterion.<span></span>rs supports the last three stable minor releases of Rust. At time of
-writing, this means Rust 1.28 or later. Older versions may work, but are not tested or guaranteed.
+writing, this means Rust 1.29 or later. Older versions may work, but are not tested or guaranteed.
 
 Currently, the oldest version of Rust believed to work is 1.23. Future versions of Criterion.rs may
 break support for such old versions, and this will not be considered a breaking change. If you

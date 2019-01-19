@@ -2,7 +2,6 @@
 authors = ["Jorge Aparicio <japaricious@gmail.com>", "Brook Heisler <brookheisler@gmail.com>"]
 name = "criterion"
 version = "0.2.7"
-edition = "2015"
 
 description = "Statistics-driven micro-benchmarking library"
 homepage = "https://bheisler.github.io/criterion.rs/book/index.html"
@@ -27,7 +26,7 @@ atty = "0.2.11"
 clap = "2.32"
 csv = "1.0"
 walkdir = "2.2.7"
-tinytemplate = { version = "1.0", path = "../tiny_template", optional = true }
+tinytemplate = { version = "1.0.1", optional = true }
 
 [dev-dependencies]
 tempdir = "0.3.7"

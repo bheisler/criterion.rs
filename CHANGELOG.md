@@ -5,10 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 ### Changed
-
 - Criterion.rs now uses `rayon` internally instead of manual `unsafe` code built with thread-scoped.
+- Replaced handlebars templates with [TinyTemplate](https://github.com/bheisler/TinyTemplate)
 
 ## [0.2.7] - 2018-12-29
 
