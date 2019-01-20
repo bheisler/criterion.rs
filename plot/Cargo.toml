@@ -23,4 +23,4 @@ rand = "0.4"
 [badges]
 travis-ci = { repository = "bheisler/criterion.rs" }
 appveyor = { repository = "bheisler/criterion.rs", id = "4255ads9ctpupcl2" }
-maintenance = { status = "passively-maintained" }
+maintenance = { status = "looking-for-maintainer" }

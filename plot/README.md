@@ -6,6 +6,9 @@ This is an unstable implementation detail of [Criterion.rs]. Anything may change
 at any time with no warning, including the public API. For further information,
 see [Criterion.rs].
 
+`criterion-plot` is currently looking for a new maintainer. See 
+[this thread](https://users.rust-lang.org/t/call-for-maintainers-criterion-plot/24413) for details.
+
 ## License
 
 This project is licensed under either of
