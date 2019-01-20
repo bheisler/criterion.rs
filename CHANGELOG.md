@@ -5,11 +5,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.2.8] - 2019-01-20
 ### Changed
 - Criterion.rs now uses `rayon` internally instead of manual `unsafe` code built with thread-scoped.
 - Replaced handlebars templates with [TinyTemplate](https://github.com/bheisler/TinyTemplate)
 - Merged `criterion-stats` crate into `criterion` crate. `criterion-stats` will no longer receive
   updates.
+- Replaced or removed various other dependencies to reduce the size of Criterion.rs' dependency 
+  tree.
 
 ## [0.2.7] - 2018-12-29
 
