@@ -1,5 +1,5 @@
-use rand::distributions::{IndependentSample, Range};
-use rand::{Rng, XorShiftRng};
+use rand::XorShiftRng;
+use stats::rand_util::{new_rng, Range};
 use stats::float::Float;
 
 use stats::bivariate::Data;
@@ -9,7 +9,7 @@ where
     X: 'a + Float,
     Y: 'a + Float,
 {
-    range: Range<usize>,
+    range: Range,
     rng: XorShiftRng,
     data: (&'a [X], &'a [Y]),
     stage: Option<(Vec<X>, Vec<Y>)>,
@@ -23,8 +23,8 @@ where
 {
     pub fn new(data: Data<'a, X, Y>) -> Resamples<'a, X, Y> {
         Resamples {
-            range: Range::new(0, data.0.len()),
-            rng: ::rand::thread_rng().gen(),
+            range: Range::new_exclusive(0, data.0.len()),
+            rng: new_rng(),
             data: (data.x(), data.y()),
             stage: None,
         }
@@ -39,7 +39,7 @@ where
                 let mut stage = (Vec::with_capacity(n), Vec::with_capacity(n));
 
                 for _ in 0..n {
-                    let i = self.range.ind_sample(rng);
+                    let i = self.range.sample(rng);
 
                     stage.0.push(self.data.0[i]);
                     stage.1.push(self.data.1[i]);
@@ -49,7 +49,7 @@ where
             }
             Some(ref mut stage) => {
                 for i in 0..n {
-                    let j = self.range.ind_sample(rng);
+                    let j = self.range.sample(rng);
 
                     stage.0[i] = self.data.0[j];
                     stage.1[i] = self.data.1[j];

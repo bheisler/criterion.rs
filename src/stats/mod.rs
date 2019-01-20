@@ -13,6 +13,7 @@ pub mod tuple;
 pub mod univariate;
 
 mod float;
+mod rand_util;
 
 use std::mem;
 use std::ops::Deref;

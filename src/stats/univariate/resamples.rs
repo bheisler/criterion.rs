@@ -1,7 +1,7 @@
 use std::mem;
 
-use rand::distributions::{IndependentSample, Range};
-use rand::{Rng, XorShiftRng};
+use rand::XorShiftRng;
+use stats::rand_util::{new_rng, Range};
 use stats::float::Float;
 
 use stats::univariate::Sample;
@@ -10,7 +10,7 @@ pub struct Resamples<'a, A>
 where
     A: 'a + Float,
 {
-    range: Range<usize>,
+    range: Range,
     rng: XorShiftRng,
     sample: &'a [A],
     stage: Option<Vec<A>>,
@@ -25,8 +25,8 @@ where
         let slice = sample;
 
         Resamples {
-            range: Range::new(0, slice.len()),
-            rng: ::rand::thread_rng().gen(),
+            range: Range::new_exclusive(0, slice.len()),
+            rng: new_rng(),
             sample: slice,
             stage: None,
         }
@@ -41,14 +41,14 @@ where
                 let mut stage = Vec::with_capacity(n);
 
                 for _ in 0..n {
-                    stage.push(self.sample[self.range.ind_sample(rng)])
+                    stage.push(self.sample[self.range.sample(rng)])
                 }
 
                 self.stage = Some(stage);
             }
             Some(ref mut stage) => {
                 for elem in stage.iter_mut() {
-                    *elem = self.sample[self.range.ind_sample(rng)]
+                    *elem = self.sample[self.range.sample(rng)]
                 }
             }
         }
@@ -69,7 +69,6 @@ mod test {
     use stats::univariate::resamples::Resamples;
     use stats::univariate::Sample;
 
-    // FIXME
     // Check that the resample is a subset of the sample
     quickcheck! {
         fn subset(size: usize, nresamples: usize) -> TestResult {
@@ -94,5 +93,26 @@ mod test {
         }
     }
 
-    // XXX Perhaps add a check that the resamples are different
+    #[test]
+    fn different_subsets() {
+        let size = 1000;
+        let v: Vec<_> = (0..size).map(|i| i as f32).collect();
+        let sample = Sample::new(&v);
+        let mut resamples = Resamples::new(sample);
+        
+        // Hypothetically, we might see one duplicate, but more than one is likely to be a bug.
+        let mut num_duplicated = 0;
+        for _ in 0..1000 {
+            let sample_1 = resamples.next().iter().cloned().collect::<Vec<_>>();
+            let sample_2 = resamples.next().iter().cloned().collect::<Vec<_>>();
+
+            if sample_1 == sample_2 {
+                num_duplicated += 1;
+            }
+        }
+
+        if num_duplicated > 1 {
+            panic!("Found {} duplicate samples", num_duplicated);
+        }
+    }
 }
