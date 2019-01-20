@@ -31,9 +31,13 @@
 #[cfg(test)]
 #[macro_use]
 extern crate approx;
+
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
+
+#[cfg(test)]
+extern crate rand;
 
 #[macro_use]
 extern crate clap;
@@ -46,7 +50,9 @@ extern crate cast;
 extern crate csv;
 extern crate itertools;
 extern crate num_traits;
-extern crate rand;
+extern crate rand_core;
+extern crate rand_os;
+extern crate rand_xoshiro;
 extern crate rayon;
 extern crate serde;
 extern crate serde_json;

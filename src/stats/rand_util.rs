@@ -1,15 +1,20 @@
-use rand::Rng;
-use rand::os::OsRng;
-use rand::XorShiftRng;
+use rand_core::{RngCore, SeedableRng};
+use rand_os::OsRng;
+use rand_xoshiro::Xoshiro256StarStar;
+
 use std::cell::RefCell;
+
+pub type Rng = Xoshiro256StarStar;
 
 thread_local! {
     static SEED_RAND: RefCell<OsRng> = RefCell::new(OsRng::new().unwrap());
 }
 
-pub fn new_rng() -> XorShiftRng {
+pub fn new_rng() -> Rng {
     SEED_RAND.with(|r| {
-        r.borrow_mut().gen()
+        let mut seed = [0u8; 32];
+        r.borrow_mut().fill_bytes(&mut seed);
+        Xoshiro256StarStar::from_seed(seed)
     })
 }
 
@@ -32,12 +37,12 @@ impl Range {
         let ints_to_reject = (max - range + 1) % range;
         let zone = max - ints_to_reject;
 
-        Range{ low, range, zone }
+        Range { low, range, zone }
     }
 
-    pub fn sample<R: Rng>(&self, rng: &mut R) -> usize {
+    pub fn sample<R: RngCore>(&self, rng: &mut R) -> usize {
         loop {
-            let value : usize = rng.gen();
+            let value: usize = rng.next_u64() as usize;
 
             if value <= self.zone {
                 return (value % self.range) + self.low;
@@ -49,8 +54,8 @@ impl Range {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::cmp;
     use quickcheck::TestResult;
+    use std::cmp;
 
     quickcheck! {
         fn range_returns_samples_in_range(low: usize, high: usize) -> TestResult {
@@ -76,7 +81,7 @@ mod test {
     struct CountingRng {
         count: u64,
     }
-    impl Rng for CountingRng {
+    impl ::rand_core::RngCore for CountingRng {
         fn next_u32(&mut self) -> u32 {
             self.next_u64() as u32
         }
@@ -86,6 +91,17 @@ mod test {
             self.count = self.count.wrapping_add(1);
             value
         }
+
+        fn fill_bytes(&mut self, _dest: &mut [u8]) {
+            unimplemented!()
+        }
+
+        fn try_fill_bytes(
+            &mut self,
+            _dest: &mut [u8],
+        ) -> ::std::result::Result<(), ::rand_core::Error> {
+            unimplemented!()
+        }
     }
 
     // These are arbitrary
@@ -94,11 +110,11 @@ mod test {
 
     #[test]
     fn range_is_uniform() {
-        let mut rng = CountingRng{ count: 0 };
+        let mut rng = CountingRng { count: 0 };
         let range = Range::new_exclusive(0, SIZE);
         let mut array = [0usize; SIZE];
 
-        for _ in 0..(ROUNDS*SIZE) {
+        for _ in 0..(ROUNDS * SIZE) {
             let index = range.sample(&mut rng);
             array[index] += 1;
         }
@@ -109,11 +125,13 @@ mod test {
     #[test]
     fn range_is_uniform_outside_of_zone() {
         // Check that range is still uniform when provided with numbers near u64::MAX.
-        let mut rng = CountingRng{ count: ::std::u64::MAX - ((SIZE*ROUNDS) / 2) as u64 };
+        let mut rng = CountingRng {
+            count: ::std::u64::MAX - ((SIZE * ROUNDS) / 2) as u64,
+        };
         let range = Range::new_exclusive(0, SIZE);
         let mut array = [0usize; SIZE];
 
-        for _ in 0..(ROUNDS*SIZE) {
+        for _ in 0..(ROUNDS * SIZE) {
             let index = range.sample(&mut rng);
             array[index] += 1;
         }

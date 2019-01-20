@@ -25,13 +25,16 @@ walkdir = "2.2.7"
 tinytemplate = { version = "1.0.1", optional = true }
 cast = "0.2"
 num-traits = "0.2"
-rand = "~0.4"
+rand_os = "0.1"
+rand_xoshiro = "0.1"
+rand_core = "0.3"
 rayon = "1.0.3"
 
 [dev-dependencies]
 tempdir = "0.3.7"
 approx = "0.3"
 quickcheck = { version = "0.8", default-features = false }
+rand = "0.6"
 
 [badges]
 travis-ci = { repository = "bheisler/criterion.rs" }

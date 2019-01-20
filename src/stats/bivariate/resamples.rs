@@ -1,6 +1,5 @@
-use rand::XorShiftRng;
-use stats::rand_util::{new_rng, Range};
 use stats::float::Float;
+use stats::rand_util::{new_rng, Range, Rng};
 
 use stats::bivariate::Data;
 
@@ -10,7 +9,7 @@ where
     Y: 'a + Float,
 {
     range: Range,
-    rng: XorShiftRng,
+    rng: Rng,
     data: (&'a [X], &'a [Y]),
     stage: Option<(Vec<X>, Vec<Y>)>,
 }

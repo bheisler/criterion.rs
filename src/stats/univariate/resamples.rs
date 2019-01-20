@@ -1,8 +1,7 @@
 use std::mem;
 
-use rand::XorShiftRng;
-use stats::rand_util::{new_rng, Range};
 use stats::float::Float;
+use stats::rand_util::{new_rng, Range, Rng};
 
 use stats::univariate::Sample;
 
@@ -11,7 +10,7 @@ where
     A: 'a + Float,
 {
     range: Range,
-    rng: XorShiftRng,
+    rng: Rng,
     sample: &'a [A],
     stage: Option<Vec<A>>,
 }
@@ -99,7 +98,7 @@ mod test {
         let v: Vec<_> = (0..size).map(|i| i as f32).collect();
         let sample = Sample::new(&v);
         let mut resamples = Resamples::new(sample);
-        
+
         // Hypothetically, we might see one duplicate, but more than one is likely to be a bug.
         let mut num_duplicated = 0;
         for _ in 0..1000 {
