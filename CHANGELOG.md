@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.2.9] - 2019-01-24
+### Changed
+- Criterion.rs no longer depends on the default features of the `rand-core` crate. This fixes some
+  downstream crates which use `rand` in a `no_std` context.
+
 ## [0.2.8] - 2019-01-20
 ### Changed
 - Criterion.rs now uses `rayon` internally instead of manual `unsafe` code built with thread-scoped.
@@ -242,3 +247,4 @@ more details
 [0.2.6]: https://github.com/bheisler/criterion.rs/compare/0.2.5...0.2.6
 [0.2.7]: https://github.com/bheisler/criterion.rs/compare/0.2.6...0.2.7
 [0.2.8]: https://github.com/bheisler/criterion.rs/compare/0.2.7...0.2.8
+[0.2.9]: https://github.com/bheisler/criterion.rs/compare/0.2.8...0.2.9
