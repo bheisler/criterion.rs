@@ -49,13 +49,13 @@ Finally, we construct a Vec of the benchmark functions and run the benchmark. Th
 
 ## Violin Plot
 
-![Violin Plot](./user_guide/violin_plot.svg)
+![Violin Plot](./violin_plot.svg)
 
 The [Violin Plot](https://en.wikipedia.org/wiki/Violin_plot) shows the median times and the PDF of each implementation.
 
 ## Line Chart
 
-![Line Chart](./user_guide/lines.svg)
+![Line Chart](./lines.svg)
 
 The line chart shows a comparison of the different functions as the input or input size increases, which can be enabled with ParameterizedBenchmark.
 
