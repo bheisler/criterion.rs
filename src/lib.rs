@@ -205,6 +205,34 @@ pub struct Bencher {
     elapsed: Duration,
 }
 
+/// TODO
+pub enum BatchSize {
+    /// TODO
+    SmallInput,
+    /// TODO
+    MediumInput,
+    /// TODO
+    LargeInput,
+    /// TODO
+    PerIteration,
+}
+impl BatchSize {
+    /// Convert to a number of iterations per batch.
+    ///
+    /// We try to do a constant number of batches regardless of the number of iterations in this
+    /// sample. If the measurement overhead is roughly constant regardless of the number of
+    /// iterations the analysis of the results later will have an easier time separating the
+    /// measurement overhead from the benchmark time.
+    fn iters_per_batch(&self, iters: u64) -> u64 {
+        match self {
+            BatchSize::SmallInput => (iters + 10 - 1) / 10,
+            BatchSize::MediumInput => (iters + 100 - 1) / 100,
+            BatchSize::LargeInput => (iters + 1000 - 1) / 1000,
+            BatchSize::PerIteration => 1,
+        }
+    }
+}
+
 impl Bencher {
     /// Times a `routine` by executing it many times and timing the total elapsed time.
     ///
@@ -490,6 +518,82 @@ impl Bencher {
             self.elapsed += start.elapsed();
 
             drop(black_box(output));
+        }
+    }
+
+    /// TODO
+    #[inline(never)]
+    pub fn iter_batched<I, O, S, R>(&mut self, mut setup: S, mut routine: R, size: BatchSize)
+    where
+        S: FnMut() -> I,
+        R: FnMut(I) -> O,
+    {
+        self.iterated = true;
+        let batch_size = size.iters_per_batch(self.iters);
+
+        if batch_size == 1 {
+            self.iter_with_setup(setup, routine);
+        } else {
+            let mut iteration_counter = 0;
+            self.elapsed = Duration::from_secs(0);
+
+            while iteration_counter < self.iters {
+                let batch_size = ::std::cmp::min(batch_size, self.iters - iteration_counter);
+
+                let inputs = (0..batch_size).map(|_| setup()).collect::<Vec<_>>();
+                let mut outputs = Vec::with_capacity(batch_size as usize);
+
+                let start = Instant::now();
+                outputs.extend(inputs.into_iter().map(|i| black_box(routine(i))));
+                self.elapsed += start.elapsed();
+
+                drop(outputs);
+
+                iteration_counter += batch_size;
+            }
+        }
+    }
+
+    /// TODO
+    #[inline(never)]
+    pub fn iter_batched_ref<I, O, S, R>(&mut self, mut setup: S, mut routine: R, size: BatchSize)
+    where
+        S: FnMut() -> I,
+        R: FnMut(&mut I) -> O,
+    {
+        self.iterated = true;
+        let batch_size = size.iters_per_batch(self.iters);
+
+        self.elapsed = Duration::from_secs(0);
+        if batch_size == 1 {
+            for _ in 0..self.iters {
+                let mut input = black_box(setup());
+
+                let start = Instant::now();
+                let output = routine(&mut input);
+                self.elapsed += start.elapsed();
+
+                drop(black_box(output));
+                drop(black_box(input));
+            }
+        } else {
+            let mut iteration_counter = 0;
+
+            while iteration_counter < self.iters {
+                let batch_size = ::std::cmp::min(batch_size, self.iters - iteration_counter);
+
+                let mut inputs = (0..batch_size).map(|_| setup()).collect::<Vec<_>>();
+                let mut outputs = Vec::with_capacity(batch_size as usize);
+
+                let start = Instant::now();
+                outputs.extend(inputs.iter_mut().map(|i| black_box(routine(i))));
+                self.elapsed += start.elapsed();
+
+                drop(outputs);
+                drop(inputs);
+
+                iteration_counter += batch_size;
+            }
         }
     }
 
