@@ -215,6 +215,8 @@ pub enum BatchSize {
     LargeInput,
     /// TODO
     PerIteration,
+    /// TODO
+    __NonExhaustive,
 }
 impl BatchSize {
     /// Convert to a number of iterations per batch.
@@ -229,6 +231,7 @@ impl BatchSize {
             BatchSize::MediumInput => (iters + 100 - 1) / 100,
             BatchSize::LargeInput => (iters + 1000 - 1) / 1000,
             BatchSize::PerIteration => 1,
+            BatchSize::__NonExhaustive => panic!("__NonExhaustive is not a valid BatchSize."),
         }
     }
 }
@@ -296,229 +299,30 @@ impl Bencher {
         self.elapsed = start.elapsed();
     }
 
-    /// Times a `routine` that requires some `setup` on each iteration.
-    ///
-    /// For example, use this loop to benchmark sorting algorithms because they require unsorted
-    /// data on each iteration.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// #[macro_use] extern crate criterion;
-    ///
-    /// use criterion::*;
-    ///
-    /// fn create_scrambled_data() -> Vec<u64> {
-    ///     # vec![]
-    ///     // ...
-    /// }
-    ///
-    /// // The sorting algorithm to test
-    /// fn sort(data: &mut [u64]) {
-    ///     // ...
-    /// }
-    ///
-    /// fn bench(c: &mut Criterion) {
-    ///     let data = create_scrambled_data();
-    ///
-    ///     c.bench_function("with_setup", move |b| {
-    ///         // This will avoid timing the to_vec call.
-    ///         b.iter_with_setup(|| data.to_vec(), |mut data| sort(&mut data))
-    ///     });
-    /// }
-    ///
-    /// criterion_group!(benches, bench);
-    /// criterion_main!(benches);
-    /// ```
-    ///
-    /// # Timing loop
-    ///
-    /// ```rust,no_run
-    /// # use std::time::{Instant, Duration};
-    /// # use std::mem;
-    /// # fn setup() {}
-    /// # fn routine(input: ()) {}
-    /// # let iters = 4_000_000;
-    /// let mut elapsed = Duration::new(0, 0);
-    /// for _ in 0..iters {
-    ///     let input = setup();
-    ///
-    ///     let start = Instant::now();
-    ///     let output = routine(input);
-    ///     let elapsed_in_iter = start.elapsed();
-    ///
-    ///     mem::drop(output);
-    ///
-    ///     elapsed = elapsed + elapsed_in_iter;
-    /// }
-    /// ```
-    ///
-    /// # Timing model
-    ///
-    /// ``` text
-    /// elapsed = iters * (Instant::now + routine)
-    /// ```
-    #[inline(never)]
-    pub fn iter_with_setup<I, O, S, R>(&mut self, mut setup: S, mut routine: R)
+    #[doc(hidden)]
+    pub fn iter_with_setup<I, O, S, R>(&mut self, setup: S, routine: R)
     where
         S: FnMut() -> I,
         R: FnMut(I) -> O,
     {
-        self.iterated = true;
-        self.elapsed = Duration::from_secs(0);
-        for _ in 0..self.iters {
-            let input = black_box(setup());
-
-            let start = Instant::now();
-            let output = routine(input);
-            self.elapsed += start.elapsed();
-
-            drop(black_box(output));
-        }
+        self.iter_batched(setup, routine, BatchSize::PerIteration);
     }
 
-    /// Times a `routine` by collecting its output on each iteration. This avoids timing the
-    /// destructor of the value returned by `routine`.
-    ///
-    /// WARNING: This requires `iters * mem::size_of::<O>()` of memory, and `iters` is not under the
-    /// control of the caller.
-    ///
-    /// # Timing loop
-    ///
-    /// ```rust,no_run
-    /// # use std::mem;
-    /// # use std::time::Instant;
-    /// # let iters = 4_000_000;
-    /// # fn routine() {}
-    /// let mut outputs = Vec::with_capacity(iters);
-    ///
-    /// let start = Instant::now();
-    /// for _ in 0..iters {
-    ///     outputs.push(routine());
-    /// }
-    /// let elapsed = start.elapsed();
-    ///
-    /// mem::drop(outputs);
-    /// ```
-    ///
-    /// # Timing model
-    ///
-    /// ``` text
-    /// elapsed = Instant::now + iters * (routine) + Iterator::collect::<Vec<_>>
-    /// ```
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// #[macro_use] extern crate criterion;
-    ///
-    /// use criterion::*;
-    ///
-    /// fn create_vector() -> Vec<u64> {
-    ///     # vec![]
-    ///     // ...
-    /// }
-    ///
-    /// fn bench(c: &mut Criterion) {
-    ///     c.bench_function("with_drop", move |b| {
-    ///         // This will avoid timing the Vec::drop.
-    ///         b.iter_with_large_drop(|| create_vector())
-    ///     });
-    /// }
-    ///
-    /// criterion_group!(benches, bench);
-    /// criterion_main!(benches);
-    /// ```
-    ///
-    #[inline(never)]
+    #[doc(hidden)]
     pub fn iter_with_large_drop<O, R>(&mut self, mut routine: R)
     where
         R: FnMut() -> O,
     {
-        self.iterated = true;
-        let mut outputs = Vec::with_capacity(self.iters as usize);
-
-        let start = Instant::now();
-        for _ in 0..self.iters {
-            outputs.push(black_box(routine()));
-        }
-        self.elapsed = start.elapsed();
-
-        drop(black_box(outputs));
+        self.iter_batched(|| (), |_| routine(), BatchSize::SmallInput);
     }
 
-    /// Times a `routine` that needs to consume its input by first creating a pool of inputs.
-    ///
-    /// This function is handy for benchmarking destructors.
-    ///
-    /// WARNING This requires `iters * mem::size_of::<I>()` of memory, and `iters` is not under the
-    /// control of the caller.
-    ///
-    /// # Timing loop
-    ///
-    /// ```rust,no_run
-    /// # use std::time::Instant;
-    /// # fn setup() {}
-    /// # fn routine(input: ()) {}
-    /// # let iters = 4_000_000;
-    /// let inputs: Vec<()> = (0..iters).map(|_| setup()).collect();
-    /// let start = Instant::now();
-    ///
-    /// for input in inputs {
-    ///     routine(input);
-    /// }
-    ///
-    /// let elapsed = start.elapsed();
-    /// ```
-    ///
-    /// # Timing model
-    ///
-    /// ``` text
-    /// elapsed = iters * (Instant::now + routine)
-    /// ```
-    /// # Example
-    ///
-    /// ```rust
-    /// #[macro_use] extern crate criterion;
-    ///
-    /// use criterion::*;
-    ///
-    /// fn create_data() -> Vec<u64> {
-    ///     # vec![]
-    ///     // ...
-    /// }
-    ///
-    /// fn use_data(data: &mut [u64]) {
-    ///     // ...
-    /// }
-    ///
-    /// fn bench(c: &mut Criterion) {
-    ///     c.bench_function("with_setup", move |b| {
-    ///         // This will avoid timing the create_data call.
-    ///         b.iter_with_large_setup(|| create_data(), |mut data| use_data(&mut data))
-    ///     });
-    /// }
-    ///
-    /// criterion_group!(benches, bench);
-    /// criterion_main!(benches);
-    /// ```
-    #[inline(never)]
-    pub fn iter_with_large_setup<I, O, S, R>(&mut self, mut setup: S, mut routine: R)
+    #[doc(hidden)]
+    pub fn iter_with_large_setup<I, O, S, R>(&mut self, setup: S, routine: R)
     where
         S: FnMut() -> I,
         R: FnMut(I) -> O,
     {
-        self.iterated = true;
-        let inputs = (0..self.iters).map(|_| setup()).collect::<Vec<_>>();
-
-        self.elapsed = Duration::from_secs(0);
-        for input in inputs {
-            let start = Instant::now();
-            let output = routine(input);
-            self.elapsed += start.elapsed();
-
-            drop(black_box(output));
-        }
+        self.iter_batched(setup, routine, BatchSize::SmallInput);
     }
 
     /// TODO
@@ -530,12 +334,20 @@ impl Bencher {
     {
         self.iterated = true;
         let batch_size = size.iters_per_batch(self.iters);
+        self.elapsed = Duration::from_secs(0);
 
         if batch_size == 1 {
-            self.iter_with_setup(setup, routine);
+            for _ in 0..self.iters {
+                let mut input = black_box(setup());
+
+                let start = Instant::now();
+                let output = routine(input);
+                self.elapsed += start.elapsed();
+
+                drop(black_box(output));
+            }
         } else {
             let mut iteration_counter = 0;
-            self.elapsed = Duration::from_secs(0);
 
             while iteration_counter < self.iters {
                 let batch_size = ::std::cmp::min(batch_size, self.iters - iteration_counter);
@@ -563,8 +375,8 @@ impl Bencher {
     {
         self.iterated = true;
         let batch_size = size.iters_per_batch(self.iters);
-
         self.elapsed = Duration::from_secs(0);
+
         if batch_size == 1 {
             for _ in 0..self.iters {
                 let mut input = black_box(setup());
