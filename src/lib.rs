@@ -187,35 +187,58 @@ where
     }
 }
 
-/// Helper struct to time routines
+/// Argument to [`Bencher::iter_batched`](struct.Bencher.html#method.iter_batched) and
+/// [`Bencher::iter_batched_ref`](struct.Bencher.html#method.iter_batched_ref) which controls the
+/// batch size.
 ///
-/// This struct provides different timing loops as methods. Each timing loop provides a different
-/// way to time a routine and each has advantages and disadvantages.
+/// Generally speaking, almost all benchmarks should use `SmallInput`. If the input or the result
+/// of the benchmark routine is large enough that `SmallInput` causes out-of-memory errors,
+/// `LargeInput` can be used to reduce memory usage at the cost of increasing the measurement
+/// overhead. If the input or the result is extremely large (or if it holds some
+/// limited external resource like a file handle), `PerIteration` will set the number of iterations
+/// per batch to exactly one. `PerIteration` can increase the measurement overhead substantially
+/// and should be avoided wherever possible.
 ///
-/// * If your routine returns a value with an expensive `drop` method, use
-///   `iter_with_large_drop`.
-/// * If your routine requires some per-iteration setup that shouldn't be timed,
-///   use `iter_with_setup` or (if the setup is expensive) use `iter_with_large_setup`
-///   to construct a pool of input data ahead of time
-/// * Otherwise, use `iter`.
-#[derive(Clone, Copy)]
-pub struct Bencher {
-    iterated: bool,
-    iters: u64,
-    elapsed: Duration,
-}
-
-/// TODO
+/// Each value lists an estimate of the measurement overhead. This is intended as a rough guide
+/// to assist in choosing an option, it should not be relied upon. In particular, it is not valid
+/// to subtract the listed overhead from the measurement and assume that the result represents the
+/// true runtime of a function. The actual measurement overhead for your specific benchmark depends
+/// on the details of the function you're benchmarking and the hardware and operating
+/// system running the benchmark.
+///
+/// With that said, if the runtime of your function is small relative to the measurement overhead
+/// it will be difficult to take accurate measurements. In this situation, the best option is to use
+/// [`Bencher::iter`](struct.Bencher.html#method.iter_batched_ref) which has next-to-zero measurement
+/// overhead.
+#[derive(Debug, Eq, PartialEq, Copy, Hash, Clone)]
 pub enum BatchSize {
-    /// TODO
+    /// `SmallInput` indicates that the input to the benchmark routine (the value returned from
+    /// the setup routine) is small enough that millions of values can be safely held in memory.
+    /// Always prefer `SmallInput` unless the benchmark is using too much memory.
+    ///
+    /// In testing, the maximum measurement overhead from benchmarking with `SmallInput` is on the
+    /// order of 500 picoseconds. This is presented as a rough guide; your results may vary.
     SmallInput,
-    /// TODO
-    MediumInput,
-    /// TODO
+
+    /// `LargeInput` indicates that the input to the benchmark routine or the value returned from
+    /// that routine is large. This will reduce the memory usage but increase the measurement
+    /// overhead.
+    ///
+    /// In testing, the maximum measurement overhead from benchmarking with `LargeInput` is on the
+    /// order of 750 picoseconds. This is presented as a rough guide; your results may vary.
     LargeInput,
-    /// TODO
+
+    /// `PerIteration` indicates that the input to the benchmark routine or the value returned from
+    /// that routine is extremely large or holds some limited resource, such that holding many values
+    /// in memory at once is infeasible. This provides the worst measurement overhead, but the
+    /// lowest memory usage.
+    ///
+    /// In testing, the maximum measurement overhead from benchmarking with `PerIteration` is on the
+    /// order of 350 nanoseconds or 350,000 picoseconds. This is presented as a rough guide; your
+    /// results may vary.
     PerIteration,
-    /// TODO
+
+    #[doc(hidden)]
     __NonExhaustive,
 }
 impl BatchSize {
@@ -225,10 +248,9 @@ impl BatchSize {
     /// sample. If the measurement overhead is roughly constant regardless of the number of
     /// iterations the analysis of the results later will have an easier time separating the
     /// measurement overhead from the benchmark time.
-    fn iters_per_batch(&self, iters: u64) -> u64 {
+    fn iters_per_batch(self, iters: u64) -> u64 {
         match self {
             BatchSize::SmallInput => (iters + 10 - 1) / 10,
-            BatchSize::MediumInput => (iters + 100 - 1) / 100,
             BatchSize::LargeInput => (iters + 1000 - 1) / 1000,
             BatchSize::PerIteration => 1,
             BatchSize::__NonExhaustive => panic!("__NonExhaustive is not a valid BatchSize."),
@@ -236,23 +258,30 @@ impl BatchSize {
     }
 }
 
+/// Timer struct to iterate a benchmarked function and measure the runtime.
+///
+/// This struct provides different timing loops as methods. Each timing loop provides a different
+/// way to time a routine and each has advantages and disadvantages.
+///
+/// * If your routine requires no per-iteration setup and returns a value with an expensive `drop`
+///   method, use `iter_with_large_drop`.
+/// * If your routine requires some per-iteration setup that shouldn't be timed, use `iter_batched`
+///   or `iter_batched_ref`. See [`BatchSize`](enum.BatchSize.html) for a discussion of batch sizes.
+///   If the setup value implements `Drop` and you don't want to include the `drop` time in the
+///   measurement, use `iter_batched_ref`, otherwise use `iter_batched`. These methods are also
+///   suitable for benchmarking routines which return a value with an expensive `drop` method,
+///   but are more complex than `iter_with_large_drop`.
+/// * Otherwise, use `iter`.
+#[derive(Clone, Copy)]
+pub struct Bencher {
+    iterated: bool,
+    iters: u64,
+    elapsed: Duration,
+}
 impl Bencher {
     /// Times a `routine` by executing it many times and timing the total elapsed time.
     ///
     /// Prefer this timing loop when `routine` returns a value that doesn't have a destructor.
-    ///
-    /// # Timing loop
-    ///
-    /// ```rust,no_run
-    /// # use std::time::Instant;
-    /// # fn routine() {}
-    /// # let iters = 4_000_000;
-    /// let start = Instant::now();
-    /// for _ in 0..iters {
-    ///     routine();
-    /// }
-    /// let elapsed = start.elapsed();
-    /// ```
     ///
     /// # Timing model
     ///
@@ -308,6 +337,41 @@ impl Bencher {
         self.iter_batched(setup, routine, BatchSize::PerIteration);
     }
 
+    /// Times a `routine` by collecting its output on each iteration. This avoids timing the
+    /// destructor of the value returned by `routine`.
+    ///
+    /// WARNING: This requires `O(iters * mem::size_of::<O>())` of memory, and `iters` is not under the
+    /// control of the caller. If this causes out-of-memory errors, use `iter_batched` instead.
+    ///
+    /// # Timing model
+    ///
+    /// ``` text
+    /// elapsed = Instant::now + iters * (routine) + Iterator::collect::<Vec<_>>
+    /// ```
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// #[macro_use] extern crate criterion;
+    ///
+    /// use criterion::*;
+    ///
+    /// fn create_vector() -> Vec<u64> {
+    ///     # vec![]
+    ///     // ...
+    /// }
+    ///
+    /// fn bench(c: &mut Criterion) {
+    ///     c.bench_function("with_drop", move |b| {
+    ///         // This will avoid timing the Vec::drop.
+    ///         b.iter_with_large_drop(|| create_vector())
+    ///     });
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
+    /// ```
+    ///
     #[doc(hidden)]
     pub fn iter_with_large_drop<O, R>(&mut self, mut routine: R)
     where
@@ -325,7 +389,49 @@ impl Bencher {
         self.iter_batched(setup, routine, BatchSize::SmallInput);
     }
 
-    /// TODO
+    /// Times a `routine` that requires some input by generating a batch of input, then timing the
+    /// iteration of the benchmark over the input. See [`BatchSize`](struct.BatchSize.html) for
+    /// details on choosing the batch size. Use this when the routine must consume its input.
+    ///
+    /// For example, use this loop to benchmark sorting algorithms, because they require unsorted
+    /// data on each iteration.
+    ///
+    /// # Timing model
+    ///
+    /// ```text
+    /// elapsed = (Instant::now * num_batches) + (iters * (routine + O::drop)) + Vec::extend
+    /// ```
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// #[macro_use] extern crate criterion;
+    ///
+    /// use criterion::*;
+    ///
+    /// fn create_scrambled_data() -> Vec<u64> {
+    ///     # vec![]
+    ///     // ...
+    /// }
+    ///
+    /// // The sorting algorithm to test
+    /// fn sort(data: &mut [u64]) {
+    ///     // ...
+    /// }
+    ///
+    /// fn bench(c: &mut Criterion) {
+    ///     let data = create_scrambled_data();
+    ///
+    ///     c.bench_function("with_setup", move |b| {
+    ///         // This will avoid timing the to_vec call.
+    ///         b.iter_batched(|| data.clone(), |mut data| sort(&mut data))
+    ///     });
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
+    /// ```
+    ///
     #[inline(never)]
     pub fn iter_batched<I, O, S, R>(&mut self, mut setup: S, mut routine: R, size: BatchSize)
     where
@@ -366,7 +472,50 @@ impl Bencher {
         }
     }
 
-    /// TODO
+    /// Times a `routine` that requires some input by generating a batch of input, then timing the
+    /// iteration of the benchmark over the input. See [`BatchSize`](struct.BatchSize.html) for
+    /// details on choosing the batch size. Use this when the routine should accept the input by
+    /// mutable reference.
+    ///
+    /// For example, use this loop to benchmark sorting algorithms, because they require unsorted
+    /// data on each iteration.
+    ///
+    /// # Timing model
+    ///
+    /// ```text
+    /// elapsed = (Instant::now * num_batches) + (iters * routine) + Vec::extend
+    /// ```
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// #[macro_use] extern crate criterion;
+    ///
+    /// use criterion::*;
+    ///
+    /// fn create_scrambled_data() -> Vec<u64> {
+    ///     # vec![]
+    ///     // ...
+    /// }
+    ///
+    /// // The sorting algorithm to test
+    /// fn sort(data: &mut [u64]) {
+    ///     // ...
+    /// }
+    ///
+    /// fn bench(c: &mut Criterion) {
+    ///     let data = create_scrambled_data();
+    ///
+    ///     c.bench_function("with_setup", move |b| {
+    ///         // This will avoid timing the to_vec call.
+    ///         b.iter_batched(|| data.clone(), |mut data| sort(&mut data))
+    ///     });
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
+    /// ```
+    ///
     #[inline(never)]
     pub fn iter_batched_ref<I, O, S, R>(&mut self, mut setup: S, mut routine: R, size: BatchSize)
     where

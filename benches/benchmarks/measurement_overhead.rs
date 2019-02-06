@@ -12,9 +12,6 @@ fn some_benchmark(c: &mut Criterion) {
             .with_function("iter_batched_small_input", |b| {
                 b.iter_batched(|| (), |_| 1, BatchSize::SmallInput)
             })
-            .with_function("iter_batched_medium_input", |b| {
-                b.iter_batched(|| (), |_| 1, BatchSize::MediumInput)
-            })
             .with_function("iter_batched_large_input", |b| {
                 b.iter_batched(|| (), |_| 1, BatchSize::LargeInput)
             })
@@ -23,9 +20,6 @@ fn some_benchmark(c: &mut Criterion) {
             })
             .with_function("iter_batched_ref_small_input", |b| {
                 b.iter_batched_ref(|| (), |_| 1, BatchSize::SmallInput)
-            })
-            .with_function("iter_batched_ref_medium_input", |b| {
-                b.iter_batched_ref(|| (), |_| 1, BatchSize::MediumInput)
             })
             .with_function("iter_batched_ref_large_input", |b| {
                 b.iter_batched_ref(|| (), |_| 1, BatchSize::LargeInput)
