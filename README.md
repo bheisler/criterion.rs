@@ -7,7 +7,9 @@
     |
     <a href="https://bheisler.github.io/criterion.rs/book/index.html">User Guide</a>
     |
-    <a href="https://bheisler.github.io/criterion.rs/criterion/">API Documentation</a>
+    <a href="https://bheisler.github.io/criterion.rs/criterion/">Master API Docs</a>
+    |
+    <a href="https://docs.rs/crate/criterion/">Released API Docs</a>
     |
     <a href="https://github.com/bheisler/criterion.rs/blob/master/CHANGELOG.md">Changelog</a>
 </div>
