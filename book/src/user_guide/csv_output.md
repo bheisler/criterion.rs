@@ -69,7 +69,7 @@ benchmarks. In this case, there is no parameter so the value is the empty string
  - `iteration_count` - The number of times the benchmark was iterated for this sample.
  - `sample_time_nanos` - The time taken by the measurement for this sample, in nanoseconds. Note
 that this is the time for the whole sample, not the time-per-iteration (see 
-[Analysis Process](/analysis.html#measurement) for more detail). To calculate the time-per-iteration,
+[Analysis Process](../analysis.md#measurement) for more detail). To calculate the time-per-iteration,
 use `sample_time_nanos/iteration_count`.
 
 As you can see, this is the raw measurements taken by the Criterion.rs benchmark process. There is

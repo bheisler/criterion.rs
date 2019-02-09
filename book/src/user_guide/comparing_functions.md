@@ -44,7 +44,7 @@ criterion_group!(benches, bench_fibs);
 criterion_main!(benches);
 ```
 
-These are the same two fibonacci functions from the [Getting Started](./getting_started.html) page. The difference here is that we import the [ParameterizedBenchmark type](http://bheisler.github.io/criterion.rs/criterion/struct.ParameterizedBenchmark.html) as well.
+These are the same two fibonacci functions from the [Getting Started](../getting_started.md) page. The difference here is that we import the [ParameterizedBenchmark type](http://bheisler.github.io/criterion.rs/criterion/struct.ParameterizedBenchmark.html) as well.
 
 ```rust
 fn bench_fibs(c: &mut Criterion) {
