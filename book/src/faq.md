@@ -110,13 +110,13 @@ Found 5 outliers among 100 measurements (5.00%)
   2 (2.00%) high severe
 ```
 
-2.714 microseconds/10000 gives 271.4 picoseconds, or pretty much the same
-result. Interestingly, this is slightly more than one cycle of my 4th-gen Core
-i7's maximum clock frequency of 4.4 GHz, which shows how good the pipelining is
-on modern CPU's. Regardless, Criterion.rs is able to accurately measure
-functions all the way down to single instructions. See the [Analysis
-Process](./analysis.md) page for more details on how Criterion.rs performs its
-measurements.
+2.714 microseconds/10000 gives 271.4 picoseconds, or pretty much the same result. Interestingly,
+this is slightly more than one cycle of my 4th-gen Core i7's maximum clock frequency of 4.4 GHz,
+which shows how good the pipelining is on modern CPUs. Regardless, Criterion.rs is able to
+accurately measure functions all the way down to single instructions. See the [Analysis
+Process](./analysis.md) page for more details on how Criterion.rs performs its measurements, or see
+the [Timing Loops](./user_guide/timing_loops.md) page for details on choosing a timing loop to minimize
+measurement overhead.
 
 ### When Should I Use `criterion::black_box`?
 

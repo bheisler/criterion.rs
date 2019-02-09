@@ -15,5 +15,6 @@
     - [CSV Output](./user_guide/csv_output.md)
     - [Known Limitations](./user_guide/known_limitations.md)
     - [Bencher Compatibility Layer](./user_guide/bencher_compatibility.md)
+    - [Timing Loops](./user_guide/timing_loops.md)
 - [Analysis Process](./analysis.md)
 - [Frequently Asked Questions](./faq.md)
