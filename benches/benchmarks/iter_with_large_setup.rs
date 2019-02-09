@@ -9,6 +9,7 @@ fn large_setup(c: &mut Criterion) {
     c.bench(
         "iter_with_large_setup",
         Benchmark::new("large_setup", |b| {
+            // NOTE: iter_with_large_setup is deprecated. Use iter_batched instead.
             b.iter_with_large_setup(
                 || (0..SIZE).map(|i| i as u8).collect::<Vec<_>>(),
                 |v| v.clone(),
@@ -22,6 +23,7 @@ fn small_setup(c: &mut Criterion) {
     c.bench(
         "iter_with_large_setup",
         Benchmark::new("small_setup", |b| {
+            // NOTE: iter_with_large_setup is deprecated. Use iter_batched instead.
             b.iter_with_large_setup(|| SIZE, |size| size)
         }),
     );

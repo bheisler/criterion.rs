@@ -238,6 +238,20 @@ pub enum BatchSize {
     /// results may vary.
     PerIteration,
 
+    /// `NumBatches` will attempt to divide the iterations up into a given number of batches.
+    /// A larger number of batches (and thus smaller batches) will reduce memory usage but increase
+    /// measurement overhead. This allows the user to choose their own tradeoff between memory usage
+    /// and measurement overhead, but care must be taken in tuning the number of batches. Most
+    /// benchmarks should use `SmallInput` or `LargeInput` instead.
+    NumBatches(u64),
+
+    /// `NumIterations` fixes the batch size to a constant number, specified by the user. This
+    /// allows the user to choose their own tradeoff between overhead and memory usage, but care must
+    /// be taken in tuning the batch size. In general, the measurement overhead of NumIterations
+    /// will be larger than that of `NumBatches`. Most benchmarks should use `SmallInput` or
+    /// `LargeInput` instead.
+    NumIterations(u64),
+
     #[doc(hidden)]
     __NonExhaustive,
 }
@@ -253,6 +267,8 @@ impl BatchSize {
             BatchSize::SmallInput => (iters + 10 - 1) / 10,
             BatchSize::LargeInput => (iters + 1000 - 1) / 1000,
             BatchSize::PerIteration => 1,
+            BatchSize::NumBatches(batches) => (iters + batches - 1) / batches,
+            BatchSize::NumIterations(size) => size,
             BatchSize::__NonExhaustive => panic!("__NonExhaustive is not a valid BatchSize."),
         }
     }
@@ -386,7 +402,7 @@ impl Bencher {
         S: FnMut() -> I,
         R: FnMut(I) -> O,
     {
-        self.iter_batched(setup, routine, BatchSize::SmallInput);
+        self.iter_batched(setup, routine, BatchSize::NumBatches(1));
     }
 
     /// Times a `routine` that requires some input by generating a batch of input, then timing the
@@ -424,7 +440,7 @@ impl Bencher {
     ///
     ///     c.bench_function("with_setup", move |b| {
     ///         // This will avoid timing the to_vec call.
-    ///         b.iter_batched(|| data.clone(), |mut data| sort(&mut data))
+    ///         b.iter_batched(|| data.clone(), |mut data| sort(&mut data), BatchSize::SmallInput)
     ///     });
     /// }
     ///
@@ -440,6 +456,7 @@ impl Bencher {
     {
         self.iterated = true;
         let batch_size = size.iters_per_batch(self.iters);
+        assert!(batch_size != 0, "Batch size must not be zero.");
         self.elapsed = Duration::from_secs(0);
 
         if batch_size == 1 {
@@ -508,7 +525,7 @@ impl Bencher {
     ///
     ///     c.bench_function("with_setup", move |b| {
     ///         // This will avoid timing the to_vec call.
-    ///         b.iter_batched(|| data.clone(), |mut data| sort(&mut data))
+    ///         b.iter_batched(|| data.clone(), |mut data| sort(&mut data), BatchSize::SmallInput)
     ///     });
     /// }
     ///
@@ -524,6 +541,7 @@ impl Bencher {
     {
         self.iterated = true;
         let batch_size = size.iters_per_batch(self.iters);
+        assert!(batch_size != 0, "Batch size must not be zero.");
         self.elapsed = Duration::from_secs(0);
 
         if batch_size == 1 {

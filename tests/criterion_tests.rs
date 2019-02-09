@@ -4,7 +4,7 @@ extern crate serde_json;
 extern crate tempdir;
 extern crate walkdir;
 
-use criterion::{Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
+use criterion::{BatchSize, Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
 use serde_json::value::Value;
 use std::cell::RefCell;
 use std::cmp::max;
@@ -380,6 +380,36 @@ fn test_timing_loops() {
             })
             .with_function("iter_with_large_drop", |b| {
                 b.iter_with_large_drop(|| vec![10; 100])
+            })
+            .with_function("iter_batched_small", |b| {
+                b.iter_batched(|| vec![10], |v| v[0], BatchSize::SmallInput)
+            })
+            .with_function("iter_batched_large", |b| {
+                b.iter_batched(|| vec![10], |v| v[0], BatchSize::LargeInput)
+            })
+            .with_function("iter_batched_per_iteration", |b| {
+                b.iter_batched(|| vec![10], |v| v[0], BatchSize::PerIteration)
+            })
+            .with_function("iter_batched_one_batch", |b| {
+                b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumBatches(1))
+            })
+            .with_function("iter_batched_10_iterations", |b| {
+                b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumIterations(10))
+            })
+            .with_function("iter_batched_ref_small", |b| {
+                b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::SmallInput)
+            })
+            .with_function("iter_batched_ref_large", |b| {
+                b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::LargeInput)
+            })
+            .with_function("iter_batched_ref_per_iteration", |b| {
+                b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::PerIteration)
+            })
+            .with_function("iter_batched_ref_one_batch", |b| {
+                b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::NumBatches(1))
+            })
+            .with_function("iter_batched_ref_10_iterations", |b| {
+                b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::NumIterations(10))
             }),
     );
 }
