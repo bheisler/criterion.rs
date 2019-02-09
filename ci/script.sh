@@ -14,6 +14,7 @@ elif [ "$DOCS" = "yes" ]; then
     cd book
     mdbook build
     cd ..
+    cp -r book/src/user_guide/html_report book/book/user_guide/html_report
     cp -r book/book/ target/doc/book/
     travis-cargo doc-upload || true
 elif [ "$RUSTFMT" = "yes" ]; then
