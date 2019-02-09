@@ -2,3 +2,8 @@
 title = "Criterion.rs Documentation"
 description = "User Guide and Other Prose Documentation For Criterion.rs"
 author = "Brook Heisler"
+
+[output.html]
+
+#[output.linkcheck]
+#follow-web-links = true
