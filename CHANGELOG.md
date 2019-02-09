@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.2.10] - 2019-02-09
 ### Added
 - Added `iter_batched/iter_batched_ref` timing loops, which allow for setup (like 
   `iter_with_setup/iter_with_large_setup`) and exclude drop (like `iter_with_large_drop`) but
@@ -255,3 +257,4 @@ more details
 [0.2.7]: https://github.com/bheisler/criterion.rs/compare/0.2.6...0.2.7
 [0.2.8]: https://github.com/bheisler/criterion.rs/compare/0.2.7...0.2.8
 [0.2.9]: https://github.com/bheisler/criterion.rs/compare/0.2.8...0.2.9
+[0.2.10]: https://github.com/bheisler/criterion.rs/compare/0.2.9...0.2.10

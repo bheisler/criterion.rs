@@ -1,7 +1,7 @@
 [package]
 authors = ["Jorge Aparicio <japaricious@gmail.com>", "Brook Heisler <brookheisler@gmail.com>"]
 name = "criterion"
-version = "0.2.9"
+version = "0.2.10"
 
 description = "Statistics-driven micro-benchmarking library"
 homepage = "https://bheisler.github.io/criterion.rs/book/index.html"
@@ -10,6 +10,7 @@ readme = "README.md"
 keywords = ["criterion", "benchmark"]
 categories = ["development-tools::profiling"]
 license = "Apache-2.0/MIT"
+exclude = ["book/*"]
 
 [dependencies]
 lazy_static = "1.2"
