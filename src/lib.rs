@@ -972,7 +972,7 @@ scripts alongside the generated plots.
                 enable_text_coloring = false;
                 enable_text_overwrite = false;
             }
-            _ => enable_text_coloring = cfg!(unix) && stdout_isatty,
+            _ => enable_text_coloring = stdout_isatty,
         }
 
         if matches.is_present("noplot") || matches.is_present("test") {
