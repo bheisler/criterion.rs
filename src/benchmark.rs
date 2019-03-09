@@ -3,7 +3,6 @@ use program::CommandFactory;
 use report::{BenchmarkId, ReportContext};
 use routine::{Function, Routine};
 use std::cell::RefCell;
-use std::collections::HashSet;
 use std::fmt::Debug;
 use std::marker::Sized;
 use std::process::Command;
@@ -389,7 +388,6 @@ impl BenchmarkDefinition for Benchmark {
 
         let mut all_ids = vec![];
         let mut any_matched = false;
-        let mut all_titles = HashSet::new();
 
         for routine in self.routines {
             let function_id = if num_routines == 1 && group_id == routine.id {
@@ -407,8 +405,8 @@ impl BenchmarkDefinition for Benchmark {
 
             id.ensure_directory_name_unique(&c.all_directories);
             c.all_directories.insert(id.as_directory_name().to_owned());
-            id.ensure_title_unique(&all_titles);
-            all_titles.insert(id.as_title().to_owned());
+            id.ensure_title_unique(&c.all_titles);
+            c.all_titles.insert(id.as_title().to_owned());
 
             if c.filter_matches(id.id()) {
                 any_matched = true;
@@ -654,7 +652,6 @@ where
 
         let mut all_ids = vec![];
         let mut any_matched = false;
-        let mut all_titles = HashSet::new();
 
         for routine in self.routines {
             for value in &self.values {
@@ -680,8 +677,8 @@ where
 
                 id.ensure_directory_name_unique(&c.all_directories);
                 c.all_directories.insert(id.as_directory_name().to_owned());
-                id.ensure_title_unique(&all_titles);
-                all_titles.insert(id.as_title().to_owned());
+                id.ensure_title_unique(&c.all_titles);
+                c.all_titles.insert(id.as_title().to_owned());
 
                 if c.filter_matches(id.id()) {
                     any_matched = true;

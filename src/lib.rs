@@ -622,6 +622,7 @@ pub struct Criterion {
     test_mode: bool,
     list_mode: bool,
     all_directories: HashSet<String>,
+    all_titles: HashSet<String>,
 }
 
 impl Default for Criterion {
@@ -670,6 +671,7 @@ impl Default for Criterion {
             list_mode: false,
             output_directory,
             all_directories: HashSet::new(),
+            all_titles: HashSet::new(),
         }
     }
 }
