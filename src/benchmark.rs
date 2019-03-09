@@ -90,7 +90,7 @@ pub struct Benchmark {
 /// used outside of Criterion.rs.
 pub trait BenchmarkDefinition: Sized {
     #[doc(hidden)]
-    fn run(self, group_id: &str, c: &Criterion);
+    fn run(self, group_id: &str, c: &mut Criterion);
 }
 
 macro_rules! benchmark_config {
@@ -376,7 +376,7 @@ impl Benchmark {
 }
 
 impl BenchmarkDefinition for Benchmark {
-    fn run(self, group_id: &str, c: &Criterion) {
+    fn run(self, group_id: &str, c: &mut Criterion) {
         let report_context = ReportContext {
             output_directory: c.output_directory.clone(),
             plotting: c.plotting,
@@ -389,7 +389,6 @@ impl BenchmarkDefinition for Benchmark {
 
         let mut all_ids = vec![];
         let mut any_matched = false;
-        let mut all_directories = HashSet::new();
         let mut all_titles = HashSet::new();
 
         for routine in self.routines {
@@ -406,8 +405,8 @@ impl BenchmarkDefinition for Benchmark {
                 self.throughput.clone(),
             );
 
-            id.ensure_directory_name_unique(&all_directories);
-            all_directories.insert(id.as_directory_name().to_owned());
+            id.ensure_directory_name_unique(&c.all_directories);
+            c.all_directories.insert(id.as_directory_name().to_owned());
             id.ensure_title_unique(&all_titles);
             all_titles.insert(id.as_title().to_owned());
 
@@ -641,7 +640,7 @@ impl<T> BenchmarkDefinition for ParameterizedBenchmark<T>
 where
     T: Debug + 'static,
 {
-    fn run(self, group_id: &str, c: &Criterion) {
+    fn run(self, group_id: &str, c: &mut Criterion) {
         let report_context = ReportContext {
             output_directory: c.output_directory.clone(),
             plotting: c.plotting,
@@ -655,7 +654,6 @@ where
 
         let mut all_ids = vec![];
         let mut any_matched = false;
-        let mut all_directories = HashSet::new();
         let mut all_titles = HashSet::new();
 
         for routine in self.routines {
@@ -680,8 +678,8 @@ where
                     throughput.clone(),
                 );
 
-                id.ensure_directory_name_unique(&all_directories);
-                all_directories.insert(id.as_directory_name().to_owned());
+                id.ensure_directory_name_unique(&c.all_directories);
+                c.all_directories.insert(id.as_directory_name().to_owned());
                 id.ensure_title_unique(&all_titles);
                 all_titles.insert(id.as_title().to_owned());
 

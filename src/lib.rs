@@ -98,7 +98,7 @@ mod plot;
 mod html;
 
 use std::cell::RefCell;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::default::Default;
 use std::fmt;
 use std::iter::IntoIterator;
@@ -621,6 +621,7 @@ pub struct Criterion {
     profile_time: Option<Duration>,
     test_mode: bool,
     list_mode: bool,
+    all_directories: HashSet<String>,
 }
 
 impl Default for Criterion {
@@ -668,6 +669,7 @@ impl Default for Criterion {
             test_mode: false,
             list_mode: false,
             output_directory,
+            all_directories: HashSet::new(),
         }
     }
 }
