@@ -475,14 +475,14 @@ impl Bencher {
             while iteration_counter < self.iters {
                 let batch_size = ::std::cmp::min(batch_size, self.iters - iteration_counter);
 
-                let inputs = (0..batch_size).map(|_| setup()).collect::<Vec<_>>();
+                let inputs = black_box((0..batch_size).map(|_| setup()).collect::<Vec<_>>());
                 let mut outputs = Vec::with_capacity(batch_size as usize);
 
                 let start = Instant::now();
-                outputs.extend(inputs.into_iter().map(|i| black_box(routine(i))));
+                outputs.extend(inputs.into_iter().map(&mut routine));
                 self.elapsed += start.elapsed();
 
-                drop(outputs);
+                black_box(outputs);
 
                 iteration_counter += batch_size;
             }
@@ -561,15 +561,14 @@ impl Bencher {
             while iteration_counter < self.iters {
                 let batch_size = ::std::cmp::min(batch_size, self.iters - iteration_counter);
 
-                let mut inputs = (0..batch_size).map(|_| setup()).collect::<Vec<_>>();
+                let mut inputs = black_box((0..batch_size).map(|_| setup()).collect::<Vec<_>>());
                 let mut outputs = Vec::with_capacity(batch_size as usize);
 
                 let start = Instant::now();
-                outputs.extend(inputs.iter_mut().map(|i| black_box(routine(i))));
+                outputs.extend(inputs.iter_mut().map(&mut routine));
                 self.elapsed += start.elapsed();
 
-                drop(outputs);
-                drop(inputs);
+                black_box(outputs);
 
                 iteration_counter += batch_size;
             }
