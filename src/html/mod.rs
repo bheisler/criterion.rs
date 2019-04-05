@@ -244,7 +244,7 @@ impl<'a> BenchmarkGroup<'a> {
         for value in values.iter() {
             let row = function_ids
                 .iter()
-                .map(|f| individual_links.remove(&(*f, *value)).unwrap())
+                .filter_map(|f| individual_links.remove(&(*f, *value)))
                 .collect::<Vec<_>>();
             value_groups.push(BenchmarkValueGroup {
                 value: value.map(|s| ReportLink::value(output_directory, group_id, s)),
