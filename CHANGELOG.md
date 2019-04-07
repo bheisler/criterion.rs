@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - Fixed panic caused by outdated files after benchmark names or types were changed.
+- Reduced timing overhead of `Criterion::iter_batched/iter_batched_ref`.
 
 ## [0.2.10] - 2019-02-09
 ### Added
