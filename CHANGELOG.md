@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Enabled automatic text-coloring on Windows.
 
+### Fixed
+- Fixed panic caused by outdated files after benchmark names or types were changed.
+
 ## [0.2.10] - 2019-02-09
 ### Added
 - Added `iter_batched/iter_batched_ref` timing loops, which allow for setup (like 
