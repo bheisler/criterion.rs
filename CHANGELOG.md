@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.2.11] - 2019-04-08
 ### Added
 - Enabled automatic text-coloring on Windows.
 
@@ -251,7 +252,7 @@ more details
 - Initial release on Crates.io.
 
 
-[Unreleased]: https://github.com/bheisler/criterion.rs/compare/0.2.8...HEAD
+[Unreleased]: https://github.com/bheisler/criterion.rs/compare/0.2.11...HEAD
 [0.1.1]: https://github.com/bheisler/criterion.rs/compare/0.1.0...0.1.1
 [0.1.2]: https://github.com/bheisler/criterion.rs/compare/0.1.1...0.1.2
 [0.2.0]: https://github.com/bheisler/criterion.rs/compare/0.1.2...0.2.0
@@ -265,3 +266,4 @@ more details
 [0.2.8]: https://github.com/bheisler/criterion.rs/compare/0.2.7...0.2.8
 [0.2.9]: https://github.com/bheisler/criterion.rs/compare/0.2.8...0.2.9
 [0.2.10]: https://github.com/bheisler/criterion.rs/compare/0.2.9...0.2.10
+[0.2.11]: https://github.com/bheisler/criterion.rs/compare/0.2.10...0.2.11
