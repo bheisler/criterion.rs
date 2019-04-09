@@ -69,6 +69,7 @@ Next, define a benchmark by creating a file at `$PROJECT/benches/my_benchmark.rs
 extern crate criterion;
 
 use criterion::Criterion;
+use criterion::black_box;
 
 fn fibonacci(n: u64) -> u64 {
     match n {
@@ -79,7 +80,7 @@ fn fibonacci(n: u64) -> u64 {
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    c.bench_function("fib 20", |b| b.iter(|| fibonacci(20)));
+    c.bench_function("fib 20", |b| b.iter(|| fibonacci(black_box(20))));
 }
 
 criterion_group!(benches, criterion_benchmark);

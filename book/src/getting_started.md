@@ -24,6 +24,7 @@ As an example, we'll benchmark an implementation of the Fibonacci function. Crea
 extern crate criterion;
 
 use criterion::Criterion;
+use criterion::black_box;
 
 fn fibonacci(n: u64) -> u64 {
     match n {
@@ -34,7 +35,7 @@ fn fibonacci(n: u64) -> u64 {
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    c.bench_function("fib 20", |b| b.iter(|| fibonacci(20)));
+    c.bench_function("fib 20", |b| b.iter(|| fibonacci(black_box(20))));
 }
 
 criterion_group!(benches, criterion_benchmark);
@@ -96,11 +97,11 @@ fn criterion_benchmark(c: &mut Criterion) {
 Here we create a function to contain our benchmark code. The name of the benchmark function doesn't matter, but it should be clear and understandable.
 
 ```rust
-    c.bench_function("fib 20", |b| b.iter(|| fibonacci(20)));
+    c.bench_function("fib 20", |b| b.iter(|| fibonacci(black_box(20))));
 }
 ```
 
-This is where the real work happens. The `bench_function` method defines a benchmark with a name and a closure. The name should be unique among all of the benchmarks for your project. The closure must accept one argument, a [Bencher](http://bheisler.github.io/criterion.rs/criterion/struct.Bencher.html). The bencher performs the benchmark - in this case, it simply calls our `fibonacci` function in a loop. There are a number of other benchmark functions, including the option to benchmark with arguments, to benchmark external programs and to compare the performance of two functions. See the API documentation for details on all of the different benchmarking options.
+This is where the real work happens. The `bench_function` method defines a benchmark with a name and a closure. The name should be unique among all of the benchmarks for your project. The closure must accept one argument, a [Bencher](http://bheisler.github.io/criterion.rs/criterion/struct.Bencher.html). The bencher performs the benchmark - in this case, it simply calls our `fibonacci` function in a loop. There are a number of other benchmark functions, including the option to benchmark with arguments, to benchmark external programs and to compare the performance of two functions. See the API documentation for details on all of the different benchmarking options. Using the `black_box` function stops the compiler from constant-folding away the whole function and replacing it with a constant.
 
 ```rust
 criterion_group!(benches, criterion_benchmark);

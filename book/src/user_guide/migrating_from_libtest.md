@@ -11,6 +11,7 @@ We'll start with this benchmark as an example:
 #![feature(test)]
 extern crate test;
 use test::Bencher;
+use test::black_box;
 
 fn fibonacci(n: u64) -> u64 {
     match n {
@@ -22,7 +23,7 @@ fn fibonacci(n: u64) -> u64 {
 
 #[bench]
 fn bench_fib(b: &mut Bencher) {
-    b.iter(|| fibonacci(20));
+    b.iter(|| fibonacci(black_box(20)));
 }
 ```
 
@@ -50,6 +51,7 @@ The next step is to update the imports:
 #[macro_use]
 extern crate criterion;
 use criterion::Criterion;
+use criterion::black_box;
 ```
 
 Then, we can change the `bench_fib` function. Remove the `#[bench]` and change
@@ -58,7 +60,7 @@ change as well:
 
 ```rust
 fn bench_fib(c: &mut Criterion) {
-    c.bench_function("fib 20", |b| b.iter(|| fibonacci(20)));
+    c.bench_function("fib 20", |b| b.iter(|| fibonacci(black_box(20))));
 }
 ```
 
@@ -76,6 +78,7 @@ And that's it! The complete migrated benchmark code is below:
 #[macro_use]
 extern crate criterion;
 use criterion::Criterion;
+use criterion::black_box;
 
 fn fibonacci(n: u64) -> u64 {
     match n {
@@ -86,7 +89,7 @@ fn fibonacci(n: u64) -> u64 {
 }
 
 fn bench_fib(c: &mut Criterion) {
-    c.bench_function("fib 20", |b| b.iter(|| fibonacci(20)));
+    c.bench_function("fib 20", |b| b.iter(|| fibonacci(black_box(20))));
 }
 
 criterion_group!(benches, bench_fib);
