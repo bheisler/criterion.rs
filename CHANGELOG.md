@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+- Fixed possible invalid file name error on Windows
+
 ## [0.2.11] - 2019-04-08
 ### Added
 - Enabled automatic text-coloring on Windows.
