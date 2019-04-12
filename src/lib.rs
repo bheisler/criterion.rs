@@ -118,6 +118,11 @@ use html::Html;
 
 pub use benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
 
+extern crate perfcnt;
+
+use perfcnt::linux::{HardwareEventType, PerfCounterBuilderLinux};
+use perfcnt::{AbstractPerfCounter, PerfCounter};
+
 lazy_static! {
     static ref DEBUG_ENABLED: bool = { std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG") };
 }
@@ -273,6 +278,11 @@ impl BatchSize {
         }
     }
 }
+/// Container for linux Perf counters
+#[derive(Default, Clone, Copy)]
+pub struct PerfCnt {
+    cycles: u64,
+}
 
 /// Timer struct to iterate a benchmarked function and measure the runtime.
 ///
@@ -293,6 +303,7 @@ pub struct Bencher {
     iterated: bool,
     iters: u64,
     elapsed: Duration,
+    perf: PerfCnt,
 }
 impl Bencher {
     /// Times a `routine` by executing it many times and timing the total elapsed time.
@@ -463,9 +474,18 @@ impl Bencher {
             for _ in 0..self.iters {
                 let mut input = black_box(setup());
 
+                let mut pc: PerfCounter =
+                    PerfCounterBuilderLinux::from_hardware_event(HardwareEventType::CacheMisses)
+                        .exclude_kernel()
+                        .exclude_idle()
+                        .finish()
+                        .unwrap();
                 let start = Instant::now();
+                pc.start();
                 let output = routine(input);
+                pc.stop();
                 self.elapsed += start.elapsed();
+                self.perf.cycles += pc.read().unwrap();
 
                 drop(black_box(output));
             }

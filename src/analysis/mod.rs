@@ -74,8 +74,8 @@ pub(crate) fn common<T>(
         return;
     }
 
-    let (iters, times) = routine.sample(id, config, criterion, report_context, parameter);
-
+    let (iters, times, perf) = routine.sample(id, config, criterion, report_context, parameter);
+    let cycles: Vec<f64> = perf.iter().map(|p| p.cycles as f64).collect();
     criterion.report.analysis(id, report_context);
 
     let avg_times = iters
@@ -84,6 +84,13 @@ pub(crate) fn common<T>(
         .map(|(&iters, &elapsed)| elapsed / iters)
         .collect::<Vec<f64>>();
     let avg_times = Sample::new(&avg_times);
+
+    let avg_cycles = iters
+        .iter()
+        .zip(perf.iter())
+        .map(|(&iters, &perf)| perf.cycles as f64 / iters)
+        .collect::<Vec<f64>>();
+    let avg_cycles = Sample::new(&avg_cycles);
 
     log_if_err!(fs::mkdirp(&format!(
         "{}/{}/new",
@@ -94,9 +101,9 @@ pub(crate) fn common<T>(
     let data = Data::new(&iters, &times);
     let labeled_sample = outliers(id, &criterion.output_directory, avg_times);
     let (distribution, slope) = regression(&data, config);
-    let (mut distributions, mut estimates) = estimates(avg_times, config);
+    let (mut distributions, mut estimates_res) = estimates(avg_times, config);
 
-    estimates.insert(Statistic::Slope, slope);
+    estimates_res.insert(Statistic::Slope, slope);
     distributions.insert(Statistic::Slope, distribution);
 
     log_if_err!(fs::save(
@@ -108,7 +115,7 @@ pub(crate) fn common<T>(
         ),
     ));
     log_if_err!(fs::save(
-        &estimates,
+        &estimates_res,
         &format!(
             "{}/{}/new/estimates.json",
             criterion.output_directory,
@@ -160,7 +167,7 @@ pub(crate) fn common<T>(
     let measurement_data = ::report::MeasurementData {
         data: Data::new(&*iters, &*times),
         avg_times: labeled_sample,
-        absolute_estimates: estimates.clone(),
+        absolute_estimates: estimates_res.clone(),
         distributions,
         comparison: compare_data,
         throughput,
@@ -169,6 +176,27 @@ pub(crate) fn common<T>(
     criterion
         .report
         .measurement_complete(id, report_context, &measurement_data);
+
+    let data = Data::new(&iters, &cycles);
+    let labeled_sample = outliers(id, &criterion.output_directory, avg_cycles);
+    let (distribution, slope) = regression(&data, config);
+    let (mut perf_distributions, mut perf_estimates) = estimates(avg_cycles, config);
+
+    perf_estimates.insert(Statistic::Slope, slope);
+    perf_distributions.insert(Statistic::Slope, distribution);
+
+    let perf_measurement_data = ::report::MeasurementData {
+        data: Data::new(&*iters, &*cycles),
+        avg_times: labeled_sample,
+        absolute_estimates: perf_estimates.clone(),
+        distributions: perf_distributions,
+        comparison: None,
+        throughput: None,
+    };
+
+    criterion
+        .report
+        .measurement_complete(id, report_context, &perf_measurement_data);
 
     log_if_err!(fs::save(
         &id,

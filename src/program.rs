@@ -5,7 +5,7 @@ use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, Stdio};
 use std::time::{Duration, Instant};
 
 use routine::Routine;
-use DurationExt;
+use {DurationExt, PerfCnt};
 
 // A two-way channel to the standard streams of a child process
 pub struct Program {
@@ -73,7 +73,7 @@ impl Program {
         }
     }
 
-    fn bench(&mut self, iters: &[u64]) -> Vec<f64> {
+    fn bench(&mut self, iters: &[u64]) -> Vec<(f64, PerfCnt)> {
         let mut n = 0;
         for iters in iters {
             self.send(iters);
@@ -86,7 +86,7 @@ impl Program {
                 let msg = msg.trim();
 
                 let elapsed: u64 = msg.parse().expect("Couldn't parse program output");
-                elapsed as f64
+                (elapsed as f64, PerfCnt::default())
             })
             .collect()
     }
@@ -115,7 +115,12 @@ impl Routine<()> for Command {
         Some(Program::spawn(self))
     }
 
-    fn bench(&mut self, program: &mut Option<Program>, iters: &[u64], _: &()) -> Vec<f64> {
+    fn bench(
+        &mut self,
+        program: &mut Option<Program>,
+        iters: &[u64],
+        _: &(),
+    ) -> Vec<(f64, PerfCnt)> {
         let program = program.as_mut().unwrap();
         program.bench(iters)
     }
@@ -159,7 +164,12 @@ where
         Some(Program::spawn(&mut command))
     }
 
-    fn bench(&mut self, program: &mut Option<Program>, iters: &[u64], _: &T) -> Vec<f64> {
+    fn bench(
+        &mut self,
+        program: &mut Option<Program>,
+        iters: &[u64],
+        _: &T,
+    ) -> Vec<(f64, PerfCnt)> {
         let program = program.as_mut().unwrap();
         program.bench(iters)
     }

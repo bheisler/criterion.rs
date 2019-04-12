@@ -33,6 +33,7 @@ rayon = "1.0.3"
 # These are needed for the minimal-versions build
 rayon-core = ">=1.4.1"
 libc = ">=0.1.5"
+perfcnt = "0.4"
 
 [dev-dependencies]
 tempdir = "0.3.7"

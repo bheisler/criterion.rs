@@ -4,14 +4,19 @@ use std::time::{Duration, Instant};
 use program::Program;
 use report::{BenchmarkId, ReportContext};
 use std::marker::PhantomData;
-use {Bencher, Criterion, DurationExt};
+use {Bencher, Criterion, DurationExt, PerfCnt};
 
 /// PRIVATE
 pub trait Routine<T> {
     fn start(&mut self, parameter: &T) -> Option<Program>;
 
     /// PRIVATE
-    fn bench(&mut self, m: &mut Option<Program>, iters: &[u64], parameter: &T) -> Vec<f64>;
+    fn bench(
+        &mut self,
+        m: &mut Option<Program>,
+        iters: &[u64],
+        parameter: &T,
+    ) -> Vec<(f64, PerfCnt)>;
     /// PRIVATE
     fn warm_up(&mut self, m: &mut Option<Program>, how_long: Duration, parameter: &T)
         -> (u64, u64);
@@ -69,7 +74,7 @@ pub trait Routine<T> {
         criterion: &Criterion,
         report_context: &ReportContext,
         parameter: &T,
-    ) -> (Box<[f64]>, Box<[f64]>) {
+    ) -> (Box<[f64]>, Box<[f64]>, Box<[PerfCnt]>) {
         let wu = config.warm_up_time;
         let m_ns = config.measurement_time.to_nanos();
 
@@ -95,11 +100,16 @@ pub trait Routine<T> {
         criterion
             .report
             .measurement_start(id, report_context, n, m_ns, m_iters.iter().sum());
-        let m_elapsed = self.bench(&mut m, &m_iters, parameter);
-
+        let m_results = self.bench(&mut m, &m_iters, parameter);
+        let m_elapsed: Vec<f64> = m_results.iter().map(|(e, _)| *e).collect();
+        let m_perf: Vec<PerfCnt> = m_results.iter().map(|(_, p)| *p).collect();
         let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();
 
-        (m_iters_f.into_boxed_slice(), m_elapsed.into_boxed_slice())
+        (
+            m_iters_f.into_boxed_slice(),
+            m_elapsed.into_boxed_slice(),
+            m_perf.into_boxed_slice(),
+        )
     }
 }
 
@@ -130,13 +140,19 @@ where
         None
     }
 
-    fn bench(&mut self, _: &mut Option<Program>, iters: &[u64], parameter: &T) -> Vec<f64> {
+    fn bench(
+        &mut self,
+        _: &mut Option<Program>,
+        iters: &[u64],
+        parameter: &T,
+    ) -> Vec<(f64, PerfCnt)> {
         let f = &mut self.f;
 
         let mut b = Bencher {
             iterated: false,
             iters: 0,
             elapsed: Duration::from_secs(0),
+            perf: PerfCnt { cycles: 0 },
         };
 
         iters
@@ -145,7 +161,8 @@ where
                 b.iters = *iters;
                 (*f)(&mut b, parameter);
                 b.assert_iterated();
-                b.elapsed.to_nanos() as f64
+                let ns = b.elapsed.to_nanos() as f64;
+                (ns, b.perf)
             })
             .collect()
     }
@@ -161,6 +178,7 @@ where
             iterated: false,
             iters: 1,
             elapsed: Duration::from_secs(0),
+            perf: PerfCnt { cycles: 0 },
         };
 
         let mut total_iters = 0;

@@ -113,7 +113,6 @@ impl BenchmarkId {
         if title != full_id {
             title.push_str("...");
         }
-
         let directory_name = match (&function_id, &value_str) {
             (&Some(ref func), &Some(ref val)) => format!(
                 "{}/{}/{}",
