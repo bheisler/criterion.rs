@@ -791,4 +791,15 @@ mod test {
         assert_eq!("group/function/value_3", new_id.as_directory_name());
         directories.insert(new_id.as_directory_name().to_owned());
     }
+    #[test]
+    fn test_benchmark_id_make_long_directory_name_unique() {
+        let long_name = (0..MAX_DIRECTORY_NAME_LEN).map(|_| 'a').collect::<String>();
+        let existing_id = BenchmarkId::new(long_name, None, None, None);
+        let mut directories = HashSet::new();
+        directories.insert(existing_id.as_directory_name().to_owned());
+
+        let mut new_id = existing_id.clone();
+        new_id.ensure_directory_name_unique(&directories);
+        assert_ne!(existing_id.as_directory_name(), new_id.as_directory_name());
+    }
 }
