@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - Fixed possible invalid file name error on Windows
+- Fixed potential case where data for two different benchmarks would be stored in the same directory.
 
 ## [0.2.11] - 2019-04-08
 ### Added
