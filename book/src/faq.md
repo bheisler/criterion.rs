@@ -64,6 +64,19 @@ for library crates, you could add this to your `Cargo.toml` file:
 bench = false
 ```
 
+If your crate produces one or more binaries as well as a library, you may need to add additional
+records to `Cargo.toml` like this:
+
+```toml
+[[bin]]
+name = "ny-binary"
+path = "src/bin/my-binary.rs"
+bench = false
+```
+
+This is because Cargo automatically discovers some kinds of binaries and it will enable the default
+benchmark harness for these as well.
+
 Of course, this only works if you define all of your benchmarks in the
 `benches` directory.
 
