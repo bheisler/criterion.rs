@@ -102,7 +102,7 @@ where
     for entry in WalkDir::new(directory)
         .into_iter()
         // Ignore errors.
-        .filter_map(|e| e.ok())
+        .filter_map(::std::result::Result::ok)
         .filter(is_benchmark)
     {
         let id: BenchmarkId = load(entry.path())?;
