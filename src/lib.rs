@@ -86,6 +86,7 @@ mod estimate;
 mod format;
 mod fs;
 mod macros;
+mod measurement;
 mod program;
 mod report;
 mod routine;
@@ -106,15 +107,17 @@ use std::default::Default;
 use std::fmt;
 use std::iter::IntoIterator;
 use std::process::Command;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use benchmark::BenchmarkConfig;
 use benchmark::NamedRoutine;
 use csv_report::FileCsvReport;
 use estimate::{Distributions, Estimates, Statistic};
+use measurement::{Measurement, WallTime};
 use plotting::Plotting;
 use report::{CliReport, Report, ReportContext, Reports};
 use routine::Function;
+use std::marker::PhantomData;
 
 #[cfg(feature = "html_reports")]
 use html::Html;
@@ -168,25 +171,29 @@ pub fn black_box<T>(dummy: T) -> T {
 /// Representing a function to benchmark together with a name of that function.
 /// Used together with `bench_functions` to represent one out of multiple functions
 /// under benchmark.
-pub struct Fun<I: fmt::Debug> {
-    f: NamedRoutine<I>,
+pub struct Fun<I: fmt::Debug, M: Measurement + 'static = WallTime> {
+    f: NamedRoutine<I, M>,
+    _phantom: PhantomData<M>,
 }
 
-impl<I> Fun<I>
+impl<I, M: Measurement<Value = Duration>> Fun<I, M>
 where
     I: fmt::Debug + 'static,
 {
     /// Create a new `Fun` given a name and a closure
-    pub fn new<F>(name: &str, f: F) -> Fun<I>
+    pub fn new<F>(name: &str, f: F) -> Fun<I, M>
     where
-        F: FnMut(&mut Bencher, &I) + 'static,
+        F: FnMut(&mut Bencher<M>, &I) + 'static,
     {
         let routine = NamedRoutine {
             id: name.to_owned(),
             f: Box::new(RefCell::new(Function::new(f))),
         };
 
-        Fun { f: routine }
+        Fun {
+            f: routine,
+            _phantom: PhantomData,
+        }
     }
 }
 
@@ -211,8 +218,7 @@ where
 ///
 /// With that said, if the runtime of your function is small relative to the measurement overhead
 /// it will be difficult to take accurate measurements. In this situation, the best option is to use
-/// [`Bencher::iter`](struct.Bencher.html#method.iter_batched_ref) which has next-to-zero measurement
-/// overhead.
+/// [`Bencher::iter`](struct.Bencher.html#method.iter) which has next-to-zero measurement overhead.
 #[derive(Debug, Eq, PartialEq, Copy, Hash, Clone)]
 pub enum BatchSize {
     /// `SmallInput` indicates that the input to the benchmark routine (the value returned from
@@ -291,13 +297,13 @@ impl BatchSize {
 ///   suitable for benchmarking routines which return a value with an expensive `drop` method,
 ///   but are more complex than `iter_with_large_drop`.
 /// * Otherwise, use `iter`.
-#[derive(Clone, Copy)]
-pub struct Bencher {
+pub struct Bencher<'a, M: Measurement = WallTime> {
     iterated: bool,
     iters: u64,
-    elapsed: Duration,
+    value: M::Value,
+    measurement: &'a M,
 }
-impl Bencher {
+impl<'a, M: Measurement> Bencher<'a, M> {
     /// Times a `routine` by executing it many times and timing the total elapsed time.
     ///
     /// Prefer this timing loop when `routine` returns a value that doesn't have a destructor.
@@ -340,11 +346,11 @@ impl Bencher {
         R: FnMut() -> O,
     {
         self.iterated = true;
-        let start = Instant::now();
+        let start = self.measurement.start();
         for _ in 0..self.iters {
             black_box(routine());
         }
-        self.elapsed = start.elapsed();
+        self.value = self.measurement.end(start);
     }
 
     #[doc(hidden)]
@@ -460,15 +466,16 @@ impl Bencher {
         self.iterated = true;
         let batch_size = size.iters_per_batch(self.iters);
         assert!(batch_size != 0, "Batch size must not be zero.");
-        self.elapsed = Duration::from_secs(0);
+        self.value = self.measurement.zero();
 
         if batch_size == 1 {
             for _ in 0..self.iters {
                 let input = black_box(setup());
 
-                let start = Instant::now();
+                let start = self.measurement.start();
                 let output = routine(input);
-                self.elapsed += start.elapsed();
+                let end = self.measurement.end(start);
+                self.value = self.measurement.add(&self.value, &end);
 
                 drop(black_box(output));
             }
@@ -481,9 +488,10 @@ impl Bencher {
                 let inputs = black_box((0..batch_size).map(|_| setup()).collect::<Vec<_>>());
                 let mut outputs = Vec::with_capacity(batch_size as usize);
 
-                let start = Instant::now();
+                let start = self.measurement.start();
                 outputs.extend(inputs.into_iter().map(&mut routine));
-                self.elapsed += start.elapsed();
+                let end = self.measurement.end(start);
+                self.value = self.measurement.add(&self.value, &end);
 
                 black_box(outputs);
 
@@ -545,15 +553,16 @@ impl Bencher {
         self.iterated = true;
         let batch_size = size.iters_per_batch(self.iters);
         assert!(batch_size != 0, "Batch size must not be zero.");
-        self.elapsed = Duration::from_secs(0);
+        self.value = self.measurement.zero();
 
         if batch_size == 1 {
             for _ in 0..self.iters {
                 let mut input = black_box(setup());
 
-                let start = Instant::now();
+                let start = self.measurement.start();
                 let output = routine(&mut input);
-                self.elapsed += start.elapsed();
+                let end = self.measurement.end(start);
+                self.value = self.measurement.add(&self.value, &end);
 
                 drop(black_box(output));
                 drop(black_box(input));
@@ -567,9 +576,10 @@ impl Bencher {
                 let mut inputs = black_box((0..batch_size).map(|_| setup()).collect::<Vec<_>>());
                 let mut outputs = Vec::with_capacity(batch_size as usize);
 
-                let start = Instant::now();
+                let start = self.measurement.start();
                 outputs.extend(inputs.iter_mut().map(&mut routine));
-                self.elapsed += start.elapsed();
+                let end = self.measurement.end(start);
+                self.value = self.measurement.add(&self.value, &end);
 
                 black_box(outputs);
 
@@ -612,7 +622,7 @@ pub enum Baseline {
 /// reported to stdout, stored in files, and plotted
 /// - **Comparison**: The current sample is compared with the sample obtained in the previous
 /// benchmark.
-pub struct Criterion {
+pub struct Criterion<M: Measurement = WallTime> {
     config: BenchmarkConfig,
     plotting: Plotting,
     filter: Option<String>,
@@ -625,6 +635,7 @@ pub struct Criterion {
     list_mode: bool,
     all_directories: HashSet<String>,
     all_titles: HashSet<String>,
+    measurement: M,
 }
 
 impl Default for Criterion {
@@ -674,11 +685,120 @@ impl Default for Criterion {
             output_directory,
             all_directories: HashSet::new(),
             all_titles: HashSet::new(),
+            measurement: WallTime,
         }
     }
 }
 
-impl Criterion {
+impl Criterion<WallTime> {
+    /// Benchmarks an external program
+    ///
+    /// The external program must:
+    ///
+    /// * Read the number of iterations from stdin
+    /// * Execute the routine to benchmark that many times
+    /// * Print the elapsed time (in nanoseconds) to stdout
+    ///
+    /// ```rust,no_run
+    /// # use std::io::{self, BufRead};
+    /// # use std::time::Instant;
+    /// # use std::time::Duration;
+    /// # trait DurationExt { fn to_nanos(&self) -> u64 { 0 } }
+    /// # impl DurationExt for Duration {}
+    /// // Example of an external program that implements this protocol
+    ///
+    /// fn main() {
+    ///     let stdin = io::stdin();
+    ///     let ref mut stdin = stdin.lock();
+    ///
+    ///     // For each line in stdin
+    ///     for line in stdin.lines() {
+    ///         // Parse line as the number of iterations
+    ///         let iters: u64 = line.unwrap().trim().parse().unwrap();
+    ///
+    ///         // Setup
+    ///
+    ///         // Benchmark
+    ///         let start = Instant::now();
+    ///         // Execute the routine "iters" times
+    ///         for _ in 0..iters {
+    ///             // Code to benchmark goes here
+    ///         }
+    ///         let elapsed = start.elapsed();
+    ///
+    ///         // Teardown
+    ///
+    ///         // Report elapsed time in nanoseconds to stdout
+    ///         println!("{}", elapsed.to_nanos());
+    ///     }
+    /// }
+    /// ```
+    #[deprecated(
+        since = "0.2.6",
+        note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
+    )]
+    #[allow(deprecated)]
+    pub fn bench_program(&mut self, id: &str, program: Command) -> &mut Criterion<WallTime> {
+        self.bench(id, Benchmark::new_external(id, program))
+    }
+
+    /// Benchmarks an external program under various inputs
+    ///
+    /// This is a convenience method to execute several related benchmarks. Each benchmark will
+    /// receive the id: `${id}/${input}`.
+    #[deprecated(
+        since = "0.2.6",
+        note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
+    )]
+    #[allow(deprecated)]
+    pub fn bench_program_over_inputs<I, F>(
+        &mut self,
+        id: &str,
+        mut program: F,
+        inputs: I,
+    ) -> &mut Criterion<WallTime>
+    where
+        F: FnMut() -> Command + 'static,
+        I: IntoIterator,
+        I::Item: fmt::Debug + 'static,
+    {
+        self.bench(
+            id,
+            ParameterizedBenchmark::new_external(
+                id,
+                move |i| {
+                    let mut command = program();
+                    command.arg(format!("{:?}", i));
+                    command
+                },
+                inputs,
+            ),
+        )
+    }
+}
+
+impl<M: Measurement> Criterion<M> {
+    // TODO: Add a link to the docs here
+    /// Changes the measurement for the benchmarks run with this runner. See the
+    /// Measurement trait for more details
+    pub fn with_measurement<M2: Measurement>(self, m: M2) -> Criterion<M2> {
+        Criterion {
+            config: self.config,
+            plotting: self.plotting,
+            filter: self.filter,
+            report: self.report,
+            baseline_directory: self.baseline_directory,
+            baseline: self.baseline,
+            profile_time: self.profile_time,
+            test_mode: self.test_mode,
+            list_mode: self.list_mode,
+            output_directory: self.output_directory,
+            all_directories: self.all_directories,
+            all_titles: self.all_titles,
+            measurement: m,
+        }
+    }
+
     /// Changes the default size of the sample for benchmarks run with this runner.
     ///
     /// A bigger sample should yield more accurate results if paired with a sufficiently large
@@ -689,7 +809,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if set to zero or one
-    pub fn sample_size(mut self, n: usize) -> Criterion {
+    pub fn sample_size(mut self, n: usize) -> Criterion<M> {
         assert!(n >= 2);
         if n < 10 {
             println!("Warning: Sample sizes < 10 will be disallowed in Criterion.rs 0.3.0.");
@@ -704,7 +824,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the input duration is zero
-    pub fn warm_up_time(mut self, dur: Duration) -> Criterion {
+    pub fn warm_up_time(mut self, dur: Duration) -> Criterion<M> {
         assert!(dur.to_nanos() > 0);
 
         self.config.warm_up_time = dur;
@@ -721,7 +841,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the input duration in zero
-    pub fn measurement_time(mut self, dur: Duration) -> Criterion {
+    pub fn measurement_time(mut self, dur: Duration) -> Criterion<M> {
         assert!(dur.to_nanos() > 0);
 
         self.config.measurement_time = dur;
@@ -739,7 +859,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the number of resamples is set to zero
-    pub fn nresamples(mut self, n: usize) -> Criterion {
+    pub fn nresamples(mut self, n: usize) -> Criterion<M> {
         assert!(n > 0);
 
         self.config.nresamples = n;
@@ -756,7 +876,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics is the threshold is set to a negative value
-    pub fn noise_threshold(mut self, threshold: f64) -> Criterion {
+    pub fn noise_threshold(mut self, threshold: f64) -> Criterion<M> {
         assert!(threshold >= 0.0);
 
         self.config.noise_threshold = threshold;
@@ -772,7 +892,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the confidence level is set to a value outside the `(0, 1)` range
-    pub fn confidence_level(mut self, cl: f64) -> Criterion {
+    pub fn confidence_level(mut self, cl: f64) -> Criterion<M> {
         assert!(cl > 0.0 && cl < 1.0);
 
         self.config.confidence_level = cl;
@@ -788,7 +908,7 @@ impl Criterion {
     /// # Panics
     ///
     /// Panics if the significance level is set to a value outside the `(0, 1)` range
-    pub fn significance_level(mut self, sl: f64) -> Criterion {
+    pub fn significance_level(mut self, sl: f64) -> Criterion<M> {
         assert!(sl > 0.0 && sl < 1.0);
 
         self.config.significance_level = sl;
@@ -797,7 +917,7 @@ impl Criterion {
 
     /// Enables plotting
     #[cfg(feature = "html_reports")]
-    pub fn with_plots(mut self) -> Criterion {
+    pub fn with_plots(mut self) -> Criterion<M> {
         use criterion_plot::VersionError;
         self.plotting = match criterion_plot::version() {
             Ok(_) => {
@@ -822,12 +942,12 @@ impl Criterion {
 
     /// Enables plotting
     #[cfg(not(feature = "html_reports"))]
-    pub fn with_plots(self) -> Criterion {
+    pub fn with_plots(self) -> Criterion<M> {
         self
     }
 
     /// Disables plotting
-    pub fn without_plots(mut self) -> Criterion {
+    pub fn without_plots(mut self) -> Criterion<M> {
         self.plotting = Plotting::Disabled;
         self
     }
@@ -849,14 +969,14 @@ impl Criterion {
     }
 
     /// Names an explicit baseline and enables overwriting the previous results.
-    pub fn save_baseline(mut self, baseline: String) -> Criterion {
+    pub fn save_baseline(mut self, baseline: String) -> Criterion<M> {
         self.baseline_directory = baseline;
         self.baseline = Baseline::Save;
         self
     }
 
     /// Names an explicit baseline and disables overwriting the previous results.
-    pub fn retain_baseline(mut self, baseline: String) -> Criterion {
+    pub fn retain_baseline(mut self, baseline: String) -> Criterion<M> {
         self.baseline_directory = baseline;
         self.baseline = Baseline::Compare;
         self
@@ -864,7 +984,7 @@ impl Criterion {
 
     /// Filters the benchmarks. Only benchmarks with names that contain the
     /// given string will be executed.
-    pub fn with_filter<S: Into<String>>(mut self, filter: S) -> Criterion {
+    pub fn with_filter<S: Into<String>>(mut self, filter: S) -> Criterion<M> {
         self.filter = Some(filter.into());
 
         self
@@ -872,7 +992,7 @@ impl Criterion {
 
     /// Set the output directory (currently for testing only)
     #[doc(hidden)]
-    pub fn output_directory(mut self, path: &std::path::Path) -> Criterion {
+    pub fn output_directory(mut self, path: &std::path::Path) -> Criterion<M> {
         self.output_directory = path.to_string_lossy().into_owned();
 
         self
@@ -897,7 +1017,7 @@ impl Criterion {
 
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
-    pub fn configure_from_args(mut self) -> Criterion {
+    pub fn configure_from_args(mut self) -> Criterion<M> {
         use clap::{App, Arg};
         let matches = App::new("Criterion Benchmark")
             .arg(Arg::with_name("FILTER")
@@ -1046,7 +1166,11 @@ scripts alongside the generated plots.
             None => true,
         }
     }
-
+}
+impl<M> Criterion<M>
+where
+    M: Measurement<Value = Duration> + 'static,
+{
     /// Benchmarks a function
     ///
     /// # Example
@@ -1068,11 +1192,48 @@ scripts alongside the generated plots.
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion
+    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion<M>
     where
-        F: FnMut(&mut Bencher) + 'static,
+        F: FnMut(&mut Bencher<M>) + 'static,
     {
         self.bench(id, Benchmark::new(id, f))
+    }
+
+    /// Benchmarks a function under various inputs
+    ///
+    /// This is a convenience method to execute several related benchmarks. Each benchmark will
+    /// receive the id: `${id}/${input}`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # #[macro_use] extern crate criterion;
+    /// # use self::criterion::*;
+    ///
+    /// fn bench(c: &mut Criterion) {
+    ///     c.bench_function_over_inputs("from_elem",
+    ///         |b: &mut Bencher, size: &usize| {
+    ///             b.iter(|| vec![0u8; *size]);
+    ///         },
+    ///         vec![1024, 2048, 4096]
+    ///     );
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
+    /// ```
+    pub fn bench_function_over_inputs<I, F>(
+        &mut self,
+        id: &str,
+        f: F,
+        inputs: I,
+    ) -> &mut Criterion<M>
+    where
+        I: IntoIterator,
+        I::Item: fmt::Debug + 'static,
+        F: FnMut(&mut Bencher<M>, &I::Item) + 'static,
+    {
+        self.bench(id, ParameterizedBenchmark::new(id, f, inputs))
     }
 
     /// Benchmarks multiple functions
@@ -1111,7 +1272,12 @@ scripts alongside the generated plots.
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    pub fn bench_functions<I>(&mut self, id: &str, funs: Vec<Fun<I>>, input: I) -> &mut Criterion
+    pub fn bench_functions<I>(
+        &mut self,
+        id: &str,
+        funs: Vec<Fun<I, M>>,
+        input: I,
+    ) -> &mut Criterion<M>
     where
         I: fmt::Debug + 'static,
     {
@@ -1121,123 +1287,6 @@ scripts alongside the generated plots.
         );
 
         self.bench(id, benchmark)
-    }
-
-    /// Benchmarks a function under various inputs
-    ///
-    /// This is a convenience method to execute several related benchmarks. Each benchmark will
-    /// receive the id: `${id}/${input}`.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # #[macro_use] extern crate criterion;
-    /// # use self::criterion::*;
-    ///
-    /// fn bench(c: &mut Criterion) {
-    ///     c.bench_function_over_inputs("from_elem",
-    ///         |b: &mut Bencher, size: &usize| {
-    ///             b.iter(|| vec![0u8; *size]);
-    ///         },
-    ///         vec![1024, 2048, 4096]
-    ///     );
-    /// }
-    ///
-    /// criterion_group!(benches, bench);
-    /// criterion_main!(benches);
-    /// ```
-    pub fn bench_function_over_inputs<I, F>(&mut self, id: &str, f: F, inputs: I) -> &mut Criterion
-    where
-        I: IntoIterator,
-        I::Item: fmt::Debug + 'static,
-        F: FnMut(&mut Bencher, &I::Item) + 'static,
-    {
-        self.bench(id, ParameterizedBenchmark::new(id, f, inputs))
-    }
-
-    /// Benchmarks an external program
-    ///
-    /// The external program must:
-    ///
-    /// * Read the number of iterations from stdin
-    /// * Execute the routine to benchmark that many times
-    /// * Print the elapsed time (in nanoseconds) to stdout
-    ///
-    /// ```rust,no_run
-    /// # use std::io::{self, BufRead};
-    /// # use std::time::Instant;
-    /// # use std::time::Duration;
-    /// # trait DurationExt { fn to_nanos(&self) -> u64 { 0 } }
-    /// # impl DurationExt for Duration {}
-    /// // Example of an external program that implements this protocol
-    ///
-    /// fn main() {
-    ///     let stdin = io::stdin();
-    ///     let ref mut stdin = stdin.lock();
-    ///
-    ///     // For each line in stdin
-    ///     for line in stdin.lines() {
-    ///         // Parse line as the number of iterations
-    ///         let iters: u64 = line.unwrap().trim().parse().unwrap();
-    ///
-    ///         // Setup
-    ///
-    ///         // Benchmark
-    ///         let start = Instant::now();
-    ///         // Execute the routine "iters" times
-    ///         for _ in 0..iters {
-    ///             // Code to benchmark goes here
-    ///         }
-    ///         let elapsed = start.elapsed();
-    ///
-    ///         // Teardown
-    ///
-    ///         // Report elapsed time in nanoseconds to stdout
-    ///         println!("{}", elapsed.to_nanos());
-    ///     }
-    /// }
-    /// ```
-    #[deprecated(
-        since = "0.2.6",
-        note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
-    )]
-    #[allow(deprecated)]
-    pub fn bench_program(&mut self, id: &str, program: Command) -> &mut Criterion {
-        self.bench(id, Benchmark::new_external(id, program))
-    }
-
-    /// Benchmarks an external program under various inputs
-    ///
-    /// This is a convenience method to execute several related benchmarks. Each benchmark will
-    /// receive the id: `${id}/${input}`.
-    #[deprecated(
-        since = "0.2.6",
-        note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
-    )]
-    #[allow(deprecated)]
-    pub fn bench_program_over_inputs<I, F>(
-        &mut self,
-        id: &str,
-        mut program: F,
-        inputs: I,
-    ) -> &mut Criterion
-    where
-        F: FnMut() -> Command + 'static,
-        I: IntoIterator,
-        I::Item: fmt::Debug + 'static,
-    {
-        self.bench(
-            id,
-            ParameterizedBenchmark::new_external(
-                id,
-                move |i| {
-                    let mut command = program();
-                    command.arg(format!("{:?}", i));
-                    command
-                },
-                inputs,
-            ),
-        )
     }
 
     /// Executes the given benchmark. Use this variant to execute benchmarks
@@ -1265,11 +1314,11 @@ scripts alongside the generated plots.
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    pub fn bench<B: BenchmarkDefinition>(
+    pub fn bench<B: BenchmarkDefinition<M>>(
         &mut self,
         group_id: &str,
         benchmark: B,
-    ) -> &mut Criterion {
+    ) -> &mut Criterion<M> {
         benchmark.run(group_id, self);
         self
     }

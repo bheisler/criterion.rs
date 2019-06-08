@@ -1,25 +1,31 @@
 use benchmark::BenchmarkConfig;
 use std::time::{Duration, Instant};
 
+use measurement::Measurement;
 use program::Program;
 use report::{BenchmarkId, ReportContext};
 use std::marker::PhantomData;
 use {Bencher, Criterion, DurationExt};
 
 /// PRIVATE
-pub trait Routine<T> {
+pub trait Routine<M: Measurement, T> {
     fn start(&mut self, parameter: &T) -> Option<Program>;
 
     /// PRIVATE
-    fn bench(&mut self, m: &mut Option<Program>, iters: &[u64], parameter: &T) -> Vec<f64>;
+    fn bench(&mut self, m: &M, p: &mut Option<Program>, iters: &[u64], parameter: &T) -> Vec<f64>;
     /// PRIVATE
-    fn warm_up(&mut self, m: &mut Option<Program>, how_long: Duration, parameter: &T)
-        -> (u64, u64);
+    fn warm_up(
+        &mut self,
+        m: &M,
+        p: &mut Option<Program>,
+        how_long: Duration,
+        parameter: &T,
+    ) -> (u64, u64);
 
     /// PRIVATE
-    fn test(&mut self, parameter: &T) {
-        let mut m = self.start(parameter);
-        self.bench(&mut m, &[1u64], parameter);
+    fn test(&mut self, m: &M, parameter: &T) {
+        let mut p = self.start(parameter);
+        self.bench(m, &mut p, &[1u64], parameter);
     }
 
     /// Iterates the benchmarked function for a fixed length of time, but takes no measurements.
@@ -29,8 +35,9 @@ pub trait Routine<T> {
     /// show the performance of the benchmarked code more clearly as well.
     fn profile(
         &mut self,
+        measurement: &M,
         id: &BenchmarkId,
-        criterion: &Criterion,
+        criterion: &Criterion<M>,
         report_context: &ReportContext,
         time: Duration,
         parameter: &T,
@@ -40,10 +47,11 @@ pub trait Routine<T> {
             .profile(id, report_context, time.to_nanos() as f64);
 
         let time = time.to_nanos();
-        let mut m = self.start(parameter);
+        let mut p = self.start(parameter);
 
         // Get the warmup time for one second
-        let (wu_elapsed, wu_iters) = self.warm_up(&mut m, Duration::from_secs(1), parameter);
+        let (wu_elapsed, wu_iters) =
+            self.warm_up(measurement, &mut p, Duration::from_secs(1), parameter);
         if wu_elapsed >= time {
             return;
         }
@@ -57,16 +65,17 @@ pub trait Routine<T> {
         let iters = remaining / met;
         let iters = iters as u64;
 
-        self.bench(&mut m, &[iters], parameter);
+        self.bench(measurement, &mut p, &[iters], parameter);
 
         criterion.report.terminated(id, report_context);
     }
 
     fn sample(
         &mut self,
+        measurement: &M,
         id: &BenchmarkId,
         config: &BenchmarkConfig,
-        criterion: &Criterion,
+        criterion: &Criterion<M>,
         report_context: &ReportContext,
         parameter: &T,
     ) -> (Box<[f64]>, Box<[f64]>) {
@@ -77,9 +86,9 @@ pub trait Routine<T> {
             .report
             .warmup(id, report_context, wu.to_nanos() as f64);
 
-        let mut m = self.start(parameter);
+        let mut p = self.start(parameter);
 
-        let (wu_elapsed, wu_iters) = self.warm_up(&mut m, wu, parameter);
+        let (wu_elapsed, wu_iters) = self.warm_up(measurement, &mut p, wu, parameter);
 
         // Initial guess for the mean execution time
         let met = wu_elapsed as f64 / wu_iters as f64;
@@ -95,7 +104,7 @@ pub trait Routine<T> {
         criterion
             .report
             .measurement_start(id, report_context, n, m_ns, m_iters.iter().sum());
-        let m_elapsed = self.bench(&mut m, &m_iters, parameter);
+        let m_elapsed = self.bench(measurement, &mut p, &m_iters, parameter);
 
         let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();
 
@@ -103,40 +112,44 @@ pub trait Routine<T> {
     }
 }
 
-pub struct Function<F, T>
+pub struct Function<M: Measurement, F, T>
 where
-    F: FnMut(&mut Bencher, &T),
+    F: FnMut(&mut Bencher<M>, &T),
 {
     f: F,
+    // TODO: Is there some way to remove these?
     _phantom: PhantomData<T>,
+    _phamtom2: PhantomData<M>,
 }
-impl<F, T> Function<F, T>
+impl<M: Measurement, F, T> Function<M, F, T>
 where
-    F: FnMut(&mut Bencher, &T),
+    F: FnMut(&mut Bencher<M>, &T),
 {
-    pub fn new(f: F) -> Function<F, T> {
+    pub fn new(f: F) -> Function<M, F, T> {
         Function {
             f,
             _phantom: PhantomData,
+            _phamtom2: PhantomData,
         }
     }
 }
 
-impl<F, T> Routine<T> for Function<F, T>
+impl<M: Measurement<Value = Duration>, F, T> Routine<M, T> for Function<M, F, T>
 where
-    F: FnMut(&mut Bencher, &T),
+    F: FnMut(&mut Bencher<M>, &T),
 {
     fn start(&mut self, _: &T) -> Option<Program> {
         None
     }
 
-    fn bench(&mut self, _: &mut Option<Program>, iters: &[u64], parameter: &T) -> Vec<f64> {
+    fn bench(&mut self, m: &M, _: &mut Option<Program>, iters: &[u64], parameter: &T) -> Vec<f64> {
         let f = &mut self.f;
 
         let mut b = Bencher {
             iterated: false,
             iters: 0,
-            elapsed: Duration::from_secs(0),
+            value: m.zero(),
+            measurement: m,
         };
 
         iters
@@ -145,13 +158,14 @@ where
                 b.iters = *iters;
                 (*f)(&mut b, parameter);
                 b.assert_iterated();
-                b.elapsed.to_nanos() as f64
+                b.value.to_nanos() as f64
             })
             .collect()
     }
 
     fn warm_up(
         &mut self,
+        m: &M,
         _: &mut Option<Program>,
         how_long: Duration,
         parameter: &T,
@@ -160,7 +174,8 @@ where
         let mut b = Bencher {
             iterated: false,
             iters: 1,
-            elapsed: Duration::from_secs(0),
+            value: m.zero(),
+            measurement: m,
         };
 
         let mut total_iters = 0;

@@ -9,8 +9,10 @@ use stats::{Distribution, Tails};
 
 use benchmark::BenchmarkConfig;
 use estimate::{Distributions, Estimates, Statistic};
+use measurement::Measurement;
 use report::{BenchmarkId, ReportContext};
 use routine::Routine;
+use std::time::Duration;
 use {build_estimates, Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
 use {format, fs};
 
@@ -33,11 +35,11 @@ macro_rules! elapsed {
 mod compare;
 
 // Common analysis procedure
-pub(crate) fn common<T>(
+pub(crate) fn common<M: Measurement<Value = Duration>, T>(
     id: &BenchmarkId,
-    routine: &mut Routine<T>,
+    routine: &mut Routine<M, T>,
     config: &BenchmarkConfig,
-    criterion: &Criterion,
+    criterion: &Criterion<M>,
     report_context: &ReportContext,
     parameter: &T,
     throughput: Option<Throughput>,
@@ -50,7 +52,7 @@ pub(crate) fn common<T>(
 
     // In test mode, run the benchmark exactly once, then exit.
     if criterion.test_mode {
-        routine.test(parameter);
+        routine.test(&criterion.measurement, parameter);
         criterion.report.terminated(id, report_context);
         return;
     }
@@ -70,11 +72,25 @@ pub(crate) fn common<T>(
 
     // In profiling mode, skip all of the analysis.
     if let Some(time) = criterion.profile_time {
-        routine.profile(id, criterion, report_context, time, parameter);
+        routine.profile(
+            &criterion.measurement,
+            id,
+            criterion,
+            report_context,
+            time,
+            parameter,
+        );
         return;
     }
 
-    let (iters, times) = routine.sample(id, config, criterion, report_context, parameter);
+    let (iters, times) = routine.sample(
+        &criterion.measurement,
+        id,
+        config,
+        criterion,
+        report_context,
+        parameter,
+    );
 
     criterion.report.analysis(id, report_context);
 

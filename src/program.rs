@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, Stdio};
 use std::time::{Duration, Instant};
 
+use measurement::WallTime;
 use routine::Routine;
 use DurationExt;
 
@@ -110,18 +111,25 @@ impl Program {
     }
 }
 
-impl Routine<()> for Command {
+impl Routine<WallTime, ()> for Command {
     fn start(&mut self, _: &()) -> Option<Program> {
         Some(Program::spawn(self))
     }
 
-    fn bench(&mut self, program: &mut Option<Program>, iters: &[u64], _: &()) -> Vec<f64> {
+    fn bench(
+        &mut self,
+        _m: &WallTime,
+        program: &mut Option<Program>,
+        iters: &[u64],
+        _: &(),
+    ) -> Vec<f64> {
         let program = program.as_mut().unwrap();
         program.bench(iters)
     }
 
     fn warm_up(
         &mut self,
+        _m: &WallTime,
         program: &mut Option<Program>,
         how_long_ns: Duration,
         _: &(),
@@ -150,7 +158,7 @@ where
     }
 }
 
-impl<F, T> Routine<T> for CommandFactory<F, T>
+impl<F, T> Routine<WallTime, T> for CommandFactory<F, T>
 where
     F: FnMut(&T) -> Command + 'static,
 {
@@ -159,13 +167,20 @@ where
         Some(Program::spawn(&mut command))
     }
 
-    fn bench(&mut self, program: &mut Option<Program>, iters: &[u64], _: &T) -> Vec<f64> {
+    fn bench(
+        &mut self,
+        _m: &WallTime,
+        program: &mut Option<Program>,
+        iters: &[u64],
+        _: &T,
+    ) -> Vec<f64> {
         let program = program.as_mut().unwrap();
         program.bench(iters)
     }
 
     fn warm_up(
         &mut self,
+        _m: &WallTime,
         program: &mut Option<Program>,
         how_long_ns: Duration,
         _: &T,

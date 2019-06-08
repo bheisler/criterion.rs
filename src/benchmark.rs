@@ -1,4 +1,5 @@
 use analysis;
+use measurement::{Measurement, WallTime};
 use program::CommandFactory;
 use report::{BenchmarkId, ReportContext};
 use routine::{Function, Routine};
@@ -63,33 +64,33 @@ impl PartialBenchmarkConfig {
     }
 }
 
-pub struct NamedRoutine<T> {
+pub struct NamedRoutine<T, M: Measurement = WallTime> {
     pub id: String,
-    pub f: Box<RefCell<Routine<T>>>,
+    pub f: Box<RefCell<Routine<M, T>>>,
 }
 
 /// Structure representing a benchmark (or group of benchmarks)
 /// which take one parameter.
-pub struct ParameterizedBenchmark<T: Debug> {
+pub struct ParameterizedBenchmark<T: Debug, M: Measurement = WallTime> {
     config: PartialBenchmarkConfig,
     values: Vec<T>,
-    routines: Vec<NamedRoutine<T>>,
+    routines: Vec<NamedRoutine<T, M>>,
     throughput: Option<Box<Fn(&T) -> Throughput>>,
 }
 
 /// Structure representing a benchmark (or group of benchmarks)
 /// which takes no parameters.
-pub struct Benchmark {
+pub struct Benchmark<M: Measurement = WallTime> {
     config: PartialBenchmarkConfig,
-    routines: Vec<NamedRoutine<()>>,
+    routines: Vec<NamedRoutine<(), M>>,
     throughput: Option<Throughput>,
 }
 
 /// Common trait for `Benchmark` and `ParameterizedBenchmark`. Not intended to be
 /// used outside of Criterion.rs.
-pub trait BenchmarkDefinition: Sized {
+pub trait BenchmarkDefinition<M: Measurement = WallTime>: Sized {
     #[doc(hidden)]
-    fn run(self, group_id: &str, c: &mut Criterion);
+    fn run(self, group_id: &str, c: &mut Criterion<M>);
 }
 
 macro_rules! benchmark_config {
@@ -218,43 +219,7 @@ macro_rules! benchmark_config {
     }
 }
 
-impl Benchmark {
-    benchmark_config!(Benchmark);
-
-    /// Create a new benchmark group and adds the given function to it.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # #[macro_use] extern crate criterion;
-    /// # use criterion::*;
-    ///
-    /// fn bench(c: &mut Criterion) {
-    ///     // One-time setup goes here
-    ///     c.bench(
-    ///         "my_group",
-    ///         Benchmark::new("my_function", |b| b.iter(|| {
-    ///             // Code to benchmark goes here
-    ///         })),
-    ///     );
-    /// }
-    ///
-    /// criterion_group!(benches, bench);
-    /// criterion_main!(benches);
-    /// ```
-    pub fn new<S, F>(id: S, f: F) -> Benchmark
-    where
-        S: Into<String>,
-        F: FnMut(&mut Bencher) + 'static,
-    {
-        Benchmark {
-            config: PartialBenchmarkConfig::default(),
-            routines: vec![],
-            throughput: None,
-        }
-        .with_function(id, f)
-    }
-
+impl Benchmark<WallTime> {
     /// Create a new benchmark group and add the given program to it.
     ///
     /// The external program must:
@@ -301,7 +266,7 @@ impl Benchmark {
         note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
     )]
     #[allow(deprecated)]
-    pub fn new_external<S>(id: S, program: Command) -> Benchmark
+    pub fn new_external<S>(id: S, program: Command) -> Benchmark<WallTime>
     where
         S: Into<String>,
     {
@@ -311,27 +276,6 @@ impl Benchmark {
             throughput: None,
         }
         .with_program(id, program)
-    }
-
-    /// Add a function to the benchmark group.
-    ///
-    /// # Example:
-    /// ```
-    /// # use criterion::Benchmark;
-    /// Benchmark::new("return 10", |b| b.iter(|| 10))
-    ///     .with_function("return 20", |b| b.iter(|| 20));
-    /// ```
-    pub fn with_function<S, F>(mut self, id: S, mut f: F) -> Benchmark
-    where
-        S: Into<String>,
-        F: FnMut(&mut Bencher) + 'static,
-    {
-        let routine = NamedRoutine {
-            id: id.into(),
-            f: Box::new(RefCell::new(Function::new(move |b, _| f(b)))),
-        };
-        self.routines.push(routine);
-        self
     }
 
     /// Add an external program to the benchmark group.
@@ -347,13 +291,75 @@ impl Benchmark {
         since = "0.2.6",
         note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
     )]
-    pub fn with_program<S>(mut self, id: S, program: Command) -> Benchmark
+    pub fn with_program<S>(mut self, id: S, program: Command) -> Benchmark<WallTime>
     where
         S: Into<String>,
     {
         let routine = NamedRoutine {
             id: id.into(),
             f: Box::new(RefCell::new(program)),
+        };
+        self.routines.push(routine);
+        self
+    }
+}
+
+impl<M> Benchmark<M>
+where
+    M: Measurement<Value = Duration> + 'static,
+{
+    benchmark_config!(Benchmark);
+
+    /// Create a new benchmark group and adds the given function to it.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # #[macro_use] extern crate criterion;
+    /// # use criterion::*;
+    ///
+    /// fn bench(c: &mut Criterion) {
+    ///     // One-time setup goes here
+    ///     c.bench(
+    ///         "my_group",
+    ///         Benchmark::new("my_function", |b| b.iter(|| {
+    ///             // Code to benchmark goes here
+    ///         })),
+    ///     );
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
+    /// ```
+    pub fn new<S, F>(id: S, f: F) -> Benchmark<M>
+    where
+        S: Into<String>,
+        F: FnMut(&mut Bencher<M>) + 'static,
+    {
+        Benchmark {
+            config: PartialBenchmarkConfig::default(),
+            routines: vec![],
+            throughput: None,
+        }
+        .with_function(id, f)
+    }
+
+    /// Add a function to the benchmark group.
+    ///
+    /// # Example:
+    /// ```
+    /// # use criterion::Benchmark;
+    /// Benchmark::new("return 10", |b| b.iter(|| 10))
+    ///     .with_function("return 20", |b| b.iter(|| 20));
+    /// ```
+    pub fn with_function<S, F>(mut self, id: S, mut f: F) -> Benchmark<M>
+    where
+        S: Into<String>,
+        F: FnMut(&mut Bencher<M>) + 'static,
+    {
+        let routine = NamedRoutine {
+            id: id.into(),
+            f: Box::new(RefCell::new(Function::new(move |b, _| f(b)))),
         };
         self.routines.push(routine);
         self
@@ -368,14 +374,14 @@ impl Benchmark {
     /// Benchmark::new("strlen", |b| b.iter(|| "foo".len()))
     ///     .throughput(Throughput::Bytes(3));
     /// ```
-    pub fn throughput(mut self, throughput: Throughput) -> Benchmark {
+    pub fn throughput(mut self, throughput: Throughput) -> Benchmark<M> {
         self.throughput = Some(throughput);
         self
     }
 }
 
-impl BenchmarkDefinition for Benchmark {
-    fn run(self, group_id: &str, c: &mut Criterion) {
+impl<M: Measurement<Value = Duration>> BenchmarkDefinition<M> for Benchmark<M> {
+    fn run(self, group_id: &str, c: &mut Criterion<M>) {
         let report_context = ReportContext {
             output_directory: c.output_directory.clone(),
             plotting: c.plotting,
@@ -432,56 +438,11 @@ impl BenchmarkDefinition for Benchmark {
         }
     }
 }
+
 impl<T> ParameterizedBenchmark<T>
 where
     T: Debug + 'static,
 {
-    benchmark_config!(ParameterizedBenchmark);
-
-    /// Create a new parameterized benchmark group and adds the given function
-    /// to it.
-    /// The function under test must follow the setup - bench - teardown pattern:
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # #[macro_use] extern crate criterion;
-    /// # use criterion::*;
-    ///
-    /// fn bench(c: &mut Criterion) {
-    ///     let parameters = vec![1u64, 2u64, 3u64];
-    ///
-    ///     // One-time setup goes here
-    ///     c.bench(
-    ///         "my_group",
-    ///         ParameterizedBenchmark::new(
-    ///             "my_function",
-    ///             |b, param| b.iter(|| {
-    ///                 // Code to benchmark using param goes here
-    ///             }),
-    ///             parameters
-    ///         )
-    ///     );
-    /// }
-    ///
-    /// criterion_group!(benches, bench);
-    /// criterion_main!(benches);
-    /// ```
-    pub fn new<S, F, I>(id: S, f: F, parameters: I) -> ParameterizedBenchmark<T>
-    where
-        S: Into<String>,
-        F: FnMut(&mut Bencher, &T) + 'static,
-        I: IntoIterator<Item = T>,
-    {
-        ParameterizedBenchmark {
-            config: PartialBenchmarkConfig::default(),
-            values: parameters.into_iter().collect(),
-            routines: vec![],
-            throughput: None,
-        }
-        .with_function(id, f)
-    }
-
     /// Create a new parameterized benchmark group and add the given program to it.
     /// The program under test must implement the following protocol:
     ///
@@ -550,40 +511,6 @@ where
         .with_program(id, program)
     }
 
-    pub(crate) fn with_functions(
-        functions: Vec<NamedRoutine<T>>,
-        parameters: Vec<T>,
-    ) -> ParameterizedBenchmark<T> {
-        ParameterizedBenchmark {
-            config: PartialBenchmarkConfig::default(),
-            values: parameters,
-            routines: functions,
-            throughput: None,
-        }
-    }
-
-    /// Add a function to the benchmark group.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use criterion::ParameterizedBenchmark;
-    /// ParameterizedBenchmark::new("times 10", |b, i| b.iter(|| i * 10), vec![1, 2, 3])
-    ///     .with_function("times 20", |b, i| b.iter(|| i * 20));
-    /// ```
-    pub fn with_function<S, F>(mut self, id: S, f: F) -> ParameterizedBenchmark<T>
-    where
-        S: Into<String>,
-        F: FnMut(&mut Bencher, &T) + 'static,
-    {
-        let routine = NamedRoutine {
-            id: id.into(),
-            f: Box::new(RefCell::new(Function::new(f))),
-        };
-        self.routines.push(routine);
-        self
-    }
-
     /// Add an external program to the benchmark group.
     ///
     /// # Example
@@ -615,6 +542,92 @@ where
         self.routines.push(routine);
         self
     }
+}
+
+impl<T, M> ParameterizedBenchmark<T, M>
+where
+    T: Debug + 'static,
+    M: Measurement<Value = Duration> + 'static,
+{
+    benchmark_config!(ParameterizedBenchmark);
+
+    pub(crate) fn with_functions(
+        functions: Vec<NamedRoutine<T, M>>,
+        parameters: Vec<T>,
+    ) -> ParameterizedBenchmark<T, M> {
+        ParameterizedBenchmark {
+            config: PartialBenchmarkConfig::default(),
+            values: parameters,
+            routines: functions,
+            throughput: None,
+        }
+    }
+
+    /// Create a new parameterized benchmark group and adds the given function
+    /// to it.
+    /// The function under test must follow the setup - bench - teardown pattern:
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # #[macro_use] extern crate criterion;
+    /// # use criterion::*;
+    ///
+    /// fn bench(c: &mut Criterion) {
+    ///     let parameters = vec![1u64, 2u64, 3u64];
+    ///
+    ///     // One-time setup goes here
+    ///     c.bench(
+    ///         "my_group",
+    ///         ParameterizedBenchmark::new(
+    ///             "my_function",
+    ///             |b, param| b.iter(|| {
+    ///                 // Code to benchmark using param goes here
+    ///             }),
+    ///             parameters
+    ///         )
+    ///     );
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
+    /// ```
+    pub fn new<S, F, I>(id: S, f: F, parameters: I) -> ParameterizedBenchmark<T, M>
+    where
+        S: Into<String>,
+        F: FnMut(&mut Bencher<M>, &T) + 'static,
+        I: IntoIterator<Item = T>,
+    {
+        ParameterizedBenchmark {
+            config: PartialBenchmarkConfig::default(),
+            values: parameters.into_iter().collect(),
+            routines: vec![],
+            throughput: None,
+        }
+        .with_function(id, f)
+    }
+
+    /// Add a function to the benchmark group.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use criterion::ParameterizedBenchmark;
+    /// ParameterizedBenchmark::new("times 10", |b, i| b.iter(|| i * 10), vec![1, 2, 3])
+    ///     .with_function("times 20", |b, i| b.iter(|| i * 20));
+    /// ```
+    pub fn with_function<S, F>(mut self, id: S, f: F) -> ParameterizedBenchmark<T, M>
+    where
+        S: Into<String>,
+        F: FnMut(&mut Bencher<M>, &T) + 'static,
+    {
+        let routine = NamedRoutine {
+            id: id.into(),
+            f: Box::new(RefCell::new(Function::new(f))),
+        };
+        self.routines.push(routine);
+        self
+    }
 
     /// Use the given function to calculate the input size for a given input.
     ///
@@ -626,7 +639,7 @@ where
     /// ParameterizedBenchmark::new("strlen", |b, s| b.iter(|| s.len()), vec!["foo", "lorem ipsum"])
     ///     .throughput(|s| Throughput::Bytes(s.len() as u32));
     /// ```
-    pub fn throughput<F>(mut self, throughput: F) -> ParameterizedBenchmark<T>
+    pub fn throughput<F>(mut self, throughput: F) -> ParameterizedBenchmark<T, M>
     where
         F: Fn(&T) -> Throughput + 'static,
     {
@@ -634,11 +647,12 @@ where
         self
     }
 }
-impl<T> BenchmarkDefinition for ParameterizedBenchmark<T>
+impl<T, M> BenchmarkDefinition<M> for ParameterizedBenchmark<T, M>
 where
     T: Debug + 'static,
+    M: Measurement<Value = Duration> + 'static,
 {
-    fn run(self, group_id: &str, c: &mut Criterion) {
+    fn run(self, group_id: &str, c: &mut Criterion<M>) {
         let report_context = ReportContext {
             output_directory: c.output_directory.clone(),
             plotting: c.plotting,
