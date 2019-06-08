@@ -37,7 +37,7 @@ libc = ">=0.1.5"
 [dev-dependencies]
 tempdir = "0.3.7"
 approx = "0.3"
-quickcheck = { version = "0.8", default-features = false }
+quickcheck = { version = "0.8, <0.8.3", default-features = false }
 rand = "0.6"
 
 [badges]
