@@ -17,6 +17,10 @@
 //!   performance behavior.
 
 #![deny(missing_docs)]
+#![deny(warnings)]
+// TODO: Remove these and use the dyn keyword once we update to 1.27.0 or later
+#![allow(unknown_lints)]
+#![allow(bare_trait_objects)]
 #![cfg_attr(feature = "real_blackbox", feature(test))]
 #![cfg_attr(not(feature = "html_reports"), allow(dead_code))]
 #![cfg_attr(
@@ -461,7 +465,7 @@ impl Bencher {
 
         if batch_size == 1 {
             for _ in 0..self.iters {
-                let mut input = black_box(setup());
+                let input = black_box(setup());
 
                 let start = Instant::now();
                 let output = routine(input);

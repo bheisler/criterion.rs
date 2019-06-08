@@ -390,6 +390,9 @@
 
 #![deny(missing_docs)]
 #![deny(warnings)]
+// TODO: Remove these and use the dyn keyword once we update to 1.27.0 or later
+#![allow(unknown_lints)]
+#![allow(bare_trait_objects)]
 // This lint has lots of false positives ATM, see
 // https://github.com/Manishearth/rust-clippy/issues/761
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::new_without_default))]
