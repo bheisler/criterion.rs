@@ -176,7 +176,7 @@ pub struct Fun<I: fmt::Debug, M: Measurement + 'static = WallTime> {
     _phantom: PhantomData<M>,
 }
 
-impl<I, M: Measurement<Value = Duration>> Fun<I, M>
+impl<I, M: Measurement> Fun<I, M>
 where
     I: fmt::Debug + 'static,
 {
@@ -1169,7 +1169,7 @@ scripts alongside the generated plots.
 }
 impl<M> Criterion<M>
 where
-    M: Measurement<Value = Duration> + 'static,
+    M: Measurement + 'static,
 {
     /// Benchmarks a function
     ///

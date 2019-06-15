@@ -1,4 +1,20 @@
 use std::time::{Duration, Instant};
+use DurationExt;
+
+/// Trait for types that represent measured values (eg. std::time::Duration is the measured value
+/// for [WallTime](struct.WallTime.html)) which provides Criterion.rs the ability to convert the
+/// structured value to/from f64 for analysis. It also provides functions to format the value to
+/// string so that it can be displayed on the command-line and in the reports.
+pub trait MeasuredValue {
+    /// Constructs a MeasuredValue from an f64.
+    ///
+    /// Implementors can assume that the number will be in the same scale as that returned by
+    /// `to_f64` (eg. if to_f64 returns nanoseconds, this value will be in nanoseconds as well).
+    fn from_f64(val: f64) -> Self;
+
+    /// Converts the measured value to f64 so that it can be used in statistical analysis.
+    fn to_f64(&self) -> f64;
+}
 
 /// Trait for all types which define something Criterion.rs can measure. The only measurement
 /// currently provided is [Walltime](struct.WallTime.html), but third party crates or benchmarks
@@ -17,7 +33,7 @@ pub trait Measurement {
 
     /// This type is the measured value. An example might be the elapsed wall-clock time between the
     /// `start` and `end` calls.
-    type Value;
+    type Value: MeasuredValue;
 
     /// Criterion.rs will call this before iterating the benchmark.
     fn start(&self) -> Self::Intermediate;
@@ -31,6 +47,16 @@ pub trait Measurement {
 
     /// Return a "zero" value for the Value type which can be added to another value.
     fn zero(&self) -> Self::Value;
+}
+
+impl MeasuredValue for Duration {
+    fn to_f64(&self) -> f64 {
+        self.to_nanos() as f64
+    }
+
+    fn from_f64(val: f64) -> Duration {
+        Duration::from_nanos(val as u64)
+    }
 }
 
 /// `WallTime` is the default measurement in Criterion.rs. It measures the elapsed time from the

@@ -12,7 +12,6 @@ use estimate::{Distributions, Estimates, Statistic};
 use measurement::Measurement;
 use report::{BenchmarkId, ReportContext};
 use routine::Routine;
-use std::time::Duration;
 use {build_estimates, Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
 use {format, fs};
 
@@ -35,7 +34,7 @@ macro_rules! elapsed {
 mod compare;
 
 // Common analysis procedure
-pub(crate) fn common<M: Measurement<Value = Duration>, T>(
+pub(crate) fn common<M: Measurement, T>(
     id: &BenchmarkId,
     routine: &mut Routine<M, T>,
     config: &BenchmarkConfig,

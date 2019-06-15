@@ -306,7 +306,7 @@ impl Benchmark<WallTime> {
 
 impl<M> Benchmark<M>
 where
-    M: Measurement<Value = Duration> + 'static,
+    M: Measurement + 'static,
 {
     benchmark_config!(Benchmark);
 
@@ -380,7 +380,7 @@ where
     }
 }
 
-impl<M: Measurement<Value = Duration>> BenchmarkDefinition<M> for Benchmark<M> {
+impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
     fn run(self, group_id: &str, c: &mut Criterion<M>) {
         let report_context = ReportContext {
             output_directory: c.output_directory.clone(),
@@ -547,7 +547,7 @@ where
 impl<T, M> ParameterizedBenchmark<T, M>
 where
     T: Debug + 'static,
-    M: Measurement<Value = Duration> + 'static,
+    M: Measurement + 'static,
 {
     benchmark_config!(ParameterizedBenchmark);
 
@@ -650,7 +650,7 @@ where
 impl<T, M> BenchmarkDefinition<M> for ParameterizedBenchmark<T, M>
 where
     T: Debug + 'static,
-    M: Measurement<Value = Duration> + 'static,
+    M: Measurement + 'static,
 {
     fn run(self, group_id: &str, c: &mut Criterion<M>) {
         let report_context = ReportContext {

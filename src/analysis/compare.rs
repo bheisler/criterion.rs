@@ -10,12 +10,11 @@ use estimate::Statistic;
 use estimate::{Distributions, Estimates};
 use measurement::Measurement;
 use report::BenchmarkId;
-use std::time::Duration;
 use {build_estimates, format, fs, Criterion};
 
 // Common comparison procedure
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::type_complexity))]
-pub(crate) fn common<M: Measurement<Value = Duration>>(
+pub(crate) fn common<M: Measurement>(
     id: &BenchmarkId,
     avg_times: &Sample<f64>,
     config: &BenchmarkConfig,
@@ -104,7 +103,7 @@ fn t_test(
 }
 
 // Estimates the relative change in the statistics of the population
-fn estimates<M: Measurement<Value = Duration>>(
+fn estimates<M: Measurement>(
     id: &BenchmarkId,
     avg_times: &Sample<f64>,
     base_avg_times: &Sample<f64>,

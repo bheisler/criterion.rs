@@ -1,7 +1,7 @@
 use benchmark::BenchmarkConfig;
 use std::time::{Duration, Instant};
 
-use measurement::Measurement;
+use measurement::{MeasuredValue, Measurement};
 use program::Program;
 use report::{BenchmarkId, ReportContext};
 use std::marker::PhantomData;
@@ -134,7 +134,7 @@ where
     }
 }
 
-impl<M: Measurement<Value = Duration>, F, T> Routine<M, T> for Function<M, F, T>
+impl<M: Measurement, F, T> Routine<M, T> for Function<M, F, T>
 where
     F: FnMut(&mut Bencher<M>, &T),
 {
@@ -158,7 +158,7 @@ where
                 b.iters = *iters;
                 (*f)(&mut b, parameter);
                 b.assert_iterated();
-                b.value.to_nanos() as f64
+                b.value.to_f64()
             })
             .collect()
     }
