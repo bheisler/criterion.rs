@@ -6,6 +6,7 @@ use criterion_plot::Size;
 use estimate::Statistic;
 use format;
 use fs;
+use measurement::ValueFormatter;
 use plot;
 use serde::Serialize;
 use std::cmp::Ordering;
@@ -303,6 +304,7 @@ impl Report for Html {
         id: &BenchmarkId,
         report_context: &ReportContext,
         measurements: &MeasurementData,
+        formatter: &ValueFormatter,
     ) {
         if !report_context.plotting.is_enabled() {
             return;
@@ -316,28 +318,30 @@ impl Report for Html {
 
         let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
 
-        fn time_interval(est: &Estimate) -> ConfidenceInterval {
+        let time_interval = |est: &Estimate| -> ConfidenceInterval {
             ConfidenceInterval {
-                lower: format::time(est.confidence_interval.lower_bound),
-                point: format::time(est.point_estimate),
-                upper: format::time(est.confidence_interval.upper_bound),
+                lower: formatter.format_value(est.confidence_interval.lower_bound),
+                point: formatter.format_value(est.point_estimate),
+                upper: formatter.format_value(est.confidence_interval.upper_bound),
             }
-        }
+        };
 
         let data = measurements.data;
 
         elapsed! {
             "Generating plots",
-            self.generate_plots(id, report_context, measurements)
+            self.generate_plots(id, report_context, formatter, measurements)
         }
 
         let throughput = measurements
             .throughput
             .as_ref()
             .map(|thr| ConfidenceInterval {
-                lower: format::throughput(thr, slope_estimate.confidence_interval.upper_bound),
-                upper: format::throughput(thr, slope_estimate.confidence_interval.lower_bound),
-                point: format::throughput(thr, slope_estimate.point_estimate),
+                lower: formatter
+                    .format_throughput(thr, slope_estimate.confidence_interval.upper_bound),
+                upper: formatter
+                    .format_throughput(thr, slope_estimate.confidence_interval.lower_bound),
+                point: formatter.format_throughput(thr, slope_estimate.point_estimate),
             });
 
         let context = Context {
@@ -395,7 +399,12 @@ impl Report for Html {
         try_else_return!(fs::save_string(&text, report_path,));
     }
 
-    fn summarize(&self, context: &ReportContext, all_ids: &[BenchmarkId]) {
+    fn summarize(
+        &self,
+        context: &ReportContext,
+        all_ids: &[BenchmarkId],
+        formatter: &ValueFormatter,
+    ) {
         if !context.plotting.is_enabled() {
             return;
         }
@@ -461,6 +470,7 @@ impl Report for Html {
                     &subgroup_id,
                     &*samples_with_function,
                     context,
+                    formatter,
                     false,
                 ));
             }
@@ -481,6 +491,7 @@ impl Report for Html {
                     &subgroup_id,
                     &*samples_with_value,
                     context,
+                    formatter,
                     false,
                 ));
             }
@@ -490,6 +501,7 @@ impl Report for Html {
             &BenchmarkId::new(group_id, None, None, None),
             &*(data.iter().by_ref().collect::<Vec<_>>()),
             context,
+            formatter,
             true,
         ));
         wait_on_gnuplot(all_plots)
@@ -605,17 +617,24 @@ impl Html {
         &self,
         id: &BenchmarkId,
         context: &ReportContext,
+        formatter: &ValueFormatter,
         measurements: &MeasurementData,
     ) {
         let mut gnuplots = vec![
             // Probability density plots
-            plot::pdf(id, context, measurements, None),
-            plot::pdf_small(id, context, measurements, THUMBNAIL_SIZE),
+            plot::pdf(id, context, formatter, measurements, None),
+            plot::pdf_small(id, context, formatter, measurements, THUMBNAIL_SIZE),
             // Linear regression plots
-            plot::regression(id, context, measurements, None),
-            plot::regression_small(id, context, measurements, THUMBNAIL_SIZE),
+            plot::regression(id, context, formatter, measurements, None),
+            plot::regression_small(id, context, formatter, measurements, THUMBNAIL_SIZE),
         ];
-        gnuplots.extend(plot::abs_distributions(id, context, measurements, None));
+        gnuplots.extend(plot::abs_distributions(
+            id,
+            context,
+            formatter,
+            measurements,
+            None,
+        ));
 
         if let Some(ref comp) = measurements.comparison {
             try_else_return!(fs::mkdirp(&format!(
@@ -632,17 +651,33 @@ impl Html {
 
             let base_data = Data::new(&comp.base_iter_counts, &comp.base_sample_times);
             gnuplots.append(&mut vec![
-                plot::regression_comparison(id, context, measurements, comp, &base_data, None),
+                plot::regression_comparison(
+                    id,
+                    context,
+                    formatter,
+                    measurements,
+                    comp,
+                    &base_data,
+                    None,
+                ),
                 plot::regression_comparison_small(
                     id,
                     context,
+                    formatter,
                     measurements,
                     comp,
                     &base_data,
                     THUMBNAIL_SIZE,
                 ),
-                plot::pdf_comparison(id, context, measurements, comp, None),
-                plot::pdf_comparison_small(id, context, measurements, comp, THUMBNAIL_SIZE),
+                plot::pdf_comparison(id, context, formatter, measurements, comp, None),
+                plot::pdf_comparison_small(
+                    id,
+                    context,
+                    formatter,
+                    measurements,
+                    comp,
+                    THUMBNAIL_SIZE,
+                ),
                 plot::t_test(id, context, measurements, comp, None),
             ]);
             gnuplots.extend(plot::rel_distributions(
@@ -687,6 +722,7 @@ impl Html {
         id: &BenchmarkId,
         data: &[&(&BenchmarkId, Vec<f64>)],
         report_context: &ReportContext,
+        formatter: &ValueFormatter,
         full_summary: bool,
     ) -> Vec<Child> {
         let mut gnuplots = vec![];
@@ -706,6 +742,7 @@ impl Html {
             id.as_directory_name()
         );
         gnuplots.push(plot::violin(
+            formatter,
             id.as_title(),
             data,
             &violin_path,
@@ -726,6 +763,7 @@ impl Html {
                     );
 
                     gnuplots.push(plot::line_comparison(
+                        formatter,
                         id.as_title(),
                         data,
                         &path,

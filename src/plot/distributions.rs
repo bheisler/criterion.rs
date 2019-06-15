@@ -8,12 +8,14 @@ use stats::Distribution;
 use super::*;
 use estimate::Statistic;
 use kde;
+use measurement::ValueFormatter;
 use report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
 use Estimate;
 
 fn abs_distribution(
     id: &BenchmarkId,
     context: &ReportContext,
+    formatter: &ValueFormatter,
     statistic: Statistic,
     distribution: &Distribution<f64>,
     estimate: &Estimate,
@@ -27,7 +29,7 @@ fn abs_distribution(
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, Some((start, end)));
     let xs_ = Sample::new(&xs);
 
-    let (x_scale, prefix) = scale_time(xs_.max());
+    let (x_scale, prefix) = formatter.scale_and_unit(xs_.max());
     let y_scale = x_scale.recip();
 
     let p = estimate.point_estimate;
@@ -57,7 +59,7 @@ fn abs_distribution(
             statistic
         )))
         .configure(Axis::BottomX, |a| {
-            a.set(Label(format!("Average time ({}s)", prefix)))
+            a.set(Label(format!("Average time ({})", prefix)))
                 .set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale))
                 .set(ScaleFactor(x_scale))
         })
@@ -108,6 +110,7 @@ fn abs_distribution(
 pub(crate) fn abs_distributions(
     id: &BenchmarkId,
     context: &ReportContext,
+    formatter: &ValueFormatter,
     measurements: &MeasurementData,
     size: Option<Size>,
 ) -> Vec<Child> {
@@ -118,6 +121,7 @@ pub(crate) fn abs_distributions(
             abs_distribution(
                 id,
                 context,
+                formatter,
                 statistic,
                 distribution,
                 &measurements.absolute_estimates[&statistic],

@@ -1,11 +1,13 @@
 use super::*;
 use kde;
+use measurement::ValueFormatter;
 use report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
 use std::process::Child;
 
 pub(crate) fn pdf(
     id: &BenchmarkId,
     context: &ReportContext,
+    formatter: &ValueFormatter,
     measurements: &MeasurementData,
     size: Option<Size>,
 ) -> Child {
@@ -38,10 +40,10 @@ pub(crate) fn pdf(
         .set(Font(DEFAULT_FONT))
         .set(size.unwrap_or(SIZE))
         .configure(Axis::BottomX, |a| {
-            let (x_scale, prefix) = scale_time(avg_times.max());
+            let (x_scale, prefix) = formatter.scale_and_unit(avg_times.max());
             let xs_ = Sample::new(&xs);
 
-            a.set(Label(format!("Average time ({}s)", prefix)))
+            a.set(Label(format!("Average time ({})", prefix)))
                 .set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale))
                 .set(ScaleFactor(x_scale))
         })
@@ -212,6 +214,7 @@ pub(crate) fn pdf(
 pub(crate) fn pdf_small(
     id: &BenchmarkId,
     context: &ReportContext,
+    formatter: &ValueFormatter,
     measurements: &MeasurementData,
     size: Option<Size>,
 ) -> Child {
@@ -230,8 +233,8 @@ pub(crate) fn pdf_small(
         .set(Font(DEFAULT_FONT))
         .set(size.unwrap_or(SIZE))
         .configure(Axis::BottomX, |a| {
-            let (x_scale, prefix) = scale_time(avg_times.max());
-            a.set(Label(format!("Average time ({}s)", prefix)))
+            let (x_scale, prefix) = formatter.scale_and_unit(avg_times.max());
+            a.set(Label(format!("Average time ({})", prefix)))
                 .set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale))
                 .set(ScaleFactor(x_scale))
         })
@@ -268,6 +271,7 @@ pub(crate) fn pdf_small(
 }
 
 fn pdf_comparison_figure(
+    formatter: &ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     size: Option<Size>,
@@ -284,7 +288,7 @@ fn pdf_comparison_figure(
     let base_xs_ = Sample::new(&base_xs);
     let xs_ = Sample::new(&xs);
 
-    let (x_scale, prefix) = scale_time(base_xs_.max().max(xs_.max()));
+    let (x_scale, prefix) = formatter.scale_and_unit(base_xs_.max().max(xs_.max()));
     let zeros = iter::repeat(0);
 
     let mut figure = Figure::new();
@@ -292,7 +296,7 @@ fn pdf_comparison_figure(
         .set(Font(DEFAULT_FONT))
         .set(size.unwrap_or(SIZE))
         .configure(Axis::BottomX, |a| {
-            a.set(Label(format!("Average time ({}s)", prefix)))
+            a.set(Label(format!("Average time ({})", prefix)))
                 .set(ScaleFactor(x_scale))
         })
         .configure(Axis::LeftY, |a| a.set(Label("Density (a.u.)")))
@@ -338,11 +342,12 @@ fn pdf_comparison_figure(
 pub(crate) fn pdf_comparison(
     id: &BenchmarkId,
     context: &ReportContext,
+    formatter: &ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     size: Option<Size>,
 ) -> Child {
-    let mut figure = pdf_comparison_figure(measurements, comparison, size);
+    let mut figure = pdf_comparison_figure(formatter, measurements, comparison, size);
     figure.set(Title(escape_underscores(id.as_title())));
     let path = context.report_path(id, "both/pdf.svg");
     debug_script(&path, &figure);
@@ -352,11 +357,12 @@ pub(crate) fn pdf_comparison(
 pub(crate) fn pdf_comparison_small(
     id: &BenchmarkId,
     context: &ReportContext,
+    formatter: &ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     size: Option<Size>,
 ) -> Child {
-    let mut figure = pdf_comparison_figure(measurements, comparison, size);
+    let mut figure = pdf_comparison_figure(formatter, measurements, comparison, size);
     figure.configure(Key, |k| k.hide());
     let path = context.report_path(id, "relative_pdf_small.svg");
     debug_script(&path, &figure);

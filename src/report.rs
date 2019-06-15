@@ -4,6 +4,7 @@ use stats::univariate::outliers::tukey::LabeledSample;
 
 use estimate::{Distributions, Estimates, Statistic};
 use format;
+use measurement::ValueFormatter;
 use stats::univariate::Sample;
 use stats::Distribution;
 use std::cell::Cell;
@@ -288,9 +289,16 @@ pub(crate) trait Report {
         _id: &BenchmarkId,
         _context: &ReportContext,
         _measurements: &MeasurementData,
+        _formatter: &ValueFormatter,
     ) {
     }
-    fn summarize(&self, _context: &ReportContext, _all_ids: &[BenchmarkId]) {}
+    fn summarize(
+        &self,
+        _context: &ReportContext,
+        _all_ids: &[BenchmarkId],
+        _formatter: &ValueFormatter,
+    ) {
+    }
     fn final_summary(&self, _context: &ReportContext) {}
 }
 
@@ -351,15 +359,21 @@ impl Report for Reports {
         id: &BenchmarkId,
         context: &ReportContext,
         measurements: &MeasurementData,
+        formatter: &ValueFormatter,
     ) {
         for report in &self.reports {
-            report.measurement_complete(id, context, measurements);
+            report.measurement_complete(id, context, measurements, formatter);
         }
     }
 
-    fn summarize(&self, context: &ReportContext, all_ids: &[BenchmarkId]) {
+    fn summarize(
+        &self,
+        context: &ReportContext,
+        all_ids: &[BenchmarkId],
+        formatter: &ValueFormatter,
+    ) {
         for report in &self.reports {
-            report.summarize(context, all_ids);
+            report.summarize(context, all_ids, formatter);
         }
     }
 
@@ -552,7 +566,13 @@ impl Report for CliReport {
         ));
     }
 
-    fn measurement_complete(&self, id: &BenchmarkId, _: &ReportContext, meas: &MeasurementData) {
+    fn measurement_complete(
+        &self,
+        id: &BenchmarkId,
+        _: &ReportContext,
+        meas: &MeasurementData,
+        formatter: &ValueFormatter,
+    ) {
         self.text_overwrite();
 
         let slope_estimate = meas.absolute_estimates[&Statistic::Slope];
@@ -570,9 +590,9 @@ impl Report for CliReport {
                 "{}{}time:   [{} {} {}]",
                 self.green(id),
                 " ".repeat(24 - id_len),
-                self.faint(format::time(slope_estimate.confidence_interval.lower_bound)),
-                self.bold(format::time(slope_estimate.point_estimate)),
-                self.faint(format::time(slope_estimate.confidence_interval.upper_bound))
+                self.faint(formatter.format_value(slope_estimate.confidence_interval.lower_bound)),
+                self.bold(formatter.format_value(slope_estimate.point_estimate)),
+                self.faint(formatter.format_value(slope_estimate.confidence_interval.upper_bound))
             );
         }
 
@@ -580,18 +600,19 @@ impl Report for CliReport {
             println!(
                 "{}thrpt:  [{} {} {}]",
                 " ".repeat(24),
-                self.faint(format::throughput(
-                    throughput,
-                    slope_estimate.confidence_interval.upper_bound
-                )),
-                self.bold(format::throughput(
-                    throughput,
-                    slope_estimate.point_estimate
-                )),
-                self.faint(format::throughput(
-                    throughput,
-                    slope_estimate.confidence_interval.lower_bound
-                )),
+                self.faint(
+                    formatter.format_throughput(
+                        throughput,
+                        slope_estimate.confidence_interval.upper_bound
+                    )
+                ),
+                self.bold(formatter.format_throughput(throughput, slope_estimate.point_estimate)),
+                self.faint(
+                    formatter.format_throughput(
+                        throughput,
+                        slope_estimate.confidence_interval.lower_bound
+                    )
+                ),
             )
         }
 
@@ -687,13 +708,13 @@ impl Report for CliReport {
         self.outliers(&meas.avg_times);
 
         if self.verbose {
-            fn format_short_estimate(estimate: &Estimate) -> String {
+            let format_short_estimate = |estimate: &Estimate| -> String {
                 format!(
                     "[{} {}]",
-                    format::time(estimate.confidence_interval.lower_bound),
-                    format::time(estimate.confidence_interval.upper_bound)
+                    formatter.format_value(estimate.confidence_interval.lower_bound),
+                    formatter.format_value(estimate.confidence_interval.upper_bound)
                 )
-            }
+            };
 
             let data = &meas.data;
             let slope_estimate = &meas.absolute_estimates[&Statistic::Slope];

@@ -1,17 +1,14 @@
+use super::{debug_script, escape_underscores};
+use super::{DARK_BLUE, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, POINT_SIZE, SIZE};
+use criterion_plot::prelude::*;
+use itertools::Itertools;
+use kde;
+use measurement::ValueFormatter;
+use report::{BenchmarkId, ValueType};
+use stats::univariate::Sample;
 use std::cmp::Ordering;
 use std::path::PathBuf;
 use std::process::Child;
-
-use criterion_plot::prelude::*;
-use stats::univariate::Sample;
-
-use kde;
-use report::{BenchmarkId, ValueType};
-
-use itertools::Itertools;
-
-use super::{debug_script, escape_underscores, scale_time};
-use super::{DARK_BLUE, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, POINT_SIZE, SIZE};
 use AxisScale;
 
 const NUM_COLORS: usize = 8;
@@ -37,6 +34,7 @@ impl AxisScale {
 
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::explicit_counter_loop))]
 pub fn line_comparison(
+    formatter: &ValueFormatter,
     title: &str,
     all_curves: &[&(&BenchmarkId, Vec<f64>)],
     path: &str,
@@ -72,12 +70,12 @@ pub fn line_comparison(
         .map(|&&(_, ref data)| Sample::new(data).mean())
         .fold(::std::f64::NAN, f64::max);
 
-    let (scale, prefix) = scale_time(max);
+    let (scale, prefix) = formatter.scale_and_unit(max);
 
     f.configure(Axis::LeftY, |a| {
         a.configure(Grid::Major, |g| g.show())
             .configure(Grid::Minor, |g| g.hide())
-            .set(Label(format!("Average time ({}s)", prefix)))
+            .set(Label(format!("Average time ({})", prefix)))
             .set(axis_scale.to_gnuplot())
             .set(ScaleFactor(scale))
     });
@@ -123,6 +121,7 @@ pub fn line_comparison(
 }
 
 pub fn violin(
+    formatter: &ValueFormatter,
     title: &str,
     all_curves: &[&(&BenchmarkId, Vec<f64>)],
     path: &str,
@@ -159,7 +158,7 @@ pub fn violin(
             max = e;
         }
     }
-    let (scale, prefix) = scale_time(max);
+    let (scale, prefix) = formatter.scale_and_unit(max);
 
     let tics = || (0..).map(|x| (f64::from(x)) + 0.5);
     let size = Size(1280, 200 + (25 * all_curves.len()));
@@ -170,7 +169,7 @@ pub fn violin(
         .configure(Axis::BottomX, |a| {
             a.configure(Grid::Major, |g| g.show())
                 .configure(Grid::Minor, |g| g.hide())
-                .set(Label(format!("Average time ({}s)", prefix)))
+                .set(Label(format!("Average time ({})", prefix)))
                 .set(axis_scale.to_gnuplot())
                 .set(ScaleFactor(scale))
         })

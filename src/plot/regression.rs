@@ -10,7 +10,13 @@ use stats::bivariate::Data;
 
 use {ConfidenceInterval, Estimate};
 
-fn regression_figure(measurements: &MeasurementData, size: Option<Size>) -> Figure {
+use measurement::ValueFormatter;
+
+fn regression_figure(
+    formatter: &ValueFormatter,
+    measurements: &MeasurementData,
+    size: Option<Size>,
+) -> Figure {
     let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
     let point = Slope::fit(&measurements.data);
     let slope_dist = &measurements.distributions[&Statistic::Slope];
@@ -44,9 +50,9 @@ fn regression_figure(measurements: &MeasurementData, size: Option<Size>) -> Figu
                 .set(ScaleFactor(x_scale))
         })
         .configure(Axis::LeftY, |a| {
-            let (y_scale, prefix) = scale_time(max_elapsed);
+            let (y_scale, prefix) = formatter.scale_and_unit(max_elapsed);
             a.configure(Grid::Major, |g| g.show())
-                .set(Label(format!("Total sample time ({}s)", prefix)))
+                .set(Label(format!("Total sample time ({})", prefix)))
                 .set(ScaleFactor(y_scale))
         })
         .plot(
@@ -91,10 +97,11 @@ fn regression_figure(measurements: &MeasurementData, size: Option<Size>) -> Figu
 pub(crate) fn regression(
     id: &BenchmarkId,
     context: &ReportContext,
+    formatter: &ValueFormatter,
     measurements: &MeasurementData,
     size: Option<Size>,
 ) -> Child {
-    let mut figure = regression_figure(measurements, size);
+    let mut figure = regression_figure(formatter, measurements, size);
     figure.set(Title(escape_underscores(id.as_title())));
     figure.configure(Key, |k| {
         k.set(Justification::Left)
@@ -110,10 +117,11 @@ pub(crate) fn regression(
 pub(crate) fn regression_small(
     id: &BenchmarkId,
     context: &ReportContext,
+    formatter: &ValueFormatter,
     measurements: &MeasurementData,
     size: Option<Size>,
 ) -> Child {
-    let mut figure = regression_figure(measurements, size);
+    let mut figure = regression_figure(formatter, measurements, size);
     figure.configure(Key, |k| k.hide());
 
     let path = context.report_path(id, "regression_small.svg");
@@ -122,6 +130,7 @@ pub(crate) fn regression_small(
 }
 
 fn regression_comparison_figure(
+    formatter: &ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     base_data: &Data<f64, f64>,
@@ -131,7 +140,7 @@ fn regression_comparison_figure(
     let max_iters = base_data.x().max().max(data.x().max());
     let max_elapsed = base_data.y().max().max(data.y().max());
 
-    let (y_scale, prefix) = scale_time(max_elapsed);
+    let (y_scale, prefix) = formatter.scale_and_unit(max_elapsed);
 
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
     let x_scale = 10f64.powi(-exponent);
@@ -175,7 +184,7 @@ fn regression_comparison_figure(
         })
         .configure(Axis::LeftY, |a| {
             a.configure(Grid::Major, |g| g.show())
-                .set(Label(format!("Total sample time ({}s)", prefix)))
+                .set(Label(format!("Total sample time ({})", prefix)))
                 .set(ScaleFactor(y_scale))
         })
         .configure(Key, |k| {
@@ -229,12 +238,14 @@ fn regression_comparison_figure(
 pub(crate) fn regression_comparison(
     id: &BenchmarkId,
     context: &ReportContext,
+    formatter: &ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     base_data: &Data<f64, f64>,
     size: Option<Size>,
 ) -> Child {
-    let mut figure = regression_comparison_figure(measurements, comparison, base_data, size);
+    let mut figure =
+        regression_comparison_figure(formatter, measurements, comparison, base_data, size);
     figure.set(Title(escape_underscores(id.as_title())));
 
     let path = context.report_path(id, "both/regression.svg");
@@ -245,12 +256,14 @@ pub(crate) fn regression_comparison(
 pub(crate) fn regression_comparison_small(
     id: &BenchmarkId,
     context: &ReportContext,
+    formatter: &ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     base_data: &Data<f64, f64>,
     size: Option<Size>,
 ) -> Child {
-    let mut figure = regression_comparison_figure(measurements, comparison, base_data, size);
+    let mut figure =
+        regression_comparison_figure(formatter, measurements, comparison, base_data, size);
     figure.configure(Key, |k| k.hide());
 
     let path = context.report_path(id, "relative_regression_small.svg");

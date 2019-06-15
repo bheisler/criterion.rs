@@ -19,20 +19,6 @@ fn escape_underscores(string: &str) -> String {
     string.replace("_", "\\_")
 }
 
-fn scale_time(ns: f64) -> (f64, &'static str) {
-    if ns < 10f64.powi(0) {
-        (10f64.powi(3), "p")
-    } else if ns < 10f64.powi(3) {
-        (10f64.powi(0), "n")
-    } else if ns < 10f64.powi(6) {
-        (10f64.powi(-3), "u")
-    } else if ns < 10f64.powi(9) {
-        (10f64.powi(-6), "m")
-    } else {
-        (10f64.powi(-9), "")
-    }
-}
-
 static DEFAULT_FONT: &'static str = "Helvetica";
 static KDE_POINTS: usize = 500;
 static SIZE: Size = Size(1280, 720);

@@ -431,7 +431,8 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
         }
 
         if all_ids.len() > 1 && any_matched && c.profile_time.is_none() && !c.test_mode {
-            c.report.summarize(&report_context, &all_ids);
+            c.report
+                .summarize(&report_context, &all_ids, c.measurement.formatter());
         }
         if any_matched {
             println!();
@@ -713,7 +714,8 @@ where
         }
 
         if all_ids.len() > 1 && any_matched && c.profile_time.is_none() && !c.test_mode {
-            c.report.summarize(&report_context, &all_ids);
+            c.report
+                .summarize(&report_context, &all_ids, c.measurement.formatter());
         }
         if any_matched {
             println!();

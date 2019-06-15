@@ -9,11 +9,11 @@ use stats::{Distribution, Tails};
 
 use benchmark::BenchmarkConfig;
 use estimate::{Distributions, Estimates, Statistic};
+use fs;
 use measurement::Measurement;
 use report::{BenchmarkId, ReportContext};
 use routine::Routine;
 use {build_estimates, Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
-use {format, fs};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => {{
@@ -24,7 +24,7 @@ macro_rules! elapsed {
         info!(
             "{} took {}",
             $msg,
-            format::time(::DurationExt::to_nanos(elapsed) as f64)
+            ::format::time(::DurationExt::to_nanos(elapsed) as f64)
         );
 
         out
@@ -181,9 +181,12 @@ pub(crate) fn common<M: Measurement, T>(
         throughput,
     };
 
-    criterion
-        .report
-        .measurement_complete(id, report_context, &measurement_data);
+    criterion.report.measurement_complete(
+        id,
+        report_context,
+        &measurement_data,
+        criterion.measurement.formatter(),
+    );
 
     log_if_err!(fs::save(
         &id,

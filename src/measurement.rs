@@ -1,19 +1,41 @@
+use format::short;
 use std::time::{Duration, Instant};
 use DurationExt;
+use Throughput;
 
 /// Trait for types that represent measured values (eg. std::time::Duration is the measured value
 /// for [WallTime](struct.WallTime.html)) which provides Criterion.rs the ability to convert the
-/// structured value to/from f64 for analysis. It also provides functions to format the value to
-/// string so that it can be displayed on the command-line and in the reports.
+/// structured value to f64 for analysis.
 pub trait MeasuredValue {
-    /// Constructs a MeasuredValue from an f64.
-    ///
-    /// Implementors can assume that the number will be in the same scale as that returned by
-    /// `to_f64` (eg. if to_f64 returns nanoseconds, this value will be in nanoseconds as well).
-    fn from_f64(val: f64) -> Self;
-
     /// Converts the measured value to f64 so that it can be used in statistical analysis.
     fn to_f64(&self) -> f64;
+}
+
+/// Trait providing functions to format measured values to string so that they can be displayed on
+/// the command line or in the reports. The functions of this trait take measured values in f64
+/// form; implementors can assume that the values are of the same scale as those produced by the
+/// associated [MeasuredValue](trait.MeasuredValue.html) (eg. if your value produces values in
+/// nanoseconds, the values passed to the formatter will be in nanoseconds).
+///
+/// Implementors are encouraged to format the values in a way that is intuitive for humans and
+/// uses the SI prefix system. For example, the format used by [WallTime](struct.Walltime.html)
+/// can display the value in units ranging from picoseconds to seconds depending on the magnitude
+/// of the elapsed time in nanoseconds.
+pub trait ValueFormatter {
+    /// Format the value (with appropriate unit) and return it as a string.
+    fn format_value(&self, value: f64) -> String;
+
+    /// Format the value as a throughput measurement. The value represents the measurement value;
+    /// the implementor will have to calculate bytes per second, iterations per cycle, etc.
+    fn format_throughput(&self, throughput: &Throughput, value: f64) -> String;
+
+    /// Return a scale factor and a unit string appropriate for the given value.
+    ///
+    /// Criterion.rs will multiple the scale factor by the value to produce a value in the returned
+    /// unit. For example, if value is in nanoseconds (1 second = 10^9 nanoseconds) but we wish to
+    /// display it in seconds, `scale_and_unit` should return `(10.powi(-9), "s")`, because
+    /// `value * 10.powi(-9)` will produce a number of seconds.
+    fn scale_and_unit(&self, value: f64) -> (f64, &'static str);
 }
 
 /// Trait for all types which define something Criterion.rs can measure. The only measurement
@@ -47,15 +69,76 @@ pub trait Measurement {
 
     /// Return a "zero" value for the Value type which can be added to another value.
     fn zero(&self) -> Self::Value;
+
+    /// Return a trait-object reference to the value formatter for this measurement.
+    fn formatter(&self) -> &ValueFormatter;
 }
 
 impl MeasuredValue for Duration {
     fn to_f64(&self) -> f64 {
         self.to_nanos() as f64
     }
+}
 
-    fn from_f64(val: f64) -> Duration {
-        Duration::from_nanos(val as u64)
+pub(crate) struct DurationFormatter;
+impl DurationFormatter {
+    fn bytes_per_second(&self, bytes_per_second: f64) -> String {
+        if bytes_per_second < 1024.0 {
+            format!("{:>6}   B/s", short(bytes_per_second))
+        } else if bytes_per_second < 1024.0 * 1024.0 {
+            format!("{:>6} KiB/s", short(bytes_per_second / 1024.0))
+        } else if bytes_per_second < 1024.0 * 1024.0 * 1024.0 {
+            format!("{:>6} MiB/s", short(bytes_per_second / (1024.0 * 1024.0)))
+        } else {
+            format!(
+                "{:>6} GiB/s",
+                short(bytes_per_second / (1024.0 * 1024.0 * 1024.0))
+            )
+        }
+    }
+
+    fn elements_per_second(&self, elements_per_second: f64) -> String {
+        if elements_per_second < 1000.0 {
+            format!("{:>6}  elem/s", short(elements_per_second))
+        } else if elements_per_second < 1000.0 * 1000.0 {
+            format!("{:>6} Kelem/s", short(elements_per_second / 1000.0))
+        } else if elements_per_second < 1000.0 * 1000.0 * 1000.0 {
+            format!(
+                "{:>6} Melem/s",
+                short(elements_per_second / (1000.0 * 1000.0))
+            )
+        } else {
+            format!(
+                "{:>6} Gelem/s",
+                short(elements_per_second / (1000.0 * 1000.0 * 1000.0))
+            )
+        }
+    }
+}
+impl ValueFormatter for DurationFormatter {
+    fn format_value(&self, ns: f64) -> String {
+        ::format::time(ns)
+    }
+
+    fn format_throughput(&self, throughput: &Throughput, ns: f64) -> String {
+        match *throughput {
+            Throughput::Bytes(bytes) => self.bytes_per_second(f64::from(bytes) * (1e9 / ns)),
+            Throughput::Elements(elems) => self.elements_per_second(f64::from(elems) * (1e9 / ns)),
+        }
+    }
+
+    fn scale_and_unit(&self, ns: f64) -> (f64, &'static str) {
+        if ns < 10f64.powi(0) {
+            (10f64.powi(3), "ps")
+        } else if ns < 10f64.powi(3) {
+            (10f64.powi(0), "ns")
+        } else if ns < 10f64.powi(6) {
+            (10f64.powi(-3), "us")
+        } else if ns < 10f64.powi(9) {
+            (10f64.powi(-6), "ms")
+        } else {
+            (10f64.powi(-9), "s")
+        }
     }
 }
 
@@ -77,5 +160,8 @@ impl Measurement for WallTime {
     }
     fn zero(&self) -> Self::Value {
         Duration::from_secs(0)
+    }
+    fn formatter(&self) -> &ValueFormatter {
+        &DurationFormatter
     }
 }
