@@ -17,7 +17,6 @@
 //!   performance behavior.
 
 #![deny(missing_docs)]
-#![deny(warnings)]
 // TODO: Remove these and use the dyn keyword once we update to 1.27.0 or later
 #![allow(unknown_lints)]
 #![allow(bare_trait_objects)]
