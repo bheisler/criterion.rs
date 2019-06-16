@@ -86,7 +86,7 @@ mod estimate;
 mod format;
 mod fs;
 mod macros;
-mod measurement;
+pub mod measurement;
 mod program;
 mod report;
 mod routine;

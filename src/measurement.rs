@@ -1,3 +1,8 @@
+//! This module defines a set of traits that can be used to plug different measurements (eg.
+//! Unix's Processor Time, CPU or GPU performance counters, etc.) into Criterion.rs. It also
+//! includes the [WallTime](struct.WallTime.html) which defines the default wall-clock time
+//! measurement.
+
 use format::short;
 use std::time::{Duration, Instant};
 use DurationExt;

@@ -13,4 +13,5 @@ criterion_main! {
     benchmarks::with_inputs::benches,
     benchmarks::special_characters::benches,
     benchmarks::measurement_overhead::benches,
+    benchmarks::custom_measurement::benches,
 }

@@ -62,7 +62,7 @@
 macro_rules! criterion_group {
     (name = $name:ident; config = $config:expr; targets = $( $target:path ),+ $(,)*) => {
         pub fn $name() {
-            let mut criterion: $crate::Criterion = $config
+            let mut criterion: $crate::Criterion<_> = $config
                 .configure_from_args();
             $(
                 $target(&mut criterion);
