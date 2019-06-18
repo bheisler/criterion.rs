@@ -5,5 +5,5 @@ author = "Brook Heisler"
 
 [output.html]
 
-#[output.linkcheck]
+[output.linkcheck]
 #follow-web-links = true

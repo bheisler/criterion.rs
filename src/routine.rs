@@ -1,7 +1,7 @@
 use benchmark::BenchmarkConfig;
 use std::time::{Duration, Instant};
 
-use measurement::{MeasuredValue, Measurement};
+use measurement::Measurement;
 use program::Program;
 use report::{BenchmarkId, ReportContext};
 use std::marker::PhantomData;
@@ -158,7 +158,7 @@ where
                 b.iters = *iters;
                 (*f)(&mut b, parameter);
                 b.assert_iterated();
-                b.value.to_f64()
+                m.to_f64(&b.value)
             })
             .collect()
     }

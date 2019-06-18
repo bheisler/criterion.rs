@@ -1,20 +1,12 @@
 //! This module defines a set of traits that can be used to plug different measurements (eg.
 //! Unix's Processor Time, CPU or GPU performance counters, etc.) into Criterion.rs. It also
-//! includes the [WallTime](struct.WallTime.html) which defines the default wall-clock time
+//! includes the [WallTime](struct.WallTime.html) struct which defines the default wall-clock time
 //! measurement.
 
 use format::short;
 use std::time::{Duration, Instant};
 use DurationExt;
 use Throughput;
-
-/// Trait for types that represent measured values (eg. std::time::Duration is the measured value
-/// for [WallTime](struct.WallTime.html)) which provides Criterion.rs the ability to convert the
-/// structured value to f64 for analysis.
-pub trait MeasuredValue {
-    /// Converts the measured value to f64 so that it can be used in statistical analysis.
-    fn to_f64(&self) -> f64;
-}
 
 /// Trait providing functions to format measured values to string so that they can be displayed on
 /// the command line or in the reports. The functions of this trait take measured values in f64
@@ -60,7 +52,7 @@ pub trait Measurement {
 
     /// This type is the measured value. An example might be the elapsed wall-clock time between the
     /// `start` and `end` calls.
-    type Value: MeasuredValue;
+    type Value;
 
     /// Criterion.rs will call this before iterating the benchmark.
     fn start(&self) -> Self::Intermediate;
@@ -75,14 +67,11 @@ pub trait Measurement {
     /// Return a "zero" value for the Value type which can be added to another value.
     fn zero(&self) -> Self::Value;
 
+    /// Converts the measured value to f64 so that it can be used in statistical analysis.
+    fn to_f64(&self, value: &Self::Value) -> f64;
+
     /// Return a trait-object reference to the value formatter for this measurement.
     fn formatter(&self) -> &ValueFormatter;
-}
-
-impl MeasuredValue for Duration {
-    fn to_f64(&self) -> f64 {
-        self.to_nanos() as f64
-    }
 }
 
 pub(crate) struct DurationFormatter;
@@ -165,6 +154,9 @@ impl Measurement for WallTime {
     }
     fn zero(&self) -> Self::Value {
         Duration::from_secs(0)
+    }
+    fn to_f64(&self, val: &Self::Value) -> f64 {
+        val.to_nanos() as f64
     }
     fn formatter(&self) -> &ValueFormatter {
         &DurationFormatter

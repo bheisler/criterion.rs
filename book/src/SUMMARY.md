@@ -16,5 +16,6 @@
     - [Known Limitations](./user_guide/known_limitations.md)
     - [Bencher Compatibility Layer](./user_guide/bencher_compatibility.md)
     - [Timing Loops](./user_guide/timing_loops.md)
+    - [Custom Measurements](./user_guide/custom_measurements.md)
 - [Analysis Process](./analysis.md)
 - [Frequently Asked Questions](./faq.md)

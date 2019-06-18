@@ -27,6 +27,8 @@ impl ValueFormatter for HalfSecFormatter {
     }
 }
 
+const NANOS_PER_SEC: u64 = 1_000_000_000;
+
 /// Silly "measurement" that is really just wall-clock time reported in half-seconds.
 struct HalfSeconds;
 impl Measurement for HalfSeconds {
@@ -44,6 +46,10 @@ impl Measurement for HalfSeconds {
     }
     fn zero(&self) -> Self::Value {
         Duration::from_secs(0)
+    }
+    fn to_f64(&self, val: &Self::Value) -> f64 {
+        let nanos = val.as_secs() * NANOS_PER_SEC + u64::from(val.subsec_nanos());
+        nanos as f64
     }
     fn formatter(&self) -> &dyn ValueFormatter {
         &HalfSecFormatter
