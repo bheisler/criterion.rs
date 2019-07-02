@@ -4,8 +4,8 @@ extern crate serde_json;
 extern crate tempdir;
 extern crate walkdir;
 
-use criterion::{BatchSize, Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
 use criterion::profiler::Profiler;
+use criterion::{BatchSize, Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
 use serde_json::value::Value;
 use std::cell::{Cell, RefCell};
 use std::cmp::max;
@@ -591,7 +591,10 @@ impl Profiler for TestProfiler {
 fn test_profiler_called() {
     let started = Rc::new(Cell::new(0u32));
     let stopped = Rc::new(Cell::new(0u32));
-    let profiler = TestProfiler { started: started.clone(), stopped: stopped.clone() };
+    let profiler = TestProfiler {
+        started: started.clone(),
+        stopped: stopped.clone(),
+    };
     let dir = temp_dir();
     let mut criterion = short_benchmark(&dir)
         .with_profiler(profiler)

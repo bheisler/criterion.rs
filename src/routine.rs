@@ -1,10 +1,10 @@
 use benchmark::BenchmarkConfig;
-use std::time::{Duration, Instant};
-use std::path::PathBuf;
 use measurement::Measurement;
 use program::Program;
 use report::{BenchmarkId, ReportContext};
 use std::marker::PhantomData;
+use std::path::PathBuf;
+use std::time::{Duration, Instant};
 use {Bencher, Criterion, DurationExt};
 
 /// PRIVATE
@@ -51,7 +51,10 @@ pub trait Routine<M: Measurement, T> {
             report_context.output_directory,
             id.as_directory_name()
         ));
-        criterion.profiler.borrow_mut().start_profiling(id.id(), &profile_path);
+        criterion
+            .profiler
+            .borrow_mut()
+            .start_profiling(id.id(), &profile_path);
 
         let time = time.to_nanos();
         let mut p = self.start(parameter);
@@ -69,10 +72,13 @@ pub trait Routine<M: Measurement, T> {
             let iters = remaining / met;
             let iters = iters as u64;
 
-            self.bench(measurement, &mut p, &[iters], parameter);    
+            self.bench(measurement, &mut p, &[iters], parameter);
         }
 
-        criterion.profiler.borrow_mut().stop_profiling(id.id(), &profile_path);
+        criterion
+            .profiler
+            .borrow_mut()
+            .stop_profiling(id.id(), &profile_path);
 
         criterion.report.terminated(id, report_context);
     }

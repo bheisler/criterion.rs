@@ -24,6 +24,6 @@ pub trait Profiler {
 /// hooks. This implementation does nothing and is used as the default.
 pub struct ExternalProfiler;
 impl Profiler for ExternalProfiler {
-    fn start_profiling(&mut self, _benchmark_id: &str, _benchmark_dir: &Path){}
+    fn start_profiling(&mut self, _benchmark_id: &str, _benchmark_dir: &Path) {}
     fn stop_profiling(&mut self, _benchmark_id: &str, _benchmark_dir: &Path) {}
 }
