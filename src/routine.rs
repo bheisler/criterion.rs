@@ -59,6 +59,9 @@ pub trait Routine<M: Measurement, T> {
         let time = time.to_nanos();
         let mut p = self.start(parameter);
 
+        // TODO: Some profilers will show the two batches of iterations as
+        // being different code-paths even though they aren't really.
+
         // Get the warmup time for one second
         let (wu_elapsed, wu_iters) =
             self.warm_up(measurement, &mut p, Duration::from_secs(1), parameter);

@@ -17,5 +17,6 @@
     - [Bencher Compatibility Layer](./user_guide/bencher_compatibility.md)
     - [Timing Loops](./user_guide/timing_loops.md)
     - [Custom Measurements](./user_guide/custom_measurements.md)
+    - [Profiling](./user_guide/profiling.md)
 - [Analysis Process](./analysis.md)
 - [Frequently Asked Questions](./faq.md)
