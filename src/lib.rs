@@ -115,6 +115,7 @@ use benchmark::NamedRoutine;
 use csv_report::FileCsvReport;
 use estimate::{Distributions, Estimates, Statistic};
 use measurement::{Measurement, WallTime};
+use profiler::{Profiler, ExternalProfiler};
 use plotting::Plotting;
 use report::{CliReport, Report, ReportContext, Reports};
 use routine::Function;
@@ -637,6 +638,7 @@ pub struct Criterion<M: Measurement = WallTime> {
     all_directories: HashSet<String>,
     all_titles: HashSet<String>,
     measurement: M,
+    profiler: Box<RefCell<Profiler>>,
 }
 
 impl Default for Criterion {
@@ -687,6 +689,7 @@ impl Default for Criterion {
             all_directories: HashSet::new(),
             all_titles: HashSet::new(),
             measurement: WallTime,
+            profiler: Box::new(RefCell::new(ExternalProfiler)),
         }
     }
 }
@@ -797,6 +800,16 @@ impl<M: Measurement> Criterion<M> {
             all_directories: self.all_directories,
             all_titles: self.all_titles,
             measurement: m,
+            profiler: self.profiler,
+        }
+    }
+
+    /// Changes the internal profiler for benchmarks run with this runner. See
+    /// the Profiler trait for more details.
+    pub fn with_profiler<P: Profiler + 'static>(self, p: P) -> Criterion<M> {
+        Criterion {
+            profiler: Box::new(RefCell::new(p)),
+            ..self
         }
     }
 
@@ -995,6 +1008,14 @@ impl<M: Measurement> Criterion<M> {
     #[doc(hidden)]
     pub fn output_directory(mut self, path: &std::path::Path) -> Criterion<M> {
         self.output_directory = path.to_string_lossy().into_owned();
+
+        self
+    }
+
+    /// Set the profile time (currently for testing only)
+    #[doc(hidden)]
+    pub fn profile_time(mut self, profile_time: Option<Duration>) -> Criterion<M> {
+        self.profile_time = profile_time;
 
         self
     }

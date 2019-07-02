@@ -1,6 +1,6 @@
 use benchmark::BenchmarkConfig;
 use std::time::{Duration, Instant};
-
+use std::path::PathBuf;
 use measurement::Measurement;
 use program::Program;
 use report::{BenchmarkId, ReportContext};
@@ -46,26 +46,33 @@ pub trait Routine<M: Measurement, T> {
             .report
             .profile(id, report_context, time.to_nanos() as f64);
 
+        let profile_path = PathBuf::from(format!(
+            "{}/{}/profile",
+            report_context.output_directory,
+            id.as_directory_name()
+        ));
+        criterion.profiler.borrow_mut().start_profiling(id.id(), &profile_path);
+
         let time = time.to_nanos();
         let mut p = self.start(parameter);
 
         // Get the warmup time for one second
         let (wu_elapsed, wu_iters) =
             self.warm_up(measurement, &mut p, Duration::from_secs(1), parameter);
-        if wu_elapsed >= time {
-            return;
+        if wu_elapsed < time {
+            // Initial guess for the mean execution time
+            let met = wu_elapsed as f64 / wu_iters as f64;
+
+            // Guess how many iterations will be required for the remaining time
+            let remaining = (time - wu_elapsed) as f64;
+
+            let iters = remaining / met;
+            let iters = iters as u64;
+
+            self.bench(measurement, &mut p, &[iters], parameter);    
         }
 
-        // Initial guess for the mean execution time
-        let met = wu_elapsed as f64 / wu_iters as f64;
-
-        // Guess how many iterations will be required for the remaining time
-        let remaining = (time - wu_elapsed) as f64;
-
-        let iters = remaining / met;
-        let iters = iters as u64;
-
-        self.bench(measurement, &mut p, &[iters], parameter);
+        criterion.profiler.borrow_mut().stop_profiling(id.id(), &profile_path);
 
         criterion.report.terminated(id, report_context);
     }

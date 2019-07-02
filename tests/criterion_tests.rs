@@ -5,11 +5,12 @@ extern crate tempdir;
 extern crate walkdir;
 
 use criterion::{BatchSize, Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
+use criterion::profiler::Profiler;
 use serde_json::value::Value;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::cmp::max;
 use std::fs::File;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::rc::Rc;
 use std::time::{Duration, SystemTime};
@@ -568,4 +569,34 @@ mod macros {
         test_group();
     }
 
+}
+
+struct TestProfiler {
+    started: Rc<Cell<u32>>,
+    stopped: Rc<Cell<u32>>,
+}
+impl Profiler for TestProfiler {
+    fn start_profiling(&mut self, benchmark_id: &str, _benchmark_path: &Path) {
+        assert!(benchmark_id.contains("profile_test"));
+        self.started.set(self.started.get() + 1);
+    }
+    fn stop_profiling(&mut self, benchmark_id: &str, _benchmark_path: &Path) {
+        assert!(benchmark_id.contains("profile_test"));
+        self.stopped.set(self.stopped.get() + 1);
+    }
+}
+
+// Verify that profilers are started and stopped as expected
+#[test]
+fn test_profiler_called() {
+    let started = Rc::new(Cell::new(0u32));
+    let stopped = Rc::new(Cell::new(0u32));
+    let profiler = TestProfiler { started: started.clone(), stopped: stopped.clone() };
+    let dir = temp_dir();
+    let mut criterion = short_benchmark(&dir)
+        .with_profiler(profiler)
+        .profile_time(Some(Duration::from_secs(1)));
+    criterion.bench_function("profile_test", |b| b.iter(|| 10));
+    assert_eq!(1, started.get());
+    assert_eq!(1, stopped.get());
 }
