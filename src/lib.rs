@@ -87,6 +87,7 @@ mod format;
 mod fs;
 mod macros;
 pub mod measurement;
+pub mod profiler;
 mod program;
 mod report;
 mod routine;
