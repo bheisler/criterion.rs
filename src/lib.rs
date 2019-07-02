@@ -347,6 +347,17 @@ impl Bencher {
         self.elapsed = start.elapsed();
     }
 
+    /// iter_custom as discussed in https://github.com/bheisler/criterion.rs/issues/265
+    #[inline(never)]
+    pub fn iter_custom<R>(&mut self, mut routine: R)
+    where
+        R: FnMut(u64) -> Duration,
+    {
+        self.iterated = true;
+        self.elapsed = routine(self.iters);
+    }
+
+
     #[doc(hidden)]
     pub fn iter_with_setup<I, O, S, R>(&mut self, setup: S, routine: R)
     where
