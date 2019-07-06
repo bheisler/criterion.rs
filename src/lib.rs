@@ -352,7 +352,7 @@ impl Bencher {
     /// Prefer this timing loop in cases where `routine` has to do it's own measurements to
     /// get accurate timing information (for example in multi-threaded scnearios where you spawn
     /// and coordinate with multiple threads).
-    /// 
+    ///
     /// # Timing model
     /// Custom, the timing model is whatever is returned as the Duration from `routine`.
     ///
@@ -362,7 +362,7 @@ impl Bencher {
     /// use criterion::*;
     /// use criterion::black_box;
     /// use std::time::Instant;
-    /// 
+    ///
     /// fn foo() {
     ///     // ...
     /// }
@@ -391,7 +391,6 @@ impl Bencher {
         self.iterated = true;
         self.elapsed = routine(self.iters);
     }
-
 
     #[doc(hidden)]
     pub fn iter_with_setup<I, O, S, R>(&mut self, setup: S, routine: R)
