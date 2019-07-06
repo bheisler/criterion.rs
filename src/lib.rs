@@ -359,6 +359,7 @@ impl Bencher {
     /// # Example
     /// ```rust
     /// #[macro_use] extern crate criterion;
+    /// use criterion::black_box;
     /// use std::time::Instant;
     /// 
     /// fn foo() {
