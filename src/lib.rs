@@ -354,7 +354,7 @@ impl Bencher {
     /// and coordinate with multiple threads).
     /// 
     /// # Timing model
-    /// Can be customized and depends on the implementation of `routine`.
+    /// Custom, the timing model is whatever is returned as the Duration from `routine`.
     ///
     /// # Example
     /// ```rust
