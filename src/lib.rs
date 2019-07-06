@@ -359,6 +359,7 @@ impl Bencher {
     /// # Example
     /// ```rust
     /// #[macro_use] extern crate criterion;
+    /// use criterion::*;
     /// use criterion::black_box;
     /// use std::time::Instant;
     /// 
@@ -368,7 +369,7 @@ impl Bencher {
     ///
     /// fn bench(c: &mut Criterion) {
     ///     c.bench_function("iter", move |b| {
-    ///         b.iter_custom(|| {
+    ///         b.iter_custom(|iters| {
     ///             let start = Instant::now();
     ///             for _i in 0..iters {
     ///                 black_box(foo());
