@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added support for plugging in custom measurements (eg. processor counters)
+  into Criterion.rs' measurement and analysis.
+- Added support for plugging in instrumentation for internal profilers such as
+  `cpuprofiler` which must be explicitly started and stopped within the profiled
+  process.
 
 ### Fixed
 - Fixed possible invalid file name error on Windows
