@@ -350,7 +350,7 @@ impl Bencher {
     /// Times a `routine` by executing it many times and relying on `routine` to measure it's own execution time.
     ///
     /// Prefer this timing loop in cases where `routine` has to do it's own measurements to
-    /// get accurate timing information (for example in multi-threaded scnearios where you spawn
+    /// get accurate timing information (for example in multi-threaded scenarios where you spawn
     /// and coordinate with multiple threads).
     ///
     /// # Timing model
