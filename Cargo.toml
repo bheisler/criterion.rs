@@ -22,6 +22,7 @@ serde_derive = "1.0"
 atty = "0.2.11"
 clap = { version = "2.32", default-features = false }
 csv = "1.0"
+csv-core = "<0.1.5"
 walkdir = "2.2.7"
 tinytemplate = { version = "1.0.1", optional = true }
 cast = "0.2"
