@@ -10,6 +10,8 @@ use std::process::Command;
 use std::time::Duration;
 use {Bencher, Criterion, DurationExt, PlotConfiguration, Throughput};
 
+// TODO: Move the benchmark config stuff to a separate module for easier use.
+
 /// Struct containing all of the configuration options for a benchmark.
 pub struct BenchmarkConfig {
     pub confidence_level: f64,
@@ -22,7 +24,8 @@ pub struct BenchmarkConfig {
 }
 
 /// Struct representing a partially-complete per-benchmark configuration.
-struct PartialBenchmarkConfig {
+#[derive(Clone)]
+pub(crate) struct PartialBenchmarkConfig {
     confidence_level: Option<f64>,
     measurement_time: Option<Duration>,
     noise_threshold: Option<f64>,
@@ -30,7 +33,7 @@ struct PartialBenchmarkConfig {
     sample_size: Option<usize>,
     significance_level: Option<f64>,
     warm_up_time: Option<Duration>,
-    plot_config: PlotConfiguration,
+    pub(crate) plot_config: PlotConfiguration,
 }
 
 impl Default for PartialBenchmarkConfig {
@@ -49,7 +52,7 @@ impl Default for PartialBenchmarkConfig {
 }
 
 impl PartialBenchmarkConfig {
-    fn to_complete(&self, defaults: &BenchmarkConfig) -> BenchmarkConfig {
+    pub(crate) fn to_complete(&self, defaults: &BenchmarkConfig) -> BenchmarkConfig {
         BenchmarkConfig {
             confidence_level: self.confidence_level.unwrap_or(defaults.confidence_level),
             measurement_time: self.measurement_time.unwrap_or(defaults.measurement_time),

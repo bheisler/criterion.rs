@@ -80,6 +80,8 @@ mod macros_private;
 #[macro_use]
 mod analysis;
 mod benchmark;
+#[macro_use]
+mod benchmark_group;
 mod csv_report;
 mod error;
 mod estimate;
@@ -125,6 +127,7 @@ use std::marker::PhantomData;
 use html::Html;
 
 pub use benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
+pub use benchmark_group::{BenchmarkGroup, BenchmarkId};
 
 lazy_static! {
     static ref DEBUG_ENABLED: bool = { std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG") };
@@ -1188,18 +1191,59 @@ scripts alongside the generated plots.
             None => true,
         }
     }
+
+    /// Return a benchmark group. All benchmarks performed using a benchmark group will be
+    /// grouped together in the final report.
+    ///
+    /// # Examples:
+    ///
+    /// ```rust
+    /// #[macro_use] extern crate criterion;
+    /// use self::criterion::*;
+    ///
+    /// fn bench_simple(c: &mut Criterion) {
+    ///     let mut group = c.benchmark_group("My Group");
+    ///
+    ///     // Now we can perform benchmarks with this group
+    ///     group.bench_function("Bench 1", |b| b.iter(|| 1 ));
+    ///     group.bench_function("Bench 2", |b| b.iter(|| 2 ));
+    ///    
+    ///     group.finish();
+    /// }
+    ///
+    /// fn bench_nested(c: &mut Criterion) {
+    ///     let mut group = c.benchmark_group("My Second Group");
+    ///
+    ///     // We can also use loops to define multiple benchmarks
+    ///     for x in [0, 1, 2] {
+    ///         for y in [0, 1, 2] {
+    ///             let point = (x, y);
+    ///             group.benchmark(BenchmarkId::new("Multiply", point), point,
+    ///                 |b, (p_x, p_y)| b.iter(|| p_x * p_y))
+    ///         }
+    ///     }
+    ///    
+    ///     group.finish();
+    /// }
+    ///
+    /// criterion_group!(benches, bench_simple, bench_nested);
+    /// criterion_main!(benches);
+    /// ```
+    pub fn benchmark_group<S: Into<String>>(&mut self, group_name: S) -> BenchmarkGroup<M> {
+        BenchmarkGroup::new(self, group_name.into())
+    }
 }
 impl<M> Criterion<M>
 where
     M: Measurement + 'static,
 {
-    /// Benchmarks a function
+    /// Benchmarks a function. For comparing multiple functions, see `benchmark_group`.
     ///
     /// # Example
     ///
     /// ```rust
-    /// # #[macro_use] extern crate criterion;
-    /// # use self::criterion::*;
+    /// #[macro_use] extern crate criterion;
+    /// use self::criterion::*;
     ///
     /// fn bench(c: &mut Criterion) {
     ///     // Setup (construct data, allocate memory, etc)
@@ -1214,12 +1258,61 @@ where
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion<M>
+    // TODO: The id here should be either a string or a benchmark ID
+    pub fn bench_function<F, O>(&mut self, id: &str, f: F) -> &mut Criterion<M>
     where
-        F: FnMut(&mut Bencher<M>) + 'static,
+        F: FnMut(&mut Bencher<M>) -> O + 'static,
     {
-        self.bench(id, Benchmark::new(id, f))
+        self.benchmark_group(id)
+            .bench_function(BenchmarkId::no_function(), f);
+        self
     }
+
+    /// Benchmarks a function with an input. For comparing multiple functions or multiple inputs,
+    /// see `benchmark_group`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// #[macro_use] extern crate criterion;
+    /// use self::criterion::*;
+    ///
+    /// fn bench(c: &mut Criterion) {
+    ///     // Setup (construct data, allocate memory, etc)
+    ///     let input = 5u64;
+    ///     c.bench_with_input(
+    ///         BenchmarkId::new("function_name", input), input,
+    ///         |b, i| b.iter(|| {
+    ///             // Code to benchmark using input `i` goes here
+    ///         }),
+    ///     );
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
+    /// ```
+    pub fn bench_with_input<F, I, O>(
+        &mut self,
+        id: BenchmarkId,
+        input: I,
+        f: F,
+    ) -> &mut Criterion<M>
+    where
+        F: FnMut(&mut Bencher<M>, I) -> O + 'static,
+    {
+        // Guaranteed safe because external callers can't create benchmark IDs without a function
+        // name or parameter
+        let group_name = id.function_name.unwrap();
+        let parameter = id.parameter.unwrap();
+        self.benchmark_group(group_name).bench_with_input(
+            BenchmarkId::no_function_with_input(parameter),
+            input,
+            f,
+        );
+        self
+    }
+
+    // TODO: Add bench_with_input here as well?
 
     /// Benchmarks a function under various inputs
     ///
@@ -1244,6 +1337,7 @@ where
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
+    #[doc(hidden)] // Soft-deprecated, use benchmark groups instead
     pub fn bench_function_over_inputs<I, F>(
         &mut self,
         id: &str,
@@ -1294,6 +1388,7 @@ where
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
+    #[doc(hidden)] // Soft-deprecated, use benchmark groups instead
     pub fn bench_functions<I>(
         &mut self,
         id: &str,
@@ -1336,6 +1431,7 @@ where
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
+    #[doc(hidden)] // Soft-deprecated, use benchmark groups instead
     pub fn bench<B: BenchmarkDefinition<M>>(
         &mut self,
         group_id: &str,

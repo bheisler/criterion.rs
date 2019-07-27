@@ -5,7 +5,9 @@ extern crate tempdir;
 extern crate walkdir;
 
 use criterion::profiler::Profiler;
-use criterion::{BatchSize, Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
+use criterion::{
+    BatchSize, Benchmark, BenchmarkId, Criterion, Fun, ParameterizedBenchmark, Throughput,
+};
 use serde_json::value::Value;
 use std::cell::{Cell, RefCell};
 use std::cmp::max;
@@ -504,6 +506,28 @@ fn test_output_files() {
 fn test_bench_with_no_iteration_panics() {
     let dir = temp_dir();
     short_benchmark(&dir).bench("test_no_iter", Benchmark::new("no_iter", |_b| {}));
+}
+
+#[test]
+fn test_benchmark_group_with_input() {
+    let dir = temp_dir();
+    let mut c = short_benchmark(&dir);
+    let mut group = c.benchmark_group("Test Group");
+    for x in 0..2 {
+        group.bench_with_input(BenchmarkId::new("Test 1", x), x, |b, i| b.iter(|| i));
+        group.bench_with_input(BenchmarkId::new("Test 2", x), x, |b, i| b.iter(|| i));
+    }
+    group.finish();
+}
+
+#[test]
+fn test_benchmark_group_without_input() {
+    let dir = temp_dir();
+    let mut c = short_benchmark(&dir);
+    let mut group = c.benchmark_group("Test Group 2");
+    group.bench_function("Test 1", |b| b.iter(|| 30));
+    group.bench_function("Test 2", |b| b.iter(|| 20));
+    group.finish();
 }
 
 mod macros {
