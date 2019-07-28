@@ -453,7 +453,7 @@ fn test_output_files() {
     for x in 0..3 {
         let dir = if x == 2 {
             // Check that certain special characters are replaced with underscores
-            tempdir.path().join(format!("test_output/output______"))
+            tempdir.path().join("test_output/output______")
         } else {
             tempdir.path().join(format!("test_output/output_{}", x + 1))
         };

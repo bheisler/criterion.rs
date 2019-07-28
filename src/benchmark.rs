@@ -26,13 +26,13 @@ pub struct BenchmarkConfig {
 /// Struct representing a partially-complete per-benchmark configuration.
 #[derive(Clone)]
 pub(crate) struct PartialBenchmarkConfig {
-    confidence_level: Option<f64>,
-    measurement_time: Option<Duration>,
-    noise_threshold: Option<f64>,
-    nresamples: Option<usize>,
-    sample_size: Option<usize>,
-    significance_level: Option<f64>,
-    warm_up_time: Option<Duration>,
+    pub(crate) confidence_level: Option<f64>,
+    pub(crate) measurement_time: Option<Duration>,
+    pub(crate) noise_threshold: Option<f64>,
+    pub(crate) nresamples: Option<usize>,
+    pub(crate) sample_size: Option<usize>,
+    pub(crate) significance_level: Option<f64>,
+    pub(crate) warm_up_time: Option<Duration>,
     pub(crate) plot_config: PlotConfiguration,
 }
 

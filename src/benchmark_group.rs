@@ -1,13 +1,11 @@
 use analysis;
-use benchmark::{BenchmarkConfig, PartialBenchmarkConfig};
+use benchmark::PartialBenchmarkConfig;
 use measurement::Measurement;
 use report::BenchmarkId as InternalBenchmarkId;
 use report::ReportContext;
 use routine::Function;
-use {Bencher, Criterion};
-
-// TODO: Add all the configuration stuff to BenchmarkGroup.
-// TODO: build out bench_custom and bench_custom_with_input
+use std::time::Duration;
+use {Bencher, Criterion, DurationExt, PlotConfiguration, Throughput};
 
 /// TODO
 pub struct BenchmarkGroup<'a, M: Measurement> {
@@ -16,10 +14,136 @@ pub struct BenchmarkGroup<'a, M: Measurement> {
     all_ids: Vec<InternalBenchmarkId>,
     any_matched: bool,
     partial_config: PartialBenchmarkConfig,
-    final_config: Option<BenchmarkConfig>,
-    report_context: Option<ReportContext>,
+    throughput: Option<Throughput>,
 }
 impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
+    /// Changes the size of the sample for this benchmark
+    ///
+    /// A bigger sample should yield more accurate results if paired with a sufficiently large
+    /// measurement time.
+    ///
+    /// Sample size must be at least 10.
+    ///
+    /// # Panics
+    ///
+    /// Panics if set to zero or one.
+    pub fn sample_size(&mut self, n: usize) -> &mut Self {
+        assert!(n >= 10);
+
+        self.partial_config.sample_size = Some(n);
+        self
+    }
+
+    /// Changes the warm up time for this benchmark
+    ///
+    /// # Panics
+    ///
+    /// Panics if the input duration is zero
+    pub fn warm_up_time(&mut self, dur: Duration) -> &mut Self {
+        assert!(dur.to_nanos() > 0);
+
+        self.partial_config.warm_up_time = Some(dur);
+        self
+    }
+
+    /// Changes the target measurement time for this benchmark group.
+    ///
+    /// Criterion will attempt to spent approximately this amount of time measuring each
+    /// benchmark on a best-effort basis. If it is not possible to perform the measurement in
+    /// the requested time (eg. because each iteration of the benchmark is long) then Criterion
+    /// will spend as long as is needed to collect the desired number of samples. With a longer
+    /// time, the measurement will become more resilient to interference from other programs.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the input duration is zero
+    pub fn measurement_time(&mut self, dur: Duration) -> &mut Self {
+        assert!(dur.to_nanos() > 0);
+
+        self.partial_config.measurement_time = Some(dur);
+        self
+    }
+
+    /// Changes the number of resamples for this benchmark group
+    ///
+    /// Number of resamples to use for the
+    /// [bootstrap](http://en.wikipedia.org/wiki/Bootstrapping_(statistics)#Case_resampling)
+    ///
+    /// A larger number of resamples reduces the random sampling errors, which are inherent to the
+    /// bootstrap method, but also increases the analysis time.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the number of resamples is set to zero
+    pub fn nresamples(&mut self, n: usize) -> &mut Self {
+        assert!(n > 0);
+
+        self.partial_config.nresamples = Some(n);
+        self
+    }
+
+    /// Changes the noise threshold for this benchmark group
+    ///
+    /// This threshold is used to decide if an increase of `X%` in the execution time is considered
+    /// significant or should be flagged as noise
+    ///
+    /// *Note:* A value of `0.02` is equivalent to `2%`
+    ///
+    /// # Panics
+    ///
+    /// Panics is the threshold is set to a negative value
+    pub fn noise_threshold(&mut self, threshold: f64) -> &mut Self {
+        assert!(threshold >= 0.0);
+
+        self.partial_config.noise_threshold = Some(threshold);
+        self
+    }
+
+    /// Changes the confidence level for this benchmark group
+    ///
+    /// The confidence level is used to calculate the
+    /// [confidence intervals](https://en.wikipedia.org/wiki/Confidence_interval) of the estimated
+    /// statistics
+    ///
+    /// # Panics
+    ///
+    /// Panics if the confidence level is set to a value outside the `(0, 1)` range
+    pub fn confidence_level(&mut self, cl: f64) -> &mut Self {
+        assert!(cl > 0.0 && cl < 1.0);
+
+        self.partial_config.confidence_level = Some(cl);
+        self
+    }
+
+    /// Changes the [significance level](https://en.wikipedia.org/wiki/Statistical_significance)
+    /// for this benchmark group
+    ///
+    /// The significance level is used for
+    /// [hypothesis testing](https://en.wikipedia.org/wiki/Statistical_hypothesis_testing)
+    ///
+    /// # Panics
+    ///
+    /// Panics if the significance level is set to a value outside the `(0, 1)` range
+    pub fn significance_level(&mut self, sl: f64) -> &mut Self {
+        assert!(sl > 0.0 && sl < 1.0);
+
+        self.partial_config.significance_level = Some(sl);
+        self
+    }
+
+    /// Changes the plot configuration for this benchmark group.
+    pub fn plot_config(&mut self, new_config: PlotConfiguration) -> &mut Self {
+        self.partial_config.plot_config = new_config;
+        self
+    }
+
+    /// Set the input size for this benchmark group. Used for reporting the
+    /// throughput.
+    pub fn throughput(&mut self, throughput: Throughput) -> &mut Self {
+        self.throughput = Some(throughput);
+        self
+    }
+
     pub(crate) fn new(criterion: &mut Criterion<M>, group_name: String) -> BenchmarkGroup<M> {
         BenchmarkGroup {
             criterion,
@@ -27,8 +151,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
             all_ids: vec![],
             any_matched: false,
             partial_config: PartialBenchmarkConfig::default(),
-            final_config: None,
-            report_context: None,
+            throughput: None,
         }
     }
 
@@ -37,7 +160,6 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     where
         F: FnMut(&mut Bencher<M>),
     {
-        self.finalize_config();
         self.run_bench(id.into_benchmark_id(), &(), |b, _| f(b));
         self
     }
@@ -52,7 +174,6 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     where
         F: FnMut(&mut Bencher<M>, &I),
     {
-        self.finalize_config();
         self.run_bench(id.into_benchmark_id(), input, f);
         self
     }
@@ -61,13 +182,19 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     where
         F: FnMut(&mut Bencher<M>, &I),
     {
-        // TODO: Fix throughput
-        let throughput = None; //self.throughput.as_ref().map(|func| func(value));
+        let config = self.partial_config.to_complete(&self.criterion.config);
+        let report_context = ReportContext {
+            output_directory: self.criterion.output_directory.clone(),
+            plotting: self.criterion.plotting,
+            plot_config: self.partial_config.plot_config.clone(),
+            test_mode: self.criterion.test_mode,
+        };
+
         let mut id = InternalBenchmarkId::new(
             self.group_name.clone(),
             id.function_name,
             id.parameter,
-            throughput.clone(),
+            self.throughput.clone(),
         );
 
         assert!(
@@ -90,30 +217,15 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
             analysis::common(
                 &id,
                 &mut func,
-                self.final_config.as_ref().unwrap(),
+                &config,
                 self.criterion,
-                self.report_context.as_ref().unwrap(),
+                &report_context,
                 input,
-                throughput,
+                self.throughput.clone(),
             );
         }
 
         self.all_ids.push(id);
-    }
-
-    fn finalize_config(&mut self) {
-        if self.final_config.is_some() {
-            return;
-        }
-
-        let config = self.partial_config.to_complete(&self.criterion.config);
-        self.final_config = Some(config);
-        self.report_context = Some(ReportContext {
-            output_directory: self.criterion.output_directory.clone(),
-            plotting: self.criterion.plotting,
-            plot_config: self.partial_config.plot_config.clone(),
-            test_mode: self.criterion.test_mode,
-        })
     }
 
     /// TODO
@@ -130,8 +242,15 @@ impl<'a, M: Measurement> Drop for BenchmarkGroup<'a, M> {
             && self.criterion.profile_time.is_none()
             && !self.criterion.test_mode
         {
+            let report_context = ReportContext {
+                output_directory: self.criterion.output_directory.clone(),
+                plotting: self.criterion.plotting,
+                plot_config: self.partial_config.plot_config.clone(),
+                test_mode: self.criterion.test_mode,
+            };
+
             self.criterion.report.summarize(
-                self.report_context.as_ref().unwrap(),
+                &report_context,
                 &self.all_ids,
                 self.criterion.measurement.formatter(),
             );
