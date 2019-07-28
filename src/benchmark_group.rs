@@ -188,6 +188,26 @@ impl BenchmarkId {
         }
     }
 
+    /// Construct a new benchmark ID from just a parameter value. Use this when benchmarking a
+    /// single function with a variety of different inputs.
+    ///
+    /// # Examples
+    /// ```
+    /// let mut criterion = Criterion::default();
+    /// let mut group = criterion.benchmark_group("from_elem");
+    ///
+    /// ```
+    ///
+    // TODO: It kinda sucks that for this (common) case, the user has to put the function name in
+    // the group name and then not provide a function name. I can't think of a better way to do it
+    // just off-hand though.
+    pub fn from_parameter<P: ::std::fmt::Display>(parameter: P) -> BenchmarkId {
+        BenchmarkId {
+            function_name: None,
+            parameter: Some(format!("{}", parameter)),
+        }
+    }
+
     pub(crate) fn no_function() -> BenchmarkId {
         BenchmarkId {
             function_name: None,
