@@ -59,7 +59,7 @@ pub enum ValueType {
     Value,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct BenchmarkId {
     pub group_id: String,
     pub function_id: Option<String>,

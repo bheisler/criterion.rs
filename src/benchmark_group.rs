@@ -1,7 +1,9 @@
+use analysis;
 use benchmark::{BenchmarkConfig, PartialBenchmarkConfig};
 use measurement::Measurement;
 use report::BenchmarkId as InternalBenchmarkId;
 use report::ReportContext;
+use routine::Function;
 use {Bencher, Criterion};
 
 // TODO: Add all the configuration stuff to BenchmarkGroup.
@@ -31,26 +33,72 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     }
 
     /// TODO
-    pub fn bench_function<ID: IntoBenchmarkId, F, O>(&mut self, id: ID, f: F) -> &mut Self
+    pub fn bench_function<ID: IntoBenchmarkId, F>(&mut self, id: ID, mut f: F) -> &mut Self
     where
-        F: FnMut(&mut Bencher<M>) -> O + 'static,
+        F: FnMut(&mut Bencher<M>),
     {
         self.finalize_config();
-        panic!("Not implemented");
+        self.run_bench(id.into_benchmark_id(), &(), |b, _| f(b));
+        self
     }
 
     /// TODO
-    pub fn bench_with_input<ID: IntoBenchmarkId, F, I, O>(
+    pub fn bench_with_input<ID: IntoBenchmarkId, F, I>(
         &mut self,
         id: ID,
-        input: I,
+        input: &I,
         f: F,
     ) -> &mut Self
     where
-        F: FnMut(&mut Bencher<M>, I) -> O + 'static,
+        F: FnMut(&mut Bencher<M>, &I),
     {
         self.finalize_config();
-        panic!("Not implemented");
+        self.run_bench(id.into_benchmark_id(), input, f);
+        self
+    }
+
+    fn run_bench<F, I>(&mut self, id: BenchmarkId, input: &I, f: F)
+    where
+        F: FnMut(&mut Bencher<M>, &I),
+    {
+        // TODO: Fix throughput
+        let throughput = None; //self.throughput.as_ref().map(|func| func(value));
+        let mut id = InternalBenchmarkId::new(
+            self.group_name.clone(),
+            id.function_name,
+            id.parameter,
+            throughput.clone(),
+        );
+
+        assert!(
+            !self.all_ids.contains(&id),
+            "Benchmark IDs must be unique within a group."
+        );
+
+        id.ensure_directory_name_unique(&self.criterion.all_directories);
+        self.criterion
+            .all_directories
+            .insert(id.as_directory_name().to_owned());
+        id.ensure_title_unique(&self.criterion.all_titles);
+        self.criterion.all_titles.insert(id.as_title().to_owned());
+
+        if self.criterion.filter_matches(id.id()) {
+            self.any_matched = true;
+
+            let mut func = Function::new(f);
+
+            analysis::common(
+                &id,
+                &mut func,
+                self.final_config.as_ref().unwrap(),
+                self.criterion,
+                self.report_context.as_ref().unwrap(),
+                input,
+                throughput,
+            );
+        }
+
+        self.all_ids.push(id);
     }
 
     fn finalize_config(&mut self) {
@@ -121,15 +169,14 @@ impl BenchmarkId {
     ///
     /// // Benchmark IDs are passed to benchmark groups:
     /// let mut criterion = Criterion::default();
-    /// # criterion.with_filter("don't actually run any benchmark")
     /// let mut group = criterion.benchmark_group("My Group");
     /// // Generate a very large input
     /// let input : String = ::std::iter::repeat("X").take(1024 * 1024).collect();
     ///
     /// // Note that we don't have to use the input as the parameter in the ID
-    /// group.bench_with_input(BenchmarkId::new("Test long string", "1MB X's"), input, |b, i| {
+    /// group.bench_with_input(BenchmarkId::new("Test long string", "1MB X's"), &input, |b, i| {
     ///     b.iter(|| i.len())
-    /// })
+    /// });
     /// ```
     pub fn new<S: Into<String>, P: ::std::fmt::Display>(
         function_name: S,

@@ -1215,11 +1215,12 @@ scripts alongside the generated plots.
     ///     let mut group = c.benchmark_group("My Second Group");
     ///
     ///     // We can also use loops to define multiple benchmarks
-    ///     for x in [0, 1, 2] {
-    ///         for y in [0, 1, 2] {
+    ///     for x in 0..3 {
+    ///         for y in 0..3 {
     ///             let point = (x, y);
-    ///             group.benchmark(BenchmarkId::new("Multiply", point), point,
-    ///                 |b, (p_x, p_y)| b.iter(|| p_x * p_y))
+    ///             let parameter_string = format!("{} * {}", x, y);
+    ///             group.bench_with_input(BenchmarkId::new("Multiply", parameter_string), &point,
+    ///                 |b, (p_x, p_y)| b.iter(|| p_x * p_y));
     ///         }
     ///     }
     ///    
@@ -1258,10 +1259,9 @@ where
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    // TODO: The id here should be either a string or a benchmark ID
-    pub fn bench_function<F, O>(&mut self, id: &str, f: F) -> &mut Criterion<M>
+    pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion<M>
     where
-        F: FnMut(&mut Bencher<M>) -> O + 'static,
+        F: FnMut(&mut Bencher<M>),
     {
         self.benchmark_group(id)
             .bench_function(BenchmarkId::no_function(), f);
@@ -1281,7 +1281,7 @@ where
     ///     // Setup (construct data, allocate memory, etc)
     ///     let input = 5u64;
     ///     c.bench_with_input(
-    ///         BenchmarkId::new("function_name", input), input,
+    ///         BenchmarkId::new("function_name", input), &input,
     ///         |b, i| b.iter(|| {
     ///             // Code to benchmark using input `i` goes here
     ///         }),
@@ -1291,14 +1291,9 @@ where
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    pub fn bench_with_input<F, I, O>(
-        &mut self,
-        id: BenchmarkId,
-        input: I,
-        f: F,
-    ) -> &mut Criterion<M>
+    pub fn bench_with_input<F, I>(&mut self, id: BenchmarkId, input: &I, f: F) -> &mut Criterion<M>
     where
-        F: FnMut(&mut Bencher<M>, I) -> O + 'static,
+        F: FnMut(&mut Bencher<M>, &I),
     {
         // Guaranteed safe because external callers can't create benchmark IDs without a function
         // name or parameter
@@ -1520,7 +1515,7 @@ fn build_estimates(
 /// Enum representing different ways of measuring the throughput of benchmarked code.
 /// If the throughput setting is configured for a benchmark then the estimated throughput will
 /// be reported as well as the time per iteration.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Throughput {
     /// Measure throughput in terms of bytes/second. The value should be the number of bytes
     /// processed by one iteration of the benchmarked code. Typically, this would be the length of
