@@ -1210,24 +1210,7 @@ scripts alongside the generated plots.
     ///    
     ///     group.finish();
     /// }
-    ///
-    /// fn bench_nested(c: &mut Criterion) {
-    ///     let mut group = c.benchmark_group("My Second Group");
-    ///
-    ///     // We can also use loops to define multiple benchmarks
-    ///     for x in 0..3 {
-    ///         for y in 0..3 {
-    ///             let point = (x, y);
-    ///             let parameter_string = format!("{} * {}", x, y);
-    ///             group.bench_with_input(BenchmarkId::new("Multiply", parameter_string), &point,
-    ///                 |b, (p_x, p_y)| b.iter(|| p_x * p_y));
-    ///         }
-    ///     }
-    ///    
-    ///     group.finish();
-    /// }
-    ///
-    /// criterion_group!(benches, bench_simple, bench_nested);
+    /// criterion_group!(benches, bench_simple);
     /// criterion_main!(benches);
     /// ```
     pub fn benchmark_group<S: Into<String>>(&mut self, group_name: S) -> BenchmarkGroup<M> {
@@ -1548,8 +1531,11 @@ pub enum AxisScale {
 /// let plot_config = PlotConfiguration::default()
 ///     .summary_scale(AxisScale::Logarithmic);
 ///
-/// Benchmark::new("test", |b| b.iter(|| 10))
-///     .plot_config(plot_config);
+/// // Using Criterion::default() for simplicity; normally you'd use the macros.
+/// let mut criterion = Criterion::default();
+/// let mut benchmark_group = criterion.benchmark_group("Group name");
+/// benchmark_group.plot_config(plot_config);
+/// // Use benchmark group
 /// ```
 #[derive(Debug, Clone)]
 pub struct PlotConfiguration {

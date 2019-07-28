@@ -7,7 +7,75 @@ use routine::Function;
 use std::time::Duration;
 use {Bencher, Criterion, DurationExt, PlotConfiguration, Throughput};
 
-/// TODO
+// TODO: The line chart on the group summary page breaks when using benchmark groups
+// See the Fibonacci3 report for an example. It should also probably group values by function name.
+
+/// Structure used to group together a set of related benchmarks, along with custom configuration
+/// settings for groups of benchmarks. All benchmarks performed using a benchmark group will be
+/// grouped together in the final report.
+///
+/// # Examples:
+///
+/// ```no_run
+/// #[macro_use] extern crate criterion;
+/// use self::criterion::*;
+/// use std::time::Duration;
+///
+/// fn bench_simple(c: &mut Criterion) {
+///     let mut group = c.benchmark_group("My Group");
+///
+///     // Now we can perform benchmarks with this group
+///     group.bench_function("Bench 1", |b| b.iter(|| 1 ));
+///     group.bench_function("Bench 2", |b| b.iter(|| 2 ));
+///    
+///     // It's recommended to call group.finish() explicitly at the end, but if you don't it will
+///     // be called automatically when the group is dropped.
+///     group.finish();
+/// }
+///
+/// fn bench_nested(c: &mut Criterion) {
+///     let mut group = c.benchmark_group("My Second Group");
+///     // We can override the configuration on a per-group level
+///     group.measurement_time(Duration::from_secs(1));
+///
+///     // We can also use loops to define multiple benchmarks, even over multiple dimensions.
+///     for x in 0..3 {
+///         for y in 0..3 {
+///             let point = (x, y);
+///             let parameter_string = format!("{} * {}", x, y);
+///             group.bench_with_input(BenchmarkId::new("Multiply", parameter_string), &point,
+///                 |b, (p_x, p_y)| b.iter(|| p_x * p_y));
+///         }
+///     }
+///    
+///     group.finish();
+/// }
+///
+/// fn bench_throughput(c: &mut Criterion) {
+///     let mut group = c.benchmark_group("Summation");
+///     
+///     for size in [1024, 2048, 4096].iter() {
+///         // Generate input of an appropriate size...
+///         let input = vec![1u64, *size];
+///
+///         // We can use the throughput function to tell Criterion.rs how large the input is
+///         // so it can calculate the overall throughput of the function. If we wanted, we could
+///         // even change the benchmark configuration for different inputs (eg. to reduce the
+///         // number of samples for extremely large and slow inputs) or even different functions.
+///         group.throughput(Throughput::Elements(*size as u32));
+///
+///         group.bench_with_input(BenchmarkId::new("sum", *size), &input,
+///             |b, i| b.iter(|| i.iter().sum::<u64>()));
+///         group.bench_with_input(BenchmarkId::new("fold", *size), &input,
+///             |b, i| b.iter(|| i.iter().fold(0u64, |a, b| a + b)));
+///     }
+///
+///     group.finish();
+/// }
+///
+/// criterion_group!(benches, bench_simple, bench_nested, bench_throughput);
+/// criterion_main!(benches);
+/// ```
 pub struct BenchmarkGroup<'a, M: Measurement> {
     criterion: &'a mut Criterion<M>,
     group_name: String,
@@ -155,7 +223,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
         }
     }
 
-    /// TODO
+    /// Benchmark the given parameterless function inside this benchmark group.
     pub fn bench_function<ID: IntoBenchmarkId, F>(&mut self, id: ID, mut f: F) -> &mut Self
     where
         F: FnMut(&mut Bencher<M>),
@@ -164,7 +232,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
         self
     }
 
-    /// TODO
+    /// Benchmark the given parameterized function inside this benchmark group.
     pub fn bench_with_input<ID: IntoBenchmarkId, F, I>(
         &mut self,
         id: ID,
@@ -309,14 +377,6 @@ impl BenchmarkId {
 
     /// Construct a new benchmark ID from just a parameter value. Use this when benchmarking a
     /// single function with a variety of different inputs.
-    ///
-    /// # Examples
-    /// ```
-    /// let mut criterion = Criterion::default();
-    /// let mut group = criterion.benchmark_group("from_elem");
-    ///
-    /// ```
-    ///
     // TODO: It kinda sucks that for this (common) case, the user has to put the function name in
     // the group name and then not provide a function name. I can't think of a better way to do it
     // just off-hand though.

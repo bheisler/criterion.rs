@@ -348,13 +348,6 @@ where
     }
 
     /// Add a function to the benchmark group.
-    ///
-    /// # Example:
-    /// ```
-    /// # use criterion::Benchmark;
-    /// Benchmark::new("return 10", |b| b.iter(|| 10))
-    ///     .with_function("return 20", |b| b.iter(|| 20));
-    /// ```
     pub fn with_function<S, F>(mut self, id: S, mut f: F) -> Benchmark<M>
     where
         S: Into<String>,
@@ -370,13 +363,6 @@ where
 
     /// Set the input size for this benchmark group. Used for reporting the
     /// throughput.
-    ///
-    /// ```
-    /// # use criterion::{Benchmark, Throughput};
-    /// # use std::process::Command;
-    /// Benchmark::new("strlen", |b| b.iter(|| "foo".len()))
-    ///     .throughput(Throughput::Bytes(3));
-    /// ```
     pub fn throughput(mut self, throughput: Throughput) -> Benchmark<M> {
         self.throughput = Some(throughput);
         self
@@ -612,14 +598,6 @@ where
     }
 
     /// Add a function to the benchmark group.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use criterion::ParameterizedBenchmark;
-    /// ParameterizedBenchmark::new("times 10", |b, i| b.iter(|| i * 10), vec![1, 2, 3])
-    ///     .with_function("times 20", |b, i| b.iter(|| i * 20));
-    /// ```
     pub fn with_function<S, F>(mut self, id: S, f: F) -> ParameterizedBenchmark<T, M>
     where
         S: Into<String>,
@@ -634,15 +612,6 @@ where
     }
 
     /// Use the given function to calculate the input size for a given input.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use criterion::{ParameterizedBenchmark, Throughput};
-    /// # use std::process::Command;
-    /// ParameterizedBenchmark::new("strlen", |b, s| b.iter(|| s.len()), vec!["foo", "lorem ipsum"])
-    ///     .throughput(|s| Throughput::Bytes(s.len() as u32));
-    /// ```
     pub fn throughput<F>(mut self, throughput: F) -> ParameterizedBenchmark<T, M>
     where
         F: Fn(&T) -> Throughput + 'static,
