@@ -7,9 +7,6 @@ use routine::Function;
 use std::time::Duration;
 use {Bencher, Criterion, DurationExt, PlotConfiguration, Throughput};
 
-// TODO: The line chart on the group summary page breaks when using benchmark groups
-// See the Fibonacci3 report for an example. It should also probably group values by function name.
-
 /// Structure used to group together a set of related benchmarks, along with custom configuration
 /// settings for groups of benchmarks. All benchmarks performed using a benchmark group will be
 /// grouped together in the final report.

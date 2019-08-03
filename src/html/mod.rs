@@ -497,9 +497,34 @@ impl Report for Html {
             }
         }
 
+        let mut all_data = data.iter().by_ref().collect::<Vec<_>>();
+        // First sort the ids/data by value.
+        // If all of the value strings can be parsed into a number, sort/dedupe
+        // numerically. Otherwise sort lexicographically.
+        let all_values_numeric = all_data.iter().all(|(ref id, _)| {
+            id.value_str
+                .as_ref()
+                .map(String::as_str)
+                .and_then(try_parse)
+                .is_some()
+        });
+        if all_values_numeric {
+            all_data.sort_unstable_by(|(a, _), (b, _)| {
+                let num1 = a.value_str.as_ref().map(String::as_str).and_then(try_parse);
+                let num2 = b.value_str.as_ref().map(String::as_str).and_then(try_parse);
+
+                num1.partial_cmp(&num2).unwrap_or(Ordering::Less)
+            });
+        } else {
+            all_data.sort_unstable_by_key(|(id, _)| id.value_str.as_ref());
+        }
+        // Next, sort the ids/data by function name. This results in a sorting priority of
+        // function name, then value. This one has to be a stable sort.
+        all_data.sort_by_key(|(id, _)| id.function_id.as_ref());
+
         all_plots.extend(self.generate_summary(
             &BenchmarkId::new(group_id, None, None, None),
-            &*(data.iter().by_ref().collect::<Vec<_>>()),
+            &*(all_data),
             context,
             formatter,
             true,
