@@ -2,11 +2,12 @@ extern crate criterion;
 
 pub use criterion::Criterion;
 pub use criterion::black_box;
+use criterion::measurement::WallTime;
 
 /// Stand-in for `bencher::Bencher` which uses Criterion.rs to perform the benchmark instead.
 pub struct Bencher<'a> {
     pub bytes: u64,
-    pub bencher: &'a mut ::criterion::Bencher,
+    pub bencher: &'a mut ::criterion::Bencher<'a, WallTime>,
 }
 impl<'a> Bencher<'a> {
     /// Callback for benchmark functions to run to perform the benchmark

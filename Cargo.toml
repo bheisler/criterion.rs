@@ -1,7 +1,7 @@
 [package]
 authors = ["Jorge Aparicio <japaricious@gmail.com>", "Brook Heisler <brookheisler@gmail.com>"]
 name = "criterion"
-version = "0.2.11"
+version = "0.3.0"
 
 description = "Statistics-driven micro-benchmarking library"
 homepage = "https://bheisler.github.io/criterion.rs/book/index.html"
