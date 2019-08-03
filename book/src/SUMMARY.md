@@ -20,3 +20,4 @@
     - [Profiling](./user_guide/profiling.md)
 - [Analysis Process](./analysis.md)
 - [Frequently Asked Questions](./faq.md)
+- [Migrating from 0.2.* to 0.3.*](./migrating_0_2_to_0_3.md)

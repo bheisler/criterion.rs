@@ -1291,8 +1291,6 @@ where
         self
     }
 
-    // TODO: Add bench_with_input here as well?
-
     /// Benchmarks a function under various inputs
     ///
     /// This is a convenience method to execute several related benchmarks. Each benchmark will
