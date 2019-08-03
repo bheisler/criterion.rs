@@ -1,11 +1,13 @@
 # Comparing Functions
 
-Criterion.rs can automatically benchmark multiple implementations of a function and produce summary graphs to show the differences in performance between them. First, lets create a comparison benchmark.
+Criterion.rs can automatically benchmark multiple implementations of a function and produce summary
+graphs to show the differences in performance between them. First, lets create a comparison
+benchmark. We can even combine this with benchmarking over a range of inputs.
 
 ```rust
 #[macro_use]
 extern crate criterion;
-use criterion::{Criterion, ParameterizedBenchmark}
+use criterion::Criterion;
 
 fn fibonacci_slow(n: u64) -> u64 {
     match n {
@@ -33,38 +35,43 @@ fn fibonacci_fast(n: u64) -> u64 {
 }
 
 fn bench_fibs(c: &mut Criterion) {
-    c.bench(
-        "Fibonacci",
-        ParameterizedBenchmark::new("Recursive", |b, i| b.iter(|| fibonacci_slow(*i)), vec![20u64, 21u64])
-            .with_function("Iterative", |b, i| b.iter(|| fibonacci_fast(*i))),
-    );
+    let mut group = c.benchmark_group("Fibonacci");
+    for i in [20u64, 21u64].iter() {
+        group.bench_with_input(BenchmarkId::new("Recursive", i), i, 
+            |b, i| b.iter(|| fibonacci_slow(*i)));
+        group.bench_with_input(BenchmarkId::new("Iterative", i), i, 
+            |b, i| b.iter(|| fibonacci_fast(*i)));
+    }
+    group.finish();
 }
 
 criterion_group!(benches, bench_fibs);
 criterion_main!(benches);
 ```
 
-These are the same two fibonacci functions from the [Getting Started](../getting_started.md) page. The difference here is that we import the [ParameterizedBenchmark type](http://bheisler.github.io/criterion.rs/criterion/struct.ParameterizedBenchmark.html) as well.
+These are the same two fibonacci functions from the [Getting Started](../getting_started.md) page.
 
 ```rust
 fn bench_fibs(c: &mut Criterion) {
-    c.bench(
-        "Fibonacci",
-        ParameterizedBenchmark::new("Recursive", |b, i| b.iter(|| fibonacci_slow(*i)), vec![2u64, 5, 10, 20])
-            .with_function("Iterative", |b, i| b.iter(|| fibonacci_fast(*i))),
-    );
+    let mut group = c.benchmark_group("Fibonacci");
+    for i in [20u64, 21u64].iter() {
+        group.bench_with_input(BenchmarkId::new("Recursive", i), i, 
+            |b, i| b.iter(|| fibonacci_slow(*i)));
+        group.bench_with_input(BenchmarkId::new("Iterative", i), i, 
+            |b, i| b.iter(|| fibonacci_fast(*i)));
+    }
+    group.finish();
 }
 ```
 
-Here, we define a `ParameterizedBenchmark` which calls the recursive implementation with several
-different inputs. We also add a second benchmark which calls the iterative implementation with the
-same inputs. This is then passed to the `Criterion::bench` function, which executes each benchmark
-with each input. Criterion will generate a report for each individual benchmark/input pair, as well
-as summary reports for each benchmark (across all inputs) and each input (across all benchmarks),
-as well as an overall summary of the whole benchmark group.
+As in the earlier example of benchmarking over a range of inputs, we create a benchmark group and
+iterate over our inputs. To compare multiple functions, we simply call `bench_with_input` multiple
+times inside the loop. Criterion will generate a report for each individual benchmark/input pair,
+as well as summary reports for each benchmark (across all inputs) and each input (across all
+benchmarks), as well as an overall summary of the whole benchmark group.
 
-For benchmarks which do not accept a parameter, there is also the `Benchmark` struct, which is
-identical to `ParameterizedBenchmark` except it does not accept parameters.
+Naturally, the benchmark group could just as easily be used to benchmark non-parameterized functions
+as well.
 
 ## Violin Plot
 

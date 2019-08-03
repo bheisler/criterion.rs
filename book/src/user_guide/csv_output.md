@@ -49,12 +49,10 @@ This data was taken with this benchmark code:
 
 ```rust
 fn compare_fibonaccis(c: &mut Criterion) {
-    let fib_slow = Fun::new("Recursive", |b, i| b.iter(|| fibonacci_slow(*i)));
-    let fib_fast = Fun::new("Iterative", |b, i| b.iter(|| fibonacci_fast(*i)));
-
-    let functions = vec![fib_slow, fib_fast];
-
-    c.bench_functions("Fibonacci", functions, 20);
+    let mut group = c.benchmark_group("Fibonacci");
+    group.bench_with_input("Recursive", 20, |b, i| b.iter(|| fibonacci_slow(*i)));
+    group.bench_with_input("Iterative", 20, |b, i| b.iter(|| fibonacci_fast(*i)));
+    group.finish();
 }
 ```
 
