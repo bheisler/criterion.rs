@@ -74,6 +74,7 @@ pub struct NamedRoutine<T, M: Measurement = WallTime> {
 
 /// Structure representing a benchmark (or group of benchmarks)
 /// which take one parameter.
+#[doc(hidden)]
 pub struct ParameterizedBenchmark<T: Debug, M: Measurement = WallTime> {
     config: PartialBenchmarkConfig,
     values: Vec<T>,
@@ -83,6 +84,7 @@ pub struct ParameterizedBenchmark<T: Debug, M: Measurement = WallTime> {
 
 /// Structure representing a benchmark (or group of benchmarks)
 /// which takes no parameters.
+#[doc(hidden)]
 pub struct Benchmark<M: Measurement = WallTime> {
     config: PartialBenchmarkConfig,
     routines: Vec<NamedRoutine<(), M>>,
@@ -91,6 +93,7 @@ pub struct Benchmark<M: Measurement = WallTime> {
 
 /// Common trait for `Benchmark` and `ParameterizedBenchmark`. Not intended to be
 /// used outside of Criterion.rs.
+#[doc(hidden)]
 pub trait BenchmarkDefinition<M: Measurement = WallTime>: Sized {
     #[doc(hidden)]
     fn run(self, group_id: &str, c: &mut Criterion<M>);

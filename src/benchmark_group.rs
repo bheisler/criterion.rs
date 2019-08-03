@@ -137,7 +137,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     /// Number of resamples to use for the
     /// [bootstrap](http://en.wikipedia.org/wiki/Bootstrapping_(statistics)#Case_resampling)
     ///
-    /// A larger number of resamples reduces the random sampling errors, which are inherent to the
+    /// A larger number of resamples reduces the random sampling errors which are inherent to the
     /// bootstrap method, but also increases the analysis time.
     ///
     /// # Panics
@@ -296,7 +296,10 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
         self.all_ids.push(id);
     }
 
-    /// TODO
+    /// Consume the benchmark group and generate the summary reports for the group.
+    ///
+    /// It is recommended to call this explicitly, but if you forget it will be called when the
+    /// group is dropped.
     pub fn finish(self) {
         ::std::mem::drop(self);
     }
@@ -329,7 +332,8 @@ impl<'a, M: Measurement> Drop for BenchmarkGroup<'a, M> {
     }
 }
 
-/// TODO
+/// Simple structure representing an ID for a benchmark. The ID must be unique within a benchmark
+/// group.
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct BenchmarkId {
     pub(crate) function_name: Option<String>,
@@ -377,9 +381,6 @@ impl BenchmarkId {
 
     /// Construct a new benchmark ID from just a parameter value. Use this when benchmarking a
     /// single function with a variety of different inputs.
-    // TODO: It kinda sucks that for this (common) case, the user has to put the function name in
-    // the group name and then not provide a function name. I can't think of a better way to do it
-    // just off-hand though.
     pub fn from_parameter<P: ::std::fmt::Display>(parameter: P) -> BenchmarkId {
         BenchmarkId {
             function_name: None,

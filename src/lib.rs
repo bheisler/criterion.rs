@@ -176,6 +176,7 @@ pub fn black_box<T>(dummy: T) -> T {
 /// Representing a function to benchmark together with a name of that function.
 /// Used together with `bench_functions` to represent one out of multiple functions
 /// under benchmark.
+#[doc(hidden)]
 pub struct Fun<I: fmt::Debug, M: Measurement + 'static = WallTime> {
     f: NamedRoutine<I, M>,
     _phantom: PhantomData<M>,
