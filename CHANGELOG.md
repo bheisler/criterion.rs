@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added support for plugging in instrumentation for internal profilers such as
   `cpuprofiler` which must be explicitly started and stopped within the profiled
   process.
+- Added the `BenchmarkGroup` type, which supersedes `ParameterizedBenchmark`, `Benchmark`,
+  `Criterion::bench_functions`, `Criterion::bench_function_over_inputs`, and `Criterion::bench`.
+  `BenchmarkGroup` performs the same function as all of the above, but is cleaner to use and more
+  powerful and flexible. All of these types/functions are now soft-deprecated (meaning they're
+  hidden from the documentation and should not be used in new code). They will be fully deprecated
+  at some point in the 0.3.* series and removed in 0.4.0.
 
 ### Fixed
 - Fixed possible invalid file name error on Windows
