@@ -38,7 +38,7 @@ else
     cargo bench $BUILD_ARGS -- --test
     cd ..
 
-    if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then
+    if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then
         cd macro
         export CARGO_TARGET_DIR="../target"
         cargo bench $BUILD_ARGS -- --test
