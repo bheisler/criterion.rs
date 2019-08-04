@@ -33,15 +33,15 @@ else
 
     cargo bench $BUILD_ARGS --all -- --test
     
-    pushd bencher_compat
+    cd bencher_compat
     export CARGO_TARGET_DIR="../target"
     cargo bench $BUILD_ARGS -- --test
-    popd
+    cd ..
 
     if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then
-        pushd macro
+        cd macro
         export CARGO_TARGET_DIR="../target"
         cargo bench $BUILD_ARGS -- --test
-        popd
+        cd ..
     fi
 fi
