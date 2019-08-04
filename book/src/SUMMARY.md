@@ -18,6 +18,7 @@
     - [Timing Loops](./user_guide/timing_loops.md)
     - [Custom Measurements](./user_guide/custom_measurements.md)
     - [Profiling](./user_guide/profiling.md)
+    - [Custom Test Framework](./user_guide/custom_test_framework.md)
 - [Analysis Process](./analysis.md)
 - [Frequently Asked Questions](./faq.md)
 - [Migrating from 0.2.* to 0.3.*](./migrating_0_2_to_0_3.md)
