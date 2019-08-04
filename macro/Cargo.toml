@@ -1,0 +1,28 @@
+[package]
+name = "criterion_macro"
+version = "0.3.0"
+authors = ["Brook Heisler <redattack34@gmail.com>"]
+edition = "2018"
+
+description = "Custom Test Framework macro for Criterion.rs"
+homepage = "https://bheisler.github.io/criterion.rs/book/index.html"
+repository = "https://github.com/bheisler/criterion.rs"
+readme = "README.md"
+keywords = ["criterion", "benchmark", "macro"]
+categories = ["development-tools::profiling"]
+license = "Apache-2.0/MIT"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = { version = "0.4", features = ["nightly"] }
+quote = "0.6"
+
+[dev-dependencies]
+criterion = { version = "0.3.0", path = "..", default-features = false }
+
+[[bench]]
+name = "test_macro_bench"
+
+[workspace]

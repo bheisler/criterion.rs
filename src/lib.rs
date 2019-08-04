@@ -1558,3 +1558,12 @@ impl PlotConfiguration {
         self
     }
 }
+
+/// Custom-test-framework runner. Should not be called directly.
+#[doc(hidden)]
+pub fn runner(benches: &[&Fn()]) {
+    for bench in benches {
+        bench();
+    }
+    Criterion::default().configure_from_args().final_summary();
+}
