@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed possible invalid file name error on Windows
 - Fixed potential case where data for two different benchmarks would be stored in the same directory.
 
+### Removed
+- Removed the `--measure-only` command-line argument; it was deprecated in favor of `--profile-time`
+  in 0.2.6.
+
 ## [0.2.11] - 2019-04-08
 ### Added
 - Enabled automatic text-coloring on Windows.

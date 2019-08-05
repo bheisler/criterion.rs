@@ -1124,10 +1124,6 @@ impl<M: Measurement> Criterion<M> {
             .arg(Arg::with_name("list")
                 .long("list")
                 .help("List all benchmarks"))
-            .arg(Arg::with_name("measure-only")
-                .long("measure-only")
-                .hidden(true)
-                .help("Only perform measurements; do no analysis or storage of results. This is useful eg. when profiling the benchmarks, to reduce clutter in the profiling data."))
             .arg(Arg::with_name("profile-time")
                 .long("profile-time")
                 .takes_value(true)
@@ -1195,11 +1191,6 @@ scripts alongside the generated plots.
         )));
         reports.push(Box::new(FileCsvReport));
 
-        // TODO: Remove this in 0.3.0
-        if matches.is_present("measure-only") {
-            println!("Warning: The '--measure-only' argument is deprecated and will be removed in Criterion.rs 0.3.0. Use '--profile-time' instead.");
-            self.profile_time = Some(Duration::from_secs(5));
-        }
         if matches.is_present("profile-time") {
             let num_seconds = value_t!(matches.value_of("profile-time"), u64).unwrap_or_else(|e| {
                 println!("{}", e);
