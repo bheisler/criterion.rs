@@ -31,15 +31,15 @@
 Criterion.<span></span>rs helps you write fast code by detecting and measuring performance improvements or regressions, even small ones, quickly and accurately. You can optimize with confidence, knowing how each change affects the performance of your code.
 
 ## Table of Contents
-- [Table of Contents](#Table-of-Contents)
-  - [Features](#Features)
-  - [Quickstart](#Quickstart)
-  - [Goals](#Goals)
-  - [Contributing](#Contributing)
-  - [Compatibility Policy](#Compatibility-Policy)
-  - [Maintenance](#Maintenance)
-  - [License](#License)
-  - [Related Projects](#Related-Projects)
+- [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Quickstart](#quickstart)
+  - [Goals](#goals)
+  - [Contributing](#contributing)
+  - [Compatibility Policy](#compatibility-policy)
+  - [Maintenance](#maintenance)
+  - [License](#license)
+  - [Related Projects](#related-projects)
 
 ### Features
 
@@ -120,9 +120,9 @@ For more details, see the [CONTRIBUTING.md file](https://github.com/bheisler/cri
 ### Compatibility Policy
 
 Criterion.<span></span>rs supports the last three stable minor releases of Rust. At time of
-writing, this means Rust 1.29 or later. Older versions may work, but are not tested or guaranteed.
+writing, this means Rust 1.33 or later. Older versions may work, but are not tested or guaranteed.
 
-Currently, the oldest version of Rust believed to work is 1.23. Future versions of Criterion.rs may
+Currently, the oldest version of Rust believed to work is 1.31. Future versions of Criterion.rs may
 break support for such old versions, and this will not be considered a breaking change. If you
 require Criterion.<span></span>rs to work on old versions of Rust, you will need to stick to a
 specific patch version of Criterion.<span></span>rs.
