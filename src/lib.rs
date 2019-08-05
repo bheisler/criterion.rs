@@ -347,6 +347,51 @@ impl Bencher {
         self.elapsed = start.elapsed();
     }
 
+    /// Times a `routine` by executing it many times and relying on `routine` to measure it's own execution time.
+    ///
+    /// Prefer this timing loop in cases where `routine` has to do it's own measurements to
+    /// get accurate timing information (for example in multi-threaded scenarios where you spawn
+    /// and coordinate with multiple threads).
+    ///
+    /// # Timing model
+    /// Custom, the timing model is whatever is returned as the Duration from `routine`.
+    ///
+    /// # Example
+    /// ```rust
+    /// #[macro_use] extern crate criterion;
+    /// use criterion::*;
+    /// use criterion::black_box;
+    /// use std::time::Instant;
+    ///
+    /// fn foo() {
+    ///     // ...
+    /// }
+    ///
+    /// fn bench(c: &mut Criterion) {
+    ///     c.bench_function("iter", move |b| {
+    ///         b.iter_custom(|iters| {
+    ///             let start = Instant::now();
+    ///             for _i in 0..iters {
+    ///                 black_box(foo());
+    ///             }
+    ///             start.elapsed()
+    ///         })
+    ///     });
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
+    /// ```
+    ///
+    #[inline(never)]
+    pub fn iter_custom<R>(&mut self, mut routine: R)
+    where
+        R: FnMut(u64) -> Duration,
+    {
+        self.iterated = true;
+        self.elapsed = routine(self.iters);
+    }
+
     #[doc(hidden)]
     pub fn iter_with_setup<I, O, S, R>(&mut self, setup: S, routine: R)
     where
