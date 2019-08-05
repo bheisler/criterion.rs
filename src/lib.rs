@@ -448,7 +448,6 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     /// criterion_main!(benches);
     /// ```
     ///
-    #[doc(hidden)]
     pub fn iter_with_large_drop<O, R>(&mut self, mut routine: R)
     where
         R: FnMut() -> O,
