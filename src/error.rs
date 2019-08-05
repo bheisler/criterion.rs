@@ -50,7 +50,7 @@ impl StdError for Error {
         }
     }
 
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         match self {
             Error::AccessError { inner, .. } => Some(inner),
             Error::CopyError { inner, .. } => Some(inner),

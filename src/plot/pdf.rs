@@ -1,13 +1,13 @@
 use super::*;
-use kde;
-use measurement::ValueFormatter;
-use report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
+use crate::kde;
+use crate::measurement::ValueFormatter;
+use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
 use std::process::Child;
 
 pub(crate) fn pdf(
     id: &BenchmarkId,
     context: &ReportContext,
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     size: Option<Size>,
 ) -> Child {
@@ -214,7 +214,7 @@ pub(crate) fn pdf(
 pub(crate) fn pdf_small(
     id: &BenchmarkId,
     context: &ReportContext,
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     size: Option<Size>,
 ) -> Child {
@@ -271,7 +271,7 @@ pub(crate) fn pdf_small(
 }
 
 fn pdf_comparison_figure(
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     size: Option<Size>,
@@ -342,7 +342,7 @@ fn pdf_comparison_figure(
 pub(crate) fn pdf_comparison(
     id: &BenchmarkId,
     context: &ReportContext,
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     size: Option<Size>,
@@ -357,7 +357,7 @@ pub(crate) fn pdf_comparison(
 pub(crate) fn pdf_comparison_small(
     id: &BenchmarkId,
     context: &ReportContext,
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     size: Option<Size>,

@@ -1,19 +1,19 @@
 use std::process::Child;
 
+use crate::estimate::Statistic;
+use crate::stats::bivariate::regression::Slope;
 use criterion_plot::prelude::*;
-use estimate::Statistic;
-use stats::bivariate::regression::Slope;
 
 use super::*;
-use report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
-use stats::bivariate::Data;
+use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
+use crate::stats::bivariate::Data;
 
-use {ConfidenceInterval, Estimate};
+use crate::{ConfidenceInterval, Estimate};
 
-use measurement::ValueFormatter;
+use crate::measurement::ValueFormatter;
 
 fn regression_figure(
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     size: Option<Size>,
 ) -> Figure {
@@ -97,7 +97,7 @@ fn regression_figure(
 pub(crate) fn regression(
     id: &BenchmarkId,
     context: &ReportContext,
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     size: Option<Size>,
 ) -> Child {
@@ -117,7 +117,7 @@ pub(crate) fn regression(
 pub(crate) fn regression_small(
     id: &BenchmarkId,
     context: &ReportContext,
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     size: Option<Size>,
 ) -> Child {
@@ -130,7 +130,7 @@ pub(crate) fn regression_small(
 }
 
 fn regression_comparison_figure(
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     base_data: &Data<f64, f64>,
@@ -238,7 +238,7 @@ fn regression_comparison_figure(
 pub(crate) fn regression_comparison(
     id: &BenchmarkId,
     context: &ReportContext,
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     base_data: &Data<f64, f64>,
@@ -256,7 +256,7 @@ pub(crate) fn regression_comparison(
 pub(crate) fn regression_comparison_small(
     id: &BenchmarkId,
     context: &ReportContext,
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     base_data: &Data<f64, f64>,

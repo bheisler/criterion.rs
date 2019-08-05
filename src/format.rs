@@ -79,7 +79,7 @@ mod test {
     #[test]
     fn short_max_len() {
         let mut float = 1.0;
-        while float < 999999.9 {
+        while float < 999_999.9 {
             let string = short(float);
             println!("{}", string);
             assert!(string.len() <= 6);
@@ -90,7 +90,7 @@ mod test {
     #[test]
     fn signed_short_max_len() {
         let mut float = -1.0;
-        while float > -999999.9 {
+        while float > -999_999.9 {
             let string = signed_short(float);
             println!("{}", string);
             assert!(string.len() <= 7);

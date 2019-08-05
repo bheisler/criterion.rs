@@ -1,21 +1,21 @@
 use std::iter;
 use std::process::Child;
 
+use crate::stats::univariate::Sample;
+use crate::stats::Distribution;
 use criterion_plot::prelude::*;
-use stats::univariate::Sample;
-use stats::Distribution;
 
 use super::*;
-use estimate::Statistic;
-use kde;
-use measurement::ValueFormatter;
-use report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
-use Estimate;
+use crate::estimate::Statistic;
+use crate::kde;
+use crate::measurement::ValueFormatter;
+use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
+use crate::Estimate;
 
 fn abs_distribution(
     id: &BenchmarkId,
     context: &ReportContext,
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     statistic: Statistic,
     distribution: &Distribution<f64>,
     estimate: &Estimate,
@@ -110,7 +110,7 @@ fn abs_distribution(
 pub(crate) fn abs_distributions(
     id: &BenchmarkId,
     context: &ReportContext,
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     size: Option<Size>,
 ) -> Vec<Child> {

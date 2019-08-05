@@ -1,7 +1,7 @@
+use crate::error::Result;
+use crate::measurement::ValueFormatter;
+use crate::report::{BenchmarkId, MeasurementData, Report, ReportContext};
 use csv::Writer;
-use error::Result;
-use measurement::ValueFormatter;
-use report::{BenchmarkId, MeasurementData, Report, ReportContext};
 use std::io::Write;
 
 #[derive(Serialize)]
@@ -53,7 +53,7 @@ impl Report for FileCsvReport {
         id: &BenchmarkId,
         context: &ReportContext,
         measurements: &MeasurementData,
-        _formatter: &ValueFormatter,
+        _formatter: &dyn ValueFormatter,
     ) {
         let path = format!(
             "{}/{}/new/raw.csv",

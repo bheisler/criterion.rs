@@ -390,9 +390,7 @@
 
 #![deny(missing_docs)]
 #![deny(warnings)]
-// TODO: Remove these and use the dyn keyword once we update to 1.27.0 or later
-#![allow(unknown_lints)]
-#![allow(bare_trait_objects)]
+#![deny(bare_trait_objects)]
 // This lint has lots of false positives ATM, see
 // https://github.com/Manishearth/rust-clippy/issues/761
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::new_without_default))]
@@ -913,13 +911,13 @@ trait Display<S> {
 /// Curve variant of Default
 trait CurveDefault<S> {
     /// Creates `curve::Properties` with default configuration
-    fn default(S) -> Self;
+    fn default(s: S) -> Self;
 }
 
 /// Error bar variant of Default
 trait ErrorBarDefault<S> {
     /// Creates `errorbar::Properties` with default configuration
-    fn default(S) -> Self;
+    fn default(s: S) -> Self;
 }
 
 /// Structs that can produce gnuplot code
@@ -992,7 +990,7 @@ impl ::std::error::Error for VersionError {
         }
     }
 
-    fn cause(&self) -> Option<&::std::error::Error> {
+    fn cause(&self) -> Option<&dyn ::std::error::Error> {
         match self {
             VersionError::Exec(err) => Some(err),
             _ => None,

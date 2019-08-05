@@ -18,9 +18,9 @@ mod rand_util;
 use std::mem;
 use std::ops::Deref;
 
+use crate::stats::float::Float;
+use crate::stats::univariate::Sample;
 use cast;
-use stats::float::Float;
-use stats::univariate::Sample;
 
 /// The bootstrap distribution of some parameter
 pub struct Distribution<A>(Box<[A]>);

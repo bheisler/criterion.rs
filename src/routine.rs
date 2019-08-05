@@ -1,11 +1,11 @@
-use benchmark::BenchmarkConfig;
-use measurement::Measurement;
-use program::Program;
-use report::{BenchmarkId, ReportContext};
+use crate::benchmark::BenchmarkConfig;
+use crate::measurement::Measurement;
+use crate::program::Program;
+use crate::report::{BenchmarkId, ReportContext};
+use crate::{Bencher, Criterion, DurationExt};
 use std::marker::PhantomData;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
-use {Bencher, Criterion, DurationExt};
 
 /// PRIVATE
 pub trait Routine<M: Measurement, T> {

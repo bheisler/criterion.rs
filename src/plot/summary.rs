@@ -1,15 +1,15 @@
 use super::{debug_script, escape_underscores};
 use super::{DARK_BLUE, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, POINT_SIZE, SIZE};
+use crate::kde;
+use crate::measurement::ValueFormatter;
+use crate::report::{BenchmarkId, ValueType};
+use crate::stats::univariate::Sample;
+use crate::AxisScale;
 use criterion_plot::prelude::*;
 use itertools::Itertools;
-use kde;
-use measurement::ValueFormatter;
-use report::{BenchmarkId, ValueType};
-use stats::univariate::Sample;
 use std::cmp::Ordering;
 use std::path::PathBuf;
 use std::process::Child;
-use AxisScale;
 
 const NUM_COLORS: usize = 8;
 static COMPARISON_COLORS: [Color; NUM_COLORS] = [
@@ -34,7 +34,7 @@ impl AxisScale {
 
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::explicit_counter_loop))]
 pub fn line_comparison(
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     title: &str,
     all_curves: &[&(&BenchmarkId, Vec<f64>)],
     path: &str,
@@ -121,7 +121,7 @@ pub fn line_comparison(
 }
 
 pub fn violin(
-    formatter: &ValueFormatter,
+    formatter: &dyn ValueFormatter,
     title: &str,
     all_curves: &[&(&BenchmarkId, Vec<f64>)],
     path: &str,

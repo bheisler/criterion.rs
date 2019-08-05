@@ -1,14 +1,14 @@
-use analysis;
-use measurement::{Measurement, WallTime};
-use program::CommandFactory;
-use report::{BenchmarkId, ReportContext};
-use routine::{Function, Routine};
+use crate::analysis;
+use crate::measurement::{Measurement, WallTime};
+use crate::program::CommandFactory;
+use crate::report::{BenchmarkId, ReportContext};
+use crate::routine::{Function, Routine};
+use crate::{Bencher, Criterion, DurationExt, PlotConfiguration, Throughput};
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::marker::Sized;
 use std::process::Command;
 use std::time::Duration;
-use {Bencher, Criterion, DurationExt, PlotConfiguration, Throughput};
 
 // TODO: Move the benchmark config stuff to a separate module for easier use.
 
@@ -69,7 +69,7 @@ impl PartialBenchmarkConfig {
 
 pub struct NamedRoutine<T, M: Measurement = WallTime> {
     pub id: String,
-    pub f: Box<RefCell<Routine<M, T>>>,
+    pub f: Box<RefCell<dyn Routine<M, T>>>,
 }
 
 /// Structure representing a benchmark (or group of benchmarks)
@@ -79,7 +79,7 @@ pub struct ParameterizedBenchmark<T: Debug, M: Measurement = WallTime> {
     config: PartialBenchmarkConfig,
     values: Vec<T>,
     routines: Vec<NamedRoutine<T, M>>,
-    throughput: Option<Box<Fn(&T) -> Throughput>>,
+    throughput: Option<Box<dyn Fn(&T) -> Throughput>>,
 }
 
 /// Structure representing a benchmark (or group of benchmarks)

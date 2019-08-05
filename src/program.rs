@@ -4,9 +4,9 @@ use std::marker::PhantomData;
 use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, Stdio};
 use std::time::{Duration, Instant};
 
-use measurement::WallTime;
-use routine::Routine;
-use DurationExt;
+use crate::measurement::WallTime;
+use crate::routine::Routine;
+use crate::DurationExt;
 
 // A two-way channel to the standard streams of a child process
 pub struct Program {

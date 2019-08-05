@@ -3,9 +3,11 @@
 use std::borrow::Cow;
 use std::iter::IntoIterator;
 
-use map;
-use traits::{Configure, Data, Set};
-use {grid, Axis, Default, Display, Grid, Label, Range, Scale, ScaleFactor, Script, TicLabels};
+use crate::map;
+use crate::traits::{Configure, Data, Set};
+use crate::{
+    grid, Axis, Default, Display, Grid, Label, Range, Scale, ScaleFactor, Script, TicLabels,
+};
 
 /// Properties of the coordinate axes
 #[derive(Clone)]
@@ -189,7 +191,7 @@ impl<'a> Script for (Axis, &'a Properties) {
     }
 }
 
-impl ::ScaleFactorTrait for Properties {
+impl crate::ScaleFactorTrait for Properties {
     fn scale_factor(&self) -> f64 {
         self.scale_factor
     }

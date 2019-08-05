@@ -1,16 +1,14 @@
 //! Bivariate analysis
 
 mod bootstrap;
+pub mod regression;
 mod resamples;
 
-pub mod regression;
-
+use crate::stats::bivariate::resamples::Resamples;
+use crate::stats::float::Float;
+use crate::stats::tuple::{Tuple, TupledDistributionsBuilder};
+use crate::stats::univariate::Sample;
 use rayon::prelude::*;
-use stats::float::Float;
-
-use stats::bivariate::resamples::Resamples;
-use stats::tuple::{Tuple, TupledDistributionsBuilder};
-use stats::univariate::Sample;
 
 /// Bivariate `(X, Y)` data
 ///

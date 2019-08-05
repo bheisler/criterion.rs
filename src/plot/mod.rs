@@ -1,8 +1,8 @@
 use std::iter;
 use std::path::PathBuf;
 
+use crate::stats::univariate::Sample;
 use criterion_plot::prelude::*;
-use stats::univariate::Sample;
 
 mod distributions;
 mod pdf;
@@ -31,7 +31,7 @@ const DARK_ORANGE: Color = Color::Rgb(255, 127, 0);
 const DARK_RED: Color = Color::Rgb(227, 26, 28);
 
 fn debug_script(path: &PathBuf, figure: &Figure) {
-    if ::debug_enabled() {
+    if crate::debug_enabled() {
         let mut script_path = path.clone();
         script_path.set_extension("gnuplot");
         println!("Writing gnuplot script to {:?}", script_path);

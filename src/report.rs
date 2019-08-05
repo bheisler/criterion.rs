@@ -1,12 +1,14 @@
-use stats::bivariate::regression::Slope;
-use stats::bivariate::Data;
-use stats::univariate::outliers::tukey::LabeledSample;
+use crate::stats::bivariate::regression::Slope;
+use crate::stats::bivariate::Data;
+use crate::stats::univariate::outliers::tukey::LabeledSample;
 
-use estimate::{Distributions, Estimates, Statistic};
-use format;
-use measurement::ValueFormatter;
-use stats::univariate::Sample;
-use stats::Distribution;
+use crate::estimate::{Distributions, Estimates, Statistic};
+use crate::format;
+use crate::measurement::ValueFormatter;
+use crate::stats::univariate::Sample;
+use crate::stats::Distribution;
+use crate::Estimate;
+use crate::{PlotConfiguration, Plotting, Throughput};
 use std::cell::Cell;
 use std::cmp;
 use std::collections::HashSet;
@@ -14,8 +16,6 @@ use std::fmt;
 use std::io::stdout;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use Estimate;
-use {PlotConfiguration, Plotting, Throughput};
 
 const MAX_DIRECTORY_NAME_LEN: usize = 64;
 const MAX_TITLE_LEN: usize = 100;
@@ -289,24 +289,24 @@ pub(crate) trait Report {
         _id: &BenchmarkId,
         _context: &ReportContext,
         _measurements: &MeasurementData,
-        _formatter: &ValueFormatter,
+        _formatter: &dyn ValueFormatter,
     ) {
     }
     fn summarize(
         &self,
         _context: &ReportContext,
         _all_ids: &[BenchmarkId],
-        _formatter: &ValueFormatter,
+        _formatter: &dyn ValueFormatter,
     ) {
     }
     fn final_summary(&self, _context: &ReportContext) {}
 }
 
 pub(crate) struct Reports {
-    reports: Vec<Box<Report>>,
+    reports: Vec<Box<dyn Report>>,
 }
 impl Reports {
-    pub fn new(reports: Vec<Box<Report>>) -> Reports {
+    pub fn new(reports: Vec<Box<dyn Report>>) -> Reports {
         Reports { reports }
     }
 }
@@ -359,7 +359,7 @@ impl Report for Reports {
         id: &BenchmarkId,
         context: &ReportContext,
         measurements: &MeasurementData,
-        formatter: &ValueFormatter,
+        formatter: &dyn ValueFormatter,
     ) {
         for report in &self.reports {
             report.measurement_complete(id, context, measurements, formatter);
@@ -370,7 +370,7 @@ impl Report for Reports {
         &self,
         context: &ReportContext,
         all_ids: &[BenchmarkId],
-        formatter: &ValueFormatter,
+        formatter: &dyn ValueFormatter,
     ) {
         for report in &self.reports {
             report.summarize(context, all_ids, formatter);
@@ -571,7 +571,7 @@ impl Report for CliReport {
         id: &BenchmarkId,
         _: &ReportContext,
         meas: &MeasurementData,
-        formatter: &ValueFormatter,
+        formatter: &dyn ValueFormatter,
     ) {
         self.text_overwrite();
 

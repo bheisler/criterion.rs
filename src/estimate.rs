@@ -1,9 +1,8 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
-use stats::Distribution;
-
-use Estimate;
+use crate::stats::Distribution;
+use crate::Estimate;
 
 #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize, Debug)]
 pub enum Statistic {

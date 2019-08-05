@@ -1,20 +1,20 @@
-use report::{make_filename_safe, BenchmarkId, MeasurementData, Report, ReportContext};
-use stats::bivariate::regression::Slope;
-use stats::bivariate::Data;
+use crate::report::{make_filename_safe, BenchmarkId, MeasurementData, Report, ReportContext};
+use crate::stats::bivariate::regression::Slope;
+use crate::stats::bivariate::Data;
 
+use crate::estimate::Statistic;
+use crate::format;
+use crate::fs;
+use crate::measurement::ValueFormatter;
+use crate::plot;
+use crate::Estimate;
 use criterion_plot::Size;
-use estimate::Statistic;
-use format;
-use fs;
-use measurement::ValueFormatter;
-use plot;
 use serde::Serialize;
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::process::Child;
 use tinytemplate::TinyTemplate;
-use Estimate;
 
 const THUMBNAIL_SIZE: Option<Size> = Some(Size(450, 300));
 
@@ -32,12 +32,12 @@ fn wait_on_gnuplot(children: Vec<Child>) {
     info!(
         "Waiting for {} gnuplot processes took {}",
         child_count,
-        ::format::time(::DurationExt::to_nanos(elapsed) as f64)
+        format::time(crate::DurationExt::to_nanos(elapsed) as f64)
     );
 }
 
 fn debug_context<S: Serialize>(path: &str, context: &S) {
-    if ::debug_enabled() {
+    if crate::debug_enabled() {
         let mut context_path = PathBuf::from(path);
         context_path.set_extension("json");
         println!("Writing report context to {:?}", context_path);
@@ -304,7 +304,7 @@ impl Report for Html {
         id: &BenchmarkId,
         report_context: &ReportContext,
         measurements: &MeasurementData,
-        formatter: &ValueFormatter,
+        formatter: &dyn ValueFormatter,
     ) {
         if !report_context.plotting.is_enabled() {
             return;
@@ -403,7 +403,7 @@ impl Report for Html {
         &self,
         context: &ReportContext,
         all_ids: &[BenchmarkId],
-        formatter: &ValueFormatter,
+        formatter: &dyn ValueFormatter,
     ) {
         if !context.plotting.is_enabled() {
             return;
@@ -642,7 +642,7 @@ impl Html {
         &self,
         id: &BenchmarkId,
         context: &ReportContext,
-        formatter: &ValueFormatter,
+        formatter: &dyn ValueFormatter,
         measurements: &MeasurementData,
     ) {
         let mut gnuplots = vec![
@@ -747,7 +747,7 @@ impl Html {
         id: &BenchmarkId,
         data: &[&(&BenchmarkId, Vec<f64>)],
         report_context: &ReportContext,
-        formatter: &ValueFormatter,
+        formatter: &dyn ValueFormatter,
         full_summary: bool,
     ) -> Vec<Child> {
         let mut gnuplots = vec![];

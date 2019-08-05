@@ -17,9 +17,8 @@
 //!   performance behavior.
 
 #![deny(missing_docs)]
-// TODO: Remove these and use the dyn keyword once we update to 1.27.0 or later
-#![allow(unknown_lints)]
-#![allow(bare_trait_objects)]
+#![deny(bare_trait_objects)]
+#![deny(warnings)]
 #![cfg_attr(feature = "real_blackbox", feature(test))]
 #![cfg_attr(not(feature = "html_reports"), allow(dead_code))]
 #![cfg_attr(
@@ -676,7 +675,7 @@ pub struct Criterion<M: Measurement = WallTime> {
     config: BenchmarkConfig,
     plotting: Plotting,
     filter: Option<String>,
-    report: Box<Report>,
+    report: Box<dyn Report>,
     output_directory: String,
     baseline_directory: String,
     baseline: Baseline,
@@ -686,7 +685,7 @@ pub struct Criterion<M: Measurement = WallTime> {
     all_directories: HashSet<String>,
     all_titles: HashSet<String>,
     measurement: M,
-    profiler: Box<RefCell<Profiler>>,
+    profiler: Box<RefCell<dyn Profiler>>,
 }
 
 impl Default for Criterion {
@@ -705,7 +704,7 @@ impl Default for Criterion {
         #[allow(unused_mut, unused_assignments)]
         let mut plotting = Plotting::Unset;
 
-        let mut reports: Vec<Box<Report>> = vec![];
+        let mut reports: Vec<Box<dyn Report>> = vec![];
         reports.push(Box::new(CliReport::new(false, false, false)));
         reports.push(Box::new(FileCsvReport));
 
@@ -980,7 +979,7 @@ impl<M: Measurement> Criterion<M> {
         use criterion_plot::VersionError;
         self.plotting = match criterion_plot::version() {
             Ok(_) => {
-                let mut reports: Vec<Box<Report>> = vec![];
+                let mut reports: Vec<Box<dyn Report>> = vec![];
                 reports.push(Box::new(CliReport::new(false, false, false)));
                 reports.push(Box::new(FileCsvReport));
                 reports.push(Box::new(Html::new()));
@@ -1179,7 +1178,7 @@ scripts alongside the generated plots.
             self.baseline_directory = dir.to_owned();
         }
 
-        let mut reports: Vec<Box<Report>> = vec![];
+        let mut reports: Vec<Box<dyn Report>> = vec![];
         reports.push(Box::new(CliReport::new(
             enable_text_overwrite,
             enable_text_coloring,
@@ -1593,7 +1592,7 @@ impl PlotConfiguration {
 
 /// Custom-test-framework runner. Should not be called directly.
 #[doc(hidden)]
-pub fn runner(benches: &[&Fn()]) {
+pub fn runner(benches: &[&dyn Fn()]) {
     for bench in benches {
         bench();
     }

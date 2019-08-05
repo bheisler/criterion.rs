@@ -1,19 +1,19 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use stats::bivariate::regression::Slope;
-use stats::bivariate::Data;
-use stats::univariate::outliers::tukey::{self, LabeledSample};
-use stats::univariate::Sample;
-use stats::{Distribution, Tails};
+use crate::stats::bivariate::regression::Slope;
+use crate::stats::bivariate::Data;
+use crate::stats::univariate::outliers::tukey::{self, LabeledSample};
+use crate::stats::univariate::Sample;
+use crate::stats::{Distribution, Tails};
 
-use benchmark::BenchmarkConfig;
-use estimate::{Distributions, Estimates, Statistic};
-use fs;
-use measurement::Measurement;
-use report::{BenchmarkId, ReportContext};
-use routine::Routine;
-use {build_estimates, Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
+use crate::benchmark::BenchmarkConfig;
+use crate::estimate::{Distributions, Estimates, Statistic};
+use crate::fs;
+use crate::measurement::Measurement;
+use crate::report::{BenchmarkId, ReportContext};
+use crate::routine::Routine;
+use crate::{build_estimates, Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => {{
@@ -24,7 +24,7 @@ macro_rules! elapsed {
         info!(
             "{} took {}",
             $msg,
-            ::format::time(::DurationExt::to_nanos(elapsed) as f64)
+            crate::format::time(crate::DurationExt::to_nanos(elapsed) as f64)
         );
 
         out
@@ -36,7 +36,7 @@ mod compare;
 // Common analysis procedure
 pub(crate) fn common<M: Measurement, T>(
     id: &BenchmarkId,
-    routine: &mut Routine<M, T>,
+    routine: &mut dyn Routine<M, T>,
     config: &BenchmarkConfig,
     criterion: &Criterion<M>,
     report_context: &ReportContext,
@@ -149,7 +149,7 @@ pub(crate) fn common<M: Measurement, T>(
                 base_estimates,
             )) => {
                 let p_value = t_distribution.p_value(t_value, &Tails::Two);
-                Some(::report::ComparisonData {
+                Some(crate::report::ComparisonData {
                     p_value,
                     t_distribution,
                     t_value,
@@ -164,7 +164,7 @@ pub(crate) fn common<M: Measurement, T>(
                 })
             }
             Err(e) => {
-                ::error::log_error(&e);
+                crate::error::log_error(&e);
                 None
             }
         }
@@ -172,7 +172,7 @@ pub(crate) fn common<M: Measurement, T>(
         None
     };
 
-    let measurement_data = ::report::MeasurementData {
+    let measurement_data = crate::report::MeasurementData {
         data: Data::new(&*iters, &*times),
         avg_times: labeled_sample,
         absolute_estimates: estimates.clone(),

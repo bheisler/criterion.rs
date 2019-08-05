@@ -5,7 +5,7 @@ use std::mem;
 use byteorder::{LittleEndian, WriteBytesExt};
 use cast::From as _0;
 
-use traits::Data;
+use crate::traits::Data;
 
 macro_rules! impl_data {
     ($($ty:ty),+) => {

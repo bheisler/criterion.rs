@@ -74,7 +74,7 @@ mod test {
                 }
             }
 
-            return TestResult::from_bool(true);
+            TestResult::from_bool(true)
         }
     }
 

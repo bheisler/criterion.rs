@@ -1,16 +1,16 @@
 use std::collections::BTreeMap;
 
-use stats::univariate::Sample;
-use stats::univariate::{self, mixed};
-use stats::Distribution;
+use crate::stats::univariate::Sample;
+use crate::stats::univariate::{self, mixed};
+use crate::stats::Distribution;
 
-use benchmark::BenchmarkConfig;
-use error::Result;
-use estimate::Statistic;
-use estimate::{Distributions, Estimates};
-use measurement::Measurement;
-use report::BenchmarkId;
-use {build_estimates, fs, Criterion};
+use crate::benchmark::BenchmarkConfig;
+use crate::error::Result;
+use crate::estimate::Statistic;
+use crate::estimate::{Distributions, Estimates};
+use crate::measurement::Measurement;
+use crate::report::BenchmarkId;
+use crate::{build_estimates, fs, Criterion};
 
 // Common comparison procedure
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::type_complexity))]

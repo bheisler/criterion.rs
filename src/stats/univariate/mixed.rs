@@ -1,11 +1,10 @@
 //! Mixed bootstrap
 
+use crate::stats::float::Float;
+use crate::stats::tuple::{Tuple, TupledDistributionsBuilder};
+use crate::stats::univariate::Resamples;
+use crate::stats::univariate::Sample;
 use rayon::prelude::*;
-use stats::float::Float;
-
-use stats::tuple::{Tuple, TupledDistributionsBuilder};
-use stats::univariate::Resamples;
-use stats::univariate::Sample;
 
 /// Performs a *mixed* two-sample bootstrap
 pub fn bootstrap<A, T, S>(

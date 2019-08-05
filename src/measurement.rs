@@ -3,10 +3,10 @@
 //! includes the [WallTime](struct.WallTime.html) struct which defines the default wall-clock time
 //! measurement.
 
-use format::short;
+use crate::format::short;
+use crate::DurationExt;
+use crate::Throughput;
 use std::time::{Duration, Instant};
-use DurationExt;
-use Throughput;
 
 /// Trait providing functions to format measured values to string so that they can be displayed on
 /// the command line or in the reports. The functions of this trait take measured values in f64
@@ -71,7 +71,7 @@ pub trait Measurement {
     fn to_f64(&self, value: &Self::Value) -> f64;
 
     /// Return a trait-object reference to the value formatter for this measurement.
-    fn formatter(&self) -> &ValueFormatter;
+    fn formatter(&self) -> &dyn ValueFormatter;
 }
 
 pub(crate) struct DurationFormatter;
@@ -111,7 +111,7 @@ impl DurationFormatter {
 }
 impl ValueFormatter for DurationFormatter {
     fn format_value(&self, ns: f64) -> String {
-        ::format::time(ns)
+        crate::format::time(ns)
     }
 
     fn format_throughput(&self, throughput: &Throughput, ns: f64) -> String {
@@ -158,7 +158,7 @@ impl Measurement for WallTime {
     fn to_f64(&self, val: &Self::Value) -> f64 {
         val.to_nanos() as f64
     }
-    fn formatter(&self) -> &ValueFormatter {
+    fn formatter(&self) -> &dyn ValueFormatter {
         &DurationFormatter
     }
 }

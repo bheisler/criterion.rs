@@ -6,7 +6,7 @@ pub trait Configure<This> {
     type Properties;
 
     /// Configure some set of properties
-    fn configure<F>(&mut self, This, F) -> &mut Self
+    fn configure<F>(&mut self, this: This, function: F) -> &mut Self
     where
         F: FnOnce(&mut Self::Properties) -> &mut Self::Properties;
 }
@@ -23,7 +23,7 @@ pub trait Plot<This> {
     type Properties;
 
     /// Plots some `data` with some `configuration`
-    fn plot<F>(&mut self, This, F) -> &mut Self
+    fn plot<F>(&mut self, this: This, function: F) -> &mut Self
     where
         F: FnOnce(&mut Self::Properties) -> &mut Self::Properties;
 }
@@ -31,5 +31,5 @@ pub trait Plot<This> {
 /// Overloaded `set` method
 pub trait Set<T> {
     /// Sets some property
-    fn set(&mut self, T) -> &mut Self;
+    fn set(&mut self, value: T) -> &mut Self;
 }

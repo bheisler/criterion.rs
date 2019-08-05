@@ -41,10 +41,9 @@ use std::iter::IntoIterator;
 use std::ops::{Deref, Index};
 use std::slice;
 
+use crate::stats::float::Float;
+use crate::stats::univariate::Sample;
 use cast;
-use stats::float::Float;
-
-use stats::univariate::Sample;
 
 use self::Label::*;
 
