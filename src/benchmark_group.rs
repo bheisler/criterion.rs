@@ -91,7 +91,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     ///
     /// # Panics
     ///
-    /// Panics if set to zero or one.
+    /// Panics if n < 10.
     pub fn sample_size(&mut self, n: usize) -> &mut Self {
         assert!(n >= 10);
 

@@ -107,16 +107,13 @@ macro_rules! benchmark_config {
         /// A bigger sample should yield more accurate results if paired with a sufficiently large
         /// measurement time.
         ///
-        /// Sample size must be at least 2.
+        /// Sample size must be at least 10.
         ///
         /// # Panics
         ///
-        /// Panics if set to zero or one.
+        /// Panics if n < 10.
         pub fn sample_size(mut self, n: usize) -> Self {
-            assert!(n >= 2);
-            if n < 10 {
-                println!("Warning: Sample sizes < 10 will be disallowed in Criterion.rs 0.3.0.");
-            }
+            assert!(n >= 10);
 
             self.config.sample_size = Some(n);
             self
