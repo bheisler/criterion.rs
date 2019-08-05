@@ -17,8 +17,7 @@ criterion = { version = "0.3.0", path = "..", default-features = false }
 
 [features]
 real_blackbox = ["criterion/real_blackbox"]
-html_reports = ["criterion/html_reports"]
-default = ["html_reports"]
+default = []
 
 [[bench]]
 name = "bencher_example"
