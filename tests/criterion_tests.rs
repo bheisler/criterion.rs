@@ -462,7 +462,7 @@ fn test_output_files() {
         verify_stats(&dir, "base");
         verify_json(&dir, "change/estimates.json");
 
-        if short_benchmark(&tempdir).can_plot() && cfg!(feature = "html_reports") {
+        if short_benchmark(&tempdir).can_plot() {
             verify_svg(&dir, "report/MAD.svg");
             verify_svg(&dir, "report/mean.svg");
             verify_svg(&dir, "report/median.svg");
@@ -485,7 +485,7 @@ fn test_output_files() {
     }
 
     // Check for overall report files
-    if short_benchmark(&tempdir).can_plot() && cfg!(feature = "html_reports") {
+    if short_benchmark(&tempdir).can_plot() {
         let dir = tempdir.path().join("test_output");
 
         verify_svg(&dir, "report/violin.svg");
@@ -494,7 +494,7 @@ fn test_output_files() {
 
     // Run the final summary process and check for the report that produces
     short_benchmark(&tempdir).final_summary();
-    if short_benchmark(&tempdir).can_plot() && cfg!(feature = "html_reports") {
+    if short_benchmark(&tempdir).can_plot() {
         let dir = tempdir.path().to_owned();
 
         verify_html(&dir, "report/index.html");

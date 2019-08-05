@@ -20,7 +20,6 @@
 #![deny(bare_trait_objects)]
 #![deny(warnings)]
 #![cfg_attr(feature = "real_blackbox", feature(test))]
-#![cfg_attr(not(feature = "html_reports"), allow(dead_code))]
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
@@ -49,6 +48,7 @@ extern crate lazy_static;
 
 extern crate atty;
 extern crate cast;
+extern crate criterion_plot;
 extern crate csv;
 extern crate itertools;
 extern crate num_traits;
@@ -58,13 +58,8 @@ extern crate rand_xoshiro;
 extern crate rayon;
 extern crate serde;
 extern crate serde_json;
-extern crate walkdir;
-
-#[cfg(feature = "html_reports")]
-extern crate criterion_plot;
-
-#[cfg(feature = "html_reports")]
 extern crate tinytemplate;
+extern crate walkdir;
 
 #[cfg(feature = "real_blackbox")]
 extern crate test;
@@ -86,22 +81,16 @@ mod error;
 mod estimate;
 mod format;
 mod fs;
+mod html;
+mod kde;
 mod macros;
 pub mod measurement;
+mod plot;
 pub mod profiler;
 mod program;
 mod report;
 mod routine;
 mod stats;
-
-#[cfg(feature = "html_reports")]
-mod kde;
-
-#[cfg(feature = "html_reports")]
-mod plot;
-
-#[cfg(feature = "html_reports")]
-mod html;
 
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashSet};
@@ -115,15 +104,13 @@ use benchmark::BenchmarkConfig;
 use benchmark::NamedRoutine;
 use csv_report::FileCsvReport;
 use estimate::{Distributions, Estimates, Statistic};
+use html::Html;
 use measurement::{Measurement, WallTime};
 use plotting::Plotting;
 use profiler::{ExternalProfiler, Profiler};
 use report::{CliReport, Report, ReportContext, Reports};
 use routine::Function;
 use std::marker::PhantomData;
-
-#[cfg(feature = "html_reports")]
-use html::Html;
 
 pub use benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
 pub use benchmark_group::{BenchmarkGroup, BenchmarkId};
@@ -134,19 +121,6 @@ lazy_static! {
 
 fn debug_enabled() -> bool {
     *DEBUG_ENABLED
-}
-
-// Fake function which shows a deprecation warning when compiled without the html_reports feature.
-#[cfg(not(feature = "html_reports"))]
-#[cfg_attr(not(feature = "html_reports"), doc(hidden))]
-pub fn deprecation_warning() {
-    #[deprecated(
-        since = "0.2.6",
-        note = "The html_reports cargo feature is deprecated. As of 0.3.0, HTML reports will no longer be optional."
-    )]
-    fn deprecation_warning_inner() {}
-
-    deprecation_warning_inner()
 }
 
 /// A function that is opaque to the optimizer, used to prevent the compiler from
@@ -974,7 +948,6 @@ impl<M: Measurement> Criterion<M> {
     }
 
     /// Enables plotting
-    #[cfg(feature = "html_reports")]
     pub fn with_plots(mut self) -> Criterion<M> {
         use criterion_plot::VersionError;
         self.plotting = match criterion_plot::version() {
@@ -998,12 +971,6 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
-    /// Enables plotting
-    #[cfg(not(feature = "html_reports"))]
-    pub fn with_plots(self) -> Criterion<M> {
-        self
-    }
-
     /// Disables plotting
     pub fn without_plots(mut self) -> Criterion<M> {
         self.plotting = Plotting::Disabled;
@@ -1011,19 +978,12 @@ impl<M: Measurement> Criterion<M> {
     }
 
     /// Return true if generation of the plots is possible.
-    #[cfg(feature = "html_reports")]
     pub fn can_plot(&self) -> bool {
         match self.plotting {
             Plotting::NotAvailable => false,
             Plotting::Enabled => true,
             _ => criterion_plot::version().is_ok(),
         }
-    }
-
-    /// Return true if generation of the plots is possible.
-    #[cfg(not(feature = "html_reports"))]
-    pub fn can_plot(&self) -> bool {
-        false
     }
 
     /// Names an explicit baseline and enables overwriting the previous results.
@@ -1205,11 +1165,8 @@ scripts alongside the generated plots.
             self.list_mode = true;
         }
 
-        #[cfg(feature = "html_reports")]
-        {
-            if self.profile_time.is_none() {
-                reports.push(Box::new(Html::new()));
-            }
+        if self.profile_time.is_none() {
+            reports.push(Box::new(Html::new()));
         }
 
         self.report = Box::new(Reports::new(reports));

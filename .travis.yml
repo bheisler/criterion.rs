@@ -42,13 +42,6 @@ matrix:
           packages:
             - gnuplot
     - os: linux
-      env: HTML_REPORTS=no GNUPLOT=yes
-      rust: 1.31.0
-      addons:
-        apt:
-          packages:
-            - gnuplot
-    - os: linux
       env: GNUPLOT=no
       rust: nightly
     - os: linux
