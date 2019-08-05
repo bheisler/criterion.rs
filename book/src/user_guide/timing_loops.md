@@ -104,9 +104,10 @@ a function in a loop. For example, this might be used for:
 
 Try to keep the overhead in the measurement routine to a minimum; Criterion.rs will still use its
 normal warm-up/target-time logic, which is based on wall-clock time. If your measurement routine
-carries a substantial amount of overhead it could mess up the calculations and cause Criterion.rs
-to run too few iterations (not to mention that the benchmarks would take a long time). Because of
-this, it's best to do heavy setup like starting processes or threads before running the benchmark.
+takes a long time to perform each measurement it could mess up the calculations and cause
+Criterion.rs to run too few iterations (not to mention that the benchmarks would take a long time).
+Because of this, it's best to do heavy setup like starting processes or threads before running the
+benchmark.
 
 ## What do I do if my function's runtime is smaller than the measurement overhead?
 
