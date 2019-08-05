@@ -2,7 +2,7 @@
 //!
 //! This crate is a microbenchmarking library which aims to provide strong
 //! statistical confidence in detecting and estimating the size of performance
-//! improvements and regressions, whle also being easy to use.
+//! improvements and regressions, while also being easy to use.
 //!
 //! See
 //! [the user guide](https://bheisler.github.io/criterion.rs/book/index.html)

@@ -30,6 +30,10 @@ rand_os = "0.1"
 rand_xoshiro = "0.1"
 rand_core = { version = "0.3", default-features = false }
 rayon = "1.0.3"
+
+# This is needed to build on old rustc versions.
+csv-core = "<0.1.5"
+
 # These are needed for the minimal-versions build
 rayon-core = ">=1.4.1"
 libc = ">=0.1.5"

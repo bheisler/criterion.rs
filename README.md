@@ -31,15 +31,15 @@
 Criterion.<span></span>rs helps you write fast code by detecting and measuring performance improvements or regressions, even small ones, quickly and accurately. You can optimize with confidence, knowing how each change affects the performance of your code.
 
 ## Table of Contents
-- [Table of Contents](#table-of-contents)
-  - [Features](#features)
-  - [Quickstart](#quickstart)
-  - [Goals](#goals)
-  - [Contributing](#contributing)
-  - [Compatibility Policy](#compatibility-policy)
-  - [Maintenance](#maintenance)
-  - [License](#license)
-  - [Related Projects](#related-projects)
+- [Table of Contents](#Table-of-Contents)
+  - [Features](#Features)
+  - [Quickstart](#Quickstart)
+  - [Goals](#Goals)
+  - [Contributing](#Contributing)
+  - [Compatibility Policy](#Compatibility-Policy)
+  - [Maintenance](#Maintenance)
+  - [License](#License)
+  - [Related Projects](#Related-Projects)
 
 ### Features
 
@@ -140,3 +140,4 @@ Criterion.<span></span>rs is dual licensed under the Apache 2.0 license and the 
 - [bencher](https://github.com/bluss/bencher) - A port of the libtest benchmark runner to stable Rust
 - [criterion](http://www.serpentine.com/criterion/) - The Haskell microbenchmarking library that inspired Criterion.<span></span>rs
 - [cargo-benchcmp](https://github.com/BurntSushi/cargo-benchcmp) - Cargo subcommand to compare the output of two libtest or bencher benchmark runs
+- [cargo-flamegraph](https://github.com/ferrous-systems/flamegraph) - Cargo subcommand to profile an executable and produce a flamegraph
