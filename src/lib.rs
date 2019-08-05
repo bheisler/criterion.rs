@@ -398,10 +398,10 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     #[inline(never)]
     pub fn iter_custom<R>(&mut self, mut routine: R)
     where
-        R: FnMut(u64) -> Duration,
+        R: FnMut(u64) -> M::Value,
     {
         self.iterated = true;
-        self.elapsed = routine(self.iters);
+        self.value = routine(self.iters);
     }
 
     #[doc(hidden)]
