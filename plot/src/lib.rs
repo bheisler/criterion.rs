@@ -412,8 +412,8 @@ use std::path::Path;
 use std::process::{Child, Command};
 use std::str;
 
-use data::Matrix;
-use traits::{Configure, Set};
+use crate::data::Matrix;
+use crate::traits::{Configure, Set};
 
 mod data;
 mod display;
@@ -796,7 +796,7 @@ pub enum Axis {
 
 impl Axis {
     fn next(self) -> Option<Axis> {
-        use Axis::*;
+        use crate::Axis::*;
 
         match self {
             BottomX => Some(LeftY),
@@ -838,7 +838,7 @@ pub enum Grid {
 
 impl Grid {
     fn next(self) -> Option<Grid> {
-        use Grid::*;
+        use crate::Grid::*;
 
         match self {
             Major => Some(Minor),
@@ -1040,8 +1040,8 @@ fn parse_version(version_str: &str) -> Result<Version, Option<ParseIntError>> {
 }
 
 fn scale_factor(map: &map::axis::Map<axis::Properties>, axes: Axes) -> (f64, f64) {
-    use Axes::*;
-    use Axis::*;
+    use crate::Axes::*;
+    use crate::Axis::*;
 
     match axes {
         BottomXLeftY => (

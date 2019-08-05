@@ -97,23 +97,23 @@ use std::collections::{BTreeMap, HashSet};
 use std::default::Default;
 use std::fmt;
 use std::iter::IntoIterator;
+use std::marker::PhantomData;
 use std::process::Command;
 use std::time::Duration;
 
-use benchmark::BenchmarkConfig;
-use benchmark::NamedRoutine;
-use csv_report::FileCsvReport;
-use estimate::{Distributions, Estimates, Statistic};
-use html::Html;
-use measurement::{Measurement, WallTime};
-use plotting::Plotting;
-use profiler::{ExternalProfiler, Profiler};
-use report::{CliReport, Report, ReportContext, Reports};
-use routine::Function;
-use std::marker::PhantomData;
+use crate::benchmark::BenchmarkConfig;
+use crate::benchmark::NamedRoutine;
+use crate::csv_report::FileCsvReport;
+use crate::estimate::{Distributions, Estimates, Statistic};
+use crate::html::Html;
+use crate::measurement::{Measurement, WallTime};
+use crate::plotting::Plotting;
+use crate::profiler::{ExternalProfiler, Profiler};
+use crate::report::{CliReport, Report, ReportContext, Reports};
+use crate::routine::Function;
 
-pub use benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
-pub use benchmark_group::{BenchmarkGroup, BenchmarkId};
+pub use crate::benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
+pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};
 
 lazy_static! {
     static ref DEBUG_ENABLED: bool = { std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG") };
