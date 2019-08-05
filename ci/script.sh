@@ -18,13 +18,7 @@ elif [ "$MINIMAL_VERSIONS" = "yes" ]; then
 else
     cargo build $BUILD_ARGS --release
 
-    # TODO: Remove this hack once we no longer have to support 1.23 and 1.20
-    if [ "$TRAVIS_RUST_VERSION" = "stable" ]; then
-        cargo test --all --release
-    else
-        cargo test --all --release --tests
-    fi
-
+    cargo test --all --release
     cargo bench --all -- --test
     
     cd bencher_compat

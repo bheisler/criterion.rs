@@ -88,9 +88,6 @@ pub fn make_filename_safe(string: &str) -> String {
     truncate_to_character_boundary(&mut string, MAX_DIRECTORY_NAME_LEN);
 
     if cfg!(target_os = "windows") {
-        // TODO: remove `allow(...)` when we don't support Rust < 1.30.
-        // (this is needed for `.trim_right` which is deprecated in favour of `.trim_end`)
-        #[allow(deprecated)]
         {
             string = string
                 // On Windows, spaces in the end of the filename are ignored and will be trimmed.
@@ -100,7 +97,7 @@ pub fn make_filename_safe(string: &str) -> String {
                 //
                 // Also note that it's important to do this *after* trimming to MAX_DIRECTORY_NAME_LEN,
                 // otherwise it can trim again to a name with a trailing space.
-                .trim_right()
+                .trim_end()
                 // On Windows, file names are not case-sensitive, so lowercase everything.
                 .to_lowercase();
         }
