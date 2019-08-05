@@ -2,7 +2,6 @@
 
 use std::mem;
 
-use byteorder::{LittleEndian, WriteBytesExt};
 use cast::From as _0;
 
 use traits::Data;
@@ -81,6 +80,10 @@ pub trait Row {
     fn ncols() -> usize;
 }
 
+fn write_f64(w: &mut impl std::io::Write, f: f64) -> std::io::Result<()> {
+    w.write_all(&f.to_bits().to_le_bytes())
+}
+
 impl<A, B> Row for (A, B)
 where
     A: Data,
@@ -91,8 +94,8 @@ where
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64)) {
         let (a, b) = self;
 
-        buffer.write_f64::<LittleEndian>(a.f64() * scale.0).unwrap();
-        buffer.write_f64::<LittleEndian>(b.f64() * scale.1).unwrap();
+        write_f64(buffer, a.f64() * scale.0).unwrap();
+        write_f64(buffer, b.f64() * scale.1).unwrap();
     }
 
     fn ncols() -> usize {
@@ -111,9 +114,9 @@ where
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64)) {
         let (a, b, c) = self;
 
-        buffer.write_f64::<LittleEndian>(a.f64() * scale.0).unwrap();
-        buffer.write_f64::<LittleEndian>(b.f64() * scale.1).unwrap();
-        buffer.write_f64::<LittleEndian>(c.f64() * scale.2).unwrap();
+        write_f64(buffer, a.f64() * scale.0).unwrap();
+        write_f64(buffer, b.f64() * scale.1).unwrap();
+        write_f64(buffer, c.f64() * scale.2).unwrap();
     }
 
     fn ncols() -> usize {
@@ -133,10 +136,10 @@ where
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64, f64)) {
         let (a, b, c, d) = self;
 
-        buffer.write_f64::<LittleEndian>(a.f64() * scale.0).unwrap();
-        buffer.write_f64::<LittleEndian>(b.f64() * scale.1).unwrap();
-        buffer.write_f64::<LittleEndian>(c.f64() * scale.2).unwrap();
-        buffer.write_f64::<LittleEndian>(d.f64() * scale.3).unwrap();
+        write_f64(buffer, a.f64() * scale.0).unwrap();
+        write_f64(buffer, b.f64() * scale.1).unwrap();
+        write_f64(buffer, c.f64() * scale.2).unwrap();
+        write_f64(buffer, d.f64() * scale.3).unwrap();
     }
 
     fn ncols() -> usize {
@@ -158,11 +161,11 @@ where
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64, f64, f64)) {
         let (a, b, c, d, e) = self;
 
-        buffer.write_f64::<LittleEndian>(a.f64() * scale.0).unwrap();
-        buffer.write_f64::<LittleEndian>(b.f64() * scale.1).unwrap();
-        buffer.write_f64::<LittleEndian>(c.f64() * scale.2).unwrap();
-        buffer.write_f64::<LittleEndian>(d.f64() * scale.3).unwrap();
-        buffer.write_f64::<LittleEndian>(e.f64() * scale.4).unwrap();
+        write_f64(buffer, a.f64() * scale.0).unwrap();
+        write_f64(buffer, b.f64() * scale.1).unwrap();
+        write_f64(buffer, c.f64() * scale.2).unwrap();
+        write_f64(buffer, d.f64() * scale.3).unwrap();
+        write_f64(buffer, e.f64() * scale.4).unwrap();
     }
 
     fn ncols() -> usize {
