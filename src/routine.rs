@@ -113,18 +113,52 @@ pub trait Routine<M: Measurement, T> {
         // Solve: [d + 2*d + 3*d + ... + n*d] * met = m_ns
         let total_runs = n * (n + 1) / 2;
         let d = (m_ns as f64 / met / total_runs as f64).ceil() as u64;
+        let expected_ns = total_runs as f64 * d as f64 * met;
+
+        if d == 1 {
+            let recommended_sample_size = recommend_sample_size(m_ns as f64, met);
+            let actual_time = Duration::from_nanos(expected_ns as u64);
+            println!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?} or reduce sample count to {}",
+                n, config.measurement_time, actual_time, recommended_sample_size);
+        }
 
         let m_iters = (1..(n + 1) as u64).map(|a| a * d).collect::<Vec<u64>>();
 
-        let m_ns = total_runs as f64 * d as f64 * met;
-        criterion
-            .report
-            .measurement_start(id, report_context, n, m_ns, m_iters.iter().sum());
+        criterion.report.measurement_start(
+            id,
+            report_context,
+            n,
+            expected_ns,
+            m_iters.iter().sum(),
+        );
         let m_elapsed = self.bench(measurement, &mut p, &m_iters, parameter);
 
         let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();
 
         (m_iters_f.into_boxed_slice(), m_elapsed.into_boxed_slice())
+    }
+}
+
+fn recommend_sample_size(target_time: f64, met: f64) -> u64 {
+    // Some math shows that n(n+1)/2 * d * met = target_time. d = 1, so it can be ignored.
+    // This leaves n(n+1) = (2*target_time)/met, or n^2 + n - (2*target_time)/met = 0
+    // Which can be solved with the quadratic formula. Since A and B are constant 1,
+    // this simplifies to sample_size = (-1 +- sqrt(1 - 4C))/2, where C = (2*target_time)/met.
+    // We don't care about the negative solution. Experimentation shows that this actually tends to
+    // result in twice the desired execution time (probably because of the ceil used to calculate
+    // d) so instead I use c = target_time/met.
+    let c = target_time / met;
+    let sample_size = (-1.0 + (4.0 * c).sqrt()) / 2.0;
+    let sample_size = sample_size as u64;
+
+    // Round down to the nearest 10 to give a margin and avoid excessive precision
+    let sample_size = (sample_size / 10) * 10;
+
+    // Clamp it to be at least 10, since criterion.rs doesn't allow sample sizes smaller than 10.
+    if sample_size < 10 {
+        10
+    } else {
+        sample_size
     }
 }
 

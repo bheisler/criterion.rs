@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   at some point in the 0.3.* series and removed in 0.4.0.
 - `iter_custom` - a "timing loop" that allows the caller to perform their own measurements. This is
   useful for complex measurements that don't fit into the usual mode of calling a lambda in a loop.
+- If the benchmark cannot be completed in approximately the requested measurement time,
+  Criterion.rs will now print a suggested measurement time and sample size that would work.
 
 ### Fixed
 - Fixed possible invalid file name error on Windows
