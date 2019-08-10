@@ -12,7 +12,6 @@ categories = ["visualization"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-byteorder = "1"
 cast = "0.2"
 itertools = "0.8"
 
