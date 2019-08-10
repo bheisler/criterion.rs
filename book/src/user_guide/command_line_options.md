@@ -12,7 +12,7 @@ would only run benchmarks whose ID contains the string `fib_20`
 * To disable plot generation, use `cargo bench -- --noplot`
 * To iterate each benchmark for a fixed length of time without saving, analyzing or plotting the results, use `cargo bench -- --profile-time <num_seconds>`. This is useful when profiling the benchmarks. It reduces the amount of unrelated clutter in the profiling results and prevents Criterion.rs' normal dynamic sampling logic from greatly increasing the runtime of the benchmarks.
 * To save a baseline, use `cargo bench -- --save-baseline <name>`. To compare against an existing baseline, use `cargo bench -- --baseline <name>`. For more on baselines, see below.
-* To test that the benchmarks run successfully without performing the measurement or analysis (eg. in a CI setting), use `cargo bench -- --test`.
+* To test that the benchmarks run successfully without performing the measurement or analysis (eg. in a CI setting), use `cargo test --benches`.
 
 ### Note:
 

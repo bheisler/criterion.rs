@@ -12,3 +12,7 @@ deprecation warnings. They will be removed in 0.4.0.
 
 All of these types and functions have been superseded by the `BenchmarkGroup` type, which is cleaner
 to use as well as more powerful and flexible.
+
+### `cargo bench -- --test` is deprecated.
+
+Use `cargo test --benches` instead.

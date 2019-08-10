@@ -30,6 +30,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Removed the `--measure-only` command-line argument; it was deprecated in favor of `--profile-time`
   in 0.2.6.
 
+### Deprecated
+- The `--test` argument is now deprecated. To test benchmarks, use `cargo test --benches`.
+
 ## [0.2.11] - 2019-04-08
 ### Added
 - Enabled automatic text-coloring on Windows.

@@ -1084,9 +1084,9 @@ impl<M: Measurement> Criterion<M> {
                 .takes_value(true)
                 .help("Iterate each benchmark for approximately the given number of seconds, doing no analysis and without storing the results. Useful for running the benchmarks in a profiler."))
             .arg(Arg::with_name("test")
+                .hidden(true)
                 .long("test")
                 .help("Run the benchmarks once, to verify that they execute successfully, but do not measure or report the results."))
-            //Ignored but always passed to benchmark executables
             .arg(Arg::with_name("bench")
                 .hidden(true)
                 .long("bench"))
@@ -1101,6 +1101,8 @@ See https://github.com/bheisler/criterion.rs for more details.
 To enable debug output, define the environment variable CRITERION_DEBUG.
 Criterion.rs will output more debug information and will save the gnuplot
 scripts alongside the generated plots.
+
+To test that the benchmarks work, run `cargo test --benches`
 ")
             .get_matches();
 
@@ -1159,7 +1161,15 @@ scripts alongside the generated plots.
 
             self.profile_time = Some(Duration::from_secs(num_seconds));
         }
-        self.test_mode = matches.is_present("test");
+
+        let bench = matches.is_present("bench");
+        let test = matches.is_present("test");
+        self.test_mode = match (bench, test) {
+            (true, true) => true,   // cargo bench -- --test should run tests
+            (true, false) => false, // cargo bench should run benchmarks
+            (false, _) => true,     // cargo test --benches should run tests
+        };
+
         if matches.is_present("list") {
             self.test_mode = true;
             self.list_mode = true;

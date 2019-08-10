@@ -19,17 +19,17 @@ else
     cargo build $BUILD_ARGS --release
 
     cargo test --all --release
-    cargo bench --all -- --test
+    cargo test --benches
     
     cd bencher_compat
     export CARGO_TARGET_DIR="../target"
-    cargo bench -- --test
+    cargo test --benches
     cd ..
 
     if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then
         cd macro
         export CARGO_TARGET_DIR="../target"
-        cargo bench -- --test
+        cargo test --benches
         cd ..
     fi
 fi
