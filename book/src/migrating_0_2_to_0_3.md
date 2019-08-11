@@ -16,3 +16,9 @@ to use as well as more powerful and flexible.
 ### `cargo bench -- --test` is deprecated.
 
 Use `cargo test --benches` instead.
+
+### The format of the `raw.csv` file has changed to accommodate custom measurements.
+
+The `sample_time_nanos` field has been split into `sample_measured_value` and `unit`. For the
+default `WallTime` measurement, the `sample_measured_value` is the same as the `sample_time_nanos`
+was previously.

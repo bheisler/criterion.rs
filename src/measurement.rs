@@ -33,6 +33,16 @@ pub trait ValueFormatter {
     /// display it in seconds, `scale_and_unit` should return `(10.powi(-9), "s")`, because
     /// `value * 10.powi(-9)` will produce a number of seconds.
     fn scale_and_unit(&self, value: f64) -> (f64, &'static str);
+
+    // TODO: I really don't like this scale_and_unit function. There must be a better interface
+    // for this...
+
+    /// Scale the values and return a unit string designed for machines.
+    ///
+    /// For example, this is used for the CSV file output. Implementations should modify the given
+    /// values slice to apply the desired scaling (if any) and return a string representing the unit
+    /// the modified values are in.
+    fn scale_for_machines(&self, values: &mut [f64]) -> &'static str;
 }
 
 /// Trait for all types which define something Criterion.rs can measure. The only measurement
@@ -133,6 +143,11 @@ impl ValueFormatter for DurationFormatter {
         } else {
             (10f64.powi(-9), "s")
         }
+    }
+
+    fn scale_for_machines(&self, _values: &mut [f64]) -> &'static str {
+        // no scaling is needed
+        "ns"
     }
 }
 

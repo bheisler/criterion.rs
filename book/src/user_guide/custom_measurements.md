@@ -97,6 +97,7 @@ pub trait ValueFormatter {
     fn format_value(&self, value: f64) -> String;
     fn format_throughput(&self, throughput: &Throughput, value: f64) -> String;
     fn scale_and_unit(&self, value: f64) -> (f64, &'static str);
+    fn scale_for_machines(&self, values: &mut [f64]) -> &'static str;
 }
 ```
 
@@ -127,7 +128,7 @@ if ns < 1.0 {  // ns = time in nanoseconds
 It's also a good idea to limit the amount of precision in floating-point output - after a few
 digits the numbers don't matter much anymore but add a lot of visual noise and make the results
 harder to interpret. For example, it's very unlikely that anyone cares about the difference between
-`10.2896653s` and `10.2896654s` - it's much more salient that their function takes "about 10
+`10.2896653s` and `10.2896654s` - it's much more salient that their function takes "about 10.3
 seconds per iteration".
 
 With that out of the way, `format_value` is pretty straightforward. `format_throughput` is also not
@@ -142,6 +143,11 @@ and the unit will be inserted into the axis labels when generating plots. So, fo
 times where the measured values are in nanoseconds, if we wanted to display plots in milliseconds
 we would return `(10.0f64.powi(-6), "ms")`, because multiplying a value in nanoseconds by 10^-6
 gives a value in milliseconds.
+
+`scale_for_machines` is another complex one. It accepts a mutable slice of values rather than a
+single value. It applies some appropriate scaling to the values and returns a unit string. This is
+used when saving values in a machine-readable form, so for this case formatters should generally
+return a fixed unit rather than adjusting the unit to improve clarity.
 
 Our half-second measurement formatter thus looks like this:
 
@@ -168,6 +174,15 @@ impl ValueFormatter for HalfSecFormatter {
 
     fn scale_and_unit(&self, _value: f64) -> (f64, &'static str) {
         (2f64 * 10f64.powi(-9), "s/2")
+    }
+
+    fn scale_for_machines(&self, values: &mut [f64]) -> &'static str {
+        // Convert values in nanoseconds to half-seconds.
+        for val in values {
+            *val *= 2f64 * 10f64.powi(-9);
+        }
+
+        "s/2"
     }
 }
 ```
