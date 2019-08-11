@@ -22,7 +22,7 @@ fn bench(c: &mut Criterion) {
     let bytes : &[u8] = ...;
 
     let mut group = c.benchmark_group("throughput-example");
-    group.throughput(Throughput::Bytes(bytes.len() as u32));
+    group.throughput(Throughput::Bytes(bytes.len() as u64));
     group.bench_function("decode", |b| b.iter(|| decode(bytes));
     group.finish();
 }
@@ -49,7 +49,7 @@ fn bench(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("throughput-example");
     for (i, elements) in [elements_1, elements_2].iter().enumerate() {
-        group.throughput(Throughput::Elements(elems.len() as u32));
+        group.throughput(Throughput::Elements(elems.len() as u64));
         group.bench_with_input(format!("Encode {}", i), elements, |elems, b| {
             b.iter(||encode(elems))
         });

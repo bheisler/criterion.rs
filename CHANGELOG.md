@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - The `raw.csv` file format has been changed slightly. The `sample_time_nanos` field has been split
   into `sample_measured_value` and `unit` fields to accommodate custom measurements.
+- Throughput has been expanded from u32 to u64 to accommodate very large input sizes.
 
 ### Fixed
 - Fixed possible invalid file name error on Windows

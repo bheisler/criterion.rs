@@ -32,3 +32,8 @@ on the part of the benchmark author, using `iter_custom` gives more flexibility 
 communicates with the external process and also allows benchmarks to work with custom measurements,
 which was not possible previously. For an example of benchmarking an external process, see the 
 `benches/external_process.rs` benchmark in the Criterion.rs repository.
+
+### Throughput has been expanded to `u64`
+
+Existing benchmarks with u32 Throughputs will need to be changed. Using u64 allows Throughput to
+scale up to much larger numbers of bytes/elements.

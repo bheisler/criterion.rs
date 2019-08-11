@@ -1411,13 +1411,13 @@ pub enum Throughput {
     /// Measure throughput in terms of bytes/second. The value should be the number of bytes
     /// processed by one iteration of the benchmarked code. Typically, this would be the length of
     /// an input string or `&[u8]`.
-    Bytes(u32),
+    Bytes(u64),
 
     /// Measure throughput in terms of elements/second. The value should be the number of elements
     /// processed by one iteration of the benchmarked code. Typically, this would be the size of a
     /// collection, but could also be the number of lines of input text or the number of values to
     /// parse.
-    Elements(u32),
+    Elements(u64),
 }
 
 /// Axis scaling type

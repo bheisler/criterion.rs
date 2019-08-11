@@ -15,7 +15,7 @@ fn large_setup(c: &mut Criterion) {
                 |v| v.clone(),
             )
         })
-        .throughput(Throughput::Bytes(SIZE as u32)),
+        .throughput(Throughput::Bytes(SIZE as u64)),
     );
 }
 

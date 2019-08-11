@@ -126,8 +126,8 @@ impl ValueFormatter for DurationFormatter {
 
     fn format_throughput(&self, throughput: &Throughput, ns: f64) -> String {
         match *throughput {
-            Throughput::Bytes(bytes) => self.bytes_per_second(f64::from(bytes) * (1e9 / ns)),
-            Throughput::Elements(elems) => self.elements_per_second(f64::from(elems) * (1e9 / ns)),
+            Throughput::Bytes(bytes) => self.bytes_per_second((bytes as f64) * (1e9 / ns)),
+            Throughput::Elements(elems) => self.elements_per_second((elems as f64) * (1e9 / ns)),
         }
     }
 

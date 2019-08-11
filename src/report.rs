@@ -171,7 +171,7 @@ impl BenchmarkId {
 
     pub fn as_number(&self) -> Option<f64> {
         match self.throughput {
-            Some(Throughput::Bytes(n)) | Some(Throughput::Elements(n)) => Some(f64::from(n)),
+            Some(Throughput::Bytes(n)) | Some(Throughput::Elements(n)) => Some(n as f64),
             None => self
                 .value_str
                 .as_ref()

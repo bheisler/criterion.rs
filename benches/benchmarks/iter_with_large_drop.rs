@@ -12,7 +12,7 @@ fn large_drop(c: &mut Criterion) {
             let v: Vec<_> = (0..SIZE).map(|i| i as u8).collect();
             b.iter_with_large_drop(|| v.clone());
         })
-        .throughput(Throughput::Bytes(SIZE as u32)),
+        .throughput(Throughput::Bytes(SIZE as u64)),
     );
 }
 
