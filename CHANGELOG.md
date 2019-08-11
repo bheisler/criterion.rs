@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   useful for complex measurements that don't fit into the usual mode of calling a lambda in a loop.
 - If the benchmark cannot be completed in approximately the requested measurement time,
   Criterion.rs will now print a suggested measurement time and sample size that would work.
+- Two new fields, `throughput_num` and `throughput_type` have been added to the `raw.csv` file.
+
+### Changed
+- The `raw.csv` file format has been changed slightly. The `sample_time_nanos` field has been split
+  into `sample_measured_value` and `unit` fields to accommodate custom measurements.
 
 ### Fixed
 - Fixed possible invalid file name error on Windows
