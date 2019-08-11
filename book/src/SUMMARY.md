@@ -11,7 +11,6 @@
     - [Benchmarking With Inputs](./user_guide/benchmarking_with_inputs.md)
     - [Advanced Configuration](./user_guide/advanced_configuration.md)
     - [Comparing Functions](./user_guide/comparing_functions.md)
-    - [Benchmarking External Programs](./user_guide/external_programs.md)
     - [CSV Output](./user_guide/csv_output.md)
     - [Known Limitations](./user_guide/known_limitations.md)
     - [Bencher Compatibility Layer](./user_guide/bencher_compatibility.md)

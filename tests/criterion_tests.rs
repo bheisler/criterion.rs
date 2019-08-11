@@ -297,65 +297,6 @@ fn test_bench_function_over_inputs() {
 }
 
 #[test]
-#[allow(deprecated)]
-fn test_bench_program() {
-    if !has_python3() {
-        return;
-    }
-
-    let dir = temp_dir();
-    short_benchmark(&dir).bench_program("test_bench_program", create_command(10));
-}
-
-#[test]
-#[allow(deprecated)]
-fn test_bench_program_over_inputs() {
-    if !has_python3() {
-        return;
-    }
-
-    let dir = temp_dir();
-
-    // Note that bench_program_over_inputs automatically passes the input
-    // as the first command-line parameter.
-    short_benchmark(&dir).bench_program_over_inputs(
-        "test_bench_program_over_inputs",
-        create_command_without_arg,
-        vec![10, 20],
-    );
-}
-
-#[test]
-fn test_bench_unparameterized() {
-    let dir = temp_dir();
-    let mut benchmark = Benchmark::new("return 10", |b| b.iter(|| 10))
-        .with_function("return 20", |b| b.iter(|| 20));
-
-    if has_python3() {
-        benchmark = benchmark.with_program("external", create_command(10));
-    }
-
-    short_benchmark(&dir).bench("test_bench_unparam", benchmark);
-}
-
-#[test]
-fn test_bench_parameterized() {
-    let dir = temp_dir();
-    let parameters = vec![5, 10];
-    let mut benchmark =
-        ParameterizedBenchmark::new("times 10", |b, i| b.iter(|| *i * 10), parameters)
-            .with_function("times 20", |b, i| b.iter(|| *i * 20));
-
-    if has_python3() {
-        // Unlike bench_program_over_inputs, the parameter is provided as a
-        // parameter to the closure here.
-        benchmark = benchmark.with_program("external", |i| create_command(*i));
-    }
-
-    short_benchmark(&dir).bench("test_bench_param", benchmark);
-}
-
-#[test]
 fn test_filtering() {
     let dir = temp_dir();
     let counter = Counter::default();

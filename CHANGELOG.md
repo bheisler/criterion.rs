@@ -34,6 +34,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Removed
 - Removed the `--measure-only` command-line argument; it was deprecated in favor of `--profile-time`
   in 0.2.6.
+- External program benchmarks have been removed; they were deprecated in 0.2.6. The new 
+  `iter_custom` timing loop can be used as a substitute; see `benches/external_process.rs` for an
+  example of this.
 
 ### Deprecated
 - The `--test` argument is now deprecated. To test benchmarks, use `cargo test --benches`.

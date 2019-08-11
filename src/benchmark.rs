@@ -1,13 +1,11 @@
 use crate::analysis;
 use crate::measurement::{Measurement, WallTime};
-use crate::program::CommandFactory;
 use crate::report::{BenchmarkId, ReportContext};
 use crate::routine::{Function, Routine};
 use crate::{Bencher, Criterion, DurationExt, PlotConfiguration, Throughput};
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::marker::Sized;
-use std::process::Command;
 use std::time::Duration;
 
 // TODO: Move the benchmark config stuff to a separate module for easier use.
@@ -222,91 +220,6 @@ macro_rules! benchmark_config {
     }
 }
 
-impl Benchmark<WallTime> {
-    /// Create a new benchmark group and add the given program to it.
-    ///
-    /// The external program must:
-    ///
-    /// * Read the number of iterations from stdin
-    /// * Execute the routine to benchmark that many times
-    /// * Print the elapsed time (in nanoseconds) to stdout
-    ///
-    /// ```rust,no_run
-    /// # use std::io::{self, BufRead};
-    /// # use std::time::Instant;
-    /// # use std::time::Duration;
-    /// # trait DurationExt { fn to_nanos(&self) -> u64 { 0 } }
-    /// # impl DurationExt for Duration {}
-    /// // Example of an external program that implements this protocol
-    ///
-    /// fn main() {
-    ///     let stdin = io::stdin();
-    ///     let ref mut stdin = stdin.lock();
-    ///
-    ///     // For each line in stdin
-    ///     for line in stdin.lines() {
-    ///         // Parse line as the number of iterations
-    ///         let iters: u64 = line.unwrap().trim().parse().unwrap();
-    ///
-    ///         // Setup
-    ///
-    ///         // Benchmark
-    ///         let start = Instant::now();
-    ///         // Execute the routine "iters" times
-    ///         for _ in 0..iters {
-    ///             // Code to benchmark goes here
-    ///         }
-    ///         let elapsed = start.elapsed();
-    ///
-    ///         // Teardown
-    ///
-    ///         // Report elapsed time in nanoseconds to stdout
-    ///         println!("{}", elapsed.to_nanos());
-    ///     }
-    /// }
-    #[deprecated(
-        since = "0.2.6",
-        note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
-    )]
-    #[allow(deprecated)]
-    pub fn new_external<S>(id: S, program: Command) -> Benchmark<WallTime>
-    where
-        S: Into<String>,
-    {
-        Benchmark {
-            config: PartialBenchmarkConfig::default(),
-            routines: vec![],
-            throughput: None,
-        }
-        .with_program(id, program)
-    }
-
-    /// Add an external program to the benchmark group.
-    ///
-    /// # Example:
-    /// ```
-    /// # use criterion::Benchmark;
-    /// # use std::process::Command;
-    /// Benchmark::new("internal", |b| b.iter(|| 10))
-    ///     .with_program("external", Command::new("my_external_benchmark"));
-    /// ```
-    #[deprecated(
-        since = "0.2.6",
-        note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
-    )]
-    pub fn with_program<S>(mut self, id: S, program: Command) -> Benchmark<WallTime>
-    where
-        S: Into<String>,
-    {
-        let routine = NamedRoutine {
-            id: id.into(),
-            f: Box::new(RefCell::new(program)),
-        };
-        self.routines.push(routine);
-        self
-    }
-}
-
 impl<M> Benchmark<M>
 where
     M: Measurement + 'static,
@@ -426,111 +339,6 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
         if any_matched {
             println!();
         }
-    }
-}
-
-impl<T> ParameterizedBenchmark<T>
-where
-    T: Debug + 'static,
-{
-    /// Create a new parameterized benchmark group and add the given program to it.
-    /// The program under test must implement the following protocol:
-    ///
-    /// * Read the number of iterations from stdin
-    /// * Execute the routine to benchmark that many times
-    /// * Print the elapsed time (in nanoseconds) to stdout
-    ///
-    /// You can pass the argument to the program in any way you choose.
-    ///
-    /// ```rust,no_run
-    /// # use std::io::{self, BufRead};
-    /// # use std::time::Instant;
-    /// # use std::time::Duration;
-    /// # trait DurationExt { fn to_nanos(&self) -> u64 { 0 } }
-    /// # impl DurationExt for Duration {}
-    /// # use std::env;
-    /// // Example of an external program that implements this protocol
-    ///
-    /// fn main() {
-    ///     let stdin = io::stdin();
-    ///     let ref mut stdin = stdin.lock();
-    ///
-    ///     // You might opt to pass the parameter to the external command as
-    ///     // an environment variable, command line argument, file on disk, etc.
-    ///     let parameter = env::var("PARAMETER").unwrap();
-    ///
-    ///     // For each line in stdin
-    ///     for line in stdin.lines() {
-    ///         // Parse line as the number of iterations
-    ///         let iters: u64 = line.unwrap().trim().parse().unwrap();
-    ///
-    ///         // Setup
-    ///
-    ///         // Benchmark
-    ///         let start = Instant::now();
-    ///         // Execute the routine "iters" times
-    ///         for _ in 0..iters {
-    ///             // Code to benchmark using the parameter goes here
-    ///         }
-    ///         let elapsed = start.elapsed();
-    ///
-    ///         // Teardown
-    ///
-    ///         // Report elapsed time in nanoseconds to stdout
-    ///         println!("{}", elapsed.to_nanos());
-    ///     }
-    /// }
-    /// ```
-    #[deprecated(
-        since = "0.2.6",
-        note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
-    )]
-    #[allow(deprecated)]
-    pub fn new_external<S, F, I>(id: S, program: F, parameters: I) -> ParameterizedBenchmark<T>
-    where
-        S: Into<String>,
-        F: FnMut(&T) -> Command + 'static,
-        I: IntoIterator<Item = T>,
-    {
-        ParameterizedBenchmark {
-            config: PartialBenchmarkConfig::default(),
-            routines: vec![],
-            values: parameters.into_iter().collect(),
-            throughput: None,
-        }
-        .with_program(id, program)
-    }
-
-    /// Add an external program to the benchmark group.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use criterion::ParameterizedBenchmark;
-    /// # use std::process::Command;
-    /// ParameterizedBenchmark::new("internal", |b, i| b.iter(|| i * 10), vec![1, 2, 3])
-    ///     .with_program("external", |i| {
-    ///         let mut command = Command::new("my_external_benchmark");
-    ///         command.arg(format!("{:?}", i));
-    ///         command
-    ///     });
-    /// ```
-    #[deprecated(
-        since = "0.2.6",
-        note = "External program benchmarks were rarely used and are awkward to maintain, so they are scheduled for deletion in 0.3.0"
-    )]
-    pub fn with_program<S, F>(mut self, id: S, program: F) -> ParameterizedBenchmark<T>
-    where
-        S: Into<String>,
-        F: FnMut(&T) -> Command + 'static,
-    {
-        let factory = CommandFactory::new(program);
-        let routine = NamedRoutine {
-            id: id.into(),
-            f: Box::new(RefCell::new(factory)),
-        };
-        self.routines.push(routine);
-        self
     }
 }
 

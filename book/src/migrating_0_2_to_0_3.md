@@ -22,3 +22,13 @@ Use `cargo test --benches` instead.
 The `sample_time_nanos` field has been split into `sample_measured_value` and `unit`. For the
 default `WallTime` measurement, the `sample_measured_value` is the same as the `sample_time_nanos`
 was previously.
+
+### External program benchmarks have been removed.
+
+These were deprecated in version 0.2.6, as they were not used widely enough to justify the extra
+maintenance work. It is still possible to benchmark external programs using the `iter_custom`
+timing loop, but it does require some extra work. Although it does require extra development effort
+on the part of the benchmark author, using `iter_custom` gives more flexibility in how the benchmark
+communicates with the external process and also allows benchmarks to work with custom measurements,
+which was not possible previously. For an example of benchmarking an external process, see the 
+`benches/external_process.rs` benchmark in the Criterion.rs repository.

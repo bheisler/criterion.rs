@@ -1,6 +1,5 @@
 use crate::benchmark::BenchmarkConfig;
 use crate::measurement::Measurement;
-use crate::program::Program;
 use crate::report::{BenchmarkId, ReportContext};
 use crate::{Bencher, Criterion, DurationExt};
 use std::marker::PhantomData;
@@ -9,23 +8,14 @@ use std::time::{Duration, Instant};
 
 /// PRIVATE
 pub trait Routine<M: Measurement, T> {
-    fn start(&mut self, parameter: &T) -> Option<Program>;
-
     /// PRIVATE
-    fn bench(&mut self, m: &M, p: &mut Option<Program>, iters: &[u64], parameter: &T) -> Vec<f64>;
+    fn bench(&mut self, m: &M, iters: &[u64], parameter: &T) -> Vec<f64>;
     /// PRIVATE
-    fn warm_up(
-        &mut self,
-        m: &M,
-        p: &mut Option<Program>,
-        how_long: Duration,
-        parameter: &T,
-    ) -> (u64, u64);
+    fn warm_up(&mut self, m: &M, how_long: Duration, parameter: &T) -> (u64, u64);
 
     /// PRIVATE
     fn test(&mut self, m: &M, parameter: &T) {
-        let mut p = self.start(parameter);
-        self.bench(m, &mut p, &[1u64], parameter);
+        self.bench(m, &[1u64], parameter);
     }
 
     /// Iterates the benchmarked function for a fixed length of time, but takes no measurements.
@@ -57,14 +47,12 @@ pub trait Routine<M: Measurement, T> {
             .start_profiling(id.id(), &profile_path);
 
         let time = time.to_nanos();
-        let mut p = self.start(parameter);
 
         // TODO: Some profilers will show the two batches of iterations as
         // being different code-paths even though they aren't really.
 
         // Get the warmup time for one second
-        let (wu_elapsed, wu_iters) =
-            self.warm_up(measurement, &mut p, Duration::from_secs(1), parameter);
+        let (wu_elapsed, wu_iters) = self.warm_up(measurement, Duration::from_secs(1), parameter);
         if wu_elapsed < time {
             // Initial guess for the mean execution time
             let met = wu_elapsed as f64 / wu_iters as f64;
@@ -75,7 +63,7 @@ pub trait Routine<M: Measurement, T> {
             let iters = remaining / met;
             let iters = iters as u64;
 
-            self.bench(measurement, &mut p, &[iters], parameter);
+            self.bench(measurement, &[iters], parameter);
         }
 
         criterion
@@ -102,9 +90,7 @@ pub trait Routine<M: Measurement, T> {
             .report
             .warmup(id, report_context, wu.to_nanos() as f64);
 
-        let mut p = self.start(parameter);
-
-        let (wu_elapsed, wu_iters) = self.warm_up(measurement, &mut p, wu, parameter);
+        let (wu_elapsed, wu_iters) = self.warm_up(measurement, wu, parameter);
 
         // Initial guess for the mean execution time
         let met = wu_elapsed as f64 / wu_iters as f64;
@@ -131,7 +117,7 @@ pub trait Routine<M: Measurement, T> {
             expected_ns,
             m_iters.iter().sum(),
         );
-        let m_elapsed = self.bench(measurement, &mut p, &m_iters, parameter);
+        let m_elapsed = self.bench(measurement, &m_iters, parameter);
 
         let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();
 
@@ -188,11 +174,7 @@ impl<M: Measurement, F, T> Routine<M, T> for Function<M, F, T>
 where
     F: FnMut(&mut Bencher<M>, &T),
 {
-    fn start(&mut self, _: &T) -> Option<Program> {
-        None
-    }
-
-    fn bench(&mut self, m: &M, _: &mut Option<Program>, iters: &[u64], parameter: &T) -> Vec<f64> {
+    fn bench(&mut self, m: &M, iters: &[u64], parameter: &T) -> Vec<f64> {
         let f = &mut self.f;
 
         let mut b = Bencher {
@@ -213,13 +195,7 @@ where
             .collect()
     }
 
-    fn warm_up(
-        &mut self,
-        m: &M,
-        _: &mut Option<Program>,
-        how_long: Duration,
-        parameter: &T,
-    ) -> (u64, u64) {
+    fn warm_up(&mut self, m: &M, how_long: Duration, parameter: &T) -> (u64, u64) {
         let f = &mut self.f;
         let mut b = Bencher {
             iterated: false,
