@@ -1,4 +1,4 @@
-use criterion::{BenchmarkId, Criterion};
+use criterion::Criterion;
 use std::io::{BufRead, BufReader, Write};
 use std::process::Command;
 use std::process::Stdio;
