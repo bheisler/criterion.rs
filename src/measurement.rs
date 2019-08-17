@@ -20,18 +20,41 @@ use std::time::{Duration, Instant};
 /// of the elapsed time in nanoseconds.
 pub trait ValueFormatter {
     /// Format the value (with appropriate unit) and return it as a string.
-    fn format_value(&self, value: f64) -> String;
+    fn format_value(&self, value: f64) -> String {
+        let mut values = [value];
+        let unit = self.scale_values(value, &mut values);
+        format!("{:>6} {}", short(values[0]), unit)
+    }
 
     /// Format the value as a throughput measurement. The value represents the measurement value;
     /// the implementor will have to calculate bytes per second, iterations per cycle, etc.
-    fn format_throughput(&self, throughput: &Throughput, value: f64) -> String;
+    fn format_throughput(&self, throughput: &Throughput, value: f64) -> String {
+        let mut values = [value];
+        let unit = self.scale_throughputs(value, throughput, &mut values);
+        format!("{:>6} {}", short(values[0]), unit)
+    }
 
-    /// Scale the given values and return an appropriate unit string.
+    /// Scale the given values to some appropriate unit and return the unit string.
     ///
     /// The given typical value should be used to choose the unit. This function may be called
     /// multiple times with different datasets; the typical value will remain the same to ensure
     /// that the units remain consistent within a graph. The typical value will not be NaN.
-    fn scale_for_graph(&self, typical_value: f64, values: &mut [f64]) -> (&'static str);
+    /// Values will not contain NaN as input, and the transformed values must not contain NaN.
+    fn scale_values(&self, typical_value: f64, values: &mut [f64]) -> (&'static str);
+
+    /// Convert the given measured values into throughput numbers based on the given throughput
+    /// value, scale them to some appropriate unit, and return the unit string.
+    ///
+    /// The given typical value should be used to choose the unit. This function may be called
+    /// multiple times with different datasets; the typical value will remain the same to ensure
+    /// that the units remain consistent within a graph. The typical value will not be NaN.
+    /// Values will not contain NaN as input, and the transformed values must not contain NaN.
+    fn scale_throughputs(
+        &self,
+        typical_value: f64,
+        throughput: &Throughput,
+        values: &mut [f64],
+    ) -> (&'static str);
 
     /// Scale the values and return a unit string designed for machines.
     ///
@@ -82,52 +105,60 @@ pub trait Measurement {
 
 pub(crate) struct DurationFormatter;
 impl DurationFormatter {
-    fn bytes_per_second(&self, bytes_per_second: f64) -> String {
-        if bytes_per_second < 1024.0 {
-            format!("{:>6}   B/s", short(bytes_per_second))
+    fn bytes_per_second(&self, bytes: f64, typical: f64, values: &mut [f64]) -> &'static str {
+        let bytes_per_second = bytes * (1e9 / typical);
+        let (denominator, unit) = if bytes_per_second < 1024.0 {
+            (1.0, "  B/s")
         } else if bytes_per_second < 1024.0 * 1024.0 {
-            format!("{:>6} KiB/s", short(bytes_per_second / 1024.0))
+            (1024.0, "KiB/s")
         } else if bytes_per_second < 1024.0 * 1024.0 * 1024.0 {
-            format!("{:>6} MiB/s", short(bytes_per_second / (1024.0 * 1024.0)))
+            (1024.0 * 1024.0, "MiB/s")
         } else {
-            format!(
-                "{:>6} GiB/s",
-                short(bytes_per_second / (1024.0 * 1024.0 * 1024.0))
-            )
+            (1024.0 * 1024.0 * 1024.0, "GiB/s")
+        };
+
+        for val in values {
+            let bytes_per_second = bytes * (1e9 / *val);
+            *val = bytes_per_second / denominator;
         }
+
+        unit
     }
 
-    fn elements_per_second(&self, elements_per_second: f64) -> String {
-        if elements_per_second < 1000.0 {
-            format!("{:>6}  elem/s", short(elements_per_second))
-        } else if elements_per_second < 1000.0 * 1000.0 {
-            format!("{:>6} Kelem/s", short(elements_per_second / 1000.0))
-        } else if elements_per_second < 1000.0 * 1000.0 * 1000.0 {
-            format!(
-                "{:>6} Melem/s",
-                short(elements_per_second / (1000.0 * 1000.0))
-            )
+    fn elements_per_second(&self, elems: f64, typical: f64, values: &mut [f64]) -> &'static str {
+        let elems_per_second = elems * (1e9 / typical);
+        let (denominator, unit) = if elems_per_second < 1000.0 {
+            (1.0, " elem/s")
+        } else if elems_per_second < 1000.0 * 1000.0 {
+            (1000.0, "Kelem/s")
+        } else if elems_per_second < 1000.0 * 1000.0 * 1000.0 {
+            (1000.0 * 1000.0, "Melem/s")
         } else {
-            format!(
-                "{:>6} Gelem/s",
-                short(elements_per_second / (1000.0 * 1000.0 * 1000.0))
-            )
+            (1000.0 * 1000.0 * 1000.0, "Gelem/s")
+        };
+
+        for val in values {
+            let elems_per_second = elems * (1e9 / *val);
+            *val = elems_per_second / denominator;
         }
+
+        unit
     }
 }
 impl ValueFormatter for DurationFormatter {
-    fn format_value(&self, ns: f64) -> String {
-        crate::format::time(ns)
-    }
-
-    fn format_throughput(&self, throughput: &Throughput, ns: f64) -> String {
+    fn scale_throughputs(
+        &self,
+        typical: f64,
+        throughput: &Throughput,
+        values: &mut [f64],
+    ) -> &'static str {
         match *throughput {
-            Throughput::Bytes(bytes) => self.bytes_per_second((bytes as f64) * (1e9 / ns)),
-            Throughput::Elements(elems) => self.elements_per_second((elems as f64) * (1e9 / ns)),
+            Throughput::Bytes(bytes) => self.bytes_per_second(bytes as f64, typical, values),
+            Throughput::Elements(elems) => self.elements_per_second(elems as f64, typical, values),
         }
     }
 
-    fn scale_for_graph(&self, ns: f64, values: &mut [f64]) -> &'static str {
+    fn scale_values(&self, ns: f64, values: &mut [f64]) -> &'static str {
         let (factor, unit) = if ns < 10f64.powi(0) {
             (10f64.powi(3), "ps")
         } else if ns < 10f64.powi(3) {

@@ -25,12 +25,12 @@ fn regression_figure(
     let data = &measurements.data;
     let (max_iters, typical) = (data.x().max(), data.y().max());
     let mut scaled_y: Vec<f64> = data.y().iter().cloned().collect();
-    let unit = formatter.scale_for_graph(typical, &mut scaled_y);
+    let unit = formatter.scale_values(typical, &mut scaled_y);
     let scaled_y = Sample::new(&scaled_y);
 
     let point_estimate = Slope::fit(&measurements.data).0;
     let mut scaled_points = [point_estimate * max_iters, lb * max_iters, ub * max_iters];
-    let _ = formatter.scale_for_graph(typical, &mut scaled_points);
+    let _ = formatter.scale_values(typical, &mut scaled_points);
     let [point, lb, ub] = scaled_points;
 
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
@@ -179,7 +179,7 @@ fn regression_comparison_figure(
         point * max_iters,
         ub * max_iters,
     ];
-    let unit = formatter.scale_for_graph(typical, &mut points);
+    let unit = formatter.scale_values(typical, &mut points);
     let [base_lb, base_point, base_ub, lb, point, ub] = points;
 
     let mut figure = Figure::new();

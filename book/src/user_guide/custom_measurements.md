@@ -94,9 +94,10 @@ The next trait is `ValueFormatter`, which defines how a measurement is displayed
 
 ```rust
 pub trait ValueFormatter {
-    fn format_value(&self, value: f64) -> String;
-    fn format_throughput(&self, throughput: &Throughput, value: f64) -> String;
-    fn scale_for_graph(&self, typical_value: f64, values: &mut[f64]) -> (&'static str);
+    fn format_value(&self, value: f64) -> String {...}
+    fn format_throughput(&self, throughput: &Throughput, value: f64) -> String {...}
+    fn scale_values(&self, typical_value: f64, values: &mut [f64]) -> &'static str;
+    fn scale_throughputs(&self, typical_value: f64, throughput: &Throughput, values: &mut [f64]) -> &'static str;
     fn scale_for_machines(&self, values: &mut [f64]) -> &'static str;
 }
 ```
@@ -112,7 +113,7 @@ Implementors should try to format the values in a way that will make sense to hu
 prefixes to simplify the numbers. An easy way to do this is to have a series of conditionals like so:
 
 ```rust
-if ns < 1.0 {  // ns = time in nanoseconds
+if ns < 1.0 {  // ns = time in nanoseconds per iteration
     format!("{:>6} ps", ns * 1e3)
 } else if ns < 10f64.powi(3) {
     format!("{:>6} ns", ns)
@@ -128,24 +129,26 @@ if ns < 1.0 {  // ns = time in nanoseconds
 It's also a good idea to limit the amount of precision in floating-point output - after a few
 digits the numbers don't matter much anymore but add a lot of visual noise and make the results
 harder to interpret. For example, it's very unlikely that anyone cares about the difference between
-`10.2896653s` and `10.2896654s` - it's much more salient that their function takes "about 10.3
+`10.2896653s` and `10.2896654s` - it's much more salient that their function takes "about 10.290
 seconds per iteration".
 
 With that out of the way, `format_value` is pretty straightforward. `format_throughput` is also not
 too difficult; match on `Throughput::Bytes` or `Throughput::Elements` and generate an appropriate
 description. For wall-clock time, that would likely take the form of "bytes per second", but a
 measurement that read CPU performance counters might want to display throughput in terms of "cycles
-per byte".
+per byte". Note that default implementations of `format_value` and `format_throughput` are provided
+which use `scale_values` and `scale_throughputs`, but you can override them if you wish.
 
-`scale_for_graph` is a bit more complex. This is primarily used for plotting. This accepts a
-"typical" value chosen by Criterion.rs, and a mutable slice of values to scale. This function
-should choose an appropriate unit based on the typical value, and convert all values in the slice
-to that unit. It should also return a string representing the chosen unit. So, for our wall-clock
-times where the measured values are in nanoseconds, if we wanted to display plots in milliseconds
-we would multiply all of the input values by `10.0f64.powi(-6)` and return `"ms"`, because
-multiplying a value in nanoseconds by 10^-6 gives a value in milliseconds.
+`scale_values` is a bit more complex. This accepts a "typical" value chosen by Criterion.rs, and a
+mutable slice of values to scale. This function should choose an appropriate unit based on the
+typical value, and convert all values in the slice to that unit. It should also return a string
+representing the chosen unit. So, for our wall-clock times where the measured values are in
+nanoseconds, if we wanted to display plots in milliseconds we would multiply all of the input
+values by `10.0f64.powi(-6)` and return `"ms"`, because multiplying a value in nanoseconds by 10^-6
+gives a value in milliseconds. `scale_throughputs` does the same thing, only it converts a slice of
+measured values to their corresponding scaled throughput values.
 
-`scale_for_machines` is similar to `scale_for_graph`, except that it's used for generating
+`scale_for_machines` is similar to `scale_values`, except that it's used for generating
 machine-readable outputs. It does not accept a typical value, because this function should always
 return values in the same unit.
 
@@ -172,12 +175,37 @@ impl ValueFormatter for HalfSecFormatter {
         }
     }
 
-    fn scale_for_graph(&self, ns: f64, values: &mut [f64]) -> &'static str {
+    fn scale_values(&self, ns: f64, values: &mut [f64]) -> &'static str {
         for val in values {
             *val *= 2f64 * 10f64.powi(-9);
         }
 
         "s/2"
+    }
+
+    fn scale_throughputs(
+        &self,
+        _typical: f64,
+        throughput: &Throughput,
+        values: &mut [f64],
+    ) -> &'static str {
+        match *throughput {
+            Throughput::Bytes(bytes) => {
+                // Convert nanoseconds/iteration to bytes/half-second.
+                for val in values {
+                    *val = (bytes as f64) / (*val * 2f64 * 10f64.powi(-9))
+                }
+
+                "b/s/2"
+            }
+            Throughput::Elements(elems) => {
+                for val in values {
+                    *val = (elems as f64) / (*val * 2f64 * 10f64.powi(-9))
+                }
+
+                "elem/s/2"
+            }
+        }
     }
 
     fn scale_for_machines(&self, values: &mut [f64]) -> &'static str {

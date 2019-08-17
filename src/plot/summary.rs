@@ -71,7 +71,7 @@ pub fn line_comparison(
         .fold(::std::f64::NAN, f64::max);
 
     let mut dummy = [1.0];
-    let unit = formatter.scale_for_graph(max, &mut dummy);
+    let unit = formatter.scale_values(max, &mut dummy);
 
     f.configure(Axis::LeftY, |a| {
         a.configure(Grid::Major, |g| g.show())
@@ -96,7 +96,7 @@ pub fn line_comparison(
             .collect();
         tuples.sort_by(|&(ax, _), &(bx, _)| (ax.partial_cmp(&bx).unwrap_or(Ordering::Less)));
         let (xs, mut ys): (Vec<_>, Vec<_>) = tuples.into_iter().unzip();
-        formatter.scale_for_graph(max, &mut ys);
+        formatter.scale_values(max, &mut ys);
 
         let function_name = key.as_ref().map(|string| escape_underscores(string));
 
@@ -160,7 +160,7 @@ pub fn violin(
         }
     }
     let mut dummy = [1.0];
-    let unit = formatter.scale_for_graph(max, &mut dummy);
+    let unit = formatter.scale_values(max, &mut dummy);
 
     let tics = || (0..).map(|x| (f64::from(x)) + 0.5);
     let size = Size(1280, 200 + (25 * all_curves.len()));
@@ -191,8 +191,8 @@ pub fn violin(
         let mut y1: Vec<_> = y.iter().map(|&y| i + y * 0.5).collect();
         let mut y2: Vec<_> = y.iter().map(|&y| i - y * 0.5).collect();
 
-        formatter.scale_for_graph(max, &mut y1);
-        formatter.scale_for_graph(max, &mut y2);
+        formatter.scale_values(max, &mut y1);
+        formatter.scale_values(max, &mut y2);
 
         f.plot(FilledCurve { x: &**x, y1, y2 }, |c| {
             if is_first {

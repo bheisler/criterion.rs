@@ -14,7 +14,7 @@ pub(crate) fn pdf(
     let avg_times = &measurements.avg_times;
     let typical = avg_times.max();
     let mut scaled_avg_times: Vec<f64> = (avg_times as &Sample<f64>).iter().cloned().collect();
-    let unit = formatter.scale_for_graph(typical, &mut scaled_avg_times);
+    let unit = formatter.scale_values(typical, &mut scaled_avg_times);
     let scaled_avg_times = Sample::new(&scaled_avg_times);
 
     let mean = scaled_avg_times.mean();
@@ -36,7 +36,7 @@ pub(crate) fn pdf(
     let (xs, ys) = kde::sweep(&scaled_avg_times, KDE_POINTS, None);
     let (lost, lomt, himt, hist) = avg_times.fences();
     let mut fences = [lost, lomt, himt, hist];
-    let _ = formatter.scale_for_graph(typical, &mut fences);
+    let _ = formatter.scale_values(typical, &mut fences);
     let [lost, lomt, himt, hist] = fences;
 
     let vertical = &[0., max_iters];
@@ -234,7 +234,7 @@ pub(crate) fn pdf_small(
     let avg_times = &*measurements.avg_times;
     let typical = avg_times.max();
     let mut scaled_avg_times: Vec<f64> = (avg_times as &Sample<f64>).iter().cloned().collect();
-    let unit = formatter.scale_for_graph(typical, &mut scaled_avg_times);
+    let unit = formatter.scale_values(typical, &mut scaled_avg_times);
     let scaled_avg_times = Sample::new(&scaled_avg_times);
     let mean = scaled_avg_times.mean();
 
@@ -294,14 +294,14 @@ fn pdf_comparison_figure(
     let base_avg_times = Sample::new(&comparison.base_avg_times);
     let typical = base_avg_times.max().max(measurements.avg_times.max());
     let mut scaled_base_avg_times: Vec<f64> = comparison.base_avg_times.clone();
-    let unit = formatter.scale_for_graph(typical, &mut scaled_base_avg_times);
+    let unit = formatter.scale_values(typical, &mut scaled_base_avg_times);
     let scaled_base_avg_times = Sample::new(&scaled_base_avg_times);
 
     let mut scaled_new_avg_times: Vec<f64> = (&measurements.avg_times as &Sample<f64>)
         .iter()
         .cloned()
         .collect();
-    let _ = formatter.scale_for_graph(typical, &mut scaled_new_avg_times);
+    let _ = formatter.scale_values(typical, &mut scaled_new_avg_times);
     let scaled_new_avg_times = Sample::new(&scaled_new_avg_times);
 
     let base_mean = scaled_base_avg_times.mean();

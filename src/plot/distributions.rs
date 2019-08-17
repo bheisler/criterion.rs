@@ -24,13 +24,13 @@ fn abs_distribution(
     let ci = estimate.confidence_interval;
     let typical = ci.upper_bound;
     let mut ci_values = [ci.lower_bound, ci.upper_bound, estimate.point_estimate];
-    let unit = formatter.scale_for_graph(typical, &mut ci_values);
+    let unit = formatter.scale_values(typical, &mut ci_values);
     let (lb, ub, p) = (ci_values[0], ci_values[1], ci_values[2]);
 
     let start = lb - (ub - lb) / 9.;
     let end = ub + (ub - lb) / 9.;
     let mut scaled_xs: Vec<f64> = distribution.iter().cloned().collect();
-    let _ = formatter.scale_for_graph(typical, &mut scaled_xs);
+    let _ = formatter.scale_values(typical, &mut scaled_xs);
     let scaled_xs_sample = Sample::new(&scaled_xs);
     let (kde_xs, ys) = kde::sweep(scaled_xs_sample, KDE_POINTS, Some((start, end)));
 
