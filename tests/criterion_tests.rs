@@ -13,7 +13,6 @@ use std::cell::{Cell, RefCell};
 use std::cmp::max;
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
 use std::rc::Rc;
 use std::time::{Duration, SystemTime};
 use tempdir::TempDir;
@@ -57,29 +56,6 @@ impl Default for Counter {
             counter: Rc::new(RefCell::new(0)),
         }
     }
-}
-
-fn create_command(depth: usize) -> Command {
-    let mut command = Command::new("python3");
-    command
-        .arg("tests/external_process.py")
-        .arg(format!("{}", depth));
-    command
-}
-
-fn create_command_without_arg() -> Command {
-    let mut command = Command::new("python3");
-    command.arg("tests/external_process.py");
-    command
-}
-
-fn has_python3() -> bool {
-    Command::new("python3")
-        .arg("--version")
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .output()
-        .is_ok()
 }
 
 fn verify_file(dir: &PathBuf, path: &str) -> PathBuf {
@@ -372,7 +348,7 @@ fn test_throughput() {
             |b, v| b.iter(|| v.len()),
             vec![vec![1], vec![1, 2, 3]],
         )
-        .throughput(|v| Throughput::Elements(v.len() as u32)),
+        .throughput(|v| Throughput::Elements(v.len() as u64)),
     );
 }
 

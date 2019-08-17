@@ -59,7 +59,7 @@ use std::time::Duration;
 ///         // so it can calculate the overall throughput of the function. If we wanted, we could
 ///         // even change the benchmark configuration for different inputs (eg. to reduce the
 ///         // number of samples for extremely large and slow inputs) or even different functions.
-///         group.throughput(Throughput::Elements(*size as u32));
+///         group.throughput(Throughput::Elements(*size as u64));
 ///
 ///         group.bench_with_input(BenchmarkId::new("sum", *size), &input,
 ///             |b, i| b.iter(|| i.iter().sum::<u64>()));
