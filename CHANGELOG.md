@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - If the benchmark cannot be completed in approximately the requested measurement time,
   Criterion.rs will now print a suggested measurement time and sample size that would work.
 - Two new fields, `throughput_num` and `throughput_type` have been added to the `raw.csv` file.
+- Added command-line options to set the defaults for warm-up time, measurement-time, etc.
 
 ### Changed
 - The `raw.csv` file format has been changed slightly. The `sample_time_nanos` field has been split

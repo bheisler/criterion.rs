@@ -715,7 +715,6 @@ impl Default for Criterion {
 }
 
 impl<M: Measurement> Criterion<M> {
-    // TODO: Add a link to the docs here
     /// Changes the measurement for the benchmarks run with this runner. See the
     /// Measurement trait for more details
     pub fn with_measurement<M2: Measurement>(self, m: M2) -> Criterion<M2> {
@@ -955,6 +954,7 @@ impl<M: Measurement> Criterion<M> {
 
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::cognitive_complexity))]
     pub fn configure_from_args(mut self) -> Criterion<M> {
         use clap::{App, Arg};
         let matches = App::new("Criterion Benchmark")
@@ -995,6 +995,34 @@ impl<M: Measurement> Criterion<M> {
                 .long("profile-time")
                 .takes_value(true)
                 .help("Iterate each benchmark for approximately the given number of seconds, doing no analysis and without storing the results. Useful for running the benchmarks in a profiler."))
+            .arg(Arg::with_name("sample-size")
+                .long("sample-size")
+                .takes_value(true)
+                .help("Changes the default size of the sample for this run."))
+            .arg(Arg::with_name("warm-up-time")
+                .long("warm-up-time")
+                .takes_value(true)
+                .help("Changes the default warm up time for this run."))
+            .arg(Arg::with_name("measurement-time")
+                .long("measurement-time")
+                .takes_value(true)
+                .help("Changes the default measurement time for this run."))
+            .arg(Arg::with_name("nresamples")
+                .long("nresamples")
+                .takes_value(true)
+                .help("Changes the default number of resamples for this run."))
+            .arg(Arg::with_name("noise-threshold")
+                .long("noise-threshold")
+                .takes_value(true)
+                .help("Changes the default noise threshold for this run."))
+            .arg(Arg::with_name("confidence-level")
+                .long("confidence-level")
+                .takes_value(true)
+                .help("Changes the default confidence level for this run."))
+            .arg(Arg::with_name("significance-level")
+                .long("significance-level")
+                .takes_value(true)
+                .help("Changes the default significance level for this run."))
             .arg(Arg::with_name("test")
                 .hidden(true)
                 .long("test")
@@ -1081,6 +1109,83 @@ To test that the benchmarks work, run `cargo test --benches`
             (true, false) => false, // cargo bench should run benchmarks
             (false, _) => true,     // cargo test --benches should run tests
         };
+
+        if matches.is_present("sample-size") {
+            let num_size = value_t!(matches.value_of("sample-size"), usize).unwrap_or_else(|e| {
+                println!("{}", e);
+                std::process::exit(1)
+            });
+
+            assert!(num_size >= 10);
+            self.config.sample_size = num_size;
+        }
+        if matches.is_present("warm-up-time") {
+            let num_seconds = value_t!(matches.value_of("warm-up-time"), u64).unwrap_or_else(|e| {
+                println!("{}", e);
+                std::process::exit(1)
+            });
+
+            let dur = std::time::Duration::new(num_seconds, 0);
+            assert!(dur.to_nanos() > 0);
+
+            self.config.warm_up_time = dur;
+        }
+        if matches.is_present("measurement-time") {
+            let num_seconds =
+                value_t!(matches.value_of("measurement-time"), u64).unwrap_or_else(|e| {
+                    println!("{}", e);
+                    std::process::exit(1)
+                });
+
+            let dur = std::time::Duration::new(num_seconds, 0);
+            assert!(dur.to_nanos() > 0);
+
+            self.config.measurement_time = dur;
+        }
+        if matches.is_present("nresamples") {
+            let num_resamples =
+                value_t!(matches.value_of("nresamples"), usize).unwrap_or_else(|e| {
+                    println!("{}", e);
+                    std::process::exit(1)
+                });
+
+            assert!(num_resamples > 0);
+
+            self.config.nresamples = num_resamples;
+        }
+        if matches.is_present("noise-threshold") {
+            let num_noise_threshold = value_t!(matches.value_of("noise-threshold"), f64)
+                .unwrap_or_else(|e| {
+                    println!("{}", e);
+                    std::process::exit(1)
+                });
+
+            assert!(num_noise_threshold > 0.0);
+
+            self.config.noise_threshold = num_noise_threshold;
+        }
+        if matches.is_present("confidence-level") {
+            let num_confidence_level = value_t!(matches.value_of("confidence-level"), f64)
+                .unwrap_or_else(|e| {
+                    println!("{}", e);
+                    std::process::exit(1)
+                });
+
+            assert!(num_confidence_level > 0.0 && num_confidence_level < 1.0);
+
+            self.config.confidence_level = num_confidence_level;
+        }
+        if matches.is_present("significance-level") {
+            let num_significance_level = value_t!(matches.value_of("significance-level"), f64)
+                .unwrap_or_else(|e| {
+                    println!("{}", e);
+                    std::process::exit(1)
+                });
+
+            assert!(num_significance_level > 0.0 && num_significance_level < 1.0);
+
+            self.config.significance_level = num_significance_level;
+        }
 
         if matches.is_present("list") {
             self.test_mode = true;
