@@ -16,8 +16,8 @@ license = "Apache-2.0/MIT"
 proc-macro = true
 
 [dependencies]
-proc-macro2 = { version = "0.4", features = ["nightly"] }
-quote = "0.6"
+proc-macro2 = { version = "1.0", features = ["nightly"] }
+quote = "1.0"
 
 [dev-dependencies]
 criterion = { version = "0.3.0", path = "..", default-features = false }
