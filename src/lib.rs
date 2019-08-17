@@ -10,7 +10,6 @@
 //! and the output.
 //!
 //! ## Features:
-//! * Benchmark Rust code as well as external programs
 //! * Collects detailed statistics, providing strong confidence that changes
 //!   to performance are real, not measurement noise
 //! * Produces detailed charts, providing thorough understanding of your code's
@@ -260,11 +259,13 @@ impl BatchSize {
     }
 }
 
-/// Timer struct to iterate a benchmarked function and measure the runtime.
+/// Timer struct used to iterate a benchmarked function and measure the runtime.
 ///
 /// This struct provides different timing loops as methods. Each timing loop provides a different
 /// way to time a routine and each has advantages and disadvantages.
 ///
+/// * If you want to do the iteration and measurement yourself (eg. passing the iteration count
+///   to a separate process), use `iter_custom`.
 /// * If your routine requires no per-iteration setup and returns a value with an expensive `drop`
 ///   method, use `iter_with_large_drop`.
 /// * If your routine requires some per-iteration setup that shouldn't be timed, use `iter_batched`

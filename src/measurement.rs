@@ -11,7 +11,7 @@ use std::time::{Duration, Instant};
 /// Trait providing functions to format measured values to string so that they can be displayed on
 /// the command line or in the reports. The functions of this trait take measured values in f64
 /// form; implementors can assume that the values are of the same scale as those produced by the
-/// associated [MeasuredValue](trait.MeasuredValue.html) (eg. if your value produces values in
+/// associated [MeasuredValue](trait.MeasuredValue.html) (eg. if your measurement produces values in
 /// nanoseconds, the values passed to the formatter will be in nanoseconds).
 ///
 /// Implementors are encouraged to format the values in a way that is intuitive for humans and
@@ -65,7 +65,7 @@ pub trait ValueFormatter {
 }
 
 /// Trait for all types which define something Criterion.rs can measure. The only measurement
-/// currently provided is [Walltime](struct.WallTime.html), but third party crates or benchmarks
+/// currently provided is [WallTime](struct.WallTime.html), but third party crates or benchmarks
 /// may define more.
 ///
 /// This trait defines two core methods, `start` and `end`. `start` is called at the beginning of

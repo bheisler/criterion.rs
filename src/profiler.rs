@@ -1,5 +1,5 @@
 //! This module provides an extension trait which allows in-process profilers
-//! to be hooked into the --profile-time argument at compile-time. Users of
+//! to be hooked into the `--profile-time` argument at compile-time. Users of
 //! out-of-process profilers such as perf don't need to do anything special.
 
 use std::path::Path;
@@ -8,8 +8,7 @@ use std::path::Path;
 /// hooks when profiling (but not when benchmarking) functions.
 pub trait Profiler {
     /// This function is called when Criterion.rs starts profiling a particular
-    /// benchmark. It provides the stringified benchmark ID (TODO: Should that
-    /// be a struct benchmark ID or not? Do I want to expose that now?) and
+    /// benchmark. It provides the stringified benchmark ID and
     /// a path to a directory where the profiler can store its data.
     fn start_profiling(&mut self, benchmark_id: &str, benchmark_dir: &Path);
 

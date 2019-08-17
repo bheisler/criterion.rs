@@ -3,14 +3,14 @@
 //! Criterion.rs benchmarks with `cargo bench`.
 
 /// Macro used to define a function group for the benchmark harness; see the
-/// criterion_main! macro for more details.
+/// `criterion_main!` macro for more details.
 ///
 /// This is used to define a function group; a collection of functions to call with a common
 /// Criterion configuration. Accepts two forms which can be seen below.
 ///
 /// Note that the group name given here is not important, it must simply
-/// be unique. Note also that this macro is not related to the Criterion::benchmark_group function
-/// or the BenchmarkGroup type.
+/// be unique. Note also that this macro is not related to the `Criterion::benchmark_group` function
+/// or the `BenchmarkGroup` type.
 ///
 /// # Examples:
 ///
