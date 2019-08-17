@@ -96,7 +96,7 @@ The next trait is `ValueFormatter`, which defines how a measurement is displayed
 pub trait ValueFormatter {
     fn format_value(&self, value: f64) -> String;
     fn format_throughput(&self, throughput: &Throughput, value: f64) -> String;
-    fn scale_and_unit(&self, value: f64) -> (f64, &'static str);
+    fn scale_for_graph(&self, typical_value: f64, values: &mut[f64]) -> (&'static str);
     fn scale_for_machines(&self, values: &mut [f64]) -> &'static str;
 }
 ```
@@ -137,17 +137,17 @@ description. For wall-clock time, that would likely take the form of "bytes per 
 measurement that read CPU performance counters might want to display throughput in terms of "cycles
 per byte".
 
-`scale_and_unit` is a bit more complex. This is primarily used for plotting. This returns two
-values; an `f64` scale and a `&str` unit. The measured values will be multiplied by the scale
-and the unit will be inserted into the axis labels when generating plots. So, for our wall-clock
+`scale_for_graph` is a bit more complex. This is primarily used for plotting. This accepts a
+"typical" value chosen by Criterion.rs, and a mutable slice of values to scale. This function
+should choose an appropriate unit based on the typical value, and convert all values in the slice
+to that unit. It should also return a string representing the chosen unit. So, for our wall-clock
 times where the measured values are in nanoseconds, if we wanted to display plots in milliseconds
-we would return `(10.0f64.powi(-6), "ms")`, because multiplying a value in nanoseconds by 10^-6
-gives a value in milliseconds.
+we would multiply all of the input values by `10.0f64.powi(-6)` and return `"ms"`, because
+multiplying a value in nanoseconds by 10^-6 gives a value in milliseconds.
 
-`scale_for_machines` is another complex one. It accepts a mutable slice of values rather than a
-single value. It applies some appropriate scaling to the values and returns a unit string. This is
-used when saving values in a machine-readable form, so for this case formatters should generally
-return a fixed unit rather than adjusting the unit to improve clarity.
+`scale_for_machines` is similar to `scale_for_graph`, except that it's used for generating
+machine-readable outputs. It does not accept a typical value, because this function should always
+return values in the same unit.
 
 Our half-second measurement formatter thus looks like this:
 
@@ -172,8 +172,12 @@ impl ValueFormatter for HalfSecFormatter {
         }
     }
 
-    fn scale_and_unit(&self, _value: f64) -> (f64, &'static str) {
-        (2f64 * 10f64.powi(-9), "s/2")
+    fn scale_for_graph(&self, ns: f64, values: &mut [f64]) -> &'static str {
+        for val in values {
+            *val *= 2f64 * 10f64.powi(-9);
+        }
+
+        "s/2"
     }
 
     fn scale_for_machines(&self, values: &mut [f64]) -> &'static str {

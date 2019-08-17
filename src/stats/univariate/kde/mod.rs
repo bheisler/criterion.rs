@@ -59,7 +59,7 @@ where
             .iter()
             .fold(_0, |acc, &x_i| acc + self.kernel.evaluate((x - x_i) / h));
 
-        sum / h / n
+        sum / (h * n)
     }
 }
 

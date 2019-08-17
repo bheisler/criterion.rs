@@ -70,14 +70,14 @@ pub fn line_comparison(
         .map(|&&(_, ref data)| Sample::new(data).mean())
         .fold(::std::f64::NAN, f64::max);
 
-    let (scale, prefix) = formatter.scale_and_unit(max);
+    let mut dummy = [1.0];
+    let unit = formatter.scale_for_graph(max, &mut dummy);
 
     f.configure(Axis::LeftY, |a| {
         a.configure(Grid::Major, |g| g.show())
             .configure(Grid::Minor, |g| g.hide())
-            .set(Label(format!("Average time ({})", prefix)))
+            .set(Label(format!("Average time ({})", unit)))
             .set(axis_scale.to_gnuplot())
-            .set(ScaleFactor(scale))
     });
 
     // This assumes the curves are sorted. It also assumes that the benchmark IDs all have numeric
@@ -95,7 +95,8 @@ pub fn line_comparison(
             })
             .collect();
         tuples.sort_by(|&(ax, _), &(bx, _)| (ax.partial_cmp(&bx).unwrap_or(Ordering::Less)));
-        let (xs, ys): (Vec<_>, Vec<_>) = tuples.into_iter().unzip();
+        let (xs, mut ys): (Vec<_>, Vec<_>) = tuples.into_iter().unzip();
+        formatter.scale_for_graph(max, &mut ys);
 
         let function_name = key.as_ref().map(|string| escape_underscores(string));
 
@@ -158,7 +159,8 @@ pub fn violin(
             max = e;
         }
     }
-    let (scale, prefix) = formatter.scale_and_unit(max);
+    let mut dummy = [1.0];
+    let unit = formatter.scale_for_graph(max, &mut dummy);
 
     let tics = || (0..).map(|x| (f64::from(x)) + 0.5);
     let size = Size(1280, 200 + (25 * all_curves.len()));
@@ -169,9 +171,8 @@ pub fn violin(
         .configure(Axis::BottomX, |a| {
             a.configure(Grid::Major, |g| g.show())
                 .configure(Grid::Minor, |g| g.hide())
-                .set(Label(format!("Average time ({})", prefix)))
+                .set(Label(format!("Average time ({})", unit)))
                 .set(axis_scale.to_gnuplot())
-                .set(ScaleFactor(scale))
         })
         .configure(Axis::LeftY, |a| {
             a.set(Label("Input"))
@@ -187,8 +188,11 @@ pub fn violin(
     let mut is_first = true;
     for (i, &(ref x, ref y)) in kdes.iter().enumerate() {
         let i = i as f64 + 0.5;
-        let y1 = y.iter().map(|&y| i + y * 0.5);
-        let y2 = y.iter().map(|&y| i - y * 0.5);
+        let mut y1: Vec<_> = y.iter().map(|&y| i + y * 0.5).collect();
+        let mut y2: Vec<_> = y.iter().map(|&y| i - y * 0.5).collect();
+
+        formatter.scale_for_graph(max, &mut y1);
+        formatter.scale_for_graph(max, &mut y2);
 
         f.plot(FilledCurve { x: &**x, y1, y2 }, |c| {
             if is_first {

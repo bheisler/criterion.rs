@@ -12,8 +12,12 @@ pub(crate) fn pdf(
     size: Option<Size>,
 ) -> Child {
     let avg_times = &measurements.avg_times;
+    let typical = avg_times.max();
+    let mut scaled_avg_times: Vec<f64> = (avg_times as &Sample<f64>).iter().cloned().collect();
+    let unit = formatter.scale_for_graph(typical, &mut scaled_avg_times);
+    let scaled_avg_times = Sample::new(&scaled_avg_times);
 
-    let mean = avg_times.mean();
+    let mean = scaled_avg_times.mean();
 
     let iter_counts = measurements.iter_counts();
     let &max_iters = iter_counts
@@ -29,8 +33,11 @@ pub(crate) fn pdf(
         format!("Iterations (x 10^{})", exponent)
     };
 
-    let (xs, ys) = kde::sweep(&avg_times, KDE_POINTS, None);
+    let (xs, ys) = kde::sweep(&scaled_avg_times, KDE_POINTS, None);
     let (lost, lomt, himt, hist) = avg_times.fences();
+    let mut fences = [lost, lomt, himt, hist];
+    let _ = formatter.scale_for_graph(typical, &mut fences);
+    let [lost, lomt, himt, hist] = fences;
 
     let vertical = &[0., max_iters];
     let zeros = iter::repeat(0);
@@ -40,12 +47,9 @@ pub(crate) fn pdf(
         .set(Font(DEFAULT_FONT))
         .set(size.unwrap_or(SIZE))
         .configure(Axis::BottomX, |a| {
-            let (x_scale, prefix) = formatter.scale_and_unit(avg_times.max());
             let xs_ = Sample::new(&xs);
-
-            a.set(Label(format!("Average time ({})", prefix)))
-                .set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale))
-                .set(ScaleFactor(x_scale))
+            a.set(Label(format!("Average time ({})", unit)))
+                .set(Range::Limits(xs_.min(), xs_.max()))
         })
         .configure(Axis::LeftY, |a| {
             a.set(Label(y_label))
@@ -85,15 +89,18 @@ pub(crate) fn pdf(
         )
         .plot(
             Points {
-                x: avg_times.iter().filter_map(
-                    |(t, label)| {
-                        if label.is_outlier() {
-                            None
-                        } else {
-                            Some(t)
-                        }
-                    },
-                ),
+                x: avg_times
+                    .iter()
+                    .zip(scaled_avg_times.iter())
+                    .filter_map(
+                        |((_, label), t)| {
+                            if label.is_outlier() {
+                                None
+                            } else {
+                                Some(t)
+                            }
+                        },
+                    ),
                 y: avg_times
                     .iter()
                     .zip(iter_counts.iter())
@@ -116,15 +123,18 @@ pub(crate) fn pdf(
         )
         .plot(
             Points {
-                x: avg_times.iter().filter_map(
-                    |(x, label)| {
-                        if label.is_mild() {
-                            Some(x)
-                        } else {
-                            None
-                        }
-                    },
-                ),
+                x: avg_times
+                    .iter()
+                    .zip(scaled_avg_times.iter())
+                    .filter_map(
+                        |((_, label), t)| {
+                            if label.is_mild() {
+                                Some(t)
+                            } else {
+                                None
+                            }
+                        },
+                    ),
                 y: avg_times
                     .iter()
                     .zip(iter_counts.iter())
@@ -147,15 +157,18 @@ pub(crate) fn pdf(
         )
         .plot(
             Points {
-                x: avg_times.iter().filter_map(
-                    |(x, label)| {
-                        if label.is_severe() {
-                            Some(x)
-                        } else {
-                            None
-                        }
-                    },
-                ),
+                x: avg_times
+                    .iter()
+                    .zip(scaled_avg_times.iter())
+                    .filter_map(
+                        |((_, label), t)| {
+                            if label.is_severe() {
+                                Some(t)
+                            } else {
+                                None
+                            }
+                        },
+                    ),
                 y: avg_times
                     .iter()
                     .zip(iter_counts.iter())
@@ -219,9 +232,13 @@ pub(crate) fn pdf_small(
     size: Option<Size>,
 ) -> Child {
     let avg_times = &*measurements.avg_times;
-    let mean = avg_times.mean();
+    let typical = avg_times.max();
+    let mut scaled_avg_times: Vec<f64> = (avg_times as &Sample<f64>).iter().cloned().collect();
+    let unit = formatter.scale_for_graph(typical, &mut scaled_avg_times);
+    let scaled_avg_times = Sample::new(&scaled_avg_times);
+    let mean = scaled_avg_times.mean();
 
-    let (xs, ys, mean_y) = kde::sweep_and_estimate(avg_times, KDE_POINTS, None, mean);
+    let (xs, ys, mean_y) = kde::sweep_and_estimate(scaled_avg_times, KDE_POINTS, None, mean);
     let xs_ = Sample::new(&xs);
     let ys_ = Sample::new(&ys);
 
@@ -233,10 +250,8 @@ pub(crate) fn pdf_small(
         .set(Font(DEFAULT_FONT))
         .set(size.unwrap_or(SIZE))
         .configure(Axis::BottomX, |a| {
-            let (x_scale, prefix) = formatter.scale_and_unit(avg_times.max());
-            a.set(Label(format!("Average time ({})", prefix)))
-                .set(Range::Limits(xs_.min() * x_scale, xs_.max() * x_scale))
-                .set(ScaleFactor(x_scale))
+            a.set(Label(format!("Average time ({})", unit)))
+                .set(Range::Limits(xs_.min(), xs_.max()))
         })
         .configure(Axis::LeftY, |a| {
             a.set(Label("Density (a.u.)"))
@@ -277,18 +292,26 @@ fn pdf_comparison_figure(
     size: Option<Size>,
 ) -> Figure {
     let base_avg_times = Sample::new(&comparison.base_avg_times);
+    let typical = base_avg_times.max().max(measurements.avg_times.max());
+    let mut scaled_base_avg_times: Vec<f64> = comparison.base_avg_times.clone();
+    let unit = formatter.scale_for_graph(typical, &mut scaled_base_avg_times);
+    let scaled_base_avg_times = Sample::new(&scaled_base_avg_times);
 
-    let base_mean = base_avg_times.mean();
-    let new_mean = measurements.avg_times.mean();
+    let mut scaled_new_avg_times: Vec<f64> = (&measurements.avg_times as &Sample<f64>)
+        .iter()
+        .cloned()
+        .collect();
+    let _ = formatter.scale_for_graph(typical, &mut scaled_new_avg_times);
+    let scaled_new_avg_times = Sample::new(&scaled_new_avg_times);
+
+    let base_mean = scaled_base_avg_times.mean();
+    let new_mean = scaled_new_avg_times.mean();
 
     let (base_xs, base_ys, base_y_mean) =
-        kde::sweep_and_estimate(base_avg_times, KDE_POINTS, None, base_mean);
+        kde::sweep_and_estimate(scaled_base_avg_times, KDE_POINTS, None, base_mean);
     let (xs, ys, y_mean) =
-        kde::sweep_and_estimate(&measurements.avg_times, KDE_POINTS, None, new_mean);
-    let base_xs_ = Sample::new(&base_xs);
-    let xs_ = Sample::new(&xs);
+        kde::sweep_and_estimate(scaled_new_avg_times, KDE_POINTS, None, new_mean);
 
-    let (x_scale, prefix) = formatter.scale_and_unit(base_xs_.max().max(xs_.max()));
     let zeros = iter::repeat(0);
 
     let mut figure = Figure::new();
@@ -296,8 +319,7 @@ fn pdf_comparison_figure(
         .set(Font(DEFAULT_FONT))
         .set(size.unwrap_or(SIZE))
         .configure(Axis::BottomX, |a| {
-            a.set(Label(format!("Average time ({})", prefix)))
-                .set(ScaleFactor(x_scale))
+            a.set(Label(format!("Average time ({})", unit)))
         })
         .configure(Axis::LeftY, |a| a.set(Label("Density (a.u.)")))
         .configure(Axis::RightY, |a| a.hide())

@@ -21,8 +21,12 @@ impl ValueFormatter for HalfSecFormatter {
         }
     }
 
-    fn scale_and_unit(&self, _value: f64) -> (f64, &'static str) {
-        (2f64 * 10f64.powi(-9), "s/2")
+    fn scale_for_graph(&self, ns: f64, values: &mut [f64]) -> &'static str {
+        for val in values {
+            *val *= 2f64 * 10f64.powi(-9);
+        }
+
+        "s/2"
     }
 
     fn scale_for_machines(&self, values: &mut [f64]) -> &'static str {

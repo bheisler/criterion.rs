@@ -26,16 +26,12 @@ pub trait ValueFormatter {
     /// the implementor will have to calculate bytes per second, iterations per cycle, etc.
     fn format_throughput(&self, throughput: &Throughput, value: f64) -> String;
 
-    /// Return a scale factor and a unit string appropriate for the given value.
+    /// Scale the given values and return an appropriate unit string.
     ///
-    /// Criterion.rs will multiple the scale factor by the value to produce a value in the returned
-    /// unit. For example, if value is in nanoseconds (1 second = 10^9 nanoseconds) but we wish to
-    /// display it in seconds, `scale_and_unit` should return `(10.powi(-9), "s")`, because
-    /// `value * 10.powi(-9)` will produce a number of seconds.
-    fn scale_and_unit(&self, value: f64) -> (f64, &'static str);
-
-    // TODO: I really don't like this scale_and_unit function. There must be a better interface
-    // for this...
+    /// The given typical value should be used to choose the unit. This function may be called
+    /// multiple times with different datasets; the typical value will remain the same to ensure
+    /// that the units remain consistent within a graph. The typical value will not be NaN.
+    fn scale_for_graph(&self, typical_value: f64, values: &mut [f64]) -> (&'static str);
 
     /// Scale the values and return a unit string designed for machines.
     ///
@@ -131,8 +127,8 @@ impl ValueFormatter for DurationFormatter {
         }
     }
 
-    fn scale_and_unit(&self, ns: f64) -> (f64, &'static str) {
-        if ns < 10f64.powi(0) {
+    fn scale_for_graph(&self, ns: f64, values: &mut [f64]) -> &'static str {
+        let (factor, unit) = if ns < 10f64.powi(0) {
             (10f64.powi(3), "ps")
         } else if ns < 10f64.powi(3) {
             (10f64.powi(0), "ns")
@@ -142,7 +138,13 @@ impl ValueFormatter for DurationFormatter {
             (10f64.powi(-6), "ms")
         } else {
             (10f64.powi(-9), "s")
+        };
+
+        for val in values {
+            *val *= factor;
         }
+
+        unit
     }
 
     fn scale_for_machines(&self, _values: &mut [f64]) -> &'static str {

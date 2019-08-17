@@ -19,7 +19,7 @@ fn escape_underscores(string: &str) -> String {
     string.replace("_", "\\_")
 }
 
-static DEFAULT_FONT: &'static str = "Helvetica";
+static DEFAULT_FONT: &str = "Helvetica";
 static KDE_POINTS: usize = 500;
 static SIZE: Size = Size(1280, 720);
 
@@ -41,6 +41,17 @@ fn debug_script(path: &PathBuf, figure: &Figure) {
         }
     }
 }
+
+/*fn get_max(values: &[f64]) -> f64 {
+    assert!(!values.is_empty());
+    let mut elems = values.iter();
+
+    match elems.next() {
+        Some(&head) => elems.fold(head, |a, &b| a.max(b)),
+        // NB `unreachable!` because `Sample` is guaranteed to have at least one data point
+        None => unreachable!(),
+    }
+}*/
 
 /// Private
 trait Append<T> {
