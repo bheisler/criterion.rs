@@ -1,7 +1,8 @@
 ## Migrating from 0.2.* to 0.3.*
 
 Criterion.rs took advantage of 0.3.0 being a breaking-change release to make a number of changes
-that will require changes to user code.
+that will require changes to user code. These changes are documented here, along with the newer
+alternatives.
 
 ### `Benchmark`, `ParameterizedBenchmark`, `Criterion::bench_functions`, `Criterion::bench_function_over_inputs`, `Criterion::bench` are deprecated.
 
