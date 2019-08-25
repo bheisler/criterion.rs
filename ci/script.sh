@@ -8,7 +8,7 @@ elif [ "$DOCS" = "yes" ]; then
     cd book
     mdbook build
     cd ..
-    cp -r book/book/ target/doc/book/
+    cp -r book/book/html/ target/doc/book/
     travis-cargo doc-upload || true
 elif [ "$RUSTFMT" = "yes" ]; then
     cargo fmt --all -- --check

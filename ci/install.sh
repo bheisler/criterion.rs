@@ -5,7 +5,7 @@ if [ "$CLIPPY" = "yes" ]; then
 fi
 
 if [ "$DOCS" = "yes" ]; then
-    cargo install mdbook --force
+    cargo install mdbook mdbook-linkcheck --force
 fi
 
 if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$GNUPLOT" = "yes" ]; then
