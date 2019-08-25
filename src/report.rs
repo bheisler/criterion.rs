@@ -1,11 +1,14 @@
-use stats::bivariate::regression::Slope;
-use stats::bivariate::Data;
-use stats::univariate::outliers::tukey::LabeledSample;
+use crate::stats::bivariate::regression::Slope;
+use crate::stats::bivariate::Data;
+use crate::stats::univariate::outliers::tukey::LabeledSample;
 
-use estimate::{Distributions, Estimates, Statistic};
-use format;
-use stats::univariate::Sample;
-use stats::Distribution;
+use crate::estimate::{Distributions, Estimates, Statistic};
+use crate::format;
+use crate::measurement::ValueFormatter;
+use crate::stats::univariate::Sample;
+use crate::stats::Distribution;
+use crate::Estimate;
+use crate::{PlotConfiguration, Plotting, Throughput};
 use std::cell::Cell;
 use std::cmp;
 use std::collections::HashSet;
@@ -13,8 +16,6 @@ use std::fmt;
 use std::io::stdout;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use Estimate;
-use {PlotConfiguration, Plotting, Throughput};
 
 const MAX_DIRECTORY_NAME_LEN: usize = 64;
 const MAX_TITLE_LEN: usize = 100;
@@ -58,7 +59,7 @@ pub enum ValueType {
     Value,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct BenchmarkId {
     pub group_id: String,
     pub function_id: Option<String>,
@@ -87,9 +88,6 @@ pub fn make_filename_safe(string: &str) -> String {
     truncate_to_character_boundary(&mut string, MAX_DIRECTORY_NAME_LEN);
 
     if cfg!(target_os = "windows") {
-        // TODO: remove `allow(...)` when we don't support Rust < 1.30.
-        // (this is needed for `.trim_right` which is deprecated in favour of `.trim_end`)
-        #[allow(deprecated)]
         {
             string = string
                 // On Windows, spaces in the end of the filename are ignored and will be trimmed.
@@ -99,7 +97,7 @@ pub fn make_filename_safe(string: &str) -> String {
                 //
                 // Also note that it's important to do this *after* trimming to MAX_DIRECTORY_NAME_LEN,
                 // otherwise it can trim again to a name with a trailing space.
-                .trim_right()
+                .trim_end()
                 // On Windows, file names are not case-sensitive, so lowercase everything.
                 .to_lowercase();
         }
@@ -173,7 +171,7 @@ impl BenchmarkId {
 
     pub fn as_number(&self) -> Option<f64> {
         match self.throughput {
-            Some(Throughput::Bytes(n)) | Some(Throughput::Elements(n)) => Some(f64::from(n)),
+            Some(Throughput::Bytes(n)) | Some(Throughput::Elements(n)) => Some(n as f64),
             None => self
                 .value_str
                 .as_ref()
@@ -288,17 +286,24 @@ pub(crate) trait Report {
         _id: &BenchmarkId,
         _context: &ReportContext,
         _measurements: &MeasurementData,
+        _formatter: &dyn ValueFormatter,
     ) {
     }
-    fn summarize(&self, _context: &ReportContext, _all_ids: &[BenchmarkId]) {}
+    fn summarize(
+        &self,
+        _context: &ReportContext,
+        _all_ids: &[BenchmarkId],
+        _formatter: &dyn ValueFormatter,
+    ) {
+    }
     fn final_summary(&self, _context: &ReportContext) {}
 }
 
 pub(crate) struct Reports {
-    reports: Vec<Box<Report>>,
+    reports: Vec<Box<dyn Report>>,
 }
 impl Reports {
-    pub fn new(reports: Vec<Box<Report>>) -> Reports {
+    pub fn new(reports: Vec<Box<dyn Report>>) -> Reports {
         Reports { reports }
     }
 }
@@ -351,15 +356,21 @@ impl Report for Reports {
         id: &BenchmarkId,
         context: &ReportContext,
         measurements: &MeasurementData,
+        formatter: &dyn ValueFormatter,
     ) {
         for report in &self.reports {
-            report.measurement_complete(id, context, measurements);
+            report.measurement_complete(id, context, measurements, formatter);
         }
     }
 
-    fn summarize(&self, context: &ReportContext, all_ids: &[BenchmarkId]) {
+    fn summarize(
+        &self,
+        context: &ReportContext,
+        all_ids: &[BenchmarkId],
+        formatter: &dyn ValueFormatter,
+    ) {
         for report in &self.reports {
-            report.summarize(context, all_ids);
+            report.summarize(context, all_ids, formatter);
         }
     }
 
@@ -552,7 +563,13 @@ impl Report for CliReport {
         ));
     }
 
-    fn measurement_complete(&self, id: &BenchmarkId, _: &ReportContext, meas: &MeasurementData) {
+    fn measurement_complete(
+        &self,
+        id: &BenchmarkId,
+        _: &ReportContext,
+        meas: &MeasurementData,
+        formatter: &dyn ValueFormatter,
+    ) {
         self.text_overwrite();
 
         let slope_estimate = meas.absolute_estimates[&Statistic::Slope];
@@ -570,9 +587,9 @@ impl Report for CliReport {
                 "{}{}time:   [{} {} {}]",
                 self.green(id),
                 " ".repeat(24 - id_len),
-                self.faint(format::time(slope_estimate.confidence_interval.lower_bound)),
-                self.bold(format::time(slope_estimate.point_estimate)),
-                self.faint(format::time(slope_estimate.confidence_interval.upper_bound))
+                self.faint(formatter.format_value(slope_estimate.confidence_interval.lower_bound)),
+                self.bold(formatter.format_value(slope_estimate.point_estimate)),
+                self.faint(formatter.format_value(slope_estimate.confidence_interval.upper_bound))
             );
         }
 
@@ -580,18 +597,19 @@ impl Report for CliReport {
             println!(
                 "{}thrpt:  [{} {} {}]",
                 " ".repeat(24),
-                self.faint(format::throughput(
-                    throughput,
-                    slope_estimate.confidence_interval.upper_bound
-                )),
-                self.bold(format::throughput(
-                    throughput,
-                    slope_estimate.point_estimate
-                )),
-                self.faint(format::throughput(
-                    throughput,
-                    slope_estimate.confidence_interval.lower_bound
-                )),
+                self.faint(
+                    formatter.format_throughput(
+                        throughput,
+                        slope_estimate.confidence_interval.upper_bound
+                    )
+                ),
+                self.bold(formatter.format_throughput(throughput, slope_estimate.point_estimate)),
+                self.faint(
+                    formatter.format_throughput(
+                        throughput,
+                        slope_estimate.confidence_interval.lower_bound
+                    )
+                ),
             )
         }
 
@@ -687,13 +705,13 @@ impl Report for CliReport {
         self.outliers(&meas.avg_times);
 
         if self.verbose {
-            fn format_short_estimate(estimate: &Estimate) -> String {
+            let format_short_estimate = |estimate: &Estimate| -> String {
                 format!(
                     "[{} {}]",
-                    format::time(estimate.confidence_interval.lower_bound),
-                    format::time(estimate.confidence_interval.upper_bound)
+                    formatter.format_value(estimate.confidence_interval.lower_bound),
+                    formatter.format_value(estimate.confidence_interval.upper_bound)
                 )
-            }
+            };
 
             let data = &meas.data;
             let slope_estimate = &meas.absolute_estimates[&Statistic::Slope];

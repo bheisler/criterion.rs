@@ -4,14 +4,14 @@ macro_rules! test {
         mod $ty {
             use quickcheck::TestResult;
 
-            use stats::bivariate::regression::Slope;
-            use stats::bivariate::Data;
+            use crate::stats::bivariate::regression::Slope;
+            use crate::stats::bivariate::Data;
 
             quickcheck! {
                 fn means(size: usize, start: usize,
                          offset: usize, nresamples: usize) -> TestResult {
-                    if let Some(x) = ::stats::test::vec::<$ty>(size, start) {
-                        let y = ::stats::test::vec::<$ty>(size + offset, start + offset).unwrap();
+                    if let Some(x) = crate::stats::test::vec::<$ty>(size, start) {
+                        let y = crate::stats::test::vec::<$ty>(size + offset, start + offset).unwrap();
                         let data = Data::new(&x[start..], &y[start+offset..]);
 
                         let (x_means, y_means) = if nresamples > 0 {
@@ -48,8 +48,8 @@ macro_rules! test {
             quickcheck! {
                 fn slope(size: usize, start: usize,
                          offset: usize, nresamples: usize) -> TestResult {
-                    if let Some(x) = ::stats::test::vec::<$ty>(size, start) {
-                        let y = ::stats::test::vec::<$ty>(size + offset, start + offset).unwrap();
+                    if let Some(x) = crate::stats::test::vec::<$ty>(size, start) {
+                        let y = crate::stats::test::vec::<$ty>(size + offset, start + offset).unwrap();
                         let data = Data::new(&x[start..], &y[start+offset..]);
 
                         let slopes = if nresamples > 0 {

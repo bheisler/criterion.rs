@@ -1,18 +1,19 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use stats::bivariate::regression::Slope;
-use stats::bivariate::Data;
-use stats::univariate::outliers::tukey::{self, LabeledSample};
-use stats::univariate::Sample;
-use stats::{Distribution, Tails};
+use crate::stats::bivariate::regression::Slope;
+use crate::stats::bivariate::Data;
+use crate::stats::univariate::outliers::tukey::{self, LabeledSample};
+use crate::stats::univariate::Sample;
+use crate::stats::{Distribution, Tails};
 
-use benchmark::BenchmarkConfig;
-use estimate::{Distributions, Estimates, Statistic};
-use report::{BenchmarkId, ReportContext};
-use routine::Routine;
-use {build_estimates, Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
-use {format, fs};
+use crate::benchmark::BenchmarkConfig;
+use crate::estimate::{Distributions, Estimates, Statistic};
+use crate::fs;
+use crate::measurement::Measurement;
+use crate::report::{BenchmarkId, ReportContext};
+use crate::routine::Routine;
+use crate::{build_estimates, Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => {{
@@ -23,7 +24,7 @@ macro_rules! elapsed {
         info!(
             "{} took {}",
             $msg,
-            format::time(::DurationExt::to_nanos(elapsed) as f64)
+            crate::format::time(crate::DurationExt::to_nanos(elapsed) as f64)
         );
 
         out
@@ -33,11 +34,11 @@ macro_rules! elapsed {
 mod compare;
 
 // Common analysis procedure
-pub(crate) fn common<T>(
+pub(crate) fn common<M: Measurement, T>(
     id: &BenchmarkId,
-    routine: &mut Routine<T>,
+    routine: &mut dyn Routine<M, T>,
     config: &BenchmarkConfig,
-    criterion: &Criterion,
+    criterion: &Criterion<M>,
     report_context: &ReportContext,
     parameter: &T,
     throughput: Option<Throughput>,
@@ -50,7 +51,7 @@ pub(crate) fn common<T>(
 
     // In test mode, run the benchmark exactly once, then exit.
     if criterion.test_mode {
-        routine.test(parameter);
+        routine.test(&criterion.measurement, parameter);
         criterion.report.terminated(id, report_context);
         return;
     }
@@ -70,11 +71,25 @@ pub(crate) fn common<T>(
 
     // In profiling mode, skip all of the analysis.
     if let Some(time) = criterion.profile_time {
-        routine.profile(id, criterion, report_context, time, parameter);
+        routine.profile(
+            &criterion.measurement,
+            id,
+            criterion,
+            report_context,
+            time,
+            parameter,
+        );
         return;
     }
 
-    let (iters, times) = routine.sample(id, config, criterion, report_context, parameter);
+    let (iters, times) = routine.sample(
+        &criterion.measurement,
+        id,
+        config,
+        criterion,
+        report_context,
+        parameter,
+    );
 
     criterion.report.analysis(id, report_context);
 
@@ -134,7 +149,7 @@ pub(crate) fn common<T>(
                 base_estimates,
             )) => {
                 let p_value = t_distribution.p_value(t_value, &Tails::Two);
-                Some(::report::ComparisonData {
+                Some(crate::report::ComparisonData {
                     p_value,
                     t_distribution,
                     t_value,
@@ -149,7 +164,7 @@ pub(crate) fn common<T>(
                 })
             }
             Err(e) => {
-                ::error::log_error(&e);
+                crate::error::log_error(&e);
                 None
             }
         }
@@ -157,7 +172,7 @@ pub(crate) fn common<T>(
         None
     };
 
-    let measurement_data = ::report::MeasurementData {
+    let measurement_data = crate::report::MeasurementData {
         data: Data::new(&*iters, &*times),
         avg_times: labeled_sample,
         absolute_estimates: estimates.clone(),
@@ -166,9 +181,12 @@ pub(crate) fn common<T>(
         throughput,
     };
 
-    criterion
-        .report
-        .measurement_complete(id, report_context, &measurement_data);
+    criterion.report.measurement_complete(
+        id,
+        report_context,
+        &measurement_data,
+        criterion.measurement.formatter(),
+    );
 
     log_if_err!(fs::save(
         &id,

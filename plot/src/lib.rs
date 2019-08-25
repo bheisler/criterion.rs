@@ -390,9 +390,7 @@
 
 #![deny(missing_docs)]
 #![deny(warnings)]
-// TODO: Remove these and use the dyn keyword once we update to 1.27.0 or later
-#![allow(unknown_lints)]
-#![allow(bare_trait_objects)]
+#![deny(bare_trait_objects)]
 // This lint has lots of false positives ATM, see
 // https://github.com/Manishearth/rust-clippy/issues/761
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::new_without_default))]
@@ -400,7 +398,6 @@
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::doc_markdown))]
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::many_single_char_names))]
 
-extern crate byteorder;
 extern crate cast;
 #[macro_use]
 extern crate itertools;
@@ -414,8 +411,8 @@ use std::path::Path;
 use std::process::{Child, Command};
 use std::str;
 
-use data::Matrix;
-use traits::{Configure, Set};
+use crate::data::Matrix;
+use crate::traits::{Configure, Set};
 
 mod data;
 mod display;
@@ -798,7 +795,7 @@ pub enum Axis {
 
 impl Axis {
     fn next(self) -> Option<Axis> {
-        use Axis::*;
+        use crate::Axis::*;
 
         match self {
             BottomX => Some(LeftY),
@@ -840,7 +837,7 @@ pub enum Grid {
 
 impl Grid {
     fn next(self) -> Option<Grid> {
-        use Grid::*;
+        use crate::Grid::*;
 
         match self {
             Major => Some(Minor),
@@ -913,13 +910,13 @@ trait Display<S> {
 /// Curve variant of Default
 trait CurveDefault<S> {
     /// Creates `curve::Properties` with default configuration
-    fn default(S) -> Self;
+    fn default(s: S) -> Self;
 }
 
 /// Error bar variant of Default
 trait ErrorBarDefault<S> {
     /// Creates `errorbar::Properties` with default configuration
-    fn default(S) -> Self;
+    fn default(s: S) -> Self;
 }
 
 /// Structs that can produce gnuplot code
@@ -992,7 +989,7 @@ impl ::std::error::Error for VersionError {
         }
     }
 
-    fn cause(&self) -> Option<&::std::error::Error> {
+    fn cause(&self) -> Option<&dyn ::std::error::Error> {
         match self {
             VersionError::Exec(err) => Some(err),
             _ => None,
@@ -1042,8 +1039,8 @@ fn parse_version(version_str: &str) -> Result<Version, Option<ParseIntError>> {
 }
 
 fn scale_factor(map: &map::axis::Map<axis::Properties>, axes: Axes) -> (f64, f64) {
-    use Axes::*;
-    use Axis::*;
+    use crate::Axes::*;
+    use crate::Axis::*;
 
     match axes {
         BottomXLeftY => (

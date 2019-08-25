@@ -1,24 +1,37 @@
 use std::process::Child;
 
+use crate::estimate::Statistic;
+use crate::stats::bivariate::regression::Slope;
 use criterion_plot::prelude::*;
-use estimate::Statistic;
-use stats::bivariate::regression::Slope;
 
 use super::*;
-use report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
-use stats::bivariate::Data;
+use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
+use crate::stats::bivariate::Data;
 
-use {ConfidenceInterval, Estimate};
+use crate::{ConfidenceInterval, Estimate};
 
-fn regression_figure(measurements: &MeasurementData, size: Option<Size>) -> Figure {
+use crate::measurement::ValueFormatter;
+
+fn regression_figure(
+    formatter: &dyn ValueFormatter,
+    measurements: &MeasurementData,
+    size: Option<Size>,
+) -> Figure {
     let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
-    let point = Slope::fit(&measurements.data);
     let slope_dist = &measurements.distributions[&Statistic::Slope];
     let (lb, ub) =
         slope_dist.confidence_interval(slope_estimate.confidence_interval.confidence_level);
 
     let data = &measurements.data;
-    let (max_iters, max_elapsed) = (data.x().max(), data.y().max());
+    let (max_iters, typical) = (data.x().max(), data.y().max());
+    let mut scaled_y: Vec<f64> = data.y().iter().cloned().collect();
+    let unit = formatter.scale_values(typical, &mut scaled_y);
+    let scaled_y = Sample::new(&scaled_y);
+
+    let point_estimate = Slope::fit(&measurements.data).0;
+    let mut scaled_points = [point_estimate * max_iters, lb * max_iters, ub * max_iters];
+    let _ = formatter.scale_values(typical, &mut scaled_points);
+    let [point, lb, ub] = scaled_points;
 
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
     let x_scale = 10f64.powi(-exponent);
@@ -28,11 +41,6 @@ fn regression_figure(measurements: &MeasurementData, size: Option<Size>) -> Figu
     } else {
         format!("Iterations (x 10^{})", exponent)
     };
-
-    let lb = lb * max_iters;
-    let point = point.0 * max_iters;
-    let ub = ub * max_iters;
-    let max_iters = max_iters;
 
     let mut figure = Figure::new();
     figure
@@ -44,15 +52,13 @@ fn regression_figure(measurements: &MeasurementData, size: Option<Size>) -> Figu
                 .set(ScaleFactor(x_scale))
         })
         .configure(Axis::LeftY, |a| {
-            let (y_scale, prefix) = scale_time(max_elapsed);
             a.configure(Grid::Major, |g| g.show())
-                .set(Label(format!("Total sample time ({}s)", prefix)))
-                .set(ScaleFactor(y_scale))
+                .set(Label(format!("Total sample time ({})", unit)))
         })
         .plot(
             Points {
                 x: data.x().as_ref(),
-                y: data.y().as_ref(),
+                y: scaled_y.as_ref(),
             },
             |c| {
                 c.set(DARK_BLUE)
@@ -91,10 +97,11 @@ fn regression_figure(measurements: &MeasurementData, size: Option<Size>) -> Figu
 pub(crate) fn regression(
     id: &BenchmarkId,
     context: &ReportContext,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     size: Option<Size>,
 ) -> Child {
-    let mut figure = regression_figure(measurements, size);
+    let mut figure = regression_figure(formatter, measurements, size);
     figure.set(Title(escape_underscores(id.as_title())));
     figure.configure(Key, |k| {
         k.set(Justification::Left)
@@ -110,10 +117,11 @@ pub(crate) fn regression(
 pub(crate) fn regression_small(
     id: &BenchmarkId,
     context: &ReportContext,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     size: Option<Size>,
 ) -> Child {
-    let mut figure = regression_figure(measurements, size);
+    let mut figure = regression_figure(formatter, measurements, size);
     figure.configure(Key, |k| k.hide());
 
     let path = context.report_path(id, "regression_small.svg");
@@ -122,6 +130,7 @@ pub(crate) fn regression_small(
 }
 
 fn regression_comparison_figure(
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     base_data: &Data<f64, f64>,
@@ -129,9 +138,7 @@ fn regression_comparison_figure(
 ) -> Figure {
     let data = &measurements.data;
     let max_iters = base_data.x().max().max(data.x().max());
-    let max_elapsed = base_data.y().max().max(data.y().max());
-
-    let (y_scale, prefix) = scale_time(max_elapsed);
+    let typical = base_data.y().max().max(data.y().max());
 
     let exponent = (max_iters.log10() / 3.).floor() as i32 * 3;
     let x_scale = 10f64.powi(-exponent);
@@ -164,6 +171,17 @@ fn regression_comparison_figure(
         ..
     } = comparison.base_estimates[&Statistic::Slope];
 
+    let mut points = [
+        base_lb * max_iters,
+        base_point * max_iters,
+        base_ub * max_iters,
+        lb * max_iters,
+        point * max_iters,
+        ub * max_iters,
+    ];
+    let unit = formatter.scale_values(typical, &mut points);
+    let [base_lb, base_point, base_ub, lb, point, ub] = points;
+
     let mut figure = Figure::new();
     figure
         .set(Font(DEFAULT_FONT))
@@ -175,8 +193,7 @@ fn regression_comparison_figure(
         })
         .configure(Axis::LeftY, |a| {
             a.configure(Grid::Major, |g| g.show())
-                .set(Label(format!("Total sample time ({}s)", prefix)))
-                .set(ScaleFactor(y_scale))
+                .set(Label(format!("Total sample time ({})", unit)))
         })
         .configure(Key, |k| {
             k.set(Justification::Left)
@@ -186,23 +203,23 @@ fn regression_comparison_figure(
         .plot(
             FilledCurve {
                 x: &[0., max_iters],
-                y1: &[0., base_lb * max_iters],
-                y2: &[0., base_ub * max_iters],
+                y1: &[0., base_lb],
+                y2: &[0., base_ub],
             },
             |c| c.set(DARK_RED).set(Opacity(0.25)),
         )
         .plot(
             FilledCurve {
                 x: &[0., max_iters],
-                y1: &[0., lb * max_iters],
-                y2: &[0., ub * max_iters],
+                y1: &[0., lb],
+                y2: &[0., ub],
             },
             |c| c.set(DARK_BLUE).set(Opacity(0.25)),
         )
         .plot(
             Lines {
                 x: &[0., max_iters],
-                y: &[0., base_point * max_iters],
+                y: &[0., base_point],
             },
             |c| {
                 c.set(DARK_RED)
@@ -214,7 +231,7 @@ fn regression_comparison_figure(
         .plot(
             Lines {
                 x: &[0., max_iters],
-                y: &[0., point * max_iters],
+                y: &[0., point],
             },
             |c| {
                 c.set(DARK_BLUE)
@@ -229,12 +246,14 @@ fn regression_comparison_figure(
 pub(crate) fn regression_comparison(
     id: &BenchmarkId,
     context: &ReportContext,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     base_data: &Data<f64, f64>,
     size: Option<Size>,
 ) -> Child {
-    let mut figure = regression_comparison_figure(measurements, comparison, base_data, size);
+    let mut figure =
+        regression_comparison_figure(formatter, measurements, comparison, base_data, size);
     figure.set(Title(escape_underscores(id.as_title())));
 
     let path = context.report_path(id, "both/regression.svg");
@@ -245,12 +264,14 @@ pub(crate) fn regression_comparison(
 pub(crate) fn regression_comparison_small(
     id: &BenchmarkId,
     context: &ReportContext,
+    formatter: &dyn ValueFormatter,
     measurements: &MeasurementData,
     comparison: &ComparisonData,
     base_data: &Data<f64, f64>,
     size: Option<Size>,
 ) -> Child {
-    let mut figure = regression_comparison_figure(measurements, comparison, base_data, size);
+    let mut figure =
+        regression_comparison_figure(formatter, measurements, comparison, base_data, size);
     figure.configure(Key, |k| k.hide());
 
     let path = context.report_path(id, "relative_regression_small.svg");

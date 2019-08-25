@@ -1,12 +1,11 @@
 use std::{mem, ops};
 
+use crate::stats::float::Float;
+use crate::stats::tuple::{Tuple, TupledDistributionsBuilder};
+use crate::stats::univariate::Percentiles;
+use crate::stats::univariate::Resamples;
 use cast;
 use rayon::prelude::*;
-use stats::float::Float;
-
-use stats::tuple::{Tuple, TupledDistributionsBuilder};
-use stats::univariate::Percentiles;
-use stats::univariate::Resamples;
 
 /// A collection of data points drawn from a population
 ///
@@ -161,7 +160,7 @@ where
     ///
     /// - Time: `O(length)`
     pub fn sum(&self) -> A {
-        ::stats::sum(self)
+        crate::stats::sum(self)
     }
 
     /// Returns the t score between these two samples

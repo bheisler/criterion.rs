@@ -85,6 +85,30 @@ option in case the pre-defined options are all unsuitable. `NumBatches` should b
 `NumIterations` as it will typically have less measurement overhead, but `NumIterations` provides
 more control over the batch size which may be necessary in some situations.
 
+## `iter_custom`
+
+This is a special "timing loop" that relies on you to do your own timing. Where the other timing
+loops take a lambda to call N times in a loop, this takes a lambda of the form 
+`FnMut(iters: u64) -> M::Value` - meaning that it accepts the number of iterations and returns
+the measured value. Typically, this will be a `Duration` for the default `WallTime` measurement,
+but it may be other types for other measurements (see the
+[Custom Measurements](./custom_measurements.md) page for more details). The lambda
+can do whatever is needed to measure the value.
+
+Use `iter_custom` when you need to do something that doesn't fit into the usual approach of calling
+a function in a loop. For example, this might be used for:
+
+* Benchmarking external processes by sending the iteration count and receiving the elapsed time
+* Measuring how long a thread pool takes to execute N jobs, to see how lock contention or pool-size
+  affects the wall-clock time
+
+Try to keep the overhead in the measurement routine to a minimum; Criterion.rs will still use its
+normal warm-up/target-time logic, which is based on wall-clock time. If your measurement routine
+takes a long time to perform each measurement it could mess up the calculations and cause
+Criterion.rs to run too few iterations (not to mention that the benchmarks would take a long time).
+Because of this, it's best to do heavy setup like starting processes or threads before running the
+benchmark.
+
 ## What do I do if my function's runtime is smaller than the measurement overhead?
 
 Criterion.rs' timing loops are carefully designed to minimize the measurement overhead as much as

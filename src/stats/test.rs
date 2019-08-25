@@ -1,5 +1,5 @@
 use rand::distributions::{Distribution, Standard};
-use rand::{FromEntropy, Rng};
+use rand::prelude::*;
 use rand_xoshiro::Xoshiro256StarStar;
 
 pub fn vec<T>(size: usize, start: usize) -> Option<Vec<T>>

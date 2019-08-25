@@ -1,3 +1,4 @@
+use criterion::BenchmarkId;
 use criterion::Criterion;
 use criterion::Fun;
 use criterion::ParameterizedBenchmark;
@@ -18,7 +19,7 @@ fn fibonacci_fast(n: u64) -> u64 {
         return 0;
     }
 
-    for _ in 0..(n + 1) {
+    for _ in 0..=n {
         c = a + b;
         a = b;
         b = c;
@@ -45,10 +46,21 @@ fn compare_fibonaccis_builder(c: &mut Criterion) {
         .with_function("Iterative", |b, i| b.iter(|| fibonacci_fast(*i))),
     );
 }
+fn compare_fibonaccis_group(c: &mut Criterion) {
+    let mut group = c.benchmark_group("Fibonacci3");
+    for i in 20..=21 {
+        group.bench_with_input(BenchmarkId::new("Recursive", i), &i, |b, i| {
+            b.iter(|| fibonacci_slow(*i))
+        });
+        group.bench_with_input(BenchmarkId::new("Iterative", i), &i, |b, i| {
+            b.iter(|| fibonacci_fast(*i))
+        });
+    }
+    group.finish()
+}
 
 fn compare_looped(c: &mut Criterion) {
     use criterion::black_box;
-    use criterion::ParameterizedBenchmark;
 
     c.bench(
         "small",
@@ -69,5 +81,6 @@ criterion_group!(
     fibonaccis,
     compare_fibonaccis,
     compare_fibonaccis_builder,
+    compare_fibonaccis_group,
     compare_looped
 );

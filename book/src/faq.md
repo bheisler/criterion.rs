@@ -96,17 +96,15 @@ To see this, consider the following benchmark:
 ```rust
 fn compare_small(c: &mut Criterion) {
     use criterion::black_box;
-    use criterion::ParameterizedBenchmark;
 
-    c.bench(
-        "small",
-        ParameterizedBenchmark::new("unlooped", |b, i| b.iter(|| i + 10), vec![10])
-            .with_function("looped", |b, i| b.iter(|| {
-                for _ in 0..10000 {
-                    black_box(i + 10);
-                }
-            }))
-    );
+    let mut group = c.benchmark_group("small");
+    group.bench_with_input("unlooped", 10, |b, i| b.iter(|| i + 10));
+    group.bench_with_input("looped", 10, |b, i| b.iter(|| {
+        for _ in 0..10000 {
+            black_box(i + 10);
+        }
+    }));
+    group.finish();
 }
 ```
 
@@ -177,3 +175,52 @@ I would recommend the latter option.
 
 Note that a file which contains a `criterion_main!` is a valid benchmark and can
 safely stay where it is.
+
+### I made a trivial change to my source and Criterion.rs reports a large change in performance. Why?
+
+Don't worry, Criterion.rs isn't broken and you (probably) didn't do anything wrong. The most common
+reason for this is that the optimizer just happened to optimize your function differently after the
+change.
+
+Optimizing compiler backends such as LLVM (which is used by `rustc`) are often complex beasts full
+of hand-rolled pattern matching code that detects when a particular optimization is possible and
+tries to guess whether it would make the code faster. Unfortunately, despite all of the engineering
+work that goes into these compilers, it's pretty common for apparently-trivial changes to the source
+like changing the order of lines to be enough to cause these optimizers to act differently. On top of
+this, apparently-small changes like changing the type of a variable or calling a slightly different
+function (such as `unwrap` vs `expect`) actually have much larger impacts under the hood than the
+slight different in source text might suggest.
+
+If you want to learn more about this (and some proposals for improving this situation in the
+future), I like [this paper](https://blog.regehr.org/archives/1619) by Regehr et al.
+
+On a similar subject, it's important to remember that a benchmark is only ever an estimate
+of the true performance of your function. If the optimizer can have significant effects on
+performance in an artificial environment like a benchmark, what about when your function is inlined
+into a variety of different calling contexts? The optimizer will almost certainly make different
+decisions for each caller. One hopes that each specialized version will be faster, but that can't
+be guaranteed. In a world of optimizing compilers, the "true performance" of a function is a fuzzy
+thing indeed.
+
+If you're still sure that Criterion.rs is doing something wrong, file an issue describing the
+problem.
+
+### I made _no_ change to my source and Criterion.rs reports a large change in performance. Why?
+
+Typically this happens because the benchmark environments aren't quite the same. There are a lot of
+factors that can influence benchmarks. Other processes might be using the CPU or memory.
+Battery-powered devices often have power-saving modes that clock down the CPU (and these sometimes
+appear in desktops as well). If your benchmarks are run inside a VM, there might be other VMs on the
+same physical machine competing for resources.
+
+However, sometimes this happens even with no change. It's important to remember that Criterion.rs
+detects regressions and improvements statistically. There is always a chance that you randomly
+get unusually fast or slow samples, enough that Criterion.rs detects it as a change even though no
+change has occurred. In very large benchmark suites you might expect to see several of these
+spurious detections each time you run the benchmarks.
+
+Unfortunately, this is a fundamental trade-off in statistics. In order to decrease the rate of false
+detections, you must also decrease the sensitivity to small changes. Conversely, to increase the
+sensitivity to small changes, you must also increase the chance of false detections. Criterion.rs
+has default settings that strike a generally-good balance between the two, but you can adjust the
+settings to suit your needs.

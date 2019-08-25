@@ -26,7 +26,7 @@ median [2.5023 ms 2.5262 ms] med. abs. dev. [40.034 us 73.259 us]
 
 ## Warmup
 
-Every Criterion.rs benchmark iterates the benchmarked function automatically for a configurable warmup period (by default, for three seconds). For Rust function benchmarks, this is to warm up the processor caches and (if applicable) file system caches. For external program benchmarks, it can also be used to warm up JIT compilers.
+Every Criterion.rs benchmark iterates the benchmarked function automatically for a configurable warmup period (by default, for three seconds). For Rust function benchmarks, this is to warm up the processor caches and (if applicable) file system caches.
 
 ## Collecting Samples
 

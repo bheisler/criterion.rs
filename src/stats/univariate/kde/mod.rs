@@ -2,12 +2,10 @@
 
 pub mod kernel;
 
-use rayon::prelude::*;
-use stats::float::Float;
-
-use stats::univariate::Sample;
-
 use self::kernel::Kernel;
+use crate::stats::float::Float;
+use crate::stats::univariate::Sample;
+use rayon::prelude::*;
 
 /// Univariate kernel density estimator
 pub struct Kde<'a, A, K>
@@ -61,7 +59,7 @@ where
             .iter()
             .fold(_0, |acc, &x_i| acc + self.kernel.evaluate((x - x_i) / h));
 
-        sum / h / n
+        sum / (h * n)
     }
 }
 
@@ -92,16 +90,16 @@ macro_rules! test {
         mod $ty {
             use quickcheck::TestResult;
 
-            use stats::univariate::kde::kernel::Gaussian;
-            use stats::univariate::kde::{Bandwidth, Kde};
-            use stats::univariate::Sample;
+            use crate::stats::univariate::kde::kernel::Gaussian;
+            use crate::stats::univariate::kde::{Bandwidth, Kde};
+            use crate::stats::univariate::Sample;
 
             // The [-inf inf] integral of the estimated PDF should be one
             quickcheck! {
                 fn integral(size: usize, start: usize) -> TestResult {
                     const DX: $ty = 1e-3;
 
-                    if let Some(v) = ::stats::test::vec::<$ty>(size, start) {
+                    if let Some(v) = crate::stats::test::vec::<$ty>(size, start) {
                         let slice = &v[start..];
                         let data = Sample::new(slice);
                         let kde = Kde::new(data, Gaussian, Bandwidth::Silverman);

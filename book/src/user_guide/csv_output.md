@@ -30,18 +30,18 @@ suitable for external tools to depend on.
 The format of `raw.csv` is as follows:
 
 ```
-group,function,value,sample_time_nanos,iteration_count
-Fibonacci,Iterative,,915000,110740
-Fibonacci,Iterative,,1964000,221480
-Fibonacci,Iterative,,2812000,332220
-Fibonacci,Iterative,,3767000,442960
-Fibonacci,Iterative,,4785000,553700
-Fibonacci,Iterative,,6302000,664440
-Fibonacci,Iterative,,6946000,775180
-Fibonacci,Iterative,,7815000,885920
-Fibonacci,Iterative,,9186000,996660
-Fibonacci,Iterative,,9578000,1107400
-Fibonacci,Iterative,,11206000,1218140
+group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+Fibonacci,Iterative,,,,915000,ns,110740
+Fibonacci,Iterative,,,,1964000,ns,221480
+Fibonacci,Iterative,,,,2812000,ns,332220
+Fibonacci,Iterative,,,,3767000,ns,442960
+Fibonacci,Iterative,,,,4785000,ns,553700
+Fibonacci,Iterative,,,,6302000,ns,664440
+Fibonacci,Iterative,,,,6946000,ns,775180
+Fibonacci,Iterative,,,,7815000,ns,885920
+Fibonacci,Iterative,,,,9186000,ns,996660
+Fibonacci,Iterative,,,,9578000,ns,1107400
+Fibonacci,Iterative,,,,11206000,ns,1218140
 ...
 ```
 
@@ -49,12 +49,10 @@ This data was taken with this benchmark code:
 
 ```rust
 fn compare_fibonaccis(c: &mut Criterion) {
-    let fib_slow = Fun::new("Recursive", |b, i| b.iter(|| fibonacci_slow(*i)));
-    let fib_fast = Fun::new("Iterative", |b, i| b.iter(|| fibonacci_fast(*i)));
-
-    let functions = vec![fib_slow, fib_fast];
-
-    c.bench_functions("Fibonacci", functions, 20);
+    let mut group = c.benchmark_group("Fibonacci");
+    group.bench_with_input("Recursive", 20, |b, i| b.iter(|| fibonacci_slow(*i)));
+    group.bench_with_input("Iterative", 20, |b, i| b.iter(|| fibonacci_fast(*i)));
+    group.finish();
 }
 ```
 
@@ -66,11 +64,17 @@ multiple functions, each function is given a different name. Otherwise, this wil
 string.
  - `value` - This is the parameter passed to the benchmarked function when using parameterized
 benchmarks. In this case, there is no parameter so the value is the empty string.
+ - `throughput_num` - This is the numeric value of the Throughput configured on the benchmark 
+(if any)
+ - `throughput_type` - "bytes" or "elements", corresponding to the variant of the Throughput 
+configured on the benchmark (if any)
  - `iteration_count` - The number of times the benchmark was iterated for this sample.
- - `sample_time_nanos` - The time taken by the measurement for this sample, in nanoseconds. Note
-that this is the time for the whole sample, not the time-per-iteration (see 
+ - `sample_measured_value` - The value of the measurement for this sample. Note
+that this is the measured value for the whole sample, not the time-per-iteration (see 
 [Analysis Process](../analysis.md#measurement) for more detail). To calculate the time-per-iteration,
-use `sample_time_nanos/iteration_count`.
+use `sample_measured_value/iteration_count`.
+ - `unit` - a string representing the unit for the measured value. For the default `WallTime` 
+measurement this will be "ns", for nanoseconds.
 
 As you can see, this is the raw measurements taken by the Criterion.rs benchmark process. There is
 one record for each sample, and one file for each benchmark.

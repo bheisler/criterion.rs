@@ -4,13 +4,15 @@ extern crate serde_json;
 extern crate tempdir;
 extern crate walkdir;
 
-use criterion::{BatchSize, Benchmark, Criterion, Fun, ParameterizedBenchmark, Throughput};
+use criterion::profiler::Profiler;
+use criterion::{
+    BatchSize, Benchmark, BenchmarkId, Criterion, Fun, ParameterizedBenchmark, Throughput,
+};
 use serde_json::value::Value;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::cmp::max;
 use std::fs::File;
-use std::path::PathBuf;
-use std::process::{Command, Stdio};
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::{Duration, SystemTime};
 use tempdir::TempDir;
@@ -54,29 +56,6 @@ impl Default for Counter {
             counter: Rc::new(RefCell::new(0)),
         }
     }
-}
-
-fn create_command(depth: usize) -> Command {
-    let mut command = Command::new("python3");
-    command
-        .arg("tests/external_process.py")
-        .arg(format!("{}", depth));
-    command
-}
-
-fn create_command_without_arg() -> Command {
-    let mut command = Command::new("python3");
-    command.arg("tests/external_process.py");
-    command
-}
-
-fn has_python3() -> bool {
-    Command::new("python3")
-        .arg("--version")
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .output()
-        .is_ok()
 }
 
 fn verify_file(dir: &PathBuf, path: &str) -> PathBuf {
@@ -294,65 +273,6 @@ fn test_bench_function_over_inputs() {
 }
 
 #[test]
-#[allow(deprecated)]
-fn test_bench_program() {
-    if !has_python3() {
-        return;
-    }
-
-    let dir = temp_dir();
-    short_benchmark(&dir).bench_program("test_bench_program", create_command(10));
-}
-
-#[test]
-#[allow(deprecated)]
-fn test_bench_program_over_inputs() {
-    if !has_python3() {
-        return;
-    }
-
-    let dir = temp_dir();
-
-    // Note that bench_program_over_inputs automatically passes the input
-    // as the first command-line parameter.
-    short_benchmark(&dir).bench_program_over_inputs(
-        "test_bench_program_over_inputs",
-        create_command_without_arg,
-        vec![10, 20],
-    );
-}
-
-#[test]
-fn test_bench_unparameterized() {
-    let dir = temp_dir();
-    let mut benchmark = Benchmark::new("return 10", |b| b.iter(|| 10))
-        .with_function("return 20", |b| b.iter(|| 20));
-
-    if has_python3() {
-        benchmark = benchmark.with_program("external", create_command(10));
-    }
-
-    short_benchmark(&dir).bench("test_bench_unparam", benchmark);
-}
-
-#[test]
-fn test_bench_parameterized() {
-    let dir = temp_dir();
-    let parameters = vec![5, 10];
-    let mut benchmark =
-        ParameterizedBenchmark::new("times 10", |b, i| b.iter(|| *i * 10), parameters)
-            .with_function("times 20", |b, i| b.iter(|| *i * 20));
-
-    if has_python3() {
-        // Unlike bench_program_over_inputs, the parameter is provided as a
-        // parameter to the closure here.
-        benchmark = benchmark.with_program("external", |i| create_command(*i));
-    }
-
-    short_benchmark(&dir).bench("test_bench_param", benchmark);
-}
-
-#[test]
 fn test_filtering() {
     let dir = temp_dir();
     let counter = Counter::default();
@@ -428,7 +348,7 @@ fn test_throughput() {
             |b, v| b.iter(|| v.len()),
             vec![vec![1], vec![1, 2, 3]],
         )
-        .throughput(|v| Throughput::Elements(v.len() as u32)),
+        .throughput(|v| Throughput::Elements(v.len() as u64)),
     );
 }
 
@@ -450,7 +370,7 @@ fn test_output_files() {
     for x in 0..3 {
         let dir = if x == 2 {
             // Check that certain special characters are replaced with underscores
-            tempdir.path().join(format!("test_output/output______"))
+            tempdir.path().join("test_output/output______")
         } else {
             tempdir.path().join(format!("test_output/output_{}", x + 1))
         };
@@ -459,7 +379,7 @@ fn test_output_files() {
         verify_stats(&dir, "base");
         verify_json(&dir, "change/estimates.json");
 
-        if short_benchmark(&tempdir).can_plot() && cfg!(feature = "html_reports") {
+        if short_benchmark(&tempdir).can_plot() {
             verify_svg(&dir, "report/MAD.svg");
             verify_svg(&dir, "report/mean.svg");
             verify_svg(&dir, "report/median.svg");
@@ -482,7 +402,7 @@ fn test_output_files() {
     }
 
     // Check for overall report files
-    if short_benchmark(&tempdir).can_plot() && cfg!(feature = "html_reports") {
+    if short_benchmark(&tempdir).can_plot() {
         let dir = tempdir.path().join("test_output");
 
         verify_svg(&dir, "report/violin.svg");
@@ -491,7 +411,7 @@ fn test_output_files() {
 
     // Run the final summary process and check for the report that produces
     short_benchmark(&tempdir).final_summary();
-    if short_benchmark(&tempdir).can_plot() && cfg!(feature = "html_reports") {
+    if short_benchmark(&tempdir).can_plot() {
         let dir = tempdir.path().to_owned();
 
         verify_html(&dir, "report/index.html");
@@ -503,6 +423,28 @@ fn test_output_files() {
 fn test_bench_with_no_iteration_panics() {
     let dir = temp_dir();
     short_benchmark(&dir).bench("test_no_iter", Benchmark::new("no_iter", |_b| {}));
+}
+
+#[test]
+fn test_benchmark_group_with_input() {
+    let dir = temp_dir();
+    let mut c = short_benchmark(&dir);
+    let mut group = c.benchmark_group("Test Group");
+    for x in 0..2 {
+        group.bench_with_input(BenchmarkId::new("Test 1", x), &x, |b, i| b.iter(|| i));
+        group.bench_with_input(BenchmarkId::new("Test 2", x), &x, |b, i| b.iter(|| i));
+    }
+    group.finish();
+}
+
+#[test]
+fn test_benchmark_group_without_input() {
+    let dir = temp_dir();
+    let mut c = short_benchmark(&dir);
+    let mut group = c.benchmark_group("Test Group 2");
+    group.bench_function("Test 1", |b| b.iter(|| 30));
+    group.bench_function("Test 2", |b| b.iter(|| 20));
+    group.finish();
 }
 
 mod macros {
@@ -568,4 +510,37 @@ mod macros {
         test_group();
     }
 
+}
+
+struct TestProfiler {
+    started: Rc<Cell<u32>>,
+    stopped: Rc<Cell<u32>>,
+}
+impl Profiler for TestProfiler {
+    fn start_profiling(&mut self, benchmark_id: &str, _benchmark_path: &Path) {
+        assert!(benchmark_id.contains("profile_test"));
+        self.started.set(self.started.get() + 1);
+    }
+    fn stop_profiling(&mut self, benchmark_id: &str, _benchmark_path: &Path) {
+        assert!(benchmark_id.contains("profile_test"));
+        self.stopped.set(self.stopped.get() + 1);
+    }
+}
+
+// Verify that profilers are started and stopped as expected
+#[test]
+fn test_profiler_called() {
+    let started = Rc::new(Cell::new(0u32));
+    let stopped = Rc::new(Cell::new(0u32));
+    let profiler = TestProfiler {
+        started: started.clone(),
+        stopped: stopped.clone(),
+    };
+    let dir = temp_dir();
+    let mut criterion = short_benchmark(&dir)
+        .with_profiler(profiler)
+        .profile_time(Some(Duration::from_secs(1)));
+    criterion.bench_function("profile_test", |b| b.iter(|| 10));
+    assert_eq!(1, started.get());
+    assert_eq!(1, stopped.get());
 }

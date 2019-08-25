@@ -1,7 +1,8 @@
 [package]
 name = "criterion_bencher_compat"
-version = "0.2.7"
+version = "0.3.0"
 authors = ["Brook Heisler <redattack34@gmail.com>"]
+edition = "2018"
 
 description = "Drop-in replacement for commonly-used parts of Bencher"
 homepage = "https://bheisler.github.io/criterion.rs/book/index.html"
@@ -12,12 +13,11 @@ categories = ["development-tools::profiling"]
 license = "Apache-2.0/MIT"
 
 [dependencies]
-criterion = { version = "0.2.7", path = "..", default-features = false }
+criterion = { version = "0.3.0", path = "..", default-features = false }
 
 [features]
 real_blackbox = ["criterion/real_blackbox"]
-html_reports = ["criterion/html_reports"]
-default = ["html_reports"]
+default = []
 
 [[bench]]
 name = "bencher_example"

@@ -7,7 +7,7 @@ use std::cell::RefCell;
 pub type Rng = Xoshiro256StarStar;
 
 thread_local! {
-    static SEED_RAND: RefCell<OsRng> = RefCell::new(OsRng::new().unwrap());
+    static SEED_RAND: RefCell<OsRng> = RefCell::new(OsRng);
 }
 
 pub fn new_rng() -> Rng {
@@ -74,7 +74,7 @@ mod test {
                 }
             }
 
-            return TestResult::from_bool(true);
+            TestResult::from_bool(true)
         }
     }
 

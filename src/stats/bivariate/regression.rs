@@ -1,8 +1,7 @@
 //! Regression analysis
 
-use stats::float::Float;
-
-use stats::bivariate::Data;
+use crate::stats::bivariate::Data;
+use crate::stats::float::Float;
 
 /// A straight line that passes through the origin `y = m * x`
 #[derive(Clone, Copy)]
@@ -22,8 +21,8 @@ where
         let xs = data.0;
         let ys = data.1;
 
-        let xy = ::stats::dot(xs, ys);
-        let x2 = ::stats::dot(xs, xs);
+        let xy = crate::stats::dot(xs, ys);
+        let x2 = crate::stats::dot(xs, xs);
 
         Slope(xy / x2)
     }
@@ -39,7 +38,7 @@ where
         let ys = data.1;
 
         let n = A::cast(xs.len());
-        let y_bar = ::stats::sum(ys) / n;
+        let y_bar = crate::stats::sum(ys) / n;
 
         let mut ss_res = _0;
         let mut ss_tot = _0;

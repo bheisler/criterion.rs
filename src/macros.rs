@@ -2,12 +2,15 @@
 //! in place of the standard benchmark harness. This allows the user to run
 //! Criterion.rs benchmarks with `cargo bench`.
 
-/// Macro used to define a benchmark group for the benchmark harness; see the
-/// criterion_main! macro for more details.
+/// Macro used to define a function group for the benchmark harness; see the
+/// `criterion_main!` macro for more details.
 ///
-/// This is used to define a benchmark group; a collection of related benchmarks
-/// which share a common configuration. Accepts two forms which can be seen
-/// below.
+/// This is used to define a function group; a collection of functions to call with a common
+/// Criterion configuration. Accepts two forms which can be seen below.
+///
+/// Note that the group name given here is not important, it must simply
+/// be unique. Note also that this macro is not related to the `Criterion::benchmark_group` function
+/// or the `BenchmarkGroup` type.
 ///
 /// # Examples:
 ///
@@ -62,7 +65,7 @@
 macro_rules! criterion_group {
     (name = $name:ident; config = $config:expr; targets = $( $target:path ),+ $(,)*) => {
         pub fn $name() {
-            let mut criterion: $crate::Criterion = $config
+            let mut criterion: $crate::Criterion<_> = $config
                 .configure_from_args();
             $(
                 $target(&mut criterion);

@@ -5,10 +5,43 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added support for plugging in custom measurements (eg. processor counters)
+  into Criterion.rs' measurement and analysis.
+- Added support for plugging in instrumentation for internal profilers such as
+  `cpuprofiler` which must be explicitly started and stopped within the profiled
+  process.
+- Added the `BenchmarkGroup` type, which supersedes `ParameterizedBenchmark`, `Benchmark`,
+  `Criterion::bench_functions`, `Criterion::bench_function_over_inputs`, and `Criterion::bench`.
+  `BenchmarkGroup` performs the same function as all of the above, but is cleaner to use and more
+  powerful and flexible. All of these types/functions are now soft-deprecated (meaning they're
+  hidden from the documentation and should not be used in new code). They will be fully deprecated
+  at some point in the 0.3.* series and removed in 0.4.0.
+- `iter_custom` - a "timing loop" that allows the caller to perform their own measurements. This is
+  useful for complex measurements that don't fit into the usual mode of calling a lambda in a loop.
+- If the benchmark cannot be completed in approximately the requested measurement time,
+  Criterion.rs will now print a suggested measurement time and sample size that would work.
+- Two new fields, `throughput_num` and `throughput_type` have been added to the `raw.csv` file.
+- Added command-line options to set the defaults for warm-up time, measurement-time, etc.
+
+### Changed
+- The `raw.csv` file format has been changed slightly. The `sample_time_nanos` field has been split
+  into `sample_measured_value` and `unit` fields to accommodate custom measurements.
+- Throughput has been expanded from u32 to u64 to accommodate very large input sizes.
 
 ### Fixed
 - Fixed possible invalid file name error on Windows
 - Fixed potential case where data for two different benchmarks would be stored in the same directory.
+
+### Removed
+- Removed the `--measure-only` command-line argument; it was deprecated in favor of `--profile-time`
+  in 0.2.6.
+- External program benchmarks have been removed; they were deprecated in 0.2.6. The new 
+  `iter_custom` timing loop can be used as a substitute; see `benches/external_process.rs` for an
+  example of this.
+
+### Deprecated
+- The `--test` argument is now deprecated. To test benchmarks, use `cargo test --benches`.
 
 ## [0.2.11] - 2019-04-08
 ### Added

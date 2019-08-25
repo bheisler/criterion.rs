@@ -1,16 +1,10 @@
 set -ex
 
-if [ "$HTML_REPORTS" = "no" ]; then
-    BUILD_ARGS="--no-default-features"
-else
-    BUILD_ARGS=""
-fi
-
 if [ "$CLIPPY" = "yes" ]; then
       cargo clippy --all -- -D warnings
 elif [ "$DOCS" = "yes" ]; then
     cargo clean
-    cargo doc --all --no-deps $BUILD_ARGS
+    cargo doc --all --no-deps
     cd book
     mdbook build
     cd ..
@@ -24,15 +18,18 @@ elif [ "$MINIMAL_VERSIONS" = "yes" ]; then
 else
     cargo build $BUILD_ARGS --release
 
-    # TODO: Remove this hack once we no longer have to support 1.23 and 1.20
-    if [ "$TRAVIS_RUST_VERSION" = "stable" ]; then
-        cargo test $BUILD_ARGS --all --release
-    else
-        cargo test $BUILD_ARGS --all --release --tests
-    fi
-
-    cargo bench $BUILD_ARGS --all -- --test
+    cargo test --all --release
+    cargo test --benches
+    
     cd bencher_compat
     export CARGO_TARGET_DIR="../target"
-    cargo bench $BUILD_ARGS -- --test
+    cargo test --benches
+    cd ..
+
+    if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then
+        cd macro
+        export CARGO_TARGET_DIR="../target"
+        cargo test --benches
+        cd ..
+    fi
 fi

@@ -3,9 +3,9 @@
 use std::borrow::Cow;
 use std::iter::IntoIterator;
 
-use data::Matrix;
-use traits::{self, Data, Set};
-use {Color, Default, Display, Figure, Label, LineType, LineWidth, Plot, Script};
+use crate::data::Matrix;
+use crate::traits::{self, Data, Set};
+use crate::{Color, Default, Display, Figure, Label, LineType, LineWidth, Plot, Script};
 
 /// Properties common to candlestick plots
 pub struct Properties {
@@ -131,7 +131,7 @@ where
     where
         F: FnOnce(&mut Properties) -> &mut Properties,
     {
-        let (x_factor, y_factor) = ::scale_factor(&self.axes, ::Axes::BottomXLeftY);
+        let (x_factor, y_factor) = crate::scale_factor(&self.axes, crate::Axes::BottomXLeftY);
         let Candlesticks {
             x,
             whisker_min,

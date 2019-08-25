@@ -1,7 +1,8 @@
 [package]
 authors = ["Jorge Aparicio <japaricious@gmail.com>", "Brook Heisler <brookheisler@gmail.com>"]
 name = "criterion-plot"
-version = "0.3.1"
+version = "0.3.2"
+edition = "2018"
 
 description = "Criterion's plotting library"
 repository = "https://github.com/bheisler/criterion.rs"
@@ -11,7 +12,6 @@ categories = ["visualization"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-byteorder = "1"
 cast = "0.2"
 itertools = "0.8"
 

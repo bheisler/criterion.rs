@@ -2,8 +2,8 @@
 
 use std::borrow::Cow;
 
-use traits::Set;
-use {Default, Display, Script, Title};
+use crate::traits::Set;
+use crate::{Default, Display, Script, Title};
 
 /// Properties of the key
 #[derive(Clone)]

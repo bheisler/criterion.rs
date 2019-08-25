@@ -1,18 +1,15 @@
+use super::{debug_script, escape_underscores};
+use super::{DARK_BLUE, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, POINT_SIZE, SIZE};
+use crate::kde;
+use crate::measurement::ValueFormatter;
+use crate::report::{BenchmarkId, ValueType};
+use crate::stats::univariate::Sample;
+use crate::AxisScale;
+use criterion_plot::prelude::*;
+use itertools::Itertools;
 use std::cmp::Ordering;
 use std::path::PathBuf;
 use std::process::Child;
-
-use criterion_plot::prelude::*;
-use stats::univariate::Sample;
-
-use kde;
-use report::{BenchmarkId, ValueType};
-
-use itertools::Itertools;
-
-use super::{debug_script, escape_underscores, scale_time};
-use super::{DARK_BLUE, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, POINT_SIZE, SIZE};
-use AxisScale;
 
 const NUM_COLORS: usize = 8;
 static COMPARISON_COLORS: [Color; NUM_COLORS] = [
@@ -37,6 +34,7 @@ impl AxisScale {
 
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::explicit_counter_loop))]
 pub fn line_comparison(
+    formatter: &dyn ValueFormatter,
     title: &str,
     all_curves: &[&(&BenchmarkId, Vec<f64>)],
     path: &str,
@@ -72,14 +70,14 @@ pub fn line_comparison(
         .map(|&&(_, ref data)| Sample::new(data).mean())
         .fold(::std::f64::NAN, f64::max);
 
-    let (scale, prefix) = scale_time(max);
+    let mut dummy = [1.0];
+    let unit = formatter.scale_values(max, &mut dummy);
 
     f.configure(Axis::LeftY, |a| {
         a.configure(Grid::Major, |g| g.show())
             .configure(Grid::Minor, |g| g.hide())
-            .set(Label(format!("Average time ({}s)", prefix)))
+            .set(Label(format!("Average time ({})", unit)))
             .set(axis_scale.to_gnuplot())
-            .set(ScaleFactor(scale))
     });
 
     // This assumes the curves are sorted. It also assumes that the benchmark IDs all have numeric
@@ -97,7 +95,8 @@ pub fn line_comparison(
             })
             .collect();
         tuples.sort_by(|&(ax, _), &(bx, _)| (ax.partial_cmp(&bx).unwrap_or(Ordering::Less)));
-        let (xs, ys): (Vec<_>, Vec<_>) = tuples.into_iter().unzip();
+        let (xs, mut ys): (Vec<_>, Vec<_>) = tuples.into_iter().unzip();
+        formatter.scale_values(max, &mut ys);
 
         let function_name = key.as_ref().map(|string| escape_underscores(string));
 
@@ -123,6 +122,7 @@ pub fn line_comparison(
 }
 
 pub fn violin(
+    formatter: &dyn ValueFormatter,
     title: &str,
     all_curves: &[&(&BenchmarkId, Vec<f64>)],
     path: &str,
@@ -159,7 +159,8 @@ pub fn violin(
             max = e;
         }
     }
-    let (scale, prefix) = scale_time(max);
+    let mut dummy = [1.0];
+    let unit = formatter.scale_values(max, &mut dummy);
 
     let tics = || (0..).map(|x| (f64::from(x)) + 0.5);
     let size = Size(1280, 200 + (25 * all_curves.len()));
@@ -170,9 +171,8 @@ pub fn violin(
         .configure(Axis::BottomX, |a| {
             a.configure(Grid::Major, |g| g.show())
                 .configure(Grid::Minor, |g| g.hide())
-                .set(Label(format!("Average time ({}s)", prefix)))
+                .set(Label(format!("Average time ({})", unit)))
                 .set(axis_scale.to_gnuplot())
-                .set(ScaleFactor(scale))
         })
         .configure(Axis::LeftY, |a| {
             a.set(Label("Input"))
@@ -188,8 +188,11 @@ pub fn violin(
     let mut is_first = true;
     for (i, &(ref x, ref y)) in kdes.iter().enumerate() {
         let i = i as f64 + 0.5;
-        let y1 = y.iter().map(|&y| i + y * 0.5);
-        let y2 = y.iter().map(|&y| i - y * 0.5);
+        let mut y1: Vec<_> = y.iter().map(|&y| i + y * 0.5).collect();
+        let mut y2: Vec<_> = y.iter().map(|&y| i - y * 0.5).collect();
+
+        formatter.scale_values(max, &mut y1);
+        formatter.scale_values(max, &mut y2);
 
         f.plot(FilledCurve { x: &**x, y1, y2 }, |c| {
             if is_first {

@@ -9,11 +9,10 @@ pub mod kde;
 pub mod mixed;
 pub mod outliers;
 
+use crate::stats::float::Float;
+use crate::stats::tuple::{Tuple, TupledDistributionsBuilder};
 use rayon::prelude::*;
-use stats::float::Float;
 use std::cmp;
-
-use stats::tuple::{Tuple, TupledDistributionsBuilder};
 
 use self::resamples::Resamples;
 

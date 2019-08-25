@@ -7,8 +7,8 @@ use std::io::Read;
 use std::path::Path;
 use walkdir::{DirEntry, WalkDir};
 
-use error::{Error, Result};
-use report::BenchmarkId;
+use crate::error::{Error, Result};
+use crate::report::BenchmarkId;
 
 pub fn load<A, P: ?Sized>(path: &P) -> Result<A>
 where

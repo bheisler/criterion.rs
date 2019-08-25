@@ -6,9 +6,9 @@ Criterion.rs provides a number of configuration options for more-complex use cas
 
 When benchmarking some types of code it is useful to measure the throughput as well as the iteration time, either in bytes per second or elements per second. Criterion.rs can estimate the throughput of a benchmark, but it needs to know how many bytes or elements each iteration will process.
 
-Throughput measurements are only supported with using the `Benchmark` or `ParameterizedBenchmark` structures; it is not available when using the simpler `bench_function` interface.
+Throughput measurements are only supported when using the `BenchmarkGroup` structure; it is not available when using the simpler `bench_function` interface.
 
-To measure throughput, use the `throughput` method on `Benchmark`, like so:
+To measure throughput, use the `throughput` method on `BenchmarkGroup`, like so:
 
 ```rust
 use criterion::*;
@@ -21,20 +21,17 @@ fn decode(bytes: &[u8]) {
 fn bench(c: &mut Criterion) {
     let bytes : &[u8] = ...;
 
-    c.bench(
-        "throughput-example",
-        Benchmark::new(
-            "decode",
-            |b| b.iter(|| decode(bytes)),
-        ).throughput(Throughput::Bytes(bytes.len() as u32)),
-    );
+    let mut group = c.benchmark_group("throughput-example");
+    group.throughput(Throughput::Bytes(bytes.len() as u64));
+    group.bench_function("decode", |b| b.iter(|| decode(bytes));
+    group.finish();
 }
 
 criterion_group!(benches, bench);
 criterion_main!(benches);
 ```
 
-For parameterized benchmarks, each argument might represent a different number of elements, so the throughput function accepts a lambda instead:
+For parameterized benchmarks, you can simply call the throughput function inside a loop:
 
 ```rust
 use criterion::*;
@@ -50,14 +47,14 @@ fn bench(c: &mut Criterion) {
     let elements_1 : &[u8] = ...;
     let elements_2 : &[u8] = ...;
 
-    c.bench(
-        "throughput-example",
-        ParameterizedBenchmark::new(
-            "encode",
-            |b, elems| b.iter(|| encode(elems)),
-            vec![elements_1, elements_2],
-        ).throughput(|elems| Throughput::Elements(elems.len() as u32)),
-    );
+    let mut group = c.benchmark_group("throughput-example");
+    for (i, elements) in [elements_1, elements_2].iter().enumerate() {
+        group.throughput(Throughput::Elements(elems.len() as u64));
+        group.bench_with_input(format!("Encode {}", i), elements, |elems, b| {
+            b.iter(||encode(elems))
+        });
+    }
+    group.finish();
 }
 
 criterion_group!(benches, bench);
@@ -75,7 +72,7 @@ alloc                   time:   [5.9846 ms 6.0192 ms 6.0623 ms]
 
 By default, Criterion.rs generates plots using a linear-scale axis. When using parameterized benchmarks, it is common for the input sizes to scale exponentially in order to cover a wide range of possible inputs. In this situation, it may be easier to read the resulting plots with a logarithmic axis.
 
-As with throughput measurements above, this option is only available when using the `ParameterizedBenchmark` structure.
+As with throughput measurements above, this option is only available when using the `BenchmarkGroup` structure.
 
 ```rust
 use criterion::*;
@@ -89,14 +86,13 @@ fn bench(c: &mut Criterion) {
     let plot_config = PlotConfiguration::default()
         .summary_scale(AxisScale::Logarithmic);
 
-    c.bench(
-        "log_scale_example",
-        ParameterizedBenchmark::new(
-            "do_thing",
-            |b, i| b.iter(|| do_a_thing(i)),
-            vec![1u64, 10u64, 100u64, 1000u64, 10000u64, 100000u64, 1000000u64],
-        ).plot_config(plot_config),
-    );
+    let mut group = c.benchmark_group("log_scale_example");
+    group.plot_config(plot_config);
+    
+    for i in [1u64, 10u64, 100u64, 1000u64, 10000u64, 100000u64, 1000000u64].iter() {
+        group.bench_function(BenchmarkId::from_parameter(i), i, |b, i| b.iter(|| do_a_thing(i)));
+    }
+    group.finish();
 }
 
 criterion_group!(benches, bench);
