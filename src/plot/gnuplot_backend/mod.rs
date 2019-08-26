@@ -22,7 +22,7 @@ use crate::measurement::ValueFormatter;
 use crate::report::{BenchmarkId, ValueType};
 use crate::stats::bivariate::Data;
 
-use super::{PlotContext, PlotData, Plotter};
+use super::{LinePlotConfig, PlotContext, PlotData, Plotter};
 use crate::format;
 
 fn gnuplot_escape(string: &str) -> String {
@@ -201,13 +201,15 @@ impl Plotter for Gnuplot {
 
     fn line_comparison(
         &mut self,
+        line_config: LinePlotConfig,
         ctx: PlotContext<'_>,
         formatter: &dyn ValueFormatter,
         all_curves: &[&(&BenchmarkId, Vec<f64>)],
         value_type: ValueType,
     ) {
-        let path = ctx.line_comparison_path();
+        let path = (line_config.path)(&ctx);
         self.process_list.push(line_comparison(
+            line_config,
             formatter,
             ctx.id.as_title(),
             all_curves,
