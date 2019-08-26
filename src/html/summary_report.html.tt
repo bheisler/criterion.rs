@@ -66,6 +66,11 @@
         <img src="lines.svg" alt="Line Chart" />
         <p>This chart shows the mean measured time for each function as the input (or the size of the input) increases.</p>
         {{- endif }}
+        {{- if line_chart_tput }}
+        <h3>Throughput Chart</h3>
+        <img src="lines_tput.svg" alt="Line Chart" />
+        <p>This chart shows the mean measured throughput for each function as the input (or the size of the input) increases.</p>
+        {{- endif }}
         {{- for bench in benchmarks }}
         <section class="plots">
             <a href="{bench.path}/report/index.html">

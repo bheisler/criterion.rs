@@ -121,6 +121,106 @@ pub fn line_comparison(
     f.set(Output(path)).draw().unwrap()
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::explicit_counter_loop))]
+pub fn line_comparison_throughput(
+    formatter: &dyn ValueFormatter,
+    title: &str,
+    all_curves: &[&(&BenchmarkId, Vec<f64>)],
+    path: &str,
+    value_type: ValueType,
+    axis_scale: AxisScale,
+) -> Child {
+    let path = PathBuf::from(path);
+    let mut f = Figure::new();
+
+    let input_suffix = match value_type {
+        ValueType::Bytes => " Size (Bytes)",
+        ValueType::Elements => " Size (Elements)",
+        ValueType::Value => "",
+    };
+
+    f.set(Font(DEFAULT_FONT))
+        .set(SIZE)
+        .configure(Key, |k| {
+            k.set(Justification::Left)
+                .set(Order::SampleText)
+                .set(Position::Outside(Vertical::Top, Horizontal::Right))
+        })
+        .set(Title(format!("{}: Comparison", escape_underscores(title))))
+        .configure(Axis::BottomX, |a| {
+            a.set(Label(format!("Input{}", input_suffix)))
+                .set(axis_scale.to_gnuplot())
+        });
+
+    let mut i = 0;
+
+    let max = all_curves
+        .iter()
+        .map(|&&(_, ref data)| Sample::new(data).mean())
+        .fold(::std::f64::NAN, f64::max);
+
+    let mut dummy = [1.0];
+    assert!(
+        all_curves[0].0.throughput.is_some(),
+        "1st BenchmarkID has throughput."
+    );
+    let unit = formatter.scale_throughputs(
+        max,
+        all_curves[0].0.throughput.as_ref().unwrap(),
+        &mut dummy,
+    );
+
+    f.configure(Axis::LeftY, |a| {
+        a.configure(Grid::Major, |g| g.show())
+            .configure(Grid::Minor, |g| g.hide())
+            .set(Label(format!("Average throughput ({})", unit)))
+            .set(axis_scale.to_gnuplot())
+    });
+
+    // This assumes the curves are sorted. It also assumes that the benchmark IDs all have numeric
+    // values or throughputs and that value is sensible (ie. not a mix of bytes and elements
+    // or whatnot)
+    for (key, group) in &all_curves.iter().group_by(|&&&(ref id, _)| &id.function_id) {
+        let mut tuples: Vec<_> = group
+            .map(|&&(ref id, ref sample)| {
+                // Unwrap is fine here because it will only fail if the assumptions above are not true
+                // ie. programmer error.
+                assert!(id.as_number().is_some(), "All BenchmarkIDs have as_number.");
+                assert!(id.throughput.is_some(), "All BenchmarkIDs have throughput.");
+
+                let x = id.as_number().unwrap();
+                let mut y = [Sample::new(sample).mean()];
+                formatter.scale_throughputs(max, id.throughput.as_ref().unwrap(), &mut y);
+                (x, y[0])
+            })
+            .collect();
+
+        tuples.sort_by(|&(ax, _), &(bx, _)| (ax.partial_cmp(&bx).unwrap_or(Ordering::Less)));
+        let (xs, ys): (Vec<_>, Vec<_>) = tuples.into_iter().unzip();
+
+        let function_name = key.as_ref().map(|string| escape_underscores(string));
+
+        f.plot(Lines { x: &xs, y: &ys }, |c| {
+            if let Some(name) = function_name {
+                c.set(Label(name));
+            }
+            c.set(LINEWIDTH)
+                .set(LineType::Solid)
+                .set(COMPARISON_COLORS[i % NUM_COLORS])
+        })
+        .plot(Points { x: &xs, y: &ys }, |p| {
+            p.set(PointType::FilledCircle)
+                .set(POINT_SIZE)
+                .set(COMPARISON_COLORS[i % NUM_COLORS])
+        });
+
+        i += 1;
+    }
+
+    debug_script(&path, &f);
+    f.set(Output(path)).draw().unwrap()
+}
+
 pub fn violin(
     formatter: &dyn ValueFormatter,
     title: &str,

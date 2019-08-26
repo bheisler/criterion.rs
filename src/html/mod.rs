@@ -92,6 +92,7 @@ struct SummaryContext {
 
     violin_plot: Option<String>,
     line_chart: Option<String>,
+    line_chart_tput: Option<String>,
 
     benchmarks: Vec<IndividualBenchmark>,
 }
@@ -801,6 +802,39 @@ impl Html {
             }
         }
 
+        let throughput_types: Vec<_> = data
+            .iter()
+            .map(|&&(ref id, _)| id.throughput.as_ref())
+            .collect();
+        let mut line_tput_path = None;
+
+        if value_types.iter().all(|x| x == &value_types[0])
+            && throughput_types[0].is_some()
+            && throughput_types.iter().all(|x| x == &throughput_types[0])
+        {
+            if let Some(value_type) = value_types[0] {
+                let values: Vec<_> = data.iter().map(|&&(ref id, _)| id.as_number()).collect();
+                if values.iter().any(|x| x != &values[0]) {
+                    let path = format!(
+                        "{}/{}/report/lines_tput.svg",
+                        report_context.output_directory,
+                        id.as_directory_name()
+                    );
+
+                    gnuplots.push(plot::line_comparison_throughput(
+                        formatter,
+                        id.as_title(),
+                        data,
+                        &path,
+                        value_type,
+                        report_context.plot_config.summary_scale,
+                    ));
+
+                    line_tput_path = Some(path);
+                }
+            }
+        }
+
         let path_prefix = if full_summary { "../.." } else { "../../.." };
         let benchmarks = data
             .iter()
@@ -815,6 +849,7 @@ impl Html {
 
             violin_plot: Some(violin_path),
             line_chart: line_path,
+            line_chart_tput: line_tput_path,
 
             benchmarks,
         };
