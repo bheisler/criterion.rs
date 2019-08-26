@@ -41,7 +41,7 @@ below for an explanation of this code):
 ```rust
 #[macro_use]
 extern crate criterion;
-extern crate mycrate:
+extern crate mycrate;
 
 use criterion::Criterion;
 use criterion::black_box;
