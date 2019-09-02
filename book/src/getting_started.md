@@ -86,7 +86,7 @@ Let's go back and walk through that benchmark code in more detail.
 ```rust
 #[macro_use]
 extern crate criterion;
-extern crate mycrate:
+extern crate mycrate;
 
 use criterion::Criterion;
 use criterion::black_box;
