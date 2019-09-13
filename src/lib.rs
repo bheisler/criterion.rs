@@ -52,7 +52,6 @@ extern crate csv;
 extern crate itertools;
 extern crate num_traits;
 extern crate rand_core;
-extern crate rand_os;
 extern crate rand_xoshiro;
 extern crate rayon;
 extern crate serde;

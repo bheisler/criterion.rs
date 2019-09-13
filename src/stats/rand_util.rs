@@ -1,5 +1,4 @@
-use rand_core::{RngCore, SeedableRng};
-use rand_os::OsRng;
+use rand_core::{OsRng, RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256StarStar;
 
 use std::cell::RefCell;
