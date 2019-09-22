@@ -210,3 +210,105 @@ impl Measurement for WallTime {
         &DurationFormatter
     }
 }
+
+#[cfg(feature = "cycles")]
+mod cycles {
+    #[cfg(not(any(target_arch = "x86_64", target_arch = "x86")))]
+    compile_error!("CyclesPerByte only supports x86 and x86_64.");
+
+    use super::*;
+
+    /// `CyclesPerByte` measures clock cycles using the x86 or x86_64 `rdtsc` instruction. `cpb` is
+    /// the preferrerd measurement for cryptographic algorithms.
+    pub struct CyclesPerByte;
+
+    fn rdtsc() -> u64 {
+        // WARN: does not check for the cpu feature; but we'd panic anyway so...
+        #[cfg(target_arch = "x86_64")]
+        unsafe {
+            core::arch::x86_64::_rdtsc()
+        }
+
+        #[cfg(target_arch = "x86")]
+        unsafe {
+            core::arch::x86::_rdtsc()
+        }
+    }
+
+    impl Measurement for CyclesPerByte {
+        type Intermediate = u64;
+        type Value = u64;
+
+        fn start(&self) -> Self::Intermediate {
+            rdtsc()
+        }
+
+        fn end(&self, i: Self::Intermediate) -> Self::Value {
+            rdtsc() - i
+        }
+
+        fn add(&self, v1: &Self::Value, v2: &Self::Value) -> Self::Value {
+            v1 + v2
+        }
+
+        fn zero(&self) -> Self::Value {
+            0
+        }
+
+        fn to_f64(&self, val: &Self::Value) -> f64 {
+            *val as f64
+        }
+
+        fn formatter(&self) -> &dyn ValueFormatter {
+            &CyclesPerByteFormatter
+        }
+    }
+
+    struct CyclesPerByteFormatter;
+
+    impl ValueFormatter for CyclesPerByteFormatter {
+        fn format_value(&self, value: f64) -> String {
+            format!("{:.4} cycles", value)
+        }
+
+        fn format_throughput(&self, throughput: &Throughput, value: f64) -> String {
+            match throughput {
+                Throughput::Bytes(b) => format!("{:.4} cpb", value / *b as f64),
+                Throughput::Elements(b) => format!("{:.4} cycles/{}", value, b),
+            }
+        }
+
+        fn scale_values(&self, _typical_value: f64, _values: &mut [f64]) -> &'static str {
+            "cycles"
+        }
+
+        fn scale_throughputs(
+            &self,
+            _typical_value: f64,
+            throughput: &Throughput,
+            values: &mut [f64],
+        ) -> &'static str {
+            match throughput {
+                Throughput::Bytes(n) => {
+                    for val in values {
+                        *val /= *n as f64;
+                    }
+                    "cpb"
+                }
+                Throughput::Elements(n) => {
+                    for val in values {
+                        *val /= *n as f64;
+                    }
+                    "c/e"
+                }
+            }
+        }
+
+        fn scale_for_machines(&self, _values: &mut [f64]) -> &'static str {
+            "cycles"
+        }
+    }
+}
+
+#[cfg(feature = "cycles")]
+pub use cycles::CyclesPerByte;
