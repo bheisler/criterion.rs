@@ -808,11 +808,8 @@ impl Html {
             .collect();
         let mut line_tput_path = None;
 
-        if value_types.iter().all(|x| x == &value_types[0])
-            && throughput_types[0].is_some()
-            && throughput_types.iter().all(|x| x == &throughput_types[0])
-        {
-            if let Some(value_type) = value_types[0] {
+        let all_throughputs_match = value_types.iter().all(|x| x == &value_types[0]) && throughput_types[0].is_some();
+        if all_throughputs_match {
                 let values: Vec<_> = data.iter().map(|&&(ref id, _)| id.as_number()).collect();
                 if values.iter().any(|x| x != &values[0]) {
                     let path = format!(
@@ -826,13 +823,11 @@ impl Html {
                         id.as_title(),
                         data,
                         &path,
-                        value_type,
                         report_context.plot_config.summary_scale,
                     ));
 
                     line_tput_path = Some(path);
                 }
-            }
         }
 
         let path_prefix = if full_summary { "../.." } else { "../../.." };

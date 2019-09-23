@@ -4,7 +4,7 @@ use crate::kde;
 use crate::measurement::ValueFormatter;
 use crate::report::{BenchmarkId, ValueType};
 use crate::stats::univariate::Sample;
-use crate::AxisScale;
+use crate::{Throughput, AxisScale};
 use criterion_plot::prelude::*;
 use itertools::Itertools;
 use std::cmp::Ordering;
@@ -127,16 +127,20 @@ pub fn line_comparison_throughput(
     title: &str,
     all_curves: &[&(&BenchmarkId, Vec<f64>)],
     path: &str,
-    value_type: ValueType,
     axis_scale: AxisScale,
 ) -> Child {
+    assert!(!all_curves.is_empty(), "Have some curves.");
+    assert!(
+        all_curves[0].0.throughput.is_some(),
+        "1st BenchmarkID has throughput."
+    );
+
     let path = PathBuf::from(path);
     let mut f = Figure::new();
 
-    let input_suffix = match value_type {
-        ValueType::Bytes => " Size (Bytes)",
-        ValueType::Elements => " Size (Elements)",
-        ValueType::Value => "",
+    let input_suffix = match all_curves[0].0.throughput.as_ref().unwrap() {
+        Throughput::Bytes(_) => " Size (Bytes)",
+        Throughput::Elements(_) => " Size (Elements)",
     };
 
     f.set(Font(DEFAULT_FONT))
@@ -152,18 +156,12 @@ pub fn line_comparison_throughput(
                 .set(axis_scale.to_gnuplot())
         });
 
-    let mut i = 0;
-
     let max = all_curves
         .iter()
         .map(|&&(_, ref data)| Sample::new(data).mean())
         .fold(::std::f64::NAN, f64::max);
 
     let mut dummy = [1.0];
-    assert!(
-        all_curves[0].0.throughput.is_some(),
-        "1st BenchmarkID has throughput."
-    );
     let unit = formatter.scale_throughputs(
         max,
         all_curves[0].0.throughput.as_ref().unwrap(),
@@ -180,6 +178,7 @@ pub fn line_comparison_throughput(
     // This assumes the curves are sorted. It also assumes that the benchmark IDs all have numeric
     // values or throughputs and that value is sensible (ie. not a mix of bytes and elements
     // or whatnot)
+    let mut i = 0;
     for (key, group) in &all_curves.iter().group_by(|&&&(ref id, _)| &id.function_id) {
         let mut tuples: Vec<_> = group
             .map(|&&(ref id, ref sample)| {
