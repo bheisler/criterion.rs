@@ -17,6 +17,7 @@
 
 #![deny(missing_docs)]
 #![deny(bare_trait_objects)]
+#![deny(warnings)]
 #![cfg_attr(feature = "real_blackbox", feature(test))]
 #![cfg_attr(
     feature = "cargo-clippy",
