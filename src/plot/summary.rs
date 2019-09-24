@@ -122,7 +122,7 @@ pub fn line_comparison(
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::explicit_counter_loop))]
-pub fn line_comparison_throughput(
+pub fn comparison_throughput(
     formatter: &dyn ValueFormatter,
     title: &str,
     all_curves: &[&(&BenchmarkId, Vec<f64>)],
@@ -190,24 +190,21 @@ pub fn line_comparison_throughput(
                 let x = id.as_number().unwrap();
                 let mut y = [Sample::new(sample).mean()];
                 formatter.scale_throughputs(max, id.throughput.as_ref().unwrap(), &mut y);
+
                 (x, y[0])
             })
             .collect();
 
         tuples.sort_by(|&(ax, _), &(bx, _)| (ax.partial_cmp(&bx).unwrap_or(Ordering::Less)));
         let (xs, ys): (Vec<_>, Vec<_>) = tuples.into_iter().unzip();
-
+        
         let function_name = key.as_ref().map(|string| escape_underscores(string));
 
-        f.plot(Lines { x: &xs, y: &ys }, |c| {
+        f.plot(Points { x: &xs, y: &ys }, |p| {
             if let Some(name) = function_name {
-                c.set(Label(name));
+                p.set(Label(name));
             }
-            c.set(LINEWIDTH)
-                .set(LineType::Solid)
-                .set(COMPARISON_COLORS[i % NUM_COLORS])
-        })
-        .plot(Points { x: &xs, y: &ys }, |p| {
+
             p.set(PointType::FilledCircle)
                 .set(POINT_SIZE)
                 .set(COMPARISON_COLORS[i % NUM_COLORS])

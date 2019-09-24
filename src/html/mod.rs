@@ -810,24 +810,20 @@ impl Html {
 
         let all_throughputs_match = value_types.iter().all(|x| x == &value_types[0]) && throughput_types[0].is_some();
         if all_throughputs_match {
-                let values: Vec<_> = data.iter().map(|&&(ref id, _)| id.as_number()).collect();
-                if values.iter().any(|x| x != &values[0]) {
-                    let path = format!(
-                        "{}/{}/report/lines_tput.svg",
-                        report_context.output_directory,
-                        id.as_directory_name()
-                    );
+            let path = format!(
+                "{}/{}/report/lines_tput.svg",
+                report_context.output_directory,
+                id.as_directory_name()
+            );
 
-                    gnuplots.push(plot::line_comparison_throughput(
-                        formatter,
-                        id.as_title(),
-                        data,
-                        &path,
-                        report_context.plot_config.summary_scale,
-                    ));
-
-                    line_tput_path = Some(path);
-                }
+            gnuplots.push(plot::comparison_throughput(
+                formatter,
+                id.as_title(),
+                data,
+                &path,
+                report_context.plot_config.summary_scale,
+            ));
+            line_tput_path = Some(path);
         }
 
         let path_prefix = if full_summary { "../.." } else { "../../.." };
