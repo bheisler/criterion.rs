@@ -743,10 +743,12 @@ impl Default for Criterion {
         // - ./target/criterion
         let output_directory = if let Some(value) = std::env::var_os("CRITERION_HOME") {
             PathBuf::from(value)
-        } else if let Some(value) = std::env::var_os("CARGO_TARGET_DIR") {
-            PathBuf::from(value).join("criterion")
         } else {
-            PathBuf::from("target/criterion")
+            let cmd = cargo_metadata::MetadataCommand::new();
+            match cmd.exec() {
+                Ok(metadata) => metadata.target_directory.join("criterion"),
+                Err(_) => PathBuf::from("target/criterion"),
+            }
         };
 
         Criterion {
@@ -1419,7 +1421,7 @@ To test that the benchmarks work, run `cargo test --benches`
     ///     // Now we can perform benchmarks with this group
     ///     group.bench_function("Bench 1", |b| b.iter(|| 1 ));
     ///     group.bench_function("Bench 2", |b| b.iter(|| 2 ));
-    ///    
+    ///
     ///     group.finish();
     /// }
     /// criterion_group!(benches, bench_simple);

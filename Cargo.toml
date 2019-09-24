@@ -31,11 +31,12 @@ num-traits = { version = "0.2", default-features = false }
 oorandom = "11.1"
 rayon = "1.3"
 regex = { version = "1.3", default-features = false, features = ["std"] }
+cargo_metadata = "0.10.0"
 
 [dependencies.plotters]
 version = "^0.2.12"
 default-features = false
-features = ["svg", "area_series", "line_series"] 
+features = ["svg", "area_series", "line_series"]
 
 [dev-dependencies]
 tempfile = "3.1"
