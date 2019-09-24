@@ -25,7 +25,7 @@ pub fn criterion(attr: TokenStream, item: TokenStream) -> TokenStream {
         pub fn #wrapped_name() {
             #item
 
-            let mut c = #init;
+            let mut c = #init.configure_from_args();
             #function_name(&mut c);
         }
     );
