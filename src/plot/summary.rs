@@ -175,29 +175,43 @@ pub fn comparison_throughput(
             .set(axis_scale.to_gnuplot())
     });
 
-    // This assumes the curves are sorted. It also assumes that the benchmark IDs all have numeric
-    // values or throughputs and that value is sensible (ie. not a mix of bytes and elements
-    // or whatnot)
-    let mut i = 0;
-    for (ref id, ref sample) in all_curves.iter() {
-        // Unwrap is fine here because it will only fail if the assumptions above are not true
-        // ie. programmer error.
-        assert!(id.as_number().is_some(), "All BenchmarkIDs have as_number.");
-        assert!(id.throughput.is_some(), "All BenchmarkIDs have throughput.");
-
-        let xs = [id.as_number().unwrap()];
-        let mut ys = [Sample::new(sample).mean()];
-        formatter.scale_throughputs(max, id.throughput.as_ref().unwrap(), &mut ys);
-
-        let label = match (&id.function_id, &id.value_str) {
+    // Creates a label for the benchmark based on the function name and parameters
+    fn mklabel(id: &BenchmarkId) -> Option<String> {
+        match (&id.function_id, &id.value_str) {
             (Some(name), Some(params)) => Some(format!("{} {}", name, params)),
             (None, Some(params)) => Some(String::from(params)),
             (Some(name), None) => Some(String::from(name)),
             (None, None) => None,
-        };
+        }
+    }
+
+    // This assumes the curves are sorted. It also assumes that the benchmark IDs all have numeric
+    // values or throughputs and that value is sensible (ie. not a mix of bytes and elements
+    // or whatnot)
+    let mut i = 0;
+    for (key, group) in &all_curves.iter().group_by(|&&&(ref id, _)| mklabel(&id)) {
+        let mut tuples: Vec<_> = group
+            .map(|&&(ref id, ref sample)| {
+                // Unwrap is fine here because it will only fail if the assumptions above are not true
+                // ie. programmer error.
+                assert!(id.as_number().is_some(), "All BenchmarkIDs have as_number.");
+                assert!(id.throughput.is_some(), "All BenchmarkIDs have throughput.");
+
+                let x = id.as_number().unwrap();
+                let mut y = [Sample::new(sample).mean()];
+                formatter.scale_throughputs(max, id.throughput.as_ref().unwrap(), &mut y);
+
+                (x, y[0])
+            })
+            .collect();
+
+        tuples.sort_by(|&(ax, _), &(bx, _)| (ax.partial_cmp(&bx).unwrap_or(Ordering::Less)));
+        let (xs, ys): (Vec<_>, Vec<_>) = tuples.into_iter().unzip();
+        
+        let function_name = key.as_ref().map(|string| escape_underscores(string));
 
         f.plot(Points { x: &xs, y: &ys }, |p| {
-            if let Some(name) = label {
+            if let Some(name) = function_name {
                 p.set(Label(name));
             }
 
@@ -205,6 +219,7 @@ pub fn comparison_throughput(
                 .set(POINT_SIZE)
                 .set(COMPARISON_COLORS[i % NUM_COLORS])
         });
+
         i += 1;
     }
 
