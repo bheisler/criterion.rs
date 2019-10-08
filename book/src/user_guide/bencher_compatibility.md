@@ -9,10 +9,7 @@ This page shows an example of how to use this crate.
 We'll start with the example benchmark from `bencher`:
 
 ```rust
-#[macro_use]
-extern crate bencher;
-
-use bencher::Bencher;
+use bencher::{benchmark_group, benchmark_main, Bencher};
 
 fn a(bench: &mut Bencher) {
     bench.iter(|| {
@@ -53,15 +50,14 @@ criterion_bencher_compat = "0.3"
 Then we update the benchmark file itself to change:
 
 ```rust
-#[macro_use]
-extern crate bencher;
+use bencher::{benchmark_group, benchmark_main, Bencher};
 ```
 
 To:
 
 ```rust
-#[macro_use]
-extern crate criterion_bencher_compat as bencher;
+use criterion_bencher_compat as bencher;
+use bencher::{benchmark_group, benchmark_main, Bencher};
 ```
 
 That's all! Now just run `cargo bench`:
