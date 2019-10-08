@@ -8,7 +8,7 @@ use crate::stats::bivariate::resamples::Resamples;
 use crate::stats::float::Float;
 use crate::stats::tuple::{Tuple, TupledDistributionsBuilder};
 use crate::stats::univariate::Sample;
-use rayon::prelude::*;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 /// Bivariate `(X, Y)` data
 ///
@@ -16,10 +16,7 @@ use rayon::prelude::*;
 ///
 /// - No `NaN`s in the data
 /// - At least two data points in the set
-pub struct Data<'a, X, Y>(&'a [X], &'a [Y])
-where
-    X: 'a,
-    Y: 'a;
+pub struct Data<'a, X, Y>(&'a [X], &'a [Y]);
 
 impl<'a, X, Y> Copy for Data<'a, X, Y> {}
 
@@ -70,8 +67,7 @@ where
     /// - Memory: `O(nresamples)`
     pub fn bootstrap<T, S>(&self, nresamples: usize, statistic: S) -> T::Distributions
     where
-        S: Fn(Data<X, Y>) -> T,
-        S: Sync,
+        S: Fn(Data<X, Y>) -> T + Sync,
         T: Tuple + Send,
         T::Distributions: Send,
         T::Builder: Send,

@@ -150,7 +150,7 @@ fn recommend_sample_size(target_time: f64, met: f64) -> u64 {
 
 pub struct Function<M: Measurement, F, T>
 where
-    F: FnMut(&mut Bencher<M>, &T),
+    F: FnMut(&mut Bencher<'_, M>, &T),
 {
     f: F,
     // TODO: Is there some way to remove these?
@@ -159,7 +159,7 @@ where
 }
 impl<M: Measurement, F, T> Function<M, F, T>
 where
-    F: FnMut(&mut Bencher<M>, &T),
+    F: FnMut(&mut Bencher<'_, M>, &T),
 {
     pub fn new(f: F) -> Function<M, F, T> {
         Function {
@@ -172,7 +172,7 @@ where
 
 impl<M: Measurement, F, T> Routine<M, T> for Function<M, F, T>
 where
-    F: FnMut(&mut Bencher<M>, &T),
+    F: FnMut(&mut Bencher<'_, M>, &T),
 {
     fn bench(&mut self, m: &M, iters: &[u64], parameter: &T) -> Vec<f64> {
         let f = &mut self.f;

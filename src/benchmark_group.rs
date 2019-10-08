@@ -209,7 +209,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
         self
     }
 
-    pub(crate) fn new(criterion: &mut Criterion<M>, group_name: String) -> BenchmarkGroup<M> {
+    pub(crate) fn new(criterion: &mut Criterion<M>, group_name: String) -> BenchmarkGroup<'_, M> {
         BenchmarkGroup {
             criterion,
             group_name,
@@ -223,7 +223,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     /// Benchmark the given parameterless function inside this benchmark group.
     pub fn bench_function<ID: IntoBenchmarkId, F>(&mut self, id: ID, mut f: F) -> &mut Self
     where
-        F: FnMut(&mut Bencher<M>),
+        F: FnMut(&mut Bencher<'_, M>),
     {
         self.run_bench(id.into_benchmark_id(), &(), |b, _| f(b));
         self
@@ -237,7 +237,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
         f: F,
     ) -> &mut Self
     where
-        F: FnMut(&mut Bencher<M>, &I),
+        F: FnMut(&mut Bencher<'_, M>, &I),
     {
         self.run_bench(id.into_benchmark_id(), input, f);
         self
@@ -245,7 +245,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
 
     fn run_bench<F, I>(&mut self, id: BenchmarkId, input: &I, f: F)
     where
-        F: FnMut(&mut Bencher<M>, &I),
+        F: FnMut(&mut Bencher<'_, M>, &I),
     {
         let config = self.partial_config.to_complete(&self.criterion.config);
         let report_context = ReportContext {

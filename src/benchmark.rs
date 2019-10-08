@@ -250,7 +250,7 @@ where
     pub fn new<S, F>(id: S, f: F) -> Benchmark<M>
     where
         S: Into<String>,
-        F: FnMut(&mut Bencher<M>) + 'static,
+        F: FnMut(&mut Bencher<'_, M>) + 'static,
     {
         Benchmark {
             config: PartialBenchmarkConfig::default(),
@@ -264,7 +264,7 @@ where
     pub fn with_function<S, F>(mut self, id: S, mut f: F) -> Benchmark<M>
     where
         S: Into<String>,
-        F: FnMut(&mut Bencher<M>) + 'static,
+        F: FnMut(&mut Bencher<'_, M>) + 'static,
     {
         let routine = NamedRoutine {
             id: id.into(),
@@ -393,7 +393,7 @@ where
     pub fn new<S, F, I>(id: S, f: F, parameters: I) -> ParameterizedBenchmark<T, M>
     where
         S: Into<String>,
-        F: FnMut(&mut Bencher<M>, &T) + 'static,
+        F: FnMut(&mut Bencher<'_, M>, &T) + 'static,
         I: IntoIterator<Item = T>,
     {
         ParameterizedBenchmark {
@@ -409,7 +409,7 @@ where
     pub fn with_function<S, F>(mut self, id: S, f: F) -> ParameterizedBenchmark<T, M>
     where
         S: Into<String>,
-        F: FnMut(&mut Bencher<M>, &T) + 'static,
+        F: FnMut(&mut Bencher<'_, M>, &T) + 'static,
     {
         let routine = NamedRoutine {
             id: id.into(),

@@ -303,7 +303,7 @@ impl Report for Html {
         &self,
         id: &BenchmarkId,
         report_context: &ReportContext,
-        measurements: &MeasurementData,
+        measurements: &MeasurementData<'_>,
         formatter: &dyn ValueFormatter,
     ) {
         if !report_context.plotting.is_enabled() {
@@ -557,7 +557,7 @@ impl Report for Html {
         let mut groups = id_groups
             .into_iter()
             .map(|(_, group)| BenchmarkGroup::new(output_directory, &group))
-            .collect::<Vec<BenchmarkGroup>>();
+            .collect::<Vec<BenchmarkGroup<'_>>>();
         groups.sort_unstable_by_key(|g| g.group_report.name);
 
         try_else_return!(fs::mkdirp(&format!("{}/report/", output_directory)));
@@ -576,7 +576,7 @@ impl Report for Html {
     }
 }
 impl Html {
-    fn comparison(&self, measurements: &MeasurementData) -> Option<Comparison> {
+    fn comparison(&self, measurements: &MeasurementData<'_>) -> Option<Comparison> {
         if let Some(ref comp) = measurements.comparison {
             let different_mean = comp.p_value < comp.significance_threshold;
             let mean_est = comp.relative_estimates[&Statistic::Mean];
@@ -643,7 +643,7 @@ impl Html {
         id: &BenchmarkId,
         context: &ReportContext,
         formatter: &dyn ValueFormatter,
-        measurements: &MeasurementData,
+        measurements: &MeasurementData<'_>,
     ) {
         let mut gnuplots = vec![
             // Probability density plots

@@ -28,7 +28,7 @@ where
         }
     }
 
-    pub fn next(&mut self) -> Data<X, Y> {
+    pub fn next(&mut self) -> Data<'_, X, Y> {
         let n = self.data.0.len();
         let rng = &mut self.rng;
 

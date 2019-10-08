@@ -14,7 +14,7 @@ pub enum Statistic {
 }
 
 impl fmt::Display for Statistic {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             Statistic::Mean => f.pad("mean"),
             Statistic::Median => f.pad("median"),

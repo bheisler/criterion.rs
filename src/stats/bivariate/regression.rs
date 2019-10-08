@@ -17,7 +17,7 @@ where
     /// squares
     ///
     /// - Time: `O(length)`
-    pub fn fit(data: &Data<A, A>) -> Slope<A> {
+    pub fn fit(data: &Data<'_, A, A>) -> Slope<A> {
         let xs = data.0;
         let ys = data.1;
 
@@ -30,7 +30,7 @@ where
     /// Computes the goodness of fit (coefficient of determination) for this data set
     ///
     /// - Time: `O(length)`
-    pub fn r_squared(&self, data: &Data<A, A>) -> A {
+    pub fn r_squared(&self, data: &Data<'_, A, A>) -> A {
         let _0 = A::cast(0);
         let _1 = A::cast(1);
         let m = self.0;

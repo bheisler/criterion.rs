@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate criterion;
-extern crate serde_json;
-extern crate tempdir;
-extern crate walkdir;
+use serde_json;
+
+
 
 use criterion::profiler::Profiler;
 use criterion::{

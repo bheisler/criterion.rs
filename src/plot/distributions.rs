@@ -122,7 +122,7 @@ pub(crate) fn abs_distributions(
     id: &BenchmarkId,
     context: &ReportContext,
     formatter: &dyn ValueFormatter,
-    measurements: &MeasurementData,
+    measurements: &MeasurementData<'_>,
     size: Option<Size>,
 ) -> Vec<Child> {
     measurements
@@ -271,7 +271,7 @@ fn rel_distribution(
 pub(crate) fn rel_distributions(
     id: &BenchmarkId,
     context: &ReportContext,
-    _measurements: &MeasurementData,
+    _measurements: &MeasurementData<'_>,
     comparison: &ComparisonData,
     size: Option<Size>,
 ) -> Vec<Child> {

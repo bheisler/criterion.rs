@@ -10,7 +10,7 @@ use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext}
 pub(crate) fn t_test(
     id: &BenchmarkId,
     context: &ReportContext,
-    _measurements: &MeasurementData,
+    _measurements: &MeasurementData<'_>,
     comparison: &ComparisonData,
     size: Option<Size>,
 ) -> Child {

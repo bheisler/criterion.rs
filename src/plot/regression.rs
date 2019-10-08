@@ -14,7 +14,7 @@ use crate::measurement::ValueFormatter;
 
 fn regression_figure(
     formatter: &dyn ValueFormatter,
-    measurements: &MeasurementData,
+    measurements: &MeasurementData<'_>,
     size: Option<Size>,
 ) -> Figure {
     let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
@@ -98,7 +98,7 @@ pub(crate) fn regression(
     id: &BenchmarkId,
     context: &ReportContext,
     formatter: &dyn ValueFormatter,
-    measurements: &MeasurementData,
+    measurements: &MeasurementData<'_>,
     size: Option<Size>,
 ) -> Child {
     let mut figure = regression_figure(formatter, measurements, size);
@@ -118,7 +118,7 @@ pub(crate) fn regression_small(
     id: &BenchmarkId,
     context: &ReportContext,
     formatter: &dyn ValueFormatter,
-    measurements: &MeasurementData,
+    measurements: &MeasurementData<'_>,
     size: Option<Size>,
 ) -> Child {
     let mut figure = regression_figure(formatter, measurements, size);
@@ -131,9 +131,9 @@ pub(crate) fn regression_small(
 
 fn regression_comparison_figure(
     formatter: &dyn ValueFormatter,
-    measurements: &MeasurementData,
+    measurements: &MeasurementData<'_>,
     comparison: &ComparisonData,
-    base_data: &Data<f64, f64>,
+    base_data: &Data<'_, f64, f64>,
     size: Option<Size>,
 ) -> Figure {
     let data = &measurements.data;
@@ -247,9 +247,9 @@ pub(crate) fn regression_comparison(
     id: &BenchmarkId,
     context: &ReportContext,
     formatter: &dyn ValueFormatter,
-    measurements: &MeasurementData,
+    measurements: &MeasurementData<'_>,
     comparison: &ComparisonData,
-    base_data: &Data<f64, f64>,
+    base_data: &Data<'_, f64, f64>,
     size: Option<Size>,
 ) -> Child {
     let mut figure =
@@ -265,9 +265,9 @@ pub(crate) fn regression_comparison_small(
     id: &BenchmarkId,
     context: &ReportContext,
     formatter: &dyn ValueFormatter,
-    measurements: &MeasurementData,
+    measurements: &MeasurementData<'_>,
     comparison: &ComparisonData,
-    base_data: &Data<f64, f64>,
+    base_data: &Data<'_, f64, f64>,
     size: Option<Size>,
 ) -> Child {
     let mut figure =

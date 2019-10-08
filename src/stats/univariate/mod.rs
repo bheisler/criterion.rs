@@ -34,8 +34,7 @@ pub fn bootstrap<A, B, T, S>(
 where
     A: Float,
     B: Float,
-    S: Fn(&Sample<A>, &Sample<B>) -> T,
-    S: Sync,
+    S: Fn(&Sample<A>, &Sample<B>) -> T + Sync,
     T: Tuple + Send,
     T::Distributions: Send,
     T::Builder: Send,
