@@ -8,6 +8,7 @@ benchmark. We can even combine this with benchmarking over a range of inputs.
 #[macro_use]
 extern crate criterion;
 use criterion::Criterion;
+use criterion::BenchmarkId;
 
 fn fibonacci_slow(n: u64) -> u64 {
     match n {
