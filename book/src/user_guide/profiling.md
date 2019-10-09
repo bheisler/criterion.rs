@@ -4,6 +4,13 @@ When optimizing code, it's often helpful to profile it to help understand why
 it produces the measured performance characteristics. Criterion.rs has several
 features to assist with profiling benchmarks.
 
+### Note on running benchmark executables directly
+
+Because of how Cargo passes certain command-line flags (see the FAQ for more details) when running
+benchmarks, Criterion.rs benchmark executables expect a `--bench` argument on their command line.
+Cargo adds this automatically, but when running the executables directly (eg. in a profiler) you
+will need to add the `--bench` argument.
+
 ### `--profile-time`
 
 Criterion.rs benchmark executables accept a `--profile-time <num_seconds>` 

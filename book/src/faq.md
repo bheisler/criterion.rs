@@ -224,3 +224,12 @@ detections, you must also decrease the sensitivity to small changes. Conversely,
 sensitivity to small changes, you must also increase the chance of false detections. Criterion.rs
 has default settings that strike a generally-good balance between the two, but you can adjust the
 settings to suit your needs.
+
+### When I run benchmark executables directly (without using Cargo) they just print "Success". Why?
+
+When Cargo runs benchmarks, it passes the `--bench` or `--test` command-line arguments to the
+benchmark executables. Criterion.rs looks for these arguments and tries to either run benchmarks or
+run in test mode. In particular, when you run `cargo test --benches` (run tests, including testing
+benchmarks) Cargo does not pass either of these arguments. This is perhaps strange, since `cargo
+bench --test` passes both `--bench` and `--test`. In any case, Criterion.rs benchmarks run in test
+mode when `--bench` is not present, or when `--bench` and `--test` are both present.
