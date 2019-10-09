@@ -127,11 +127,11 @@ impl DurationFormatter {
 
     fn elements_per_second(&self, elems: f64, typical: f64, values: &mut [f64]) -> &'static str {
         let elems_per_second = elems * (1e9 / typical);
-        let (denominator, unit) = if elems_per_second < 1000.0 {
+        let (denominator, unit) = if typical < 1000.0 {
             (1.0, " elem/s")
-        } else if elems_per_second < 1000.0 * 1000.0 {
+        } else if typical < 1000.0 * 1000.0 {
             (1000.0, "Kelem/s")
-        } else if elems_per_second < 1000.0 * 1000.0 * 1000.0 {
+        } else if typical < 1000.0 * 1000.0 * 1000.0 {
             (1000.0 * 1000.0, "Melem/s")
         } else {
             (1000.0 * 1000.0 * 1000.0, "Gelem/s")
