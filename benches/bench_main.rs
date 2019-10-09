@@ -1,6 +1,4 @@
-#[macro_use]
-extern crate criterion;
-
+use criterion::criterion_main;
 
 mod benchmarks;
 

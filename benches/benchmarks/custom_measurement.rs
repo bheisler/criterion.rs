@@ -1,5 +1,8 @@
-use criterion::measurement::{Measurement, ValueFormatter};
-use criterion::{black_box, Criterion, Throughput};
+use criterion::{
+    black_box, criterion_group,
+    measurement::{Measurement, ValueFormatter},
+    Criterion, Throughput,
+};
 use std::time::{Duration, Instant};
 
 struct HalfSecFormatter;

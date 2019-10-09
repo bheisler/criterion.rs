@@ -783,8 +783,7 @@ mod test {
 
     #[test]
     fn test_make_filename_safe_respects_character_boundaries() {
-        let input =
-            "✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓";
+        let input = "✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓";
         let safe = make_filename_safe(input);
         assert!(safe.len() < MAX_DIRECTORY_NAME_LEN);
     }

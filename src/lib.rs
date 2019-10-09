@@ -36,28 +36,12 @@ extern crate approx;
 #[macro_use]
 extern crate quickcheck;
 
-
-
-#[macro_use]
-extern crate clap;
+use clap::value_t;
 
 #[macro_use]
 extern crate lazy_static;
-
 use atty;
-
 use criterion_plot;
-
-
-
-
-
-
-
-
-
-
-
 
 #[cfg(feature = "real_blackbox")]
 extern crate test;

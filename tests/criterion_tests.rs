@@ -1,12 +1,9 @@
-#[macro_use]
-extern crate criterion;
+use criterion;
 use serde_json;
 
-
-
-use criterion::profiler::Profiler;
 use criterion::{
-    BatchSize, Benchmark, BenchmarkId, Criterion, Fun, ParameterizedBenchmark, Throughput,
+    criterion_group, criterion_main, profiler::Profiler, BatchSize, Benchmark, BenchmarkId,
+    Criterion, Fun, ParameterizedBenchmark, Throughput,
 };
 use serde_json::value::Value;
 use std::cell::{Cell, RefCell};
@@ -448,7 +445,7 @@ fn test_benchmark_group_without_input() {
 }
 
 mod macros {
-    use super::criterion;
+    use super::{criterion, criterion_group, criterion_main};
 
     #[test]
     #[should_panic(expected = "group executed")]
@@ -509,7 +506,6 @@ mod macros {
 
         test_group();
     }
-
 }
 
 struct TestProfiler {

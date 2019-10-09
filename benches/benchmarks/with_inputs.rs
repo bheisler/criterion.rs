@@ -1,8 +1,6 @@
 use std::iter;
 
-use criterion::BenchmarkId;
-use criterion::Criterion;
-use criterion::Throughput;
+use criterion::{criterion_group, BenchmarkId, Criterion, Throughput};
 
 fn from_elem(c: &mut Criterion) {
     static KB: usize = 1024;
