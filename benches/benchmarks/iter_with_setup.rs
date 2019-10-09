@@ -1,4 +1,4 @@
-use criterion::Criterion;
+use criterion::{criterion_group, Criterion};
 
 const SIZE: usize = 1024 * 1024;
 

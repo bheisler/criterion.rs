@@ -6,7 +6,7 @@ use crate::stats::univariate::Sample;
 
 pub struct Resamples<'a, A>
 where
-    A: 'a + Float,
+    A: Float,
 {
     range: Range,
     rng: Rng,

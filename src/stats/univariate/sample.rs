@@ -204,10 +204,8 @@ where
     /// - Memory: `O(nresamples)`
     pub fn bootstrap<T, S>(&self, nresamples: usize, statistic: S) -> T::Distributions
     where
-        S: Fn(&Sample<A>) -> T,
-        S: Sync,
-        T: Tuple,
-        T: Send,
+        S: Fn(&Sample<A>) -> T + Sync,
+        T: Tuple + Send,
         T::Distributions: Send,
         T::Builder: Send,
     {

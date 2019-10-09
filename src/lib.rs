@@ -36,29 +36,12 @@ extern crate approx;
 #[macro_use]
 extern crate quickcheck;
 
-#[cfg(test)]
-extern crate rand;
-
-#[macro_use]
-extern crate clap;
+use clap::value_t;
 
 #[macro_use]
 extern crate lazy_static;
-
-extern crate atty;
-extern crate cast;
-extern crate criterion_plot;
-extern crate csv;
-extern crate itertools;
-extern crate num_traits;
-extern crate rand_core;
-extern crate rand_os;
-extern crate rand_xoshiro;
-extern crate rayon;
-extern crate serde;
-extern crate serde_json;
-extern crate tinytemplate;
-extern crate walkdir;
+use atty;
+use criterion_plot;
 
 #[cfg(feature = "real_blackbox")]
 extern crate test;
@@ -159,7 +142,7 @@ where
     /// Create a new `Fun` given a name and a closure
     pub fn new<F>(name: &str, f: F) -> Fun<I, M>
     where
-        F: FnMut(&mut Bencher<M>, &I) + 'static,
+        F: FnMut(&mut Bencher<'_, M>, &I) + 'static,
     {
         let routine = NamedRoutine {
             id: name.to_owned(),
@@ -1229,7 +1212,7 @@ To test that the benchmarks work, run `cargo test --benches`
     /// criterion_group!(benches, bench_simple);
     /// criterion_main!(benches);
     /// ```
-    pub fn benchmark_group<S: Into<String>>(&mut self, group_name: S) -> BenchmarkGroup<M> {
+    pub fn benchmark_group<S: Into<String>>(&mut self, group_name: S) -> BenchmarkGroup<'_, M> {
         BenchmarkGroup::new(self, group_name.into())
     }
 }
@@ -1260,7 +1243,7 @@ where
     /// ```
     pub fn bench_function<F>(&mut self, id: &str, f: F) -> &mut Criterion<M>
     where
-        F: FnMut(&mut Bencher<M>),
+        F: FnMut(&mut Bencher<'_, M>),
     {
         self.benchmark_group(id)
             .bench_function(BenchmarkId::no_function(), f);
@@ -1292,7 +1275,7 @@ where
     /// ```
     pub fn bench_with_input<F, I>(&mut self, id: BenchmarkId, input: &I, f: F) -> &mut Criterion<M>
     where
-        F: FnMut(&mut Bencher<M>, &I),
+        F: FnMut(&mut Bencher<'_, M>, &I),
     {
         // Guaranteed safe because external callers can't create benchmark IDs without a function
         // name or parameter
@@ -1339,7 +1322,7 @@ where
     where
         I: IntoIterator,
         I::Item: fmt::Debug + 'static,
-        F: FnMut(&mut Bencher<M>, &I::Item) + 'static,
+        F: FnMut(&mut Bencher<'_, M>, &I::Item) + 'static,
     {
         self.bench(id, ParameterizedBenchmark::new(id, f, inputs))
     }

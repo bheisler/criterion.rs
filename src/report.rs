@@ -224,12 +224,12 @@ impl BenchmarkId {
     }
 }
 impl fmt::Display for BenchmarkId {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_title())
     }
 }
 impl fmt::Debug for BenchmarkId {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fn format_opt(opt: &Option<String>) -> String {
             match *opt {
                 Some(ref string) => format!("\"{}\"", string),
@@ -285,7 +285,7 @@ pub(crate) trait Report {
         &self,
         _id: &BenchmarkId,
         _context: &ReportContext,
-        _measurements: &MeasurementData,
+        _measurements: &MeasurementData<'_>,
         _formatter: &dyn ValueFormatter,
     ) {
     }
@@ -355,7 +355,7 @@ impl Report for Reports {
         &self,
         id: &BenchmarkId,
         context: &ReportContext,
-        measurements: &MeasurementData,
+        measurements: &MeasurementData<'_>,
         formatter: &dyn ValueFormatter,
     ) {
         for report in &self.reports {
@@ -465,7 +465,7 @@ impl CliReport {
         }
     }
 
-    pub fn outliers(&self, sample: &LabeledSample<f64>) {
+    pub fn outliers(&self, sample: &LabeledSample<'_, f64>) {
         let (los, lom, _, him, his) = sample.count();
         let noutliers = los + lom + him + his;
         let sample_size = sample.len();
@@ -567,7 +567,7 @@ impl Report for CliReport {
         &self,
         id: &BenchmarkId,
         _: &ReportContext,
-        meas: &MeasurementData,
+        meas: &MeasurementData<'_>,
         formatter: &dyn ValueFormatter,
     ) {
         self.text_overwrite();
@@ -783,8 +783,7 @@ mod test {
 
     #[test]
     fn test_make_filename_safe_respects_character_boundaries() {
-        let input =
-            "✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓";
+        let input = "✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓";
         let safe = make_filename_safe(input);
         assert!(safe.len() < MAX_DIRECTORY_NAME_LEN);
     }

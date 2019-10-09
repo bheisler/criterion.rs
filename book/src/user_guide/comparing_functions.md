@@ -5,9 +5,7 @@ graphs to show the differences in performance between them. First, lets create a
 benchmark. We can even combine this with benchmarking over a range of inputs.
 
 ```rust
-#[macro_use]
-extern crate criterion;
-use criterion::Criterion;
+use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
 
 fn fibonacci_slow(n: u64) -> u64 {
     match n {

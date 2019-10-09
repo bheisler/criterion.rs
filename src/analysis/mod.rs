@@ -217,7 +217,10 @@ fn base_dir_exists(id: &BenchmarkId, baseline: &str, output_directory: &str) -> 
 }
 
 // Performs a simple linear regression on the sample
-fn regression(data: &Data<f64, f64>, config: &BenchmarkConfig) -> (Distribution<f64>, Estimate) {
+fn regression(
+    data: &Data<'_, f64, f64>,
+    config: &BenchmarkConfig,
+) -> (Distribution<f64>, Estimate) {
     let cl = config.confidence_level;
 
     let distribution = elapsed!(

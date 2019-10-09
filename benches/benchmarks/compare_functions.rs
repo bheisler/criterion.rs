@@ -1,7 +1,4 @@
-use criterion::BenchmarkId;
-use criterion::Criterion;
-use criterion::Fun;
-use criterion::ParameterizedBenchmark;
+use criterion::{criterion_group, BenchmarkId, Criterion, Fun, ParameterizedBenchmark};
 
 fn fibonacci_slow(n: u64) -> u64 {
     match n {

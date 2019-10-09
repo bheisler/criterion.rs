@@ -10,7 +10,7 @@ use rayon::prelude::*;
 /// Univariate kernel density estimator
 pub struct Kde<'a, A, K>
 where
-    A: 'a + Float,
+    A: Float,
     K: Kernel<A>,
 {
     bandwidth: A,

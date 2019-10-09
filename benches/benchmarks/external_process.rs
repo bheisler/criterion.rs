@@ -1,9 +1,10 @@
-use criterion::Criterion;
-use std::io::{BufRead, BufReader, Write};
-use std::process::Command;
-use std::process::Stdio;
-use std::str::FromStr;
-use std::time::Duration;
+use criterion::{criterion_group, Criterion};
+use std::{
+    io::{BufRead, BufReader, Write},
+    process::{Command, Stdio},
+    str::FromStr,
+    time::Duration,
+};
 
 fn create_command() -> Command {
     let mut command = Command::new("python3");

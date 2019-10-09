@@ -8,7 +8,7 @@ pub(crate) fn pdf(
     id: &BenchmarkId,
     context: &ReportContext,
     formatter: &dyn ValueFormatter,
-    measurements: &MeasurementData,
+    measurements: &MeasurementData<'_>,
     size: Option<Size>,
 ) -> Child {
     let avg_times = &measurements.avg_times;
@@ -228,7 +228,7 @@ pub(crate) fn pdf_small(
     id: &BenchmarkId,
     context: &ReportContext,
     formatter: &dyn ValueFormatter,
-    measurements: &MeasurementData,
+    measurements: &MeasurementData<'_>,
     size: Option<Size>,
 ) -> Child {
     let avg_times = &*measurements.avg_times;
@@ -287,7 +287,7 @@ pub(crate) fn pdf_small(
 
 fn pdf_comparison_figure(
     formatter: &dyn ValueFormatter,
-    measurements: &MeasurementData,
+    measurements: &MeasurementData<'_>,
     comparison: &ComparisonData,
     size: Option<Size>,
 ) -> Figure {
@@ -365,7 +365,7 @@ pub(crate) fn pdf_comparison(
     id: &BenchmarkId,
     context: &ReportContext,
     formatter: &dyn ValueFormatter,
-    measurements: &MeasurementData,
+    measurements: &MeasurementData<'_>,
     comparison: &ComparisonData,
     size: Option<Size>,
 ) -> Child {
@@ -380,7 +380,7 @@ pub(crate) fn pdf_comparison_small(
     id: &BenchmarkId,
     context: &ReportContext,
     formatter: &dyn ValueFormatter,
-    measurements: &MeasurementData,
+    measurements: &MeasurementData<'_>,
     comparison: &ComparisonData,
     size: Option<Size>,
 ) -> Child {

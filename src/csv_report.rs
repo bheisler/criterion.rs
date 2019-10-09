@@ -24,7 +24,7 @@ impl<W: Write> CsvReportWriter<W> {
     fn write_data(
         &mut self,
         id: &BenchmarkId,
-        data: &MeasurementData,
+        data: &MeasurementData<'_>,
         formatter: &dyn ValueFormatter,
     ) -> Result<()> {
         let mut data_scaled: Vec<f64> = data.sample_times().as_ref().into();
@@ -62,7 +62,7 @@ impl FileCsvReport {
         &self,
         path: String,
         id: &BenchmarkId,
-        measurements: &MeasurementData,
+        measurements: &MeasurementData<'_>,
         formatter: &dyn ValueFormatter,
     ) -> Result<()> {
         let writer = Writer::from_path(path)?;
@@ -77,7 +77,7 @@ impl Report for FileCsvReport {
         &self,
         id: &BenchmarkId,
         context: &ReportContext,
-        measurements: &MeasurementData,
+        measurements: &MeasurementData<'_>,
         formatter: &dyn ValueFormatter,
     ) {
         let path = format!(
