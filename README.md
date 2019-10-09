@@ -40,6 +40,7 @@ Criterion.<span></span>rs helps you write fast code by detecting and measuring p
   - [Maintenance](#maintenance)
   - [License](#license)
   - [Related Projects](#related-projects)
+  - [Criterion.rs Extensions](#criterionrs-extensions)
 
 ### Features
 
@@ -137,3 +138,7 @@ Criterion.<span></span>rs is dual licensed under the Apache 2.0 license and the 
 - [criterion](http://www.serpentine.com/criterion/) - The Haskell microbenchmarking library that inspired Criterion.<span></span>rs
 - [cargo-benchcmp](https://github.com/BurntSushi/cargo-benchcmp) - Cargo subcommand to compare the output of two libtest or bencher benchmark runs
 - [cargo-flamegraph](https://github.com/ferrous-systems/flamegraph) - Cargo subcommand to profile an executable and produce a flamegraph
+
+### Criterion.rs Extensions
+
+- [criterion-cycles-per-byte](https://crates.io/crates/criterion-cycles-per-byte) - A custom-measurement plugin that counts the number of CPU cycles used by the benchmark.
