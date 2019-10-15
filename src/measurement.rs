@@ -28,9 +28,9 @@ pub trait ValueFormatter {
 
     /// Format the value as a throughput measurement. The value represents the measurement value;
     /// the implementor will have to calculate bytes per second, iterations per cycle, etc.
-    fn format_throughput(&self, throughput: &Throughput, value: f64) -> String {
+    fn format_throughput(&self, throughput: &Throughput, typical_value: f64, value: f64) -> String {
         let mut values = [value];
-        let unit = self.scale_throughputs(value, throughput, &mut values);
+        let unit = self.scale_throughputs(typical_value, throughput, &mut values);
         format!("{:>6} {}", short(values[0]), unit)
     }
 
@@ -106,19 +106,18 @@ pub trait Measurement {
 pub(crate) struct DurationFormatter;
 impl DurationFormatter {
     fn bytes_per_second(&self, bytes: f64, typical: f64, values: &mut [f64]) -> &'static str {
-        let bytes_per_second = bytes * (1e9 / typical);
-        let (denominator, unit) = if bytes_per_second < 1024.0 {
+        let (denominator, unit) = if typical < 1024.0 {
             (1.0, "  B/s")
-        } else if bytes_per_second < 1024.0 * 1024.0 {
+        } else if typical < 1024.0 * 1024.0 {
             (1024.0, "KiB/s")
-        } else if bytes_per_second < 1024.0 * 1024.0 * 1024.0 {
+        } else if typical < 1024.0 * 1024.0 * 1024.0 {
             (1024.0 * 1024.0, "MiB/s")
         } else {
             (1024.0 * 1024.0 * 1024.0, "GiB/s")
         };
 
         for val in values {
-            let bytes_per_second = bytes * (1e9 / *val);
+            let bytes_per_second = Throughput::Bytes(bytes as u64).per_second(*val);
             *val = bytes_per_second / denominator;
         }
 
@@ -126,7 +125,6 @@ impl DurationFormatter {
     }
 
     fn elements_per_second(&self, elems: f64, typical: f64, values: &mut [f64]) -> &'static str {
-        let elems_per_second = elems * (1e9 / typical);
         let (denominator, unit) = if typical < 1000.0 {
             (1.0, " elem/s")
         } else if typical < 1000.0 * 1000.0 {
@@ -138,7 +136,7 @@ impl DurationFormatter {
         };
 
         for val in values {
-            let elems_per_second = elems * (1e9 / *val);
+            let elems_per_second = Throughput::Elements(elems as u64).per_second(*val);
             *val = elems_per_second / denominator;
         }
 

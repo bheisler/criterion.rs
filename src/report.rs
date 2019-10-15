@@ -597,19 +597,21 @@ impl Report for CliReport {
             println!(
                 "{}thrpt:  [{} {} {}]",
                 " ".repeat(24),
-                self.faint(
-                    formatter.format_throughput(
-                        throughput,
-                        slope_estimate.confidence_interval.upper_bound
-                    )
-                ),
-                self.bold(formatter.format_throughput(throughput, slope_estimate.point_estimate)),
-                self.faint(
-                    formatter.format_throughput(
-                        throughput,
-                        slope_estimate.confidence_interval.lower_bound
-                    )
-                ),
+                self.faint(formatter.format_throughput(
+                    throughput,
+                    throughput.per_second(slope_estimate.point_estimate),
+                    slope_estimate.confidence_interval.upper_bound
+                )),
+                self.bold(formatter.format_throughput(
+                    throughput,
+                    throughput.per_second(slope_estimate.point_estimate),
+                    slope_estimate.point_estimate
+                )),
+                self.faint(formatter.format_throughput(
+                    throughput,
+                    throughput.per_second(slope_estimate.point_estimate),
+                    slope_estimate.confidence_interval.lower_bound
+                )),
             )
         }
 
@@ -783,8 +785,7 @@ mod test {
 
     #[test]
     fn test_make_filename_safe_respects_character_boundaries() {
-        let input =
-            "✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓";
+        let input = "✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓";
         let safe = make_filename_safe(input);
         assert!(safe.len() < MAX_DIRECTORY_NAME_LEN);
     }

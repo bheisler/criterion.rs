@@ -334,16 +334,26 @@ impl Report for Html {
             self.generate_plots(id, report_context, formatter, measurements)
         }
 
-        let throughput = measurements
-            .throughput
-            .as_ref()
-            .map(|thr| ConfidenceInterval {
-                lower: formatter
-                    .format_throughput(thr, slope_estimate.confidence_interval.upper_bound),
-                upper: formatter
-                    .format_throughput(thr, slope_estimate.confidence_interval.lower_bound),
-                point: formatter.format_throughput(thr, slope_estimate.point_estimate),
-            });
+        let throughput = measurements.throughput.as_ref().map(|thr| {
+            let typical_throughput = thr.per_second(slope_estimate.point_estimate);
+            ConfidenceInterval {
+                lower: formatter.format_throughput(
+                    thr,
+                    typical_throughput,
+                    slope_estimate.confidence_interval.upper_bound,
+                ),
+                upper: formatter.format_throughput(
+                    thr,
+                    typical_throughput,
+                    slope_estimate.confidence_interval.lower_bound,
+                ),
+                point: formatter.format_throughput(
+                    thr,
+                    typical_throughput,
+                    slope_estimate.point_estimate,
+                ),
+            }
+        });
 
         let context = Context {
             title: id.as_title().to_owned(),
@@ -808,7 +818,8 @@ impl Html {
             .collect();
         let mut line_tput_path = None;
 
-        let all_throughputs_match = value_types.iter().all(|x| x == &value_types[0]) && throughput_types[0].is_some();
+        let all_throughputs_match =
+            value_types.iter().all(|x| x == &value_types[0]) && throughput_types[0].is_some();
         if all_throughputs_match {
             let path = format!(
                 "{}/{}/report/lines_tput.svg",

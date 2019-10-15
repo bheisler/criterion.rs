@@ -1223,7 +1223,7 @@ To test that the benchmarks work, run `cargo test --benches`
     ///     // Now we can perform benchmarks with this group
     ///     group.bench_function("Bench 1", |b| b.iter(|| 1 ));
     ///     group.bench_function("Bench 2", |b| b.iter(|| 2 ));
-    ///    
+    ///
     ///     group.finish();
     /// }
     /// criterion_group!(benches, bench_simple);
@@ -1524,6 +1524,18 @@ pub enum Throughput {
     /// collection, but could also be the number of lines of input text or the number of values to
     /// parse.
     Elements(u64),
+}
+
+impl Throughput {
+    /// Given a runtime in ns, return the throughput in bytes or elements per second.
+    fn per_second(&self, runtime: f64) -> f64 {
+        let val = match *self {
+            Throughput::Bytes(bytes) => bytes as f64,
+            Throughput::Elements(elems) => elems as f64,
+        };
+
+        val * (1e9 / runtime)
+    }
 }
 
 /// Axis scaling type
