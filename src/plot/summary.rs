@@ -4,7 +4,7 @@ use crate::kde;
 use crate::measurement::ValueFormatter;
 use crate::report::{BenchmarkId, ValueType};
 use crate::stats::univariate::Sample;
-use crate::{Throughput, AxisScale};
+use crate::{AxisScale, Throughput};
 use criterion_plot::prelude::*;
 use itertools::Itertools;
 use std::cmp::Ordering;
@@ -156,40 +156,36 @@ pub fn comparison_throughput(
                 .set(axis_scale.to_gnuplot())
         });
 
-    let max = all_curves
-        .iter()
-        .map(|&&(_, ref data)| Sample::new(data).mean())
-        .fold(::std::f64::NAN, f64::max);
+    let mut tput = all_curves[0].0.throughput.as_ref().unwrap();
+    let mut max_tput: f64 = 0.;
+    let mut max_mean: f64 = 0.;
+    for (ref id, ref data) in all_curves {
+        let mean = Sample::new(data).mean();
+        let cur_tput = id.throughput.as_ref().unwrap();
 
-    let mut dummy = [1.0];
-    let unit = formatter.scale_throughputs(
-        max,
-        all_curves[0].0.throughput.as_ref().unwrap(),
-        &mut dummy,
-    );
+        if cur_tput.per_second(mean) > max_tput {
+            max_tput = cur_tput.per_second(mean);
+            max_mean = mean;
+            tput = cur_tput;
+        }
+    }
+
+    let mut max_formatted = [max_mean];
+    let unit = formatter.scale_throughputs(max_mean, tput, &mut max_formatted);
 
     f.configure(Axis::LeftY, |a| {
         a.configure(Grid::Major, |g| g.show())
             .configure(Grid::Minor, |g| g.hide())
             .set(Label(format!("Average throughput ({})", unit)))
             .set(axis_scale.to_gnuplot())
+            .set(Range::Limits(0., max_formatted[0]))
     });
-
-    // Creates a label for the benchmark based on the function name and parameters
-    fn mklabel(id: &BenchmarkId) -> Option<String> {
-        match (&id.function_id, &id.value_str) {
-            (Some(name), Some(params)) => Some(format!("{} {}", name, params)),
-            (None, Some(params)) => Some(String::from(params)),
-            (Some(name), None) => Some(String::from(name)),
-            (None, None) => None,
-        }
-    }
 
     // This assumes the curves are sorted. It also assumes that the benchmark IDs all have numeric
     // values or throughputs and that value is sensible (ie. not a mix of bytes and elements
     // or whatnot)
     let mut i = 0;
-    for (key, group) in &all_curves.iter().group_by(|&&&(ref id, _)| mklabel(&id)) {
+    for (key, group) in &all_curves.iter().group_by(|&&&(ref id, _)| &id.function_id) {
         let mut tuples: Vec<_> = group
             .map(|&&(ref id, ref sample)| {
                 // Unwrap is fine here because it will only fail if the assumptions above are not true
@@ -199,7 +195,7 @@ pub fn comparison_throughput(
 
                 let x = id.as_number().unwrap();
                 let mut y = [Sample::new(sample).mean()];
-                formatter.scale_throughputs(max, id.throughput.as_ref().unwrap(), &mut y);
+                formatter.scale_throughputs(max_mean, id.throughput.as_ref().unwrap(), &mut y);
 
                 (x, y[0])
             })
@@ -207,14 +203,18 @@ pub fn comparison_throughput(
 
         tuples.sort_by(|&(ax, _), &(bx, _)| (ax.partial_cmp(&bx).unwrap_or(Ordering::Less)));
         let (xs, ys): (Vec<_>, Vec<_>) = tuples.into_iter().unzip();
-        
+
         let function_name = key.as_ref().map(|string| escape_underscores(string));
 
-        f.plot(Points { x: &xs, y: &ys }, |p| {
+        f.plot(Lines { x: &xs, y: &ys }, |c| {
             if let Some(name) = function_name {
-                p.set(Label(name));
+                c.set(Label(name));
             }
-
+            c.set(LINEWIDTH)
+                .set(LineType::Solid)
+                .set(COMPARISON_COLORS[i % NUM_COLORS])
+        })
+        .plot(Points { x: &xs, y: &ys }, |p| {
             p.set(PointType::FilledCircle)
                 .set(POINT_SIZE)
                 .set(COMPARISON_COLORS[i % NUM_COLORS])
