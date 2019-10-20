@@ -45,8 +45,8 @@ Criterion.<span></span>rs helps you write fast code by detecting and measuring p
 ### Features
 
 - __Statistics__: Statistical analysis detects if, and by how much, performance has changed since the last benchmark run
-- __Charts__: Uses [gnuplot](http://www.gnuplot.info/) to generate detailed graphs of benchmark results.
-- __Stable-compatible__: Benchmark your code without installing nightly Rust.
+- __Charts__: Uses [gnuplot](http://www.gnuplot.info/) to generate detailed graphs of benchmark results
+- __Stable-compatible__: Benchmark your code without installing nightly Rust
 
 ### Quickstart
 
@@ -63,7 +63,7 @@ name = "my_benchmark"
 harness = false
 ```
 
-Next, define a benchmark by creating a file at `$PROJECT/benches/my_benchmark.rs` with the following contents.
+Next, define a benchmark by creating a file at `$PROJECT/benches/my_benchmark.rs` with the following contents:
 
 ```rust
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
@@ -108,11 +108,11 @@ One great way to contribute to Criterion.<span></span>rs is to use it for your o
 
 Code or documentation improvements in the form of pull requests are also welcome. If you're not
 sure what to work on, try checking the 
-[Beginner label](https://github.com/bheisler/criterion.rs/issues?q=is%3Aissue+is%3Aopen+label%3ABeginner)
+[Beginner label](https://github.com/bheisler/criterion.rs/issues?q=is%3Aissue+is%3Aopen+label%3ABeginner).
 
-If your issues or pull requests have no response after a few days, feel free to ping me (@bheisler)
+If your issues or pull requests have no response after a few days, feel free to ping me (@bheisler).
 
-For more details, see the [CONTRIBUTING.md file](https://github.com/bheisler/criterion.rs/blob/master/CONTRIBUTING.md)
+For more details, see the [CONTRIBUTING.md file](https://github.com/bheisler/criterion.rs/blob/master/CONTRIBUTING.md).
 
 ### Compatibility Policy
 
@@ -141,4 +141,4 @@ Criterion.<span></span>rs is dual licensed under the Apache 2.0 license and the 
 
 ### Criterion.rs Extensions
 
-- [criterion-cycles-per-byte](https://crates.io/crates/criterion-cycles-per-byte) - A custom-measurement plugin that counts the number of CPU cycles used by the benchmark.
+- [criterion-cycles-per-byte](https://crates.io/crates/criterion-cycles-per-byte) - A custom-measurement plugin that counts the number of CPU cycles used by the benchmark
