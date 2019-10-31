@@ -1,68 +1,89 @@
-use std::iter;
-use std::path::PathBuf;
+mod gnuplot_backend;
+mod plotters_backend;
 
-use crate::stats::univariate::Sample;
-use criterion_plot::prelude::*;
+pub(crate) use gnuplot_backend::Gnuplot;
+pub(crate) use plotters_backend::PlottersBackend;
 
-mod distributions;
-mod pdf;
-mod regression;
-mod summary;
-mod t_test;
-pub(crate) use self::distributions::*;
-pub(crate) use self::pdf::*;
-pub(crate) use self::regression::*;
-pub(crate) use self::summary::*;
-pub(crate) use self::t_test::*;
+use crate::measurement::ValueFormatter;
+use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext, ValueType};
 
-fn escape_underscores(string: &str) -> String {
-    string.replace("_", "\\_")
+#[derive(Clone, Copy)]
+pub(crate) struct PlotContext<'a> {
+    pub(crate) id: &'a BenchmarkId,
+    pub(crate) context: &'a ReportContext,
+    pub(crate) size: Option<(usize, usize)>,
+    pub(crate) is_thumbnail: bool,
 }
 
-static DEFAULT_FONT: &str = "Helvetica";
-static KDE_POINTS: usize = 500;
-static SIZE: Size = Size(1280, 720);
-
-const LINEWIDTH: LineWidth = LineWidth(2.);
-const POINT_SIZE: PointSize = PointSize(0.75);
-
-const DARK_BLUE: Color = Color::Rgb(31, 120, 180);
-const DARK_ORANGE: Color = Color::Rgb(255, 127, 0);
-const DARK_RED: Color = Color::Rgb(227, 26, 28);
-
-fn debug_script(path: &PathBuf, figure: &Figure) {
-    if crate::debug_enabled() {
-        let mut script_path = path.clone();
-        script_path.set_extension("gnuplot");
-        println!("Writing gnuplot script to {:?}", script_path);
-        let result = figure.save(script_path.as_path());
-        if let Err(e) = result {
-            error!("Failed to write debug output: {}", e);
+impl<'a> PlotContext<'a> {
+    pub fn size(mut self, s: Option<criterion_plot::Size>) -> PlotContext<'a> {
+        if let Some(s) = s {
+            self.size = Some((s.0, s.1));
         }
-    }
-}
-
-/*fn get_max(values: &[f64]) -> f64 {
-    assert!(!values.is_empty());
-    let mut elems = values.iter();
-
-    match elems.next() {
-        Some(&head) => elems.fold(head, |a, &b| a.max(b)),
-        // NB `unreachable!` because `Sample` is guaranteed to have at least one data point
-        None => unreachable!(),
-    }
-}*/
-
-/// Private
-trait Append<T> {
-    /// Private
-    fn append_(self, item: T) -> Self;
-}
-
-// NB I wish this was in the standard library
-impl<T> Append<T> for Vec<T> {
-    fn append_(mut self, item: T) -> Vec<T> {
-        self.push(item);
         self
     }
+
+    pub fn thumbnail(mut self, value: bool) -> PlotContext<'a> {
+        self.is_thumbnail = value;
+        self
+    }
+
+    pub fn line_comparison_path(&self) -> String {
+        format!(
+            "{}/{}/report/lines.svg",
+            self.context.output_directory,
+            self.id.as_directory_name()
+        )
+    }
+
+    pub fn violin_path(&self) -> String {
+        format!(
+            "{}/{}/report/violin.svg",
+            self.context.output_directory,
+            self.id.as_directory_name()
+        )
+    }
+}
+
+#[derive(Clone, Copy)]
+pub(crate) struct PlotData<'a> {
+    pub(crate) formatter: &'a dyn ValueFormatter,
+    pub(crate) measurements: &'a MeasurementData<'a>,
+    pub(crate) comparison: Option<&'a ComparisonData>,
+}
+
+impl<'a> PlotData<'a> {
+    pub fn comparison(mut self, comp: &'a ComparisonData) -> PlotData<'a> {
+        self.comparison = Some(comp);
+        self
+    }
+}
+
+pub(crate) trait Plotter {
+    fn pdf(&mut self, ctx: PlotContext<'_>, data: PlotData<'_>);
+
+    fn regression(&mut self, ctx: PlotContext<'_>, data: PlotData<'_>);
+
+    fn abs_distributions(&mut self, ctx: PlotContext<'_>, data: PlotData<'_>);
+
+    fn rel_distributions(&mut self, ctx: PlotContext<'_>, data: PlotData<'_>);
+
+    fn line_comparison(
+        &mut self,
+        ctx: PlotContext<'_>,
+        formatter: &dyn ValueFormatter,
+        all_curves: &[&(&BenchmarkId, Vec<f64>)],
+        value_type: ValueType,
+    );
+
+    fn violin(
+        &mut self,
+        ctx: PlotContext<'_>,
+        formatter: &dyn ValueFormatter,
+        all_curves: &[&(&BenchmarkId, Vec<f64>)],
+    );
+
+    fn t_test(&mut self, ctx: PlotContext<'_>, data: PlotData<'_>);
+
+    fn wait(&mut self);
 }

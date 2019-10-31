@@ -87,6 +87,7 @@ use crate::csv_report::FileCsvReport;
 use crate::estimate::{Distributions, Estimates, Statistic};
 use crate::html::Html;
 use crate::measurement::{Measurement, WallTime};
+use crate::plot::{Gnuplot, Plotter, PlottersBackend};
 use crate::plotting::Plotting;
 use crate::profiler::{ExternalProfiler, Profiler};
 use crate::report::{CliReport, Report, ReportContext, Reports};
@@ -629,6 +630,7 @@ pub enum Baseline {
 /// benchmark.
 pub struct Criterion<M: Measurement = WallTime> {
     config: BenchmarkConfig,
+    prefer_plotters: bool,
     plotting: Plotting,
     filter: Option<String>,
     report: Box<dyn Report>,
@@ -680,6 +682,10 @@ impl Default for Criterion {
                 significance_level: 0.05,
                 warm_up_time: Duration::new(3, 0),
             },
+            // In the initial version, we just prefer the Gnuplot backend by default, but we can
+            // adjust adjust later. And we may remove this if we decide completely relies on
+            // Plotters for plotting.
+            prefer_plotters: false,
             plotting,
             filter: None,
             report: Box::new(Reports::new(reports)),
@@ -703,6 +709,7 @@ impl<M: Measurement> Criterion<M> {
     pub fn with_measurement<M2: Measurement>(self, m: M2) -> Criterion<M2> {
         Criterion {
             config: self.config,
+            prefer_plotters: self.prefer_plotters,
             plotting: self.plotting,
             filter: self.filter,
             report: self.report,
@@ -724,6 +731,19 @@ impl<M: Measurement> Criterion<M> {
     pub fn with_profiler<P: Profiler + 'static>(self, p: P) -> Criterion<M> {
         Criterion {
             profiler: Box::new(RefCell::new(p)),
+            ..self
+        }
+    }
+
+    /// Changes the preferred plotting backend to Plotters based one.
+    ///
+    /// By default Criterion will use gnuplot if possible and use plotters as the fallback plotting
+    /// backend.
+    /// If plotters backend is preferred, Criterion will use plotters backend regardless if gnuplot
+    /// is installed.
+    pub fn prefer_plotters(self) -> Criterion<M> {
+        Criterion {
+            prefer_plotters: true,
             ..self
         }
     }
@@ -841,26 +861,32 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    fn create_plotter(&self) -> Box<dyn Plotter> {
+        use criterion_plot::VersionError;
+        match (self.prefer_plotters, criterion_plot::version()) {
+            (false, Ok(_)) => Box::new(Gnuplot::default()),
+            (false, Err(e)) => {
+                match e {
+                    VersionError::Exec(_) => println!("Gnuplot not found, using plotters backend"),
+                    e => println!(
+                        "Gnuplot not found or not usable, using plotters backend\n{}",
+                        e
+                    ),
+                }
+                Box::new(PlottersBackend::default())
+            }
+            _ => Box::new(PlottersBackend::default()),
+        }
+    }
+
     /// Enables plotting
     pub fn with_plots(mut self) -> Criterion<M> {
-        use criterion_plot::VersionError;
-        self.plotting = match criterion_plot::version() {
-            Ok(_) => {
-                let mut reports: Vec<Box<dyn Report>> = vec![];
-                reports.push(Box::new(CliReport::new(false, false, false)));
-                reports.push(Box::new(FileCsvReport));
-                reports.push(Box::new(Html::new()));
-                self.report = Box::new(Reports::new(reports));
-                Plotting::Enabled
-            }
-            Err(e) => {
-                match e {
-                    VersionError::Exec(_) => println!("Gnuplot not found, disabling plotting"),
-                    e => println!("Gnuplot not found or not usable, disabling plotting\n{}", e),
-                }
-                Plotting::NotAvailable
-            }
-        };
+        self.plotting = Plotting::Enabled;
+        let mut reports: Vec<Box<dyn Report>> = vec![];
+        reports.push(Box::new(CliReport::new(false, false, false)));
+        reports.push(Box::new(FileCsvReport));
+        reports.push(Box::new(Html::new(self.create_plotter())));
+        self.report = Box::new(Reports::new(reports));
 
         self
     }
@@ -1013,6 +1039,9 @@ impl<M: Measurement> Criterion<M> {
             .arg(Arg::with_name("bench")
                 .hidden(true)
                 .long("bench"))
+            .arg(Arg::with_name("prefer-plotters")
+                 .long("prefer-plotters")
+                 .help("Set the preferred plotting backend to Plotters, otherwise Criterion will only use plotters backend when gnuplot isn't available."))
             .arg(Arg::with_name("version")
                 .hidden(true)
                 .short("V")
@@ -1046,6 +1075,10 @@ To test that the benchmarks work, run `cargo test --benches`
                 enable_text_overwrite = false;
             }
             _ => enable_text_coloring = stdout_isatty,
+        }
+
+        if matches.is_present("prefer-plotters") {
+            self.prefer_plotters = true;
         }
 
         if matches.is_present("noplot") || matches.is_present("test") {
@@ -1176,7 +1209,7 @@ To test that the benchmarks work, run `cargo test --benches`
         }
 
         if self.profile_time.is_none() {
-            reports.push(Box::new(Html::new()));
+            reports.push(Box::new(Html::new(self.create_plotter())));
         }
 
         self.report = Box::new(Reports::new(reports));
@@ -1423,6 +1456,10 @@ mod plotting {
         Unset,
         Disabled,
         Enabled,
+        // Not sure if we should make Plotters backend behind a feature swith, but if this is the
+        // case, we definitely want to keep this. Otherwise, we should have at least plotters
+        // backend as the default plotter when Gnuplot is not available.
+        #[allow(dead_code)]
         NotAvailable,
     }
 
