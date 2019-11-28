@@ -36,7 +36,7 @@ rayon = "1.1"
 # This should be changed to Plotters' next release
 git = "https://github.com/38/plotters.git"
 default-features = false
-features = ["svg"] 
+features = ["svg", "area_series", "line_series"] 
 
 [dev-dependencies]
 tempdir = "0.3.7"
