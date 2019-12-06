@@ -33,8 +33,7 @@ rand = "0.7"
 rayon = "1.1"
 
 [dependencies.plotters]
-# This should be changed to Plotters' next release
-git = "https://github.com/38/plotters.git"
+version = "^0.2.12"
 default-features = false
 features = ["svg", "area_series", "line_series"] 
 
