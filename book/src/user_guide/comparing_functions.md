@@ -16,21 +16,22 @@ fn fibonacci_slow(n: u64) -> u64 {
 }
 
 fn fibonacci_fast(n: u64) -> u64 {
-    let mut a = 0u64;
-    let mut b = 1u64;
-    let mut c = 0u64;
+    let mut a = 0;
+    let mut b = 1;
 
-    if n == 0 {
-        return 0
+    match n {
+        0 => b,
+        _ => {
+            for _ in 0..n {
+                let c = a + b;
+                a = b;
+                b = c;
+            }
+            b
+        }
     }
-
-    for _ in 0..(n+1) {
-        c = a + b;
-        a = b;
-        b = c;
-    }
-    return b;
 }
+
 
 fn bench_fibs(c: &mut Criterion) {
     let mut group = c.benchmark_group("Fibonacci");

@@ -8,20 +8,20 @@ fn fibonacci_slow(n: u64) -> u64 {
 }
 
 fn fibonacci_fast(n: u64) -> u64 {
-    let mut a = 0u64;
-    let mut b = 1u64;
-    let mut c: u64;
+    let mut a = 0;
+    let mut b = 1;
 
-    if n == 0 {
-        return 0;
+    match n {
+        0 => b,
+        _ => {
+            for _ in 0..n {
+                let c = a + b;
+                a = b;
+                b = c;
+            }
+            b
+        }
     }
-
-    for _ in 0..=n {
-        c = a + b;
-        a = b;
-        b = c;
-    }
-    b
 }
 
 fn compare_fibonaccis(c: &mut Criterion) {
