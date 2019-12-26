@@ -84,6 +84,6 @@ each implementation.
 ![Line Chart](./lines.svg)
 
 The line chart shows a comparison of the different functions as the input or input size increases,
-which can be enabled with ParameterizedBenchmark.
+which can be generated with `Criterion::benchmark_group`.
 
     
