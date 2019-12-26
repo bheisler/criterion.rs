@@ -17,7 +17,7 @@
 //! use itertools_num::linspace;
 //! use criterion_plot::prelude::*;
 //!
-//! # if let Err(_) = plot::version() {
+//! # if let Err(_) = criterion_plot::version() {
 //! #     return;
 //! # }
 //! let ref xs = linspace::<f64>(-10., 10., 51).collect::<Vec<_>>();
@@ -91,7 +91,7 @@
 //!     }
 //! }
 //!
-//! # if let Err(_) = plot::version() {
+//! # if let Err(_) = criterion_plot::version() {
 //! #     return;
 //! # }
 //! let ref xs_ = linspace::<f64>(-4., 4., 101).collect::<Vec<_>>();
@@ -159,7 +159,7 @@
 //! use criterion_plot::prelude::*;
 //! use rand::Rng;
 //!
-//! # if let Err(_) = plot::version() {
+//! # if let Err(_) = criterion_plot::version() {
 //! #     return;
 //! # }
 //! let xs = 1..11;
@@ -230,7 +230,7 @@
 //!     Complex::new(0., x) / Complex::new(10., x) / Complex::new(1., x / 10_000.)
 //! }
 //!
-//! # if let Err(_) = plot::version() {
+//! # if let Err(_) = criterion_plot::version() {
 //! #     return;
 //! # }
 //! let (start, end): (f64, f64) = (1.1, 90_000.);
@@ -298,7 +298,7 @@
 //! use itertools_num::linspace;
 //! use criterion_plot::prelude::*;
 //!
-//! # if let Err(_) = plot::version() {
+//! # if let Err(_) = criterion_plot::version() {
 //! #     return;
 //! # }
 //! let (start, end) = (-5., 5.);
