@@ -20,7 +20,6 @@
 //! use itertools_num::linspace;
 //! use plot::prelude::*;
 //!
-//! # fn main() {
 //! # if let Err(_) = plot::version() {
 //! #     return;
 //! # }
@@ -70,7 +69,6 @@
 //! #   .and_then(|gnuplot| {
 //! #       gnuplot.wait_with_output().ok().and_then(|p| String::from_utf8(p.stderr).ok())
 //! #   }));
-//! # }
 //! ```
 //!
 //! - error bars (based on
@@ -100,7 +98,6 @@
 //!     }
 //! }
 //!
-//! # fn main() {
 //! # if let Err(_) = plot::version() {
 //! #     return;
 //! # }
@@ -156,7 +153,6 @@
 //! #   .and_then(|gnuplot| {
 //! #       gnuplot.wait_with_output().ok().and_then(|p| String::from_utf8(p.stderr).ok())
 //! #   }));
-//! # }
 //! ```
 //!
 //! - Candlesticks (based on
@@ -173,7 +169,6 @@
 //! use plot::prelude::*;
 //! use rand::Rng;
 //!
-//! # fn main() {
 //! # if let Err(_) = plot::version() {
 //! #     return;
 //! # }
@@ -226,7 +221,6 @@
 //! #   .and_then(|gnuplot| {
 //! #       gnuplot.wait_with_output().ok().and_then(|p| String::from_utf8(p.stderr).ok())
 //! #   }));
-//! # }
 //! ```
 //!
 //! - Multiaxis (based on [`multiaxis.dem`](http://gnuplot.sourceforge.net/demo/multiaxis.html))
@@ -250,7 +244,6 @@
 //!     Complex::new(0., x) / Complex::new(10., x) / Complex::new(1., x / 10_000.)
 //! }
 //!
-//! # fn main() {
 //! # if let Err(_) = plot::version() {
 //! #     return;
 //! # }
@@ -304,7 +297,6 @@
 //! #           String::from_utf8(p.stderr).ok()
 //! #       })
 //! #   }));
-//! # }
 //! ```
 //! - Filled curves (based on
 //! [`transparent.dem`](http://gnuplot.sourceforge.net/demo/transparent.html))
@@ -323,7 +315,6 @@
 //! use itertools_num::linspace;
 //! use plot::prelude::*;
 //!
-//! # fn main() {
 //! # if let Err(_) = plot::version() {
 //! #     return;
 //! # }
@@ -385,7 +376,6 @@
 //!     .and_then(|gnuplot| {
 //!         gnuplot.wait_with_output().ok().and_then(|p| String::from_utf8(p.stderr).ok())
 //!     }));
-//! # }
 //! ```
 
 #![deny(missing_docs)]
@@ -989,7 +979,7 @@ impl ::std::error::Error for VersionError {
         }
     }
 
-    fn cause(&self) -> Option<&dyn ::std::error::Error> {
+    fn cause(&self) -> Option<&dyn::std::error::Error> {
         match self {
             VersionError::Exec(err) => Some(err),
             _ => None,
