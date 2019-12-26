@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Fixed
+- Fixed `fibonacci` functions.
 - Fixed `#[criterion]` benchmarks ignoring the command-line options.
 
 ## [0.3.0] - 2019-08-25
