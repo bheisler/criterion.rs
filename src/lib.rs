@@ -314,9 +314,9 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         self.value = self.measurement.end(start);
     }
 
-    /// Times a `routine` by executing it many times and relying on `routine` to measure it's own execution time.
+    /// Times a `routine` by executing it many times and relying on `routine` to measure its own execution time.
     ///
-    /// Prefer this timing loop in cases where `routine` has to do it's own measurements to
+    /// Prefer this timing loop in cases where `routine` has to do its own measurements to
     /// get accurate timing information (for example in multi-threaded scenarios where you spawn
     /// and coordinate with multiple threads).
     ///
