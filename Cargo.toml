@@ -27,9 +27,7 @@ walkdir = "2.2"
 tinytemplate = "1.0"
 cast = "0.2"
 num-traits = "0.2"
-rand_xoshiro = "0.3"
-rand_core = { version = "0.5", default-features = false }
-rand = "0.7"
+oorandom = "11.1"
 rayon = "1.1"
 
 [dev-dependencies]

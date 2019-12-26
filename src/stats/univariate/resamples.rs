@@ -1,14 +1,13 @@
 use std::mem;
 
 use crate::stats::float::Float;
-use crate::stats::rand_util::{new_rng, Range, Rng};
+use crate::stats::rand_util::{new_rng, Rng};
 use crate::stats::univariate::Sample;
 
 pub struct Resamples<'a, A>
 where
     A: Float,
 {
-    range: Range,
     rng: Rng,
     sample: &'a [A],
     stage: Option<Vec<A>>,
@@ -23,7 +22,6 @@ where
         let slice = sample;
 
         Resamples {
-            range: Range::new_exclusive(0, slice.len()),
             rng: new_rng(),
             sample: slice,
             stage: None,
@@ -39,14 +37,16 @@ where
                 let mut stage = Vec::with_capacity(n);
 
                 for _ in 0..n {
-                    stage.push(self.sample[self.range.sample(rng)])
+                    let idx = rng.rand_range(0u64..(self.sample.len() as u64));
+                    stage.push(self.sample[idx as usize])
                 }
 
                 self.stage = Some(stage);
             }
             Some(ref mut stage) => {
                 for elem in stage.iter_mut() {
-                    *elem = self.sample[self.range.sample(rng)]
+                    let idx = rng.rand_range(0u64..(self.sample.len() as u64));
+                    *elem = self.sample[idx as usize]
                 }
             }
         }

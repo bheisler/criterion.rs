@@ -40,7 +40,7 @@ pub trait ValueFormatter {
     /// multiple times with different datasets; the typical value will remain the same to ensure
     /// that the units remain consistent within a graph. The typical value will not be NaN.
     /// Values will not contain NaN as input, and the transformed values must not contain NaN.
-    fn scale_values(&self, typical_value: f64, values: &mut [f64]) -> (&'static str);
+    fn scale_values(&self, typical_value: f64, values: &mut [f64]) -> &'static str;
 
     /// Convert the given measured values into throughput numbers based on the given throughput
     /// value, scale them to some appropriate unit, and return the unit string.
@@ -54,7 +54,7 @@ pub trait ValueFormatter {
         typical_value: f64,
         throughput: &Throughput,
         values: &mut [f64],
-    ) -> (&'static str);
+    ) -> &'static str;
 
     /// Scale the values and return a unit string designed for machines.
     ///

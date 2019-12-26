@@ -1,13 +1,12 @@
 use crate::stats::bivariate::Data;
 use crate::stats::float::Float;
-use crate::stats::rand_util::{new_rng, Range, Rng};
+use crate::stats::rand_util::{new_rng, Rng};
 
 pub struct Resamples<'a, X, Y>
 where
     X: 'a + Float,
     Y: 'a + Float,
 {
-    range: Range,
     rng: Rng,
     data: (&'a [X], &'a [Y]),
     stage: Option<(Vec<X>, Vec<Y>)>,
@@ -21,7 +20,6 @@ where
 {
     pub fn new(data: Data<'a, X, Y>) -> Resamples<'a, X, Y> {
         Resamples {
-            range: Range::new_exclusive(0, data.0.len()),
             rng: new_rng(),
             data: (data.x(), data.y()),
             stage: None,
@@ -30,14 +28,13 @@ where
 
     pub fn next(&mut self) -> Data<'_, X, Y> {
         let n = self.data.0.len();
-        let rng = &mut self.rng;
 
         match self.stage {
             None => {
                 let mut stage = (Vec::with_capacity(n), Vec::with_capacity(n));
 
                 for _ in 0..n {
-                    let i = self.range.sample(rng);
+                    let i = self.rng.rand_range(0u64..(self.data.0.len() as u64)) as usize;
 
                     stage.0.push(self.data.0[i]);
                     stage.1.push(self.data.1[i]);
@@ -47,7 +44,7 @@ where
             }
             Some(ref mut stage) => {
                 for i in 0..n {
-                    let j = self.range.sample(rng);
+                    let j = self.rng.rand_range(0u64..(self.data.0.len() as u64)) as usize;
 
                     stage.0[i] = self.data.0[j];
                     stage.1[i] = self.data.1[j];
