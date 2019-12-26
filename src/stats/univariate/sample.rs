@@ -120,7 +120,11 @@ where
         where
             T: PartialOrd,
         {
-            a.partial_cmp(b).unwrap()
+            match a.partial_cmp(b) {
+                Some(o) => o,
+                // Arbitrary way to handle NaNs that should never happen
+                None => Ordering::Equal,
+            }
         }
 
         let mut v = self.to_vec().into_boxed_slice();
