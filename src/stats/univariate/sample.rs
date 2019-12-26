@@ -120,13 +120,7 @@ where
         where
             T: PartialOrd,
         {
-            if a < b {
-                Ordering::Less
-            } else if a == b {
-                Ordering::Equal
-            } else {
-                Ordering::Greater
-            }
+            a.partial_cmp(b).unwrap()
         }
 
         let mut v = self.to_vec().into_boxed_slice();
