@@ -286,7 +286,6 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
     fn run(self, group_id: &str, c: &mut Criterion<M>) {
         let report_context = ReportContext {
             output_directory: c.output_directory.clone(),
-            plotting: c.plotting,
             plot_config: self.config.plot_config.clone(),
             test_mode: c.test_mode,
         };
@@ -436,7 +435,6 @@ where
     fn run(self, group_id: &str, c: &mut Criterion<M>) {
         let report_context = ReportContext {
             output_directory: c.output_directory.clone(),
-            plotting: c.plotting,
             plot_config: self.config.plot_config.clone(),
             test_mode: c.test_mode,
         };

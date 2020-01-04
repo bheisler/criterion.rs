@@ -289,10 +289,6 @@ impl Report for Html {
         measurements: &MeasurementData<'_>,
         formatter: &dyn ValueFormatter,
     ) {
-        if !report_context.plotting.is_enabled() {
-            return;
-        }
-
         try_else_return!(fs::mkdirp(&format!(
             "{}/{}/report/",
             report_context.output_directory,
@@ -388,10 +384,6 @@ impl Report for Html {
         all_ids: &[BenchmarkId],
         formatter: &dyn ValueFormatter,
     ) {
-        if !context.plotting.is_enabled() {
-            return;
-        }
-
         let all_ids = all_ids
             .iter()
             .filter(|id| {
@@ -515,10 +507,6 @@ impl Report for Html {
     }
 
     fn final_summary(&self, report_context: &ReportContext) {
-        if !report_context.plotting.is_enabled() {
-            return;
-        }
-
         let output_directory = &report_context.output_directory;
         if !fs::is_dir(&output_directory) {
             return;

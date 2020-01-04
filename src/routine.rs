@@ -91,6 +91,14 @@ pub trait Routine<M: Measurement, T> {
             .warmup(id, report_context, wu.to_nanos() as f64);
 
         let (wu_elapsed, wu_iters) = self.warm_up(measurement, wu, parameter);
+        if crate::debug_enabled() {
+            println!(
+                "\nCompleted {} iterations in {} nanoseconds, estimated execution time is {} ns",
+                wu_iters,
+                wu_elapsed,
+                wu_elapsed as f64 / wu_iters as f64
+            );
+        }
 
         // Initial guess for the mean execution time
         let met = wu_elapsed as f64 / wu_iters as f64;

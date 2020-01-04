@@ -8,7 +8,7 @@ use crate::measurement::ValueFormatter;
 use crate::stats::univariate::Sample;
 use crate::stats::Distribution;
 use crate::Estimate;
-use crate::{PlotConfiguration, Plotting, Throughput};
+use crate::{PlotConfiguration, Throughput};
 use std::cell::Cell;
 use std::cmp;
 use std::collections::HashSet;
@@ -250,7 +250,6 @@ impl fmt::Debug for BenchmarkId {
 
 pub struct ReportContext {
     pub output_directory: String,
-    pub plotting: Plotting,
     pub plot_config: PlotConfiguration,
     pub test_mode: bool,
 }
