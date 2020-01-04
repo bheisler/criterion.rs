@@ -1,8 +1,10 @@
 # Plots & Graphs
 
-If [gnuplot](http://www.gnuplot.info/) is installed, Criterion.rs can generate a number of useful
-charts and graphs which you can check to get a better understanding of the behavior of the
-benchmark.
+Criterion.rs can generate a number of useful charts and graphs which you can check to get a better
+understanding of the behavior of the benchmark. These charts will be generated with
+[gnuplot](http://www.gnuplot.info/) by default, but will fall back on using the `plotters` crate if
+it is not available. The examples below were generated using the gnuplot backend, but the plotters
+ones are similar.
 
 ## File Structure
 

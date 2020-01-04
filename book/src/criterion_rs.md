@@ -22,4 +22,4 @@ To enable debug output in Criterion.rs, define the environment variable `CRITERI
 CRITERION_DEBUG=1 cargo bench
 ```
 
-This will enable extra debug output. Criterion.rs will also save the gnuplot scripts alongside the generated plot files. When raising issues with Criterion.rs (especially when reporting issues with the plot generation) please run your benchmarks with this option enabled and provide the additional output and relevant gnuplot scripts.
+This will enable extra debug output. If using gnuplot, Criterion.rs will also save the gnuplot scripts alongside the generated plot files. When raising issues with Criterion.rs (especially when reporting issues with the plot generation) please run your benchmarks with this option enabled and provide the additional output and relevant gnuplot scripts.

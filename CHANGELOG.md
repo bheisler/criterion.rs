@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added new plotting backend using the `plotters` crate. Implementation generously provided by Hao 
+  Hou, author of the `plotters` crate.
+- Added `--plotting-backend` command-line option to select the plotting backend. The existing 
+  gnuplot backend will be used by default when available, and the plotters backend will be used when
+  gnuplot is not available or when requested.
+- Added `Criterion::plotting_backend()` function to configure the plotting backend in code.
+
 ### Fixed
 - Fixed `fibonacci` functions.
 - Fixed `#[criterion]` benchmarks ignoring the command-line options.
