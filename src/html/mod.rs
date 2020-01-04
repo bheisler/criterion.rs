@@ -1,40 +1,21 @@
 use crate::report::{make_filename_safe, BenchmarkId, MeasurementData, Report, ReportContext};
 use crate::stats::bivariate::regression::Slope;
-use crate::stats::bivariate::Data;
 
 use crate::estimate::Statistic;
 use crate::format;
 use crate::fs;
 use crate::measurement::ValueFormatter;
-use crate::plot;
+use crate::plot::{PlotContext, PlotData, Plotter};
 use crate::Estimate;
 use criterion_plot::Size;
 use serde::Serialize;
+use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
-use std::process::Child;
 use tinytemplate::TinyTemplate;
 
 const THUMBNAIL_SIZE: Option<Size> = Some(Size(450, 300));
-
-fn wait_on_gnuplot(children: Vec<Child>) {
-    let start = ::std::time::Instant::now();
-    let child_count = children.len();
-    for child in children {
-        match child.wait_with_output() {
-            Ok(ref out) if out.status.success() => {}
-            Ok(out) => error!("Error in Gnuplot: {}", String::from_utf8_lossy(&out.stderr)),
-            Err(e) => error!("Got IO error while waiting for Gnuplot to complete: {}", e),
-        }
-    }
-    let elapsed = &start.elapsed();
-    info!(
-        "Waiting for {} gnuplot processes took {}",
-        child_count,
-        format::time(crate::DurationExt::to_nanos(elapsed) as f64)
-    );
-}
 
 fn debug_context<S: Serialize>(path: &str, context: &S) {
     if crate::debug_enabled() {
@@ -278,9 +259,10 @@ struct IndexContext<'a> {
 
 pub struct Html {
     templates: TinyTemplate<'static>,
+    plotter: RefCell<Box<dyn Plotter>>,
 }
 impl Html {
-    pub fn new() -> Html {
+    pub(crate) fn new(plotter: Box<dyn Plotter>) -> Html {
         let mut templates = TinyTemplate::new();
         templates
             .add_template("report_link", include_str!("report_link.html.tt"))
@@ -295,7 +277,8 @@ impl Html {
             .add_template("summary_report", include_str!("summary_report.html.tt"))
             .expect("Unable to parse summary_report template");
 
-        Html { templates }
+        let plotter = RefCell::new(plotter);
+        Html { templates, plotter }
     }
 }
 impl Report for Html {
@@ -420,7 +403,6 @@ impl Report for Html {
             })
             .collect::<Vec<_>>();
 
-        let mut all_plots = vec![];
         let group_id = all_ids[0].group_id.clone();
 
         let data = self.load_summary_data(&context.output_directory, &all_ids);
@@ -466,13 +448,13 @@ impl Report for Html {
                 let subgroup_id =
                     BenchmarkId::new(group_id.clone(), Some(function_id.clone()), None, None);
 
-                all_plots.extend(self.generate_summary(
+                self.generate_summary(
                     &subgroup_id,
                     &*samples_with_function,
                     context,
                     formatter,
                     false,
-                ));
+                );
             }
         }
 
@@ -487,13 +469,13 @@ impl Report for Html {
                 let subgroup_id =
                     BenchmarkId::new(group_id.clone(), None, Some(value_str.clone()), None);
 
-                all_plots.extend(self.generate_summary(
+                self.generate_summary(
                     &subgroup_id,
                     &*samples_with_value,
                     context,
                     formatter,
                     false,
-                ));
+                );
             }
         }
 
@@ -522,14 +504,14 @@ impl Report for Html {
         // function name, then value. This one has to be a stable sort.
         all_data.sort_by_key(|(id, _)| id.function_id.as_ref());
 
-        all_plots.extend(self.generate_summary(
+        self.generate_summary(
             &BenchmarkId::new(group_id, None, None, None),
             &*(all_data),
             context,
             formatter,
             true,
-        ));
-        wait_on_gnuplot(all_plots)
+        );
+        self.plotter.borrow_mut().wait();
     }
 
     fn final_summary(&self, report_context: &ReportContext) {
@@ -645,21 +627,31 @@ impl Html {
         formatter: &dyn ValueFormatter,
         measurements: &MeasurementData<'_>,
     ) {
-        let mut gnuplots = vec![
-            // Probability density plots
-            plot::pdf(id, context, formatter, measurements, None),
-            plot::pdf_small(id, context, formatter, measurements, THUMBNAIL_SIZE),
-            // Linear regression plots
-            plot::regression(id, context, formatter, measurements, None),
-            plot::regression_small(id, context, formatter, measurements, THUMBNAIL_SIZE),
-        ];
-        gnuplots.extend(plot::abs_distributions(
+        let plot_ctx = PlotContext {
             id,
             context,
-            formatter,
+            size: None,
+            is_thumbnail: false,
+        };
+
+        let plot_data = PlotData {
             measurements,
-            None,
-        ));
+            formatter,
+            comparison: None,
+        };
+
+        let plot_ctx_small = plot_ctx.thumbnail(true).size(THUMBNAIL_SIZE);
+
+        self.plotter.borrow_mut().pdf(plot_ctx, plot_data);
+        self.plotter.borrow_mut().pdf(plot_ctx_small, plot_data);
+        self.plotter.borrow_mut().regression(plot_ctx, plot_data);
+        self.plotter
+            .borrow_mut()
+            .regression(plot_ctx_small, plot_data);
+
+        self.plotter
+            .borrow_mut()
+            .abs_distributions(plot_ctx, plot_data);
 
         if let Some(ref comp) = measurements.comparison {
             try_else_return!(fs::mkdirp(&format!(
@@ -674,47 +666,21 @@ impl Html {
                 id.as_directory_name()
             )));
 
-            let base_data = Data::new(&comp.base_iter_counts, &comp.base_sample_times);
-            gnuplots.append(&mut vec![
-                plot::regression_comparison(
-                    id,
-                    context,
-                    formatter,
-                    measurements,
-                    comp,
-                    &base_data,
-                    None,
-                ),
-                plot::regression_comparison_small(
-                    id,
-                    context,
-                    formatter,
-                    measurements,
-                    comp,
-                    &base_data,
-                    THUMBNAIL_SIZE,
-                ),
-                plot::pdf_comparison(id, context, formatter, measurements, comp, None),
-                plot::pdf_comparison_small(
-                    id,
-                    context,
-                    formatter,
-                    measurements,
-                    comp,
-                    THUMBNAIL_SIZE,
-                ),
-                plot::t_test(id, context, measurements, comp, None),
-            ]);
-            gnuplots.extend(plot::rel_distributions(
-                id,
-                context,
-                measurements,
-                comp,
-                None,
-            ));
+            let comp_data = plot_data.comparison(&comp);
+
+            self.plotter.borrow_mut().pdf(plot_ctx, comp_data);
+            self.plotter.borrow_mut().pdf(plot_ctx_small, comp_data);
+            self.plotter.borrow_mut().regression(plot_ctx, comp_data);
+            self.plotter
+                .borrow_mut()
+                .regression(plot_ctx_small, comp_data);
+            self.plotter.borrow_mut().t_test(plot_ctx, comp_data);
+            self.plotter
+                .borrow_mut()
+                .rel_distributions(plot_ctx, comp_data);
         }
 
-        wait_on_gnuplot(gnuplots);
+        self.plotter.borrow_mut().wait();
     }
 
     fn load_summary_data<'a>(
@@ -749,8 +715,13 @@ impl Html {
         report_context: &ReportContext,
         formatter: &dyn ValueFormatter,
         full_summary: bool,
-    ) -> Vec<Child> {
-        let mut gnuplots = vec![];
+    ) {
+        let plot_ctx = PlotContext {
+            id,
+            context: report_context,
+            size: None,
+            is_thumbnail: false,
+        };
 
         try_else_return!(
             fs::mkdirp(&format!(
@@ -758,21 +729,10 @@ impl Html {
                 report_context.output_directory,
                 id.as_directory_name()
             )),
-            || gnuplots
+            || {}
         );
 
-        let violin_path = format!(
-            "{}/{}/report/violin.svg",
-            report_context.output_directory,
-            id.as_directory_name()
-        );
-        gnuplots.push(plot::violin(
-            formatter,
-            id.as_title(),
-            data,
-            &violin_path,
-            report_context.plot_config.summary_scale,
-        ));
+        self.plotter.borrow_mut().violin(plot_ctx, formatter, data);
 
         let value_types: Vec<_> = data.iter().map(|&&(ref id, _)| id.value_type()).collect();
         let mut line_path = None;
@@ -781,22 +741,10 @@ impl Html {
             if let Some(value_type) = value_types[0] {
                 let values: Vec<_> = data.iter().map(|&&(ref id, _)| id.as_number()).collect();
                 if values.iter().any(|x| x != &values[0]) {
-                    let path = format!(
-                        "{}/{}/report/lines.svg",
-                        report_context.output_directory,
-                        id.as_directory_name()
-                    );
-
-                    gnuplots.push(plot::line_comparison(
-                        formatter,
-                        id.as_title(),
-                        data,
-                        &path,
-                        value_type,
-                        report_context.plot_config.summary_scale,
-                    ));
-
-                    line_path = Some(path);
+                    self.plotter
+                        .borrow_mut()
+                        .line_comparison(plot_ctx, formatter, data, value_type);
+                    line_path = Some(plot_ctx.line_comparison_path());
                 }
             }
         }
@@ -813,7 +761,7 @@ impl Html {
             thumbnail_width: THUMBNAIL_SIZE.unwrap().0,
             thumbnail_height: THUMBNAIL_SIZE.unwrap().1,
 
-            violin_plot: Some(violin_path),
+            violin_plot: Some(plot_ctx.violin_path()),
             line_chart: line_path,
 
             benchmarks,
@@ -831,9 +779,7 @@ impl Html {
             .templates
             .render("summary_report", &context)
             .expect("Failed to render summary report template");
-        try_else_return!(fs::save_string(&text, report_path,), || gnuplots);
-
-        gnuplots
+        try_else_return!(fs::save_string(&text, report_path,), || {});
     }
 }
 

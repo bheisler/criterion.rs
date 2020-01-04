@@ -30,6 +30,11 @@ num-traits = "0.2"
 oorandom = "11.1"
 rayon = "1.1"
 
+[dependencies.plotters]
+version = "^0.2.12"
+default-features = false
+features = ["svg", "area_series", "line_series"] 
+
 [dev-dependencies]
 tempdir = "0.3.7"
 approx = "0.3"
