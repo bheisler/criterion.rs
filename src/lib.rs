@@ -1258,7 +1258,7 @@ To test that the benchmarks work, run `cargo test --benches`
     ///     // Now we can perform benchmarks with this group
     ///     group.bench_function("Bench 1", |b| b.iter(|| 1 ));
     ///     group.bench_function("Bench 2", |b| b.iter(|| 2 ));
-    ///    
+    ///
     ///     group.finish();
     /// }
     /// criterion_group!(benches, bench_simple);
@@ -1266,6 +1266,44 @@ To test that the benchmarks work, run `cargo test --benches`
     /// ```
     pub fn benchmark_group<S: Into<String>>(&mut self, group_name: S) -> BenchmarkGroup<'_, M> {
         BenchmarkGroup::new(self, group_name.into())
+    }
+}
+impl<M: Measurement + Clone> Criterion<M> {
+    /// Returns a clone of the measurement.
+    ///
+    /// This can be used when [`Bencher::iter_custom`](struct.Bencher.html#method.iter_custom)
+    /// is called from a function generic over the measurement to perform manual measurements.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// #[macro_use] extern crate criterion;
+    /// use criterion::*;
+    /// use criterion::measurement::Measurement;
+    ///
+    /// fn foo(input: u64) {
+    ///     // ...
+    /// }
+    ///
+    /// fn bench(c: &mut Criterion<impl Measurement + Clone + 'static>) {
+    ///     let measurement = c.measurement();
+    ///     c.bench_function("iter", move |b| {
+    ///         b.iter_custom(|iters| {
+    ///             let input = black_box(1337);
+    ///             let start = measurement.start();
+    ///             for _i in 0..iters {
+    ///                 foo(input);
+    ///             }
+    ///             measurement.end(start)
+    ///         })
+    ///     });
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
+    /// ```
+    pub fn measurement(&self) -> M {
+        self.measurement.clone()
     }
 }
 impl<M> Criterion<M>
