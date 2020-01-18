@@ -163,7 +163,7 @@ pub fn violin(
     // Scale the X axis units. Use the middle as a "typical value". E.g. if
     // it is 0.002 s then this function will decide that milliseconds are an
     // appropriate unit. It will multiple `one` by 1000, and return "ms".
-    let unit = formatter.scale_values((min + max)/2.0, &mut one);
+    let unit = formatter.scale_values((min + max) / 2.0, &mut one);
 
     let tics = || (0..).map(|x| (f64::from(x)) + 0.5);
     let size = Size(1280, 200 + (25 * all_curves.len()));

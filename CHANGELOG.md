@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Fixed `fibonacci` functions.
 - Fixed `#[criterion]` benchmarks ignoring the command-line options.
+- Fixed incorrect scaling of the violin plots.
 
 ## [0.3.0] - 2019-08-25
 ### Added
