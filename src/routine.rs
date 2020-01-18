@@ -112,8 +112,14 @@ pub trait Routine<M: Measurement, T> {
         if d == 1 {
             let recommended_sample_size = recommend_sample_size(m_ns as f64, met);
             let actual_time = Duration::from_nanos(expected_ns as u64);
-            println!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?} or reduce sample count to {}",
-                n, config.measurement_time, actual_time, recommended_sample_size);
+            print!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?}",
+                    n, config.measurement_time, actual_time);
+
+            if recommended_sample_size != n {
+                println!(" or reduce sample count to {}.", recommended_sample_size);
+            } else {
+                println!(".");
+            }
         }
 
         let m_iters = (1..(n + 1) as u64).map(|a| a * d).collect::<Vec<u64>>();
