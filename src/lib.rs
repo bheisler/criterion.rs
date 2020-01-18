@@ -913,6 +913,10 @@ impl<M: Measurement> Criterion<M> {
     /// Disables plotting
     pub fn without_plots(mut self) -> Criterion<M> {
         self.plotting_enabled = false;
+        let mut reports: Vec<Box<dyn Report>> = vec![];
+        reports.push(Box::new(CliReport::new(false, false, false)));
+        reports.push(Box::new(FileCsvReport));
+        self.report = Box::new(Reports::new(reports));
         self
     }
 
