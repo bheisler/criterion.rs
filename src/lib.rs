@@ -1287,7 +1287,7 @@ impl<M: Measurement + Clone> Criterion<M> {
     ///
     /// fn bench(c: &mut Criterion<impl Measurement + Clone + 'static>) {
     ///     let measurement = c.measurement();
-    ///     c.bench_function("iter", move |b| {
+    ///     c.bench_function("measurement", move |b| {
     ///         b.iter_custom(|iters| {
     ///             let input = black_box(1337);
     ///             let start = measurement.start();
