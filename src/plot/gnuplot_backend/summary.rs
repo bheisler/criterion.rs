@@ -159,8 +159,11 @@ pub fn violin(
             max = e;
         }
     }
-    let mut dummy = [1.0];
-    let unit = formatter.scale_values(max, &mut dummy);
+    let mut one = [1.0];
+    // Scale the X axis units. Use the middle as a "typical value". E.g. if
+    // it is 0.002 s then this function will decide that milliseconds are an
+    // appropriate unit. It will multiple `one` by 1000, and return "ms".
+    let unit = formatter.scale_values((min + max)/2.0, &mut one);
 
     let tics = || (0..).map(|x| (f64::from(x)) + 0.5);
     let size = Size(1280, 200 + (25 * all_curves.len()));
@@ -188,13 +191,12 @@ pub fn violin(
     let mut is_first = true;
     for (i, &(ref x, ref y)) in kdes.iter().enumerate() {
         let i = i as f64 + 0.5;
-        let mut y1: Vec<_> = y.iter().map(|&y| i + y * 0.5).collect();
-        let mut y2: Vec<_> = y.iter().map(|&y| i - y * 0.5).collect();
+        let y1: Vec<_> = y.iter().map(|&y| i + y * 0.45).collect();
+        let y2: Vec<_> = y.iter().map(|&y| i - y * 0.45).collect();
 
-        formatter.scale_values(max, &mut y1);
-        formatter.scale_values(max, &mut y2);
+        let x: Vec<_> = x.iter().map(|&x| x * one[0]).collect();
 
-        f.plot(FilledCurve { x: &**x, y1, y2 }, |c| {
+        f.plot(FilledCurve { x, y1, y2 }, |c| {
             if is_first {
                 is_first = false;
 
