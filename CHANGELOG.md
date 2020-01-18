@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed incorrect scaling of the violin plots.
 - Don't print the recommended sample count if it's the same as the configured
   sample count.
+- Fix potential panic when nresamples is set too low. Also added a warning
+  against setting nresamples too low.
 
 ## [0.3.0] - 2019-08-25
 ### Added

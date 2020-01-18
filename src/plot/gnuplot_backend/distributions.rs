@@ -25,7 +25,7 @@ fn abs_distribution(
     let typical = ci.upper_bound;
     let mut ci_values = [ci.lower_bound, ci.upper_bound, estimate.point_estimate];
     let unit = formatter.scale_values(typical, &mut ci_values);
-    let (lb, ub, p) = (ci_values[0], ci_values[1], ci_values[2]);
+    let (lb, ub, point) = (ci_values[0], ci_values[1], ci_values[2]);
 
     let start = lb - (ub - lb) / 9.;
     let end = ub + (ub - lb) / 9.;
@@ -34,9 +34,13 @@ fn abs_distribution(
     let scaled_xs_sample = Sample::new(&scaled_xs);
     let (kde_xs, ys) = kde::sweep(scaled_xs_sample, KDE_POINTS, Some((start, end)));
 
-    let n_p = kde_xs.iter().enumerate().find(|&(_, &x)| x >= p).unwrap().0;
-    let y_p = ys[n_p - 1]
-        + (ys[n_p] - ys[n_p - 1]) / (kde_xs[n_p] - kde_xs[n_p - 1]) * (p - kde_xs[n_p - 1]);
+    let n_point = kde_xs
+        .iter()
+        .position(|&x| x >= point)
+        .unwrap_or(kde_xs.len() - 1);
+    let n_point = n_point.max(1); // Must be at least the second element or this will panic
+    let slope = (ys[n_point] - ys[n_point - 1]) / (kde_xs[n_point] - kde_xs[n_point - 1]);
+    let y_point = ys[n_point - 1] + (slope * (point - kde_xs[n_point - 1]));
 
     let zero = iter::repeat(0);
 
@@ -102,8 +106,8 @@ fn abs_distribution(
         )
         .plot(
             Lines {
-                x: &[p, p],
-                y: &[0., y_p],
+                x: &[point, point],
+                y: &[0., y_point],
             },
             |c| {
                 c.set(DARK_BLUE)
@@ -159,9 +163,14 @@ fn rel_distribution(
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, Some((start, end)));
     let xs_ = Sample::new(&xs);
 
-    let p = estimate.point_estimate;
-    let n_p = xs.iter().enumerate().find(|&(_, &x)| x >= p).unwrap().0;
-    let y_p = ys[n_p - 1] + (ys[n_p] - ys[n_p - 1]) / (xs[n_p] - xs[n_p - 1]) * (p - xs[n_p - 1]);
+    let point = estimate.point_estimate;
+    let n_point = xs
+        .iter()
+        .position(|&x| x >= point)
+        .unwrap_or(ys.len() - 1)
+        .max(1);
+    let slope = (ys[n_point] - ys[n_point - 1]) / (xs[n_point] - xs[n_point - 1]);
+    let y_point = ys[n_point - 1] + (slope * (point - xs[n_point - 1]));
 
     let one = iter::repeat(1);
     let zero = iter::repeat(0);
@@ -239,8 +248,8 @@ fn rel_distribution(
         )
         .plot(
             Lines {
-                x: &[p, p],
-                y: &[0., y_p],
+                x: &[point, point],
+                y: &[0., y_point],
             },
             |c| {
                 c.set(DARK_BLUE)

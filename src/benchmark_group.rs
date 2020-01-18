@@ -142,6 +142,9 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     /// Panics if the number of resamples is set to zero
     pub fn nresamples(&mut self, n: usize) -> &mut Self {
         assert!(n > 0);
+        if n <= 1000 {
+            println!("\nWarning: It is not recommended to reduce nresamples below 1000.");
+        }
 
         self.partial_config.nresamples = Some(n);
         self
