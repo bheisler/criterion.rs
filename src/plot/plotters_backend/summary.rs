@@ -90,6 +90,7 @@ fn draw_line_comarision_figure<XR: AsRangedCoord<Value = f64>, YR: AsRangedCoord
             )
             .unwrap();
         if let Some(name) = name {
+            let name: &str = &*name;
             series.label(name).legend(move |(x, y)| {
                 Rectangle::new(
                     [(x, y - 5), (x + 20, y + 5)],
