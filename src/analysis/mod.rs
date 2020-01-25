@@ -123,11 +123,13 @@ pub(crate) fn common<M: Measurement, T>(
         .collect::<Vec<f64>>();
     let avg_times = Sample::new(&avg_times);
 
-    log_if_err!(fs::mkdirp(&format!(
-        "{}/{}/new",
-        criterion.output_directory,
-        id.as_directory_name()
-    )));
+    if let None = &criterion.load_baseline {
+        log_if_err!(fs::mkdirp(&format!(
+            "{}/{}/new",
+            criterion.output_directory,
+            id.as_directory_name()
+        )));
+    }
 
     let data = Data::new(&iters, &times);
     let labeled_sample = outliers(id, &criterion.output_directory, avg_times);
@@ -137,22 +139,24 @@ pub(crate) fn common<M: Measurement, T>(
     estimates.insert(Statistic::Slope, slope);
     distributions.insert(Statistic::Slope, distribution);
 
-    log_if_err!(fs::save(
-        &(data.x().as_ref(), data.y().as_ref()),
-        &format!(
-            "{}/{}/new/sample.json",
-            criterion.output_directory,
-            id.as_directory_name()
-        ),
-    ));
-    log_if_err!(fs::save(
-        &estimates,
-        &format!(
-            "{}/{}/new/estimates.json",
-            criterion.output_directory,
-            id.as_directory_name()
-        )
-    ));
+    if let None = &criterion.load_baseline {
+        log_if_err!(fs::save(
+            &(data.x().as_ref(), data.y().as_ref()),
+            &format!(
+                "{}/{}/new/sample.json",
+                criterion.output_directory,
+                id.as_directory_name()
+            ),
+        ));
+        log_if_err!(fs::save(
+            &estimates,
+            &format!(
+                "{}/{}/new/estimates.json",
+                criterion.output_directory,
+                id.as_directory_name()
+            )
+        ));
+    }
 
     let compare_data = if base_dir_exists(
         id,
@@ -211,14 +215,16 @@ pub(crate) fn common<M: Measurement, T>(
         criterion.measurement.formatter(),
     );
 
-    log_if_err!(fs::save(
-        &id,
-        &format!(
-            "{}/{}/new/benchmark.json",
-            criterion.output_directory,
-            id.as_directory_name()
-        )
-    ));
+    if let None = &criterion.load_baseline {
+        log_if_err!(fs::save(
+            &id,
+            &format!(
+                "{}/{}/new/benchmark.json",
+                criterion.output_directory,
+                id.as_directory_name()
+            )
+        ));
+    }
 
     if let Baseline::Save = criterion.baseline {
         copy_new_dir_to_base(
