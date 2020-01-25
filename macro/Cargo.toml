@@ -1,6 +1,6 @@
 [package]
 name = "criterion-macro"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Brook Heisler <redattack34@gmail.com>"]
 edition = "2018"
 
@@ -20,7 +20,7 @@ proc-macro2 = { version = "1.0", features = ["nightly"] }
 quote = "1.0"
 
 [dev-dependencies]
-criterion = { version = "0.3.0", path = "..", default-features = false }
+criterion = { version = "0.3.1", path = "..", default-features = false }
 
 [[bench]]
 name = "test_macro_bench"
