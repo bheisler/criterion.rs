@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added `Criterion::plotting_backend()` function to configure the plotting backend in code.
 - Added `--load-baseline` command-line option to load a baseline for comparison
   rather than measuring the current code
+- Benchmark filters can now be regular expressions.
 
 ### Fixed
 - Fixed `fibonacci` functions.

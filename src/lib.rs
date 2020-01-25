@@ -37,6 +37,7 @@ extern crate approx;
 extern crate quickcheck;
 
 use clap::value_t;
+use regex::Regex;
 
 #[macro_use]
 extern crate lazy_static;
@@ -661,7 +662,7 @@ pub struct Criterion<M: Measurement = WallTime> {
     config: BenchmarkConfig,
     plotting_backend: PlottingBackend,
     plotting_enabled: bool,
-    filter: Option<String>,
+    filter: Option<Regex>,
     report: Box<dyn Report>,
     output_directory: String,
     baseline_directory: String,
@@ -947,7 +948,12 @@ impl<M: Measurement> Criterion<M> {
     /// Filters the benchmarks. Only benchmarks with names that contain the
     /// given string will be executed.
     pub fn with_filter<S: Into<String>>(mut self, filter: S) -> Criterion<M> {
-        self.filter = Some(filter.into());
+        let filter_text = filter.into();
+        let filter = Regex::new(&filter_text).expect(&format!(
+            "Unable to parse '{}' as a regular expression.",
+            filter_text
+        ));
+        self.filter = Some(filter);
 
         self
     }
@@ -1258,7 +1264,7 @@ To test that the benchmarks work, run `cargo test --benches`
 
     fn filter_matches(&self, id: &str) -> bool {
         match self.filter {
-            Some(ref string) => id.contains(string),
+            Some(ref regex) => regex.is_match(id),
             None => true,
         }
     }
