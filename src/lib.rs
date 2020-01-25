@@ -667,6 +667,7 @@ pub struct Criterion<M: Measurement = WallTime> {
     baseline_directory: String,
     baseline: Baseline,
     profile_time: Option<Duration>,
+    load_baseline: Option<String>,
     test_mode: bool,
     list_mode: bool,
     all_directories: HashSet<String>,
@@ -715,6 +716,7 @@ impl Default for Criterion {
             baseline_directory: "base".to_owned(),
             baseline: Baseline::Save,
             profile_time: None,
+            load_baseline: None,
             test_mode: false,
             list_mode: false,
             output_directory,
@@ -739,6 +741,7 @@ impl<M: Measurement> Criterion<M> {
             baseline_directory: self.baseline_directory,
             baseline: self.baseline,
             profile_time: self.profile_time,
+            load_baseline: self.load_baseline,
             test_mode: self.test_mode,
             list_mode: self.list_mode,
             output_directory: self.output_directory,
@@ -1024,6 +1027,12 @@ impl<M: Measurement> Criterion<M> {
                 .long("profile-time")
                 .takes_value(true)
                 .help("Iterate each benchmark for approximately the given number of seconds, doing no analysis and without storing the results. Useful for running the benchmarks in a profiler."))
+            .arg(Arg::with_name("load-baseline")
+                 .long("load-baseline")
+                 .takes_value(true)
+                 .conflicts_with("profile-time")
+                 .requires("baseline")
+                 .help("Load a previous baseline instead of sampling new data."))
             .arg(Arg::with_name("sample-size")
                 .long("sample-size")
                 .takes_value(true)
@@ -1142,6 +1151,10 @@ To test that the benchmarks work, run `cargo test --benches`
             }
 
             self.profile_time = Some(Duration::from_secs(num_seconds));
+        }
+
+        if let Some(dir) = matches.value_of("load-baseline") {
+            self.load_baseline = Some(dir.to_owned());
         }
 
         let bench = matches.is_present("bench");

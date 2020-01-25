@@ -82,14 +82,37 @@ pub(crate) fn common<M: Measurement, T>(
         return;
     }
 
-    let (iters, times) = routine.sample(
-        &criterion.measurement,
-        id,
-        config,
-        criterion,
-        report_context,
-        parameter,
-    );
+    let (iters, times);
+    if let Some(baseline) = &criterion.load_baseline {
+        let loaded = fs::load::<(Box<[f64]>, Box<[f64]>), _>(&format!(
+            "{}/{}/{}/sample.json",
+            criterion.output_directory,
+            id.as_directory_name(),
+            baseline
+        ));
+
+        match loaded {
+            Err(_) => panic!(format!(
+                "Baseline '{base}' must exist before it can be loaded; try --save-baseline {base}",
+                base = baseline,
+            )),
+            Ok(samples) => {
+                iters = samples.0;
+                times = samples.1;
+            }
+        }
+    } else {
+        let samples = routine.sample(
+            &criterion.measurement,
+            id,
+            config,
+            criterion,
+            report_context,
+            parameter,
+        );
+        iters = samples.0;
+        times = samples.1;
+    }
 
     criterion.report.analysis(id, report_context);
 
