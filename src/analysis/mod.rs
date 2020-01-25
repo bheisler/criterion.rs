@@ -92,10 +92,10 @@ pub(crate) fn common<M: Measurement, T>(
         ));
 
         match loaded {
-            Err(_) => panic!(format!(
-                "Baseline '{base}' must exist before it can be loaded; try --save-baseline {base}",
-                base = baseline,
-            )),
+            Err(err) => panic!(
+                "Baseline '{base}' must exist before it can be loaded; try --save-baseline {base}. Error: {err}",
+                base = baseline, err = err
+            ),
             Ok(samples) => {
                 iters = samples.0;
                 times = samples.1;
@@ -123,7 +123,7 @@ pub(crate) fn common<M: Measurement, T>(
         .collect::<Vec<f64>>();
     let avg_times = Sample::new(&avg_times);
 
-    if let None = &criterion.load_baseline {
+    if criterion.load_baseline.is_none() {
         log_if_err!(fs::mkdirp(&format!(
             "{}/{}/new",
             criterion.output_directory,
@@ -139,7 +139,7 @@ pub(crate) fn common<M: Measurement, T>(
     estimates.insert(Statistic::Slope, slope);
     distributions.insert(Statistic::Slope, distribution);
 
-    if let None = &criterion.load_baseline {
+    if criterion.load_baseline.is_none() {
         log_if_err!(fs::save(
             &(data.x().as_ref(), data.y().as_ref()),
             &format!(
@@ -202,7 +202,7 @@ pub(crate) fn common<M: Measurement, T>(
     let measurement_data = crate::report::MeasurementData {
         data: Data::new(&*iters, &*times),
         avg_times: labeled_sample,
-        absolute_estimates: estimates.clone(),
+        absolute_estimates: estimates,
         distributions,
         comparison: compare_data,
         throughput,
@@ -215,7 +215,7 @@ pub(crate) fn common<M: Measurement, T>(
         criterion.measurement.formatter(),
     );
 
-    if let None = &criterion.load_baseline {
+    if criterion.load_baseline.is_none() {
         log_if_err!(fs::save(
             &id,
             &format!(

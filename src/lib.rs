@@ -949,10 +949,12 @@ impl<M: Measurement> Criterion<M> {
     /// given string will be executed.
     pub fn with_filter<S: Into<String>>(mut self, filter: S) -> Criterion<M> {
         let filter_text = filter.into();
-        let filter = Regex::new(&filter_text).expect(&format!(
-            "Unable to parse '{}' as a regular expression.",
-            filter_text
-        ));
+        let filter = Regex::new(&filter_text).unwrap_or_else(|err| {
+            panic!(
+                "Unable to parse '{}' as a regular expression: {}",
+                filter_text, err
+            )
+        });
         self.filter = Some(filter);
 
         self
