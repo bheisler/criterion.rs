@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   gnuplot backend will be used by default when available, and the plotters backend will be used when
   gnuplot is not available or when requested.
 - Added `Criterion::plotting_backend()` function to configure the plotting backend in code.
+- Added `--load-baseline` command-line option to load a baseline for comparison
+  rather than measuring the current code
 
 ### Fixed
 - Fixed `fibonacci` functions.

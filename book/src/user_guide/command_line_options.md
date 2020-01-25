@@ -23,17 +23,22 @@ By default, Criterion.rs will compare the measurements against the previous run 
 
 * `--save-baseline <name>` will compare against the named baseline, then overwrite it. 
 * `--baseline <name>` will compare against the named baseline without overwriting it.
+* `--load-baseline <name>` will load the named baseline as the new data set rather than
 
 Using these options, you can manage multiple baseline measurements. For instance, if you want to compare against a static reference point such as the master branch, you might run:
 
 ```sh
 git checkout master
 cargo bench -- --save-baseline master
+git checkout feature
+cargo bench -- --save-baseline feature
 git checkout optimizations
-cargo bench -- --baseline master
 
 # Some optimization work here
 
-# Measure again and compare against the stored baseline without overwriting it
-cargo bench -- --baseline master
+# Measure again
+cargo bench
+# Now compare against the stored baselines without overwriting it or re-running the measurements
+cargo bench -- --load-baseline new --baseline master
+cargo bench -- --load-baseline new --baseline feature
 ```
