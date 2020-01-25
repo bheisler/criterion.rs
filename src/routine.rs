@@ -4,7 +4,7 @@ use crate::report::{BenchmarkId, ReportContext};
 use crate::{Bencher, Criterion, DurationExt};
 use std::marker::PhantomData;
 use std::path::PathBuf;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 /// PRIVATE
 pub trait Routine<M: Measurement, T> {
@@ -196,6 +196,7 @@ where
             iters: 0,
             value: m.zero(),
             measurement: m,
+            elapsed_time: Duration::from_millis(0),
         };
 
         iters
@@ -216,19 +217,20 @@ where
             iters: 1,
             value: m.zero(),
             measurement: m,
+            elapsed_time: Duration::from_millis(0),
         };
 
         let mut total_iters = 0;
-        let start = Instant::now();
+        let mut elapsed_time = Duration::from_millis(0);
         loop {
             (*f)(&mut b, parameter);
 
             b.assert_iterated();
 
             total_iters += b.iters;
-            let elapsed = start.elapsed();
-            if elapsed > how_long {
-                return (elapsed.to_nanos(), total_iters);
+            elapsed_time += b.elapsed_time;
+            if elapsed_time > how_long {
+                return (elapsed_time.to_nanos(), total_iters);
             }
 
             b.iters *= 2;

@@ -81,6 +81,7 @@ use std::fmt;
 use std::iter::IntoIterator;
 use std::marker::PhantomData;
 use std::time::Duration;
+use std::time::Instant;
 
 use criterion_plot::{Version, VersionError};
 
@@ -278,10 +279,11 @@ impl BatchSize {
 ///   but are more complex than `iter_with_large_drop`.
 /// * Otherwise, use `iter`.
 pub struct Bencher<'a, M: Measurement = WallTime> {
-    iterated: bool,
-    iters: u64,
-    value: M::Value,
-    measurement: &'a M,
+    iterated: bool,         // have we iterated this benchmark?
+    iters: u64,             // Number of times to iterate this benchmark
+    value: M::Value,        // The measured value
+    measurement: &'a M,     // Reference to the measurement object
+    elapsed_time: Duration, // How much time did it take to perform the iteration? Used for the warmup period.
 }
 impl<'a, M: Measurement> Bencher<'a, M> {
     /// Times a `routine` by executing it many times and timing the total elapsed time.
@@ -326,11 +328,13 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         R: FnMut() -> O,
     {
         self.iterated = true;
+        let time_start = Instant::now();
         let start = self.measurement.start();
         for _ in 0..self.iters {
             black_box(routine());
         }
         self.value = self.measurement.end(start);
+        self.elapsed_time = time_start.elapsed();
     }
 
     /// Times a `routine` by executing it many times and relying on `routine` to measure its own execution time.
@@ -375,7 +379,9 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         R: FnMut(u64) -> M::Value,
     {
         self.iterated = true;
+        let time_start = Instant::now();
         self.value = routine(self.iters);
+        self.elapsed_time = time_start.elapsed();
     }
 
     #[doc(hidden)]
@@ -490,6 +496,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         self.iterated = true;
         let batch_size = size.iters_per_batch(self.iters);
         assert!(batch_size != 0, "Batch size must not be zero.");
+        let time_start = Instant::now();
         self.value = self.measurement.zero();
 
         if batch_size == 1 {
@@ -522,6 +529,8 @@ impl<'a, M: Measurement> Bencher<'a, M> {
                 iteration_counter += batch_size;
             }
         }
+
+        self.elapsed_time = time_start.elapsed();
     }
 
     /// Times a `routine` that requires some input by generating a batch of input, then timing the
@@ -577,6 +586,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         self.iterated = true;
         let batch_size = size.iters_per_batch(self.iters);
         assert!(batch_size != 0, "Batch size must not be zero.");
+        let time_start = Instant::now();
         self.value = self.measurement.zero();
 
         if batch_size == 1 {
@@ -610,6 +620,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
                 iteration_counter += batch_size;
             }
         }
+        self.elapsed_time = time_start.elapsed();
     }
 
     // Benchmarks must actually call one of the iter methods. This causes benchmarks to fail loudly
