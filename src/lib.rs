@@ -1115,15 +1115,37 @@ impl<M: Measurement + Clone> Criterion<M> {
     /// ```rust
     /// #[macro_use] extern crate criterion;
     /// use criterion::*;
-    /// use criterion::measurement::Measurement;
+    /// use criterion::measurement::{Measurement, WallTime};
+    /// # // stub for cycles, criterion only has WallTime as only measurement for now
+    /// # use criterion::measurement::ValueFormatter;
+    /// # use std::time::Duration;
+    /// #[derive(Clone)]
+    /// pub struct Cycles;
+    ///
+    /// impl Measurement for Cycles {
+    ///     // ...
+    /// #     type Intermediate = (); type Value = u64;
+    /// #     fn start(&self) -> Self::Intermediate {}
+    /// #     fn end(&self, start_cycles: ()) -> u64 { 10 }
+    /// #     fn add(&self, c1: &u64, c2: &u64) -> u64 { c1 + c2 }
+    /// #     fn zero(&self) -> u64 { 0 }
+    /// #     fn to_f64(&self, value: &u64) -> f64 { *value as f64 }
+    /// #     fn formatter(&self) -> &dyn ValueFormatter { &CyclesFormatter }
+    /// }
+    /// # struct CyclesFormatter;
+    /// # impl ValueFormatter for CyclesFormatter {
+    /// #     fn scale_throughputs(&self, _typical: f64, _throughput: &Throughput, _values: &mut [f64]) -> &'static str { panic!() }
+    /// #     fn scale_values(&self, _reference: f64, _values: &mut [f64]) -> &'static str { "cycles" }
+    /// #     fn scale_for_machines(&self, _values: &mut [f64]) -> &'static str { "cycles" }
+    /// # }
     ///
     /// fn foo(input: u64) {
     ///     // ...
     /// }
     ///
-    /// fn bench(c: &mut Criterion<impl Measurement + Clone + 'static>) {
+    /// fn bench(name: &str, c: &mut Criterion<impl Measurement + Clone + 'static>) {
     ///     let measurement = c.measurement();
-    ///     c.bench_function("measurement", move |b| {
+    ///     c.bench_function(name, move |b| {
     ///         b.iter_custom(|iters| {
     ///             let input = black_box(1337);
     ///             let start = measurement.start();
@@ -1135,8 +1157,20 @@ impl<M: Measurement + Clone> Criterion<M> {
     ///     });
     /// }
     ///
-    /// criterion_group!(benches, bench);
-    /// criterion_main!(benches);
+    /// fn main() {
+    ///     let mut criterion_time = Criterion::default()
+    /// #       .warm_up_time(Duration::from_millis(50))
+    /// #       .measurement_time(Duration::from_millis(100))
+    /// #       .sample_size(10)
+    ///         .with_measurement(WallTime);
+    ///     bench("time", &mut criterion_time);
+    ///     let mut criterion_cycles = Criterion::default()
+    /// #       .warm_up_time(Duration::from_millis(50))
+    /// #       .measurement_time(Duration::from_millis(100))
+    /// #       .sample_size(10)
+    ///         .with_measurement(Cycles);
+    ///     bench("cycles", &mut criterion_cycles);
+    /// }
     /// ```
     pub fn measurement(&self) -> M {
         self.measurement.clone()
