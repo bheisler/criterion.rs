@@ -1,6 +1,6 @@
 # Command-Line Output
 
-The output for this page was produced by running `cargo bench -- --verbose`. `cargo bench` omits
+The output for this page was produced by running `cargo bench --verbose`. `cargo bench` omits
 some of this information. Note: If `cargo bench` fails with an error message about an unknown
 argument, see [the
 FAQ](../faq.html#cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options).
