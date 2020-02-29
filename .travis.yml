@@ -14,8 +14,6 @@ os:
 matrix:
   include:
     - os: linux
-      env: GNUPLOT=no
-    - os: linux
       env: GNUPLOT=yes
       addons:
         apt:
@@ -46,8 +44,6 @@ matrix:
         apt:
           packages:
             - gnuplot
-    - os: osx
-      env: GNUPLOT=no
     - os: osx
       env: GNUPLOT=yes
     - os: osx
