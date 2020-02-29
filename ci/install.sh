@@ -10,7 +10,7 @@ if [ "$DOCS" = "yes" ]; then
 fi
 
 if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$GNUPLOT" = "yes" ]; then
-    brew update
+    brew unlink python@2 # because we're installing python3 and they both want to install stuff under /usr/local/Frameworks/Python.framework/
     brew install gnuplot
 fi
 
