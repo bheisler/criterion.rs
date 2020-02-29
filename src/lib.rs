@@ -516,11 +516,11 @@ impl<'a, M: Measurement> Bencher<'a, M> {
             while iteration_counter < self.iters {
                 let batch_size = ::std::cmp::min(batch_size, self.iters - iteration_counter);
 
-                let inputs = black_box((0..batch_size).map(|_| setup()).collect::<Vec<_>>());
+                let mut inputs = black_box((0..batch_size).map(|_| setup()).collect::<Vec<_>>());
                 let mut outputs = Vec::with_capacity(batch_size as usize);
 
                 let start = self.measurement.start();
-                outputs.extend(inputs.into_iter().map(&mut routine));
+                outputs.extend(inputs.drain(..).map(&mut routine));
                 let end = self.measurement.end(start);
                 self.value = self.measurement.add(&self.value, &end);
 
