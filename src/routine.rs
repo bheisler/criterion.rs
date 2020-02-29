@@ -195,6 +195,7 @@ where
             iterated: false,
             iters: 0,
             value: m.zero(),
+            overhead: m.zero(),
             measurement: m,
             elapsed_time: Duration::from_millis(0),
         };
@@ -205,7 +206,7 @@ where
                 b.iters = *iters;
                 (*f)(&mut b, parameter);
                 b.assert_iterated();
-                m.to_f64(&b.value)
+                m.to_f64(&b.value) - m.to_f64(&b.overhead)
             })
             .collect()
     }
@@ -216,6 +217,7 @@ where
             iterated: false,
             iters: 1,
             value: m.zero(),
+            overhead: m.zero(),
             measurement: m,
             elapsed_time: Duration::from_millis(0),
         };

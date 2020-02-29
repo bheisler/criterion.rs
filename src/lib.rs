@@ -282,6 +282,7 @@ pub struct Bencher<'a, M: Measurement = WallTime> {
     iterated: bool,         // have we iterated this benchmark?
     iters: u64,             // Number of times to iterate this benchmark
     value: M::Value,        // The measured value
+    overhead: M::Value,     // The measured overhead, to be subtracted from the value
     measurement: &'a M,     // Reference to the measurement object
     elapsed_time: Duration, // How much time did it take to perform the iteration? Used for the warmup period.
 }
@@ -334,6 +335,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
             black_box(routine());
         }
         self.value = self.measurement.end(start);
+        self.overhead = self.measurement.zero();
         self.elapsed_time = time_start.elapsed();
     }
 
@@ -381,6 +383,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         self.iterated = true;
         let time_start = Instant::now();
         self.value = routine(self.iters);
+        self.overhead = self.measurement.zero();
         self.elapsed_time = time_start.elapsed();
     }
 
@@ -454,7 +457,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     /// # Timing model
     ///
     /// ```text
-    /// elapsed = (Instant::now * num_batches) + (iters * (routine + O::drop)) + Vec::extend
+    /// elapsed = iters * routine + Vec::extend
     /// ```
     ///
     /// # Example
@@ -498,10 +501,16 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         assert!(batch_size != 0, "Batch size must not be zero.");
         let time_start = Instant::now();
         self.value = self.measurement.zero();
+        self.overhead = self.measurement.zero();
 
         if batch_size == 1 {
             for _ in 0..self.iters {
                 let input = black_box(setup());
+
+                let overhead_start = self.measurement.start();
+                black_box(&input);
+                let overhead_end = self.measurement.end(overhead_start);
+                self.overhead = self.measurement.add(&self.overhead, &overhead_end);
 
                 let start = self.measurement.start();
                 let output = routine(input);
@@ -518,6 +527,13 @@ impl<'a, M: Measurement> Bencher<'a, M> {
 
                 let mut inputs = black_box((0..batch_size).map(|_| setup()).collect::<Vec<_>>());
                 let mut outputs = Vec::with_capacity(batch_size as usize);
+
+                let overhead_start = self.measurement.start();
+                for input in inputs.iter_mut() {
+                    black_box(input);
+                }
+                let overhead_end = self.measurement.end(overhead_start);
+                self.overhead = self.measurement.add(&self.overhead, &overhead_end);
 
                 let start = self.measurement.start();
                 outputs.extend(inputs.drain(..).map(&mut routine));
@@ -544,7 +560,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     /// # Timing model
     ///
     /// ```text
-    /// elapsed = (Instant::now * num_batches) + (iters * routine) + Vec::extend
+    /// elapsed = iters * routine + Vec::extend
     /// ```
     ///
     /// # Example
@@ -588,10 +604,16 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         assert!(batch_size != 0, "Batch size must not be zero.");
         let time_start = Instant::now();
         self.value = self.measurement.zero();
+        self.overhead = self.measurement.zero();
 
         if batch_size == 1 {
             for _ in 0..self.iters {
                 let mut input = black_box(setup());
+
+                let overhead_start = self.measurement.start();
+                black_box(&mut input);
+                let overhead_end = self.measurement.end(overhead_start);
+                self.overhead = self.measurement.add(&self.overhead, &overhead_end);
 
                 let start = self.measurement.start();
                 let output = routine(&mut input);
@@ -609,6 +631,13 @@ impl<'a, M: Measurement> Bencher<'a, M> {
 
                 let mut inputs = black_box((0..batch_size).map(|_| setup()).collect::<Vec<_>>());
                 let mut outputs = Vec::with_capacity(batch_size as usize);
+
+                let overhead_start = self.measurement.start();
+                for input in inputs.iter_mut() {
+                    black_box(input);
+                }
+                let overhead_end = self.measurement.end(overhead_start);
+                self.overhead = self.measurement.add(&self.overhead, &overhead_end);
 
                 let start = self.measurement.start();
                 outputs.extend(inputs.iter_mut().map(&mut routine));
