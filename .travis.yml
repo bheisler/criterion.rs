@@ -12,11 +12,6 @@ os:
   - osx
 
 matrix:
-  # Clear the whole matrix
-  exclude:
-    - os: linux
-    - os: osx
-  # Add each target manually
   include:
     - os: linux
       env: GNUPLOT=no
