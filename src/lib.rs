@@ -1172,6 +1172,7 @@ impl<M: Measurement + Clone> Criterion<M> {
     ///     bench("cycles", &mut criterion_cycles);
     /// }
     /// ```
+    #[allow(clippy::needless_doctest_main)]
     pub fn measurement(&self) -> M {
         self.measurement.clone()
     }
