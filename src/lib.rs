@@ -857,16 +857,18 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
-    /// Changes the default noise threshold for benchmarks run with this runner.
+    /// Changes the default noise threshold for benchmarks run with this runner. The noise threshold
+    /// is used to filter out small changes in performance, even if they are statistically
+    /// significant. Sometimes benchmarking the same code twice will result in small but
+    /// statistically significant differences solely because of noise. This provides a way to filter
+    /// out some of these false positives at the cost of making it harder to detect small changes
+    /// to the true performance of the benchmark.
     ///
-    /// This threshold is used to decide if an increase of `X%` in the execution time is considered
-    /// significant or should be flagged as noise
-    ///
-    /// *Note:* A value of `0.02` is equivalent to `2%`
+    /// The default is 0.01, meaning that changes smaller than 1% will be ignored.
     ///
     /// # Panics
     ///
-    /// Panics is the threshold is set to a negative value
+    /// Panics if the threshold is set to a negative value
     pub fn noise_threshold(mut self, threshold: f64) -> Criterion<M> {
         assert!(threshold >= 0.0);
 
@@ -874,27 +876,40 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
-    /// Changes the default confidence level for benchmarks run with this runner
-    ///
-    /// The confidence level is used to calculate the
-    /// [confidence intervals](https://en.wikipedia.org/wiki/Confidence_interval) of the estimated
-    /// statistics
+    /// Changes the default confidence level for benchmarks run with this runner. The confidence
+    /// level is the desired probability that the true runtime lies within the estimated
+    /// [confidence interval](https://en.wikipedia.org/wiki/Confidence_interval). The default is
+    /// 0.95, meaning that the confidence interval should capture the true value 95% of the time.
     ///
     /// # Panics
     ///
     /// Panics if the confidence level is set to a value outside the `(0, 1)` range
     pub fn confidence_level(mut self, cl: f64) -> Criterion<M> {
         assert!(cl > 0.0 && cl < 1.0);
+        if cl < 0.5 {
+            println!("\nWarning: It is not recommended to reduce confidence level below 0.5.");
+        }
 
         self.config.confidence_level = cl;
         self
     }
 
     /// Changes the default [significance level](https://en.wikipedia.org/wiki/Statistical_significance)
-    /// for benchmarks run with this runner
+    /// for benchmarks run with this runner. This is used to perform a
+    /// [hypothesis test](https://en.wikipedia.org/wiki/Statistical_hypothesis_testing) to see if
+    /// the measurements from this run are different from the measured performance of the last run.
+    /// The significance level is the desired probability that two measurements of identical code
+    /// will be considered 'different' due to noise in the measurements. The default value is 0.05,
+    /// meaning that approximately 5% of identical benchmarks will register as different due to
+    /// noise.
     ///
-    /// The significance level is used for
-    /// [hypothesis testing](https://en.wikipedia.org/wiki/Statistical_hypothesis_testing)
+    /// This presents a trade-off. By setting the significance level closer to 0.0, you can increase
+    /// the statistical robustness against noise, but it also weaken's Criterion.rs' ability to
+    /// detect small but real changes in the performance. By setting the significance level
+    /// closer to 1.0, Criterion.rs will be more able to detect small true changes, but will also
+    /// report more spurious differences.
+    ///
+    /// See also the noise threshold setting.
     ///
     /// # Panics
     ///
