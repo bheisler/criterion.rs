@@ -24,7 +24,8 @@
     allow(
         clippy::used_underscore_binding,
         clippy::just_underscores_and_digits,
-        clippy::transmute_ptr_to_ptr
+        clippy::transmute_ptr_to_ptr,
+        clippy::option_as_ref_deref // Needs Rust >= 1.40.0
     )
 )]
 
@@ -1312,7 +1313,7 @@ To test that the benchmarks work, run `cargo test --benches`
     ///     // Now we can perform benchmarks with this group
     ///     group.bench_function("Bench 1", |b| b.iter(|| 1 ));
     ///     group.bench_function("Bench 2", |b| b.iter(|| 2 ));
-    ///    
+    ///
     ///     group.finish();
     /// }
     /// criterion_group!(benches, bench_simple);
