@@ -706,8 +706,17 @@ impl Default for Criterion {
         reports.push(Box::new(FileCsvReport));
 
         let output_directory =
-            match std::env::vars().find(|&(ref key, _)| key == "CARGO_TARGET_DIR") {
-                Some((_, value)) => format!("{}/criterion", value),
+            match std::env::vars_os().find(|&(ref key, _)| key == "CARGO_TARGET_DIR") {
+                Some((_, value)) => {
+                    // TODO: The target directory may be non-utf8 and yet still be valid.
+                    // To deal with this, we should ideally use PathBuf instead of String
+                    // to store paths in the `Criterion` struct, but it is unclear to me
+                    // if this would entail a breaking change.
+                    let value = value
+                        .into_string()
+                        .expect("CARGO_TARGET_DIR must be a valid UTF-8 path");
+                    format!("{}/criterion", value)
+                },
                 None => "target/criterion".to_owned(),
             };
 
