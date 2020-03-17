@@ -100,7 +100,7 @@ pub use crate::benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmar
 pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};
 
 lazy_static! {
-    static ref DEBUG_ENABLED: bool = { std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG") };
+    static ref DEBUG_ENABLED: bool = { std::env::var("CRITERION_DEBUG").is_ok() };
     static ref GNUPLOT_VERSION: Result<Version, VersionError> = { criterion_plot::version() };
     static ref DEFAULT_PLOTTING_BACKEND: PlottingBackend = {
         match &*GNUPLOT_VERSION {
