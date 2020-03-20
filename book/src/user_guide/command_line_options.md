@@ -24,7 +24,7 @@ By default, Criterion.rs will compare the measurements against the previous run 
 
 * `--save-baseline <name>` will compare against the named baseline, then overwrite it. 
 * `--baseline <name>` will compare against the named baseline without overwriting it.
-* `--load-baseline <name>` will load the named baseline as the new data set rather than
+* `--load-baseline <name>` will load the named baseline as the new data set rather than the previous baseline.
 
 Using these options, you can manage multiple baseline measurements. For instance, if you want to compare against a static reference point such as the master branch, you might run:
 
