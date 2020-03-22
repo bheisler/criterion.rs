@@ -188,8 +188,8 @@ impl<'a> BenchmarkGroup<'a> {
         let mut individual_links = HashMap::with_capacity(ids.len());
 
         for id in ids.iter() {
-            let function_id = id.function_id.as_ref().map(String::as_str);
-            let value = id.value_str.as_ref().map(String::as_str);
+            let function_id = id.function_id.as_deref();
+            let value = id.value_str.as_deref();
 
             let individual_link = ReportLink::individual(output_directory, id);
 
@@ -475,17 +475,13 @@ impl Report for Html {
         // First sort the ids/data by value.
         // If all of the value strings can be parsed into a number, sort/dedupe
         // numerically. Otherwise sort lexicographically.
-        let all_values_numeric = all_data.iter().all(|(ref id, _)| {
-            id.value_str
-                .as_ref()
-                .map(String::as_str)
-                .and_then(try_parse)
-                .is_some()
-        });
+        let all_values_numeric = all_data
+            .iter()
+            .all(|(ref id, _)| id.value_str.as_deref().and_then(try_parse).is_some());
         if all_values_numeric {
             all_data.sort_unstable_by(|(a, _), (b, _)| {
-                let num1 = a.value_str.as_ref().map(String::as_str).and_then(try_parse);
-                let num2 = b.value_str.as_ref().map(String::as_str).and_then(try_parse);
+                let num1 = a.value_str.as_deref().and_then(try_parse);
+                let num2 = b.value_str.as_deref().and_then(try_parse);
 
                 num1.partial_cmp(&num2).unwrap_or(Ordering::Less)
             });
