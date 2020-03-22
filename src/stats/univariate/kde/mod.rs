@@ -20,7 +20,7 @@ where
 
 impl<'a, A, K> Kde<'a, A, K>
 where
-    A: 'a + Float,
+    A: Float,
     K: Kernel<A>,
 {
     /// Creates a new kernel density estimator from the `sample`, using a kernel and estimating

@@ -107,7 +107,7 @@ where
 }
 
 /// Iterator over `Data`
-pub struct Pairs<'a, X: 'a, Y: 'a> {
+pub struct Pairs<'a, X, Y> {
     data: Data<'a, X, Y>,
     state: usize,
 }

@@ -4,8 +4,8 @@ use crate::stats::rand_util::{new_rng, Rng};
 
 pub struct Resamples<'a, X, Y>
 where
-    X: 'a + Float,
-    Y: 'a + Float,
+    X: Float,
+    Y: Float,
 {
     rng: Rng,
     data: (&'a [X], &'a [Y]),
@@ -15,8 +15,8 @@ where
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::should_implement_trait))]
 impl<'a, X, Y> Resamples<'a, X, Y>
 where
-    X: 'a + Float,
-    Y: 'a + Float,
+    X: Float,
+    Y: Float,
 {
     pub fn new(data: Data<'a, X, Y>) -> Resamples<'a, X, Y> {
         Resamples {

@@ -16,7 +16,7 @@ where
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::should_implement_trait))]
 impl<'a, A> Resamples<'a, A>
 where
-    A: 'a + Float,
+    A: Float,
 {
     pub fn new(sample: &'a Sample<A>) -> Resamples<'a, A> {
         let slice = sample;
