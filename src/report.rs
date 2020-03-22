@@ -803,7 +803,7 @@ mod test {
         assert_eq!("group/function/value_2", new_id.as_directory_name());
         directories.insert(new_id.as_directory_name().to_owned());
 
-        new_id = existing_id.clone();
+        new_id = existing_id;
         new_id.ensure_directory_name_unique(&directories);
         assert_eq!("group/function/value_3", new_id.as_directory_name());
         directories.insert(new_id.as_directory_name().to_owned());
