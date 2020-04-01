@@ -22,7 +22,7 @@ fn do_something(size: usize) {
 fn from_elem(c: &mut Criterion) {
     let size: usize = 1024;
 
-    c.bench_with_input(BenchmarkId::new("input_example", size), size, |b, &s| {
+    c.bench_with_input(BenchmarkId::new("input_example", size), &size, |b, &s| {
         b.iter(|| do_something(s));
     });
 }
