@@ -1,9 +1,7 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use serde_json;
 use std::ffi::OsStr;
 use std::fs::{self, File};
-use std::io::Read;
 use std::path::Path;
 use walkdir::{DirEntry, WalkDir};
 
@@ -15,13 +13,8 @@ where
     A: DeserializeOwned,
     P: AsRef<Path>,
 {
-    let path = path.as_ref();
-    let mut f = File::open(path).map_err(|inner| Error::AccessError {
-        inner,
-        path: path.to_owned(),
-    })?;
-    let mut string = String::new();
-    let _ = f.read_to_string(&mut string);
+    let path =path.as_ref();
+    let string = String::from_utf8(fs::read(path).unwrap()).unwrap();
     let result: A = serde_json::from_str(string.as_str()).map_err(|inner| Error::SerdeError {
         inner,
         path: path.to_owned(),

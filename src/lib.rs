@@ -41,8 +41,6 @@ use regex::Regex;
 
 #[macro_use]
 extern crate lazy_static;
-use atty;
-use criterion_plot;
 
 #[cfg(feature = "real_blackbox")]
 extern crate test;

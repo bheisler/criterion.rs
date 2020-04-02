@@ -4,7 +4,6 @@ use crate::stats::float::Float;
 use crate::stats::tuple::{Tuple, TupledDistributionsBuilder};
 use crate::stats::univariate::Percentiles;
 use crate::stats::univariate::Resamples;
-use cast;
 use rayon::prelude::*;
 
 /// A collection of data points drawn from a population

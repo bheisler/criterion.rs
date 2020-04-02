@@ -20,7 +20,6 @@ use std::ops::Deref;
 
 use crate::stats::float::Float;
 use crate::stats::univariate::Sample;
-use cast;
 
 /// The bootstrap distribution of some parameter
 pub struct Distribution<A>(Box<[A]>);
