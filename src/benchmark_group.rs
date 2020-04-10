@@ -256,6 +256,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     ) -> &mut Self
     where
         F: FnMut(&mut Bencher<'_, M>, &I),
+        I: ?Sized,
     {
         self.run_bench(id.into_benchmark_id(), input, f);
         self
@@ -264,6 +265,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     fn run_bench<F, I>(&mut self, id: BenchmarkId, input: &I, f: F)
     where
         F: FnMut(&mut Bencher<'_, M>, &I),
+        I: ?Sized,
     {
         let config = self.partial_config.to_complete(&self.criterion.config);
         let report_context = ReportContext {
