@@ -37,7 +37,9 @@ extern crate approx;
 extern crate quickcheck;
 
 use clap::value_t;
-use regex::Regex;
+
+#[cfg(feature = "filter_regex")]
+use regex::Regex as Filter;
 
 #[macro_use]
 extern crate lazy_static;
@@ -100,8 +102,8 @@ pub use crate::benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmar
 pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};
 
 lazy_static! {
-    static ref DEBUG_ENABLED: bool = { std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG") };
-    static ref GNUPLOT_VERSION: Result<Version, VersionError> = { criterion_plot::version() };
+    static ref DEBUG_ENABLED: bool = std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG");
+    static ref GNUPLOT_VERSION: Result<Version, VersionError> = criterion_plot::version();
     static ref DEFAULT_PLOTTING_BACKEND: PlottingBackend = {
         match &*GNUPLOT_VERSION {
             Ok(_) => PlottingBackend::Gnuplot,
@@ -655,6 +657,22 @@ pub enum PlottingBackend {
     Plotters,
 }
 
+/// Small internal abstraction to help paper over differences between the
+/// `filter_regex` feature being enabled vs disabled.
+#[cfg(not(feature = "filter_regex"))]
+#[derive(Debug, Clone, PartialEq)]
+struct Filter(String);
+
+#[cfg(not(feature = "filter_regex"))]
+impl Filter {
+    fn new(s: &str) -> Result<Self, std::convert::Infallible> {
+        Ok(Self(s.to_string()))
+    }
+    fn is_match(&self, o: &str) -> bool {
+        o.contains(&self.0)
+    }
+}
+
 /// The benchmark manager
 ///
 /// `Criterion` lets you configure and execute benchmarks
@@ -673,7 +691,7 @@ pub struct Criterion<M: Measurement = WallTime> {
     config: BenchmarkConfig,
     plotting_backend: PlottingBackend,
     plotting_enabled: bool,
-    filter: Option<Regex>,
+    filter: Option<Filter>,
     report: Box<dyn Report>,
     output_directory: String,
     baseline_directory: String,
@@ -971,11 +989,17 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
-    /// Filters the benchmarks. Only benchmarks with names that contain the
-    /// given string will be executed.
+    /// Filters the benchmarks.
+    ///
+    /// If the `filter_regex` feature is enabled in criterion, `filter` will be
+    /// used as a regex, and only benchmarks with names which match the regex
+    /// are executed.
+    ///
+    /// Otherwise, filter is treated as a string, and only benchmarks with names
+    /// that contain the given string will be executed.
     pub fn with_filter<S: Into<String>>(mut self, filter: S) -> Criterion<M> {
         let filter_text = filter.into();
-        let filter = Regex::new(&filter_text).unwrap_or_else(|err| {
+        let filter = Filter::new(&filter_text).unwrap_or_else(|err| {
             panic!(
                 "Unable to parse '{}' as a regular expression: {}",
                 filter_text, err
@@ -1292,7 +1316,7 @@ To test that the benchmarks work, run `cargo test --benches`
 
     fn filter_matches(&self, id: &str) -> bool {
         match self.filter {
-            Some(ref regex) => regex.is_match(id),
+            Some(ref filter) => filter.is_match(id),
             None => true,
         }
     }
