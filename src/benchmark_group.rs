@@ -270,6 +270,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
             output_directory: self.criterion.output_directory.clone(),
             plot_config: self.partial_config.plot_config.clone(),
             test_mode: self.criterion.test_mode,
+            reporter: self.criterion.reporter.clone(),
         };
 
         let mut id = InternalBenchmarkId::new(
@@ -331,6 +332,7 @@ impl<'a, M: Measurement> Drop for BenchmarkGroup<'a, M> {
                 output_directory: self.criterion.output_directory.clone(),
                 plot_config: self.partial_config.plot_config.clone(),
                 test_mode: self.criterion.test_mode,
+                reporter: self.criterion.reporter.clone(),
             };
 
             self.criterion.report.summarize(

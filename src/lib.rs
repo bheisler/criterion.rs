@@ -675,6 +675,7 @@ pub struct Criterion<M: Measurement = WallTime> {
     plotting_enabled: bool,
     filter: Option<Regex>,
     report: Box<dyn Report>,
+    reporter: String,
     output_directory: String,
     baseline_directory: String,
     baseline: Baseline,
@@ -725,6 +726,7 @@ impl Default for Criterion {
             plotting_enabled: true,
             filter: None,
             report: Box::new(Reports::new(reports)),
+            reporter: "criterion".to_owned(),
             baseline_directory: "base".to_owned(),
             baseline: Baseline::Save,
             profile_time: None,
@@ -750,6 +752,7 @@ impl<M: Measurement> Criterion<M> {
             plotting_enabled: self.plotting_enabled,
             filter: self.filter,
             report: self.report,
+            reporter: self.reporter,
             baseline_directory: self.baseline_directory,
             baseline: self.baseline,
             profile_time: self.profile_time,
@@ -1013,6 +1016,7 @@ impl<M: Measurement> Criterion<M> {
             output_directory: self.output_directory.clone(),
             plot_config: PlotConfiguration::default(),
             test_mode: self.test_mode,
+            reporter: self.reporter.clone(),
         };
 
         self.report.final_summary(&report_context);
@@ -1107,6 +1111,12 @@ impl<M: Measurement> Criterion<M> {
                  .takes_value(true)
                  .possible_values(&["gnuplot", "plotters"])
                  .help("Set the plotting backend. By default, Criterion will use the gnuplot backend if gnuplot is available, or the plotters backend if it isn't."))
+            .arg(Arg::with_name("reporter")
+                 .short("R")
+                 .long("reporter")
+                 .default_value("criterion")
+                 .possible_values(&["criterion", "bencher"])
+                 .help("Set the CLI report format."))
             .arg(Arg::with_name("version")
                 .hidden(true)
                 .short("V")
@@ -1163,6 +1173,10 @@ To test that the benchmarks work, run `cargo test --benches`
         if let Some(dir) = matches.value_of("baseline") {
             self.baseline = Baseline::Compare;
             self.baseline_directory = dir.to_owned();
+        }
+
+        if let Some(reporter) = matches.value_of("reporter") {
+            self.reporter = reporter.to_owned();
         }
 
         let mut reports: Vec<Box<dyn Report>> = vec![];

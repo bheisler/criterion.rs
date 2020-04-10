@@ -72,6 +72,30 @@ pub fn iter_count(iterations: u64) -> String {
     }
 }
 
+pub fn thousands(mut n: usize) -> String {
+    use std::fmt::Write;
+
+    let mut output = String::new();
+    let mut trailing = false;
+    for &pow in &[9, 6, 3, 0] {
+        let base = 10_usize.pow(pow);
+        if pow == 0 || trailing || n / base != 0 {
+            if !trailing {
+                output.write_fmt(format_args!("{}", n / base)).unwrap();
+            } else {
+                output.write_fmt(format_args!("{:03}", n / base)).unwrap();
+            }
+            if pow != 0 {
+                output.push(',');
+            }
+            trailing = true;
+        }
+        n %= base;
+    }
+
+    output
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

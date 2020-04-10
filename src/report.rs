@@ -252,6 +252,7 @@ pub struct ReportContext {
     pub output_directory: String,
     pub plot_config: PlotConfiguration,
     pub test_mode: bool,
+    pub reporter: String,
 }
 impl ReportContext {
     pub fn report_path<P: AsRef<Path> + ?Sized>(&self, id: &BenchmarkId, file_name: &P) -> PathBuf {
@@ -565,13 +566,31 @@ impl Report for CliReport {
     fn measurement_complete(
         &self,
         id: &BenchmarkId,
-        _: &ReportContext,
+        ctx: &ReportContext,
         meas: &MeasurementData<'_>,
         formatter: &dyn ValueFormatter,
     ) {
         self.text_overwrite();
 
         let slope_estimate = meas.absolute_estimates[&Statistic::Slope];
+
+        if ctx.reporter == "bencher" {
+            let deviation = (slope_estimate.confidence_interval.upper_bound
+                - slope_estimate.confidence_interval.lower_bound)
+                as usize;
+
+            print!(
+                "test {} ... bench:{} ns/iter (+/- {})",
+                self.green(id.as_title().to_owned()),
+                self.bold(format!(
+                    "{:>11}",
+                    format::thousands(slope_estimate.point_estimate as usize)
+                )),
+                self.faint(format::thousands(deviation))
+            );
+
+            return;
+        }
 
         {
             let mut id = id.as_title().to_owned();

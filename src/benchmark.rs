@@ -306,6 +306,7 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
             output_directory: c.output_directory.clone(),
             plot_config: self.config.plot_config.clone(),
             test_mode: c.test_mode,
+            reporter: c.reporter.clone(),
         };
 
         let config = self.config.to_complete(&c.config);
@@ -455,6 +456,7 @@ where
             output_directory: c.output_directory.clone(),
             plot_config: self.config.plot_config.clone(),
             test_mode: c.test_mode,
+            reporter: c.reporter.clone(),
         };
 
         let config = self.config.to_complete(&c.config);
