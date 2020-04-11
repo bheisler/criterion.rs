@@ -1,13 +1,16 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json;
+#[cfg(feature = "plotting")]
 use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::Path;
+#[cfg(feature = "plotting")]
 use walkdir::{DirEntry, WalkDir};
 
 use crate::error::{Error, Result};
+#[cfg(feature = "plotting")]
 use crate::report::BenchmarkId;
 
 pub fn load<A, P: ?Sized>(path: &P) -> Result<A>
@@ -29,7 +32,7 @@ where
 
     Ok(result)
 }
-
+#[cfg(feature = "plotting")]
 pub fn is_dir<P>(path: &P) -> bool
 where
     P: AsRef<Path>,
@@ -86,6 +89,7 @@ where
     Ok(())
 }
 
+#[cfg(feature = "plotting")]
 pub fn list_existing_benchmarks<P>(directory: &P) -> Result<Vec<BenchmarkId>>
 where
     P: AsRef<Path>,

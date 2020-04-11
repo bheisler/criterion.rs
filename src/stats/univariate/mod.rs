@@ -5,6 +5,7 @@ mod percentiles;
 mod resamples;
 mod sample;
 
+#[cfg(feature = "plotting")]
 pub mod kde;
 pub mod mixed;
 pub mod outliers;

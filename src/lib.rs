@@ -44,6 +44,7 @@ use regex::Regex as Filter;
 #[macro_use]
 extern crate lazy_static;
 use atty;
+#[cfg(feature = "plotting")]
 use criterion_plot;
 
 #[cfg(feature = "real_blackbox")]
@@ -66,10 +67,13 @@ mod error;
 mod estimate;
 mod format;
 mod fs;
+#[cfg(feature = "plotting")]
 mod html;
+#[cfg(feature = "plotting")]
 mod kde;
 mod macros;
 pub mod measurement;
+#[cfg(feature = "plotting")]
 mod plot;
 pub mod profiler;
 mod report;
@@ -85,14 +89,18 @@ use std::marker::PhantomData;
 use std::time::Duration;
 use std::time::Instant;
 
+#[cfg(feature = "plotting")]
 use criterion_plot::{Version, VersionError};
 
 use crate::benchmark::BenchmarkConfig;
 use crate::benchmark::NamedRoutine;
 use crate::csv_report::FileCsvReport;
 use crate::estimate::{Distributions, Estimates, Statistic};
+#[cfg(feature = "plotting")]
 use crate::html::Html;
 use crate::measurement::{Measurement, WallTime};
+
+#[cfg(feature = "plotting")]
 use crate::plot::{Gnuplot, Plotter, PlottersBackend};
 use crate::profiler::{ExternalProfiler, Profiler};
 use crate::report::{CliReport, Report, ReportContext, Reports};
@@ -103,6 +111,9 @@ pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};
 
 lazy_static! {
     static ref DEBUG_ENABLED: bool = std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG");
+}
+#[cfg(feature = "plotting")]
+lazy_static! {
     static ref GNUPLOT_VERSION: Result<Version, VersionError> = criterion_plot::version();
     static ref DEFAULT_PLOTTING_BACKEND: PlottingBackend = {
         match &*GNUPLOT_VERSION {
@@ -647,6 +658,7 @@ pub enum Baseline {
 }
 
 /// Enum used to select the plotting backend.
+#[cfg(feature = "plotting")]
 #[derive(Debug, Clone, Copy)]
 pub enum PlottingBackend {
     /// Plotting backend which uses the external `gnuplot` command to render plots. This is the
@@ -689,7 +701,9 @@ impl Filter {
 /// benchmark.
 pub struct Criterion<M: Measurement = WallTime> {
     config: BenchmarkConfig,
+    #[cfg(feature = "plotting")]
     plotting_backend: PlottingBackend,
+    #[cfg(feature = "plotting")]
     plotting_enabled: bool,
     filter: Option<Filter>,
     report: Box<dyn Report>,
@@ -739,7 +753,9 @@ impl Default for Criterion {
                 significance_level: 0.05,
                 warm_up_time: Duration::new(3, 0),
             },
+            #[cfg(feature = "plotting")]
             plotting_backend: *DEFAULT_PLOTTING_BACKEND,
+            #[cfg(feature = "plotting")]
             plotting_enabled: true,
             filter: None,
             report: Box::new(Reports::new(reports)),
@@ -764,7 +780,9 @@ impl<M: Measurement> Criterion<M> {
     pub fn with_measurement<M2: Measurement>(self, m: M2) -> Criterion<M2> {
         Criterion {
             config: self.config,
+            #[cfg(feature = "plotting")]
             plotting_backend: self.plotting_backend,
+            #[cfg(feature = "plotting")]
             plotting_enabled: self.plotting_enabled,
             filter: self.filter,
             report: self.report,
@@ -795,6 +813,8 @@ impl<M: Measurement> Criterion<M> {
     /// if not.
     ///
     /// Panics if `backend` is `PlottingBackend::Gnuplot` and gnuplot is not available.
+
+    #[cfg(feature = "plotting")]
     pub fn plotting_backend(self, backend: PlottingBackend) -> Criterion<M> {
         if let PlottingBackend::Gnuplot = backend {
             if GNUPLOT_VERSION.is_err() {
@@ -939,6 +959,7 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    #[cfg(feature = "plotting")]
     fn create_plotter(&self) -> Box<dyn Plotter> {
         match self.plotting_backend {
             PlottingBackend::Gnuplot => Box::new(Gnuplot::default()),
@@ -947,12 +968,16 @@ impl<M: Measurement> Criterion<M> {
     }
 
     /// Enables plotting
+    #[cfg(feature = "plotting")]
     pub fn with_plots(mut self) -> Criterion<M> {
         self.plotting_enabled = true;
         let mut reports: Vec<Box<dyn Report>> = vec![];
         reports.push(Box::new(CliReport::new(false, false, false)));
         reports.push(Box::new(FileCsvReport));
-        reports.push(Box::new(Html::new(self.create_plotter())));
+        #[cfg(feature = "plotting")]
+        {
+            reports.push(Box::new(Html::new(self.create_plotter())));
+        }
         self.report = Box::new(Reports::new(reports));
 
         self
@@ -960,7 +985,10 @@ impl<M: Measurement> Criterion<M> {
 
     /// Disables plotting
     pub fn without_plots(mut self) -> Criterion<M> {
-        self.plotting_enabled = false;
+        #[cfg(feature = "plotting")]
+        {
+            self.plotting_enabled = false;
+        }
         let mut reports: Vec<Box<dyn Report>> = vec![];
         reports.push(Box::new(CliReport::new(false, false, false)));
         reports.push(Box::new(FileCsvReport));
@@ -1165,19 +1193,33 @@ To test that the benchmarks work, run `cargo test --benches`
             }
             _ => enable_text_coloring = stdout_isatty,
         }
-
-        match matches.value_of("plotting-backend") {
-            // Use plotting_backend() here to re-use the panic behavior if Gnuplot is not available.
-            Some("gnuplot") => self = self.plotting_backend(PlottingBackend::Gnuplot),
-            Some("plotters") => self = self.plotting_backend(PlottingBackend::Plotters),
-            Some(val) => panic!("Unexpected plotting backend '{}'", val),
-            None => {}
+        #[cfg(not(feature = "plotting"))]
+        {
+            if matches.value_of("plotting-backend").is_some() {
+                panic!("criterion was compiled with the `plotting` feature disabled.");
+            }
+        }
+        #[cfg(feature = "plotting")]
+        {
+            match matches.value_of("plotting-backend") {
+                // Use plotting_backend() here to re-use the panic behavior if Gnuplot is not available.
+                Some("gnuplot") => self = self.plotting_backend(PlottingBackend::Gnuplot),
+                Some("plotters") => self = self.plotting_backend(PlottingBackend::Plotters),
+                Some(val) => panic!("Unexpected plotting backend '{}'", val),
+                None => {}
+            }
         }
 
-        if matches.is_present("noplot") || matches.is_present("test") {
+        if matches.is_present("noplot")
+            || matches.is_present("test")
+            || cfg!(not(feature = "plotting"))
+        {
             self = self.without_plots();
         } else {
-            self = self.with_plots();
+            #[cfg(feature = "plotting")]
+            {
+                self = self.with_plots();
+            }
         }
 
         if let Some(dir) = matches.value_of("save-baseline") {
@@ -1304,9 +1346,11 @@ To test that the benchmarks work, run `cargo test --benches`
             self.test_mode = true;
             self.list_mode = true;
         }
-
-        if self.profile_time.is_none() && self.plotting_enabled {
-            reports.push(Box::new(Html::new(self.create_plotter())));
+        #[cfg(feature = "plotting")]
+        {
+            if self.profile_time.is_none() && self.plotting_enabled {
+                reports.push(Box::new(Html::new(self.create_plotter())));
+            }
         }
 
         self.report = Box::new(Reports::new(reports));

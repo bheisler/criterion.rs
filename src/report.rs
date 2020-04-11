@@ -15,6 +15,7 @@ use std::collections::HashSet;
 use std::fmt;
 use std::io::stdout;
 use std::io::Write;
+#[cfg(feature = "plotting")]
 use std::path::{Path, PathBuf};
 
 const MAX_DIRECTORY_NAME_LEN: usize = 64;
@@ -51,7 +52,7 @@ impl<'a> MeasurementData<'a> {
         self.data.y()
     }
 }
-
+#[cfg(feature = "plotting")]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum ValueType {
     Bytes,
@@ -169,6 +170,7 @@ impl BenchmarkId {
         &self.directory_name
     }
 
+    #[cfg(feature = "plotting")]
     pub fn as_number(&self) -> Option<f64> {
         match self.throughput {
             Some(Throughput::Bytes(n)) | Some(Throughput::Elements(n)) => Some(n as f64),
@@ -179,6 +181,7 @@ impl BenchmarkId {
         }
     }
 
+    #[cfg(feature = "plotting")]
     pub fn value_type(&self) -> Option<ValueType> {
         match self.throughput {
             Some(Throughput::Bytes(_)) => Some(ValueType::Bytes),
@@ -254,6 +257,7 @@ pub struct ReportContext {
     pub test_mode: bool,
 }
 impl ReportContext {
+    #[cfg(feature = "plotting")]
     pub fn report_path<P: AsRef<Path> + ?Sized>(&self, id: &BenchmarkId, file_name: &P) -> PathBuf {
         let mut path = PathBuf::from(format!(
             "{}/{}/report",

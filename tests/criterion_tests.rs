@@ -26,12 +26,19 @@ fn temp_dir() -> TempDir {
 // Configure a Criterion struct to perform really fast benchmarks. This is not
 // recommended for real benchmarking, only for testing.
 fn short_benchmark(dir: &TempDir) -> Criterion {
-    Criterion::default()
+    let crit = Criterion::default()
         .output_directory(dir.path())
         .warm_up_time(Duration::from_millis(250))
         .measurement_time(Duration::from_millis(500))
-        .nresamples(1000)
-        .with_plots()
+        .nresamples(1000);
+    #[cfg(feature = "plotting")]
+    {
+        crit.with_plots()
+    }
+    #[cfg(not(feature = "plotting"))]
+    {
+        crit.without_plots()
+    }
 }
 
 #[derive(Clone)]
