@@ -62,6 +62,7 @@ mod analysis;
 mod benchmark;
 #[macro_use]
 mod benchmark_group;
+#[cfg(feature = "csv")]
 mod csv_report;
 mod error;
 mod estimate;
@@ -94,6 +95,7 @@ use criterion_plot::{Version, VersionError};
 
 use crate::benchmark::BenchmarkConfig;
 use crate::benchmark::NamedRoutine;
+#[cfg(feature = "csv")]
 use crate::csv_report::FileCsvReport;
 use crate::estimate::{Distributions, Estimates, Statistic};
 #[cfg(feature = "plotting")]
@@ -735,7 +737,10 @@ impl Default for Criterion {
     fn default() -> Criterion {
         let mut reports: Vec<Box<dyn Report>> = vec![];
         reports.push(Box::new(CliReport::new(false, false, false)));
-        reports.push(Box::new(FileCsvReport));
+        #[cfg(feature = "csv")]
+        {
+            reports.push(Box::new(FileCsvReport));
+        }
 
         let output_directory =
             match std::env::vars().find(|&(ref key, _)| key == "CARGO_TARGET_DIR") {
@@ -973,7 +978,10 @@ impl<M: Measurement> Criterion<M> {
         self.plotting_enabled = true;
         let mut reports: Vec<Box<dyn Report>> = vec![];
         reports.push(Box::new(CliReport::new(false, false, false)));
-        reports.push(Box::new(FileCsvReport));
+        #[cfg(feature = "csv")]
+        {
+            reports.push(Box::new(FileCsvReport));
+        }
         #[cfg(feature = "plotting")]
         {
             reports.push(Box::new(Html::new(self.create_plotter())));
@@ -991,7 +999,10 @@ impl<M: Measurement> Criterion<M> {
         }
         let mut reports: Vec<Box<dyn Report>> = vec![];
         reports.push(Box::new(CliReport::new(false, false, false)));
-        reports.push(Box::new(FileCsvReport));
+        #[cfg(feature = "csv")]
+        {
+            reports.push(Box::new(FileCsvReport));
+        }
         self.report = Box::new(Reports::new(reports));
         self
     }
@@ -1237,7 +1248,10 @@ To test that the benchmarks work, run `cargo test --benches`
             enable_text_coloring,
             verbose,
         )));
-        reports.push(Box::new(FileCsvReport));
+        #[cfg(feature = "csv")]
+        {
+            reports.push(Box::new(FileCsvReport));
+        }
 
         if matches.is_present("profile-time") {
             let num_seconds = value_t!(matches.value_of("profile-time"), u64).unwrap_or_else(|e| {

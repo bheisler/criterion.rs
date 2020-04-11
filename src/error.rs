@@ -1,3 +1,4 @@
+#[cfg(feature = "csv")]
 use csv::Error as CsvError;
 use serde_json::Error as SerdeError;
 use std::error::Error as StdError;
@@ -20,6 +21,7 @@ pub enum Error {
         path: PathBuf,
         inner: SerdeError,
     },
+    #[cfg(feature = "csv")]
     CsvError(CsvError),
 }
 impl fmt::Display for Error {
@@ -36,6 +38,7 @@ impl fmt::Display for Error {
                 "Failed to read or write file {:?} due to serialization error: {}",
                 path, inner
             ),
+            #[cfg(feature = "csv")]
             Error::CsvError(inner) => write!(f, "CSV error: {}", inner),
         }
     }
@@ -46,6 +49,7 @@ impl StdError for Error {
             Error::AccessError { .. } => "AccessError",
             Error::CopyError { .. } => "CopyError",
             Error::SerdeError { .. } => "SerdeError",
+            #[cfg(feature = "csv")]
             Error::CsvError(_) => "CsvError",
         }
     }
@@ -55,10 +59,12 @@ impl StdError for Error {
             Error::AccessError { inner, .. } => Some(inner),
             Error::CopyError { inner, .. } => Some(inner),
             Error::SerdeError { inner, .. } => Some(inner),
+            #[cfg(feature = "csv")]
             Error::CsvError(inner) => Some(inner),
         }
     }
 }
+#[cfg(feature = "csv")]
 impl From<CsvError> for Error {
     fn from(other: CsvError) -> Error {
         Error::CsvError(other)

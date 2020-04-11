@@ -5,6 +5,7 @@ use crate::stats::univariate::outliers::tukey::LabeledSample;
 use crate::estimate::{Distributions, Estimates, Statistic};
 use crate::format;
 use crate::measurement::ValueFormatter;
+#[cfg(feature = "csv")]
 use crate::stats::univariate::Sample;
 use crate::stats::Distribution;
 use crate::Estimate;
@@ -43,6 +44,7 @@ pub(crate) struct MeasurementData<'a> {
     pub comparison: Option<ComparisonData>,
     pub throughput: Option<Throughput>,
 }
+#[cfg(feature = "csv")]
 impl<'a> MeasurementData<'a> {
     pub fn iter_counts(&self) -> &Sample<f64> {
         self.data.x()
