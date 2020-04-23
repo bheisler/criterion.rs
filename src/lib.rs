@@ -445,7 +445,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     }
 
     /// Times a `routine` that requires some input by generating a batch of input, then timing the
-    /// iteration of the benchmark over the input. See [`BatchSize`](struct.BatchSize.html) for
+    /// iteration of the benchmark over the input. See [`BatchSize`](enum.BatchSize.html) for
     /// details on choosing the batch size. Use this when the routine must consume its input.
     ///
     /// For example, use this loop to benchmark sorting algorithms, because they require unsorted
@@ -534,7 +534,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     }
 
     /// Times a `routine` that requires some input by generating a batch of input, then timing the
-    /// iteration of the benchmark over the input. See [`BatchSize`](struct.BatchSize.html) for
+    /// iteration of the benchmark over the input. See [`BatchSize`](enum.BatchSize.html) for
     /// details on choosing the batch size. Use this when the routine should accept the input by
     /// mutable reference.
     ///
