@@ -249,17 +249,15 @@ impl fmt::Debug for BenchmarkId {
 }
 
 pub struct ReportContext {
-    pub output_directory: String,
+    pub output_directory: PathBuf,
     pub plot_config: PlotConfiguration,
     pub test_mode: bool,
 }
 impl ReportContext {
     pub fn report_path<P: AsRef<Path> + ?Sized>(&self, id: &BenchmarkId, file_name: &P) -> PathBuf {
-        let mut path = PathBuf::from(format!(
-            "{}/{}/report",
-            self.output_directory,
-            id.as_directory_name()
-        ));
+        let mut path = self.output_directory.clone();
+        path.push(id.as_directory_name());
+        path.push("report");
         path.push(file_name);
         path
     }

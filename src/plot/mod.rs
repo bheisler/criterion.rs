@@ -6,6 +6,7 @@ pub(crate) use plotters_backend::PlottersBackend;
 
 use crate::measurement::ValueFormatter;
 use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext, ValueType};
+use std::path::PathBuf;
 
 #[derive(Clone, Copy)]
 pub(crate) struct PlotContext<'a> {
@@ -28,20 +29,20 @@ impl<'a> PlotContext<'a> {
         self
     }
 
-    pub fn line_comparison_path(&self) -> String {
-        format!(
-            "{}/{}/report/lines.svg",
-            self.context.output_directory,
-            self.id.as_directory_name()
-        )
+    pub fn line_comparison_path(&self) -> PathBuf {
+        let mut path = self.context.output_directory.clone();
+        path.push(self.id.as_directory_name());
+        path.push("report");
+        path.push("lines.svg");
+        path
     }
 
-    pub fn violin_path(&self) -> String {
-        format!(
-            "{}/{}/report/violin.svg",
-            self.context.output_directory,
-            self.id.as_directory_name()
-        )
+    pub fn violin_path(&self) -> PathBuf {
+        let mut path = self.context.output_directory.clone();
+        path.push(self.id.as_directory_name());
+        path.push("report");
+        path.push("violin.svg");
+        path
     }
 }
 

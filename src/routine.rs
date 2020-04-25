@@ -3,7 +3,6 @@ use crate::measurement::Measurement;
 use crate::report::{BenchmarkId, ReportContext};
 use crate::{Bencher, Criterion, DurationExt};
 use std::marker::PhantomData;
-use std::path::PathBuf;
 use std::time::Duration;
 
 /// PRIVATE
@@ -36,11 +35,9 @@ pub trait Routine<M: Measurement, T: ?Sized> {
             .report
             .profile(id, report_context, time.to_nanos() as f64);
 
-        let profile_path = PathBuf::from(format!(
-            "{}/{}/profile",
-            report_context.output_directory,
-            id.as_directory_name()
-        ));
+        let mut profile_path = report_context.output_directory.clone();
+        profile_path.push(id.as_directory_name());
+        profile_path.push("profile");
         criterion
             .profiler
             .borrow_mut()

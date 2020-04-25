@@ -17,7 +17,7 @@ use tinytemplate::TinyTemplate;
 
 const THUMBNAIL_SIZE: Option<Size> = Some(Size(450, 300));
 
-fn debug_context<S: Serialize>(path: &str, context: &S) {
+fn debug_context<S: Serialize>(path: &Path, context: &S) {
     if crate::debug_enabled() {
         let mut context_path = PathBuf::from(path);
         context_path.set_extension("json");
@@ -110,7 +110,7 @@ struct Comparison {
     additional_plots: Vec<Plot>,
 }
 
-fn if_exists(output_directory: &str, path: &Path) -> Option<String> {
+fn if_exists(output_directory: &Path, path: &Path) -> Option<String> {
     let report_path = path.join("report/index.html");
     if PathBuf::from(output_directory).join(&report_path).is_file() {
         Some(report_path.to_string_lossy().to_string())
@@ -125,7 +125,7 @@ struct ReportLink<'a> {
 }
 impl<'a> ReportLink<'a> {
     // TODO: Would be nice if I didn't have to keep making these components filename-safe.
-    fn group(output_directory: &str, group_id: &'a str) -> ReportLink<'a> {
+    fn group(output_directory: &Path, group_id: &'a str) -> ReportLink<'a> {
         let path = PathBuf::from(make_filename_safe(group_id));
 
         ReportLink {
@@ -134,7 +134,7 @@ impl<'a> ReportLink<'a> {
         }
     }
 
-    fn function(output_directory: &str, group_id: &str, function_id: &'a str) -> ReportLink<'a> {
+    fn function(output_directory: &Path, group_id: &str, function_id: &'a str) -> ReportLink<'a> {
         let mut path = PathBuf::from(make_filename_safe(group_id));
         path.push(make_filename_safe(function_id));
 
@@ -144,7 +144,7 @@ impl<'a> ReportLink<'a> {
         }
     }
 
-    fn value(output_directory: &str, group_id: &str, value_str: &'a str) -> ReportLink<'a> {
+    fn value(output_directory: &Path, group_id: &str, value_str: &'a str) -> ReportLink<'a> {
         let mut path = PathBuf::from(make_filename_safe(group_id));
         path.push(make_filename_safe(value_str));
 
@@ -154,7 +154,7 @@ impl<'a> ReportLink<'a> {
         }
     }
 
-    fn individual(output_directory: &str, id: &'a BenchmarkId) -> ReportLink<'a> {
+    fn individual(output_directory: &Path, id: &'a BenchmarkId) -> ReportLink<'a> {
         let path = PathBuf::from(id.as_directory_name());
         ReportLink {
             name: id.as_title(),
@@ -179,7 +179,7 @@ struct BenchmarkGroup<'a> {
     individual_links: Vec<BenchmarkValueGroup<'a>>,
 }
 impl<'a> BenchmarkGroup<'a> {
-    fn new(output_directory: &str, ids: &[&'a BenchmarkId]) -> BenchmarkGroup<'a> {
+    fn new(output_directory: &Path, ids: &[&'a BenchmarkId]) -> BenchmarkGroup<'a> {
         let group_id = &ids[0].group_id;
         let group_report = ReportLink::group(output_directory, group_id);
 
@@ -289,11 +289,12 @@ impl Report for Html {
         measurements: &MeasurementData<'_>,
         formatter: &dyn ValueFormatter,
     ) {
-        try_else_return!(fs::mkdirp(&format!(
-            "{}/{}/report/",
-            report_context.output_directory,
-            id.as_directory_name()
-        )));
+        try_else_return!({
+            let mut report_dir = report_context.output_directory.clone();
+            report_dir.push(id.as_directory_name());
+            report_dir.push("report");
+            fs::mkdirp(&report_dir)
+        });
 
         let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
 
@@ -363,19 +364,17 @@ impl Report for Html {
             comparison: self.comparison(measurements),
         };
 
-        let report_path = &format!(
-            "{}/{}/report/index.html",
-            report_context.output_directory,
-            id.as_directory_name()
-        );
-
+        let mut report_path = report_context.output_directory.clone();
+        report_path.push(id.as_directory_name());
+        report_path.push("report");
+        report_path.push("index.html");
         debug_context(&report_path, &context);
 
         let text = self
             .templates
             .render("benchmark_report", &context)
             .expect("Failed to render benchmark report template");
-        try_else_return!(fs::save_string(&text, report_path,));
+        try_else_return!(fs::save_string(&text, &report_path));
     }
 
     fn summarize(
@@ -387,11 +386,8 @@ impl Report for Html {
         let all_ids = all_ids
             .iter()
             .filter(|id| {
-                fs::is_dir(&format!(
-                    "{}/{}",
-                    context.output_directory,
-                    id.as_directory_name()
-                ))
+                let id_dir = context.output_directory.join(id.as_directory_name());
+                fs::is_dir(&id_dir)
             })
             .collect::<Vec<_>>();
 
@@ -530,9 +526,9 @@ impl Report for Html {
             .collect::<Vec<BenchmarkGroup<'_>>>();
         groups.sort_unstable_by_key(|g| g.group_report.name);
 
-        try_else_return!(fs::mkdirp(&format!("{}/report/", output_directory)));
+        try_else_return!(fs::mkdirp(&output_directory.join("report")));
 
-        let report_path = &format!("{}/report/index.html", output_directory);
+        let report_path = output_directory.join("report").join("index.html");
 
         let context = IndexContext { groups };
 
@@ -542,7 +538,7 @@ impl Report for Html {
             .templates
             .render("index", &context)
             .expect("Failed to render index template");
-        try_else_return!(fs::save_string(&text, report_path,));
+        try_else_return!(fs::save_string(&text, &report_path,));
     }
 }
 impl Html {
@@ -642,17 +638,21 @@ impl Html {
             .abs_distributions(plot_ctx, plot_data);
 
         if let Some(ref comp) = measurements.comparison {
-            try_else_return!(fs::mkdirp(&format!(
-                "{}/{}/report/change/",
-                context.output_directory,
-                id.as_directory_name()
-            )));
+            try_else_return!({
+                let mut change_dir = context.output_directory.clone();
+                change_dir.push(id.as_directory_name());
+                change_dir.push("report");
+                change_dir.push("change");
+                fs::mkdirp(&change_dir)
+            });
 
-            try_else_return!(fs::mkdirp(&format!(
-                "{}/{}/report/both",
-                context.output_directory,
-                id.as_directory_name()
-            )));
+            try_else_return!({
+                let mut both_dir = context.output_directory.clone();
+                both_dir.push(id.as_directory_name());
+                both_dir.push("report");
+                both_dir.push("both");
+                fs::mkdirp(&both_dir)
+            });
 
             let comp_data = plot_data.comparison(&comp);
 
@@ -673,15 +673,13 @@ impl Html {
 
     fn load_summary_data<'a>(
         &self,
-        output_directory: &str,
+        output_directory: &Path,
         all_ids: &[&'a BenchmarkId],
     ) -> Vec<(&'a BenchmarkId, Vec<f64>)> {
-        let output_dir = Path::new(output_directory);
-
         all_ids
             .iter()
             .filter_map(|id| {
-                let entry = output_dir.join(id.as_directory_name()).join("new");
+                let entry = output_directory.join(id.as_directory_name()).join("new");
 
                 let (iters, times): (Vec<f64>, Vec<f64>) =
                     try_else_return!(fs::load(&entry.join("sample.json")), || None);
@@ -712,11 +710,12 @@ impl Html {
         };
 
         try_else_return!(
-            fs::mkdirp(&format!(
-                "{}/{}/report/",
-                report_context.output_directory,
-                id.as_directory_name()
-            )),
+            {
+                let mut report_dir = report_context.output_directory.clone();
+                report_dir.push(id.as_directory_name());
+                report_dir.push("report");
+                fs::mkdirp(&report_dir)
+            },
             || {}
         );
 
@@ -749,25 +748,23 @@ impl Html {
             thumbnail_width: THUMBNAIL_SIZE.unwrap().0,
             thumbnail_height: THUMBNAIL_SIZE.unwrap().1,
 
-            violin_plot: Some(plot_ctx.violin_path()),
-            line_chart: line_path,
+            violin_plot: Some(plot_ctx.violin_path().to_string_lossy().into_owned()),
+            line_chart: line_path.map(|p| p.to_string_lossy().into_owned()),
 
             benchmarks,
         };
 
-        let report_path = &format!(
-            "{}/{}/report/index.html",
-            report_context.output_directory,
-            id.as_directory_name()
-        );
-
+        let mut report_path = report_context.output_directory.clone();
+        report_path.push(id.as_directory_name());
+        report_path.push("report");
+        report_path.push("index.html");
         debug_context(&report_path, &context);
 
         let text = self
             .templates
             .render("summary_report", &context)
             .expect("Failed to render summary report template");
-        try_else_return!(fs::save_string(&text, report_path,), || {});
+        try_else_return!(fs::save_string(&text, &report_path,), || {});
     }
 }
 

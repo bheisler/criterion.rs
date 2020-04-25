@@ -78,6 +78,7 @@ use std::default::Default;
 use std::fmt;
 use std::iter::IntoIterator;
 use std::marker::PhantomData;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 use std::time::Instant;
 
@@ -673,7 +674,7 @@ pub struct Criterion<M: Measurement = WallTime> {
     plotting_enabled: bool,
     filter: Option<Regex>,
     report: Box<dyn Report>,
-    output_directory: String,
+    output_directory: PathBuf,
     baseline_directory: String,
     baseline: Baseline,
     profile_time: Option<Duration>,
@@ -705,8 +706,8 @@ impl Default for Criterion {
 
         let output_directory =
             match std::env::vars().find(|&(ref key, _)| key == "CARGO_TARGET_DIR") {
-                Some((_, value)) => format!("{}/criterion", value),
-                None => "target/criterion".to_owned(),
+                Some((_, value)) => format!("{}/criterion", value).into(),
+                None => "target/criterion".into(),
             };
 
         Criterion {
@@ -986,8 +987,8 @@ impl<M: Measurement> Criterion<M> {
 
     /// Set the output directory (currently for testing only)
     #[doc(hidden)]
-    pub fn output_directory(mut self, path: &std::path::Path) -> Criterion<M> {
-        self.output_directory = path.to_string_lossy().into_owned();
+    pub fn output_directory(mut self, path: &Path) -> Criterion<M> {
+        self.output_directory = path.to_owned();
 
         self
     }

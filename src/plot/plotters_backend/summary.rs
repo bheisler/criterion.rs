@@ -3,6 +3,7 @@ use crate::AxisScale;
 use itertools::Itertools;
 use plotters::coord::{AsRangedCoord, Shift};
 use std::cmp::Ordering;
+use std::path::Path;
 
 const NUM_COLORS: usize = 8;
 static COMPARISON_COLORS: [RGBColor; NUM_COLORS] = [
@@ -20,7 +21,7 @@ pub fn line_comparison(
     formatter: &dyn ValueFormatter,
     title: &str,
     all_curves: &[&(&BenchmarkId, Vec<f64>)],
-    path: &str,
+    path: &Path,
     value_type: ValueType,
     axis_scale: AxisScale,
 ) {
@@ -149,7 +150,7 @@ pub fn violin(
     formatter: &dyn ValueFormatter,
     title: &str,
     all_curves: &[&(&BenchmarkId, Vec<f64>)],
-    path: &str,
+    path: &Path,
     axis_scale: AxisScale,
 ) {
     let all_curves_vec = all_curves.iter().rev().cloned().collect::<Vec<_>>();

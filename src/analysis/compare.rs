@@ -29,20 +29,16 @@ pub(crate) fn common<M: Measurement>(
     Vec<f64>,
     Estimates,
 )> {
-    let sample_dir = format!(
-        "{}/{}/{}/sample.json",
-        criterion.output_directory,
-        id.as_directory_name(),
-        criterion.baseline_directory
-    );
-    let (iters, times): (Vec<f64>, Vec<f64>) = fs::load(&sample_dir)?;
+    let mut sample_file = criterion.output_directory.clone();
+    sample_file.push(id.as_directory_name());
+    sample_file.push(&criterion.baseline_directory);
+    sample_file.push("sample.json");
+    let (iters, times): (Vec<f64>, Vec<f64>) = fs::load(&sample_file)?;
 
-    let estimates_file = &format!(
-        "{}/{}/{}/estimates.json",
-        criterion.output_directory,
-        id.as_directory_name(),
-        criterion.baseline_directory
-    );
+    let mut estimates_file = criterion.output_directory.clone();
+    estimates_file.push(id.as_directory_name());
+    estimates_file.push(&criterion.baseline_directory);
+    estimates_file.push("estimates.json");
     let base_estimates: Estimates = fs::load(&estimates_file)?;
 
     let base_avg_times: Vec<f64> = iters
@@ -52,11 +48,10 @@ pub(crate) fn common<M: Measurement>(
         .collect();
     let base_avg_time_sample = Sample::new(&base_avg_times);
 
-    fs::mkdirp(&format!(
-        "{}/{}/change",
-        criterion.output_directory,
-        id.as_directory_name()
-    ))?;
+    let mut change_dir = criterion.output_directory.clone();
+    change_dir.push(id.as_directory_name());
+    change_dir.push("change");
+    fs::mkdirp(&change_dir)?;
     let (t_statistic, t_distribution) = t_test(avg_times, base_avg_time_sample, config);
 
     let (estimates, relative_distributions) =
@@ -137,14 +132,13 @@ fn estimates<M: Measurement>(
     let estimates = build_estimates(&distributions, &point_estimates, cl);
 
     {
-        log_if_err!(fs::save(
-            &estimates,
-            &format!(
-                "{}/{}/change/estimates.json",
-                criterion.output_directory,
-                id.as_directory_name()
-            )
-        ));
+        log_if_err!({
+            let mut estimates_path = criterion.output_directory.clone();
+            estimates_path.push(id.as_directory_name());
+            estimates_path.push("change");
+            estimates_path.push("estimates.json");
+            fs::save(&estimates, &estimates_path)
+        });
     }
     (estimates, distributions)
 }

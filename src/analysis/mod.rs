@@ -84,12 +84,11 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
 
     let (iters, times);
     if let Some(baseline) = &criterion.load_baseline {
-        let loaded = fs::load::<(Box<[f64]>, Box<[f64]>), _>(&format!(
-            "{}/{}/{}/sample.json",
-            criterion.output_directory,
-            id.as_directory_name(),
-            baseline
-        ));
+        let mut sample_path = criterion.output_directory.clone();
+        sample_path.push(id.as_directory_name());
+        sample_path.push(baseline);
+        sample_path.push("sample.json");
+        let loaded = fs::load::<(Box<[f64]>, Box<[f64]>), _>(&sample_path);
 
         match loaded {
             Err(err) => panic!(
@@ -124,11 +123,12 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
     let avg_times = Sample::new(&avg_times);
 
     if criterion.load_baseline.is_none() {
-        log_if_err!(fs::mkdirp(&format!(
-            "{}/{}/new",
-            criterion.output_directory,
-            id.as_directory_name()
-        )));
+        log_if_err!({
+            let mut new_dir = criterion.output_directory.clone();
+            new_dir.push(id.as_directory_name());
+            new_dir.push("new");
+            fs::mkdirp(&new_dir)
+        });
     }
 
     let data = Data::new(&iters, &times);
@@ -140,22 +140,20 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
     distributions.insert(Statistic::Slope, distribution);
 
     if criterion.load_baseline.is_none() {
-        log_if_err!(fs::save(
-            &(data.x().as_ref(), data.y().as_ref()),
-            &format!(
-                "{}/{}/new/sample.json",
-                criterion.output_directory,
-                id.as_directory_name()
-            ),
-        ));
-        log_if_err!(fs::save(
-            &estimates,
-            &format!(
-                "{}/{}/new/estimates.json",
-                criterion.output_directory,
-                id.as_directory_name()
-            )
-        ));
+        log_if_err!({
+            let mut sample_file = criterion.output_directory.clone();
+            sample_file.push(id.as_directory_name());
+            sample_file.push("new");
+            sample_file.push("sample.json");
+            fs::save(&(data.x().as_ref(), data.y().as_ref()), &sample_file)
+        });
+        log_if_err!({
+            let mut estimates_file = criterion.output_directory.clone();
+            estimates_file.push(id.as_directory_name());
+            estimates_file.push("new");
+            estimates_file.push("estimates.json");
+            fs::save(&estimates, &estimates_file)
+        });
     }
 
     let compare_data = if base_dir_exists(
@@ -216,14 +214,13 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
     );
 
     if criterion.load_baseline.is_none() {
-        log_if_err!(fs::save(
-            &id,
-            &format!(
-                "{}/{}/new/benchmark.json",
-                criterion.output_directory,
-                id.as_directory_name()
-            )
-        ));
+        log_if_err!({
+            let mut benchmark_file = criterion.output_directory.clone();
+            benchmark_file.push(id.as_directory_name());
+            benchmark_file.push("new");
+            benchmark_file.push("benchmark.json");
+            fs::save(&id, &benchmark_file)
+        });
     }
 
     if let Baseline::Save = criterion.baseline {
@@ -235,14 +232,11 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
     }
 }
 
-fn base_dir_exists(id: &BenchmarkId, baseline: &str, output_directory: &str) -> bool {
-    Path::new(&format!(
-        "{}/{}/{}",
-        output_directory,
-        id.as_directory_name(),
-        baseline
-    ))
-    .exists()
+fn base_dir_exists(id: &BenchmarkId, baseline: &str, output_directory: &Path) -> bool {
+    let mut base_dir = output_directory.to_owned();
+    base_dir.push(id.as_directory_name());
+    base_dir.push(baseline);
+    base_dir.exists()
 }
 
 // Performs a simple linear regression on the sample
@@ -279,18 +273,17 @@ fn regression(
 // Classifies the outliers in the sample
 fn outliers<'a>(
     id: &BenchmarkId,
-    output_directory: &str,
+    output_directory: &Path,
     avg_times: &'a Sample<f64>,
 ) -> LabeledSample<'a, f64> {
     let sample = tukey::classify(avg_times);
-    log_if_err!(fs::save(
-        &sample.fences(),
-        &format!(
-            "{}/{}/new/tukey.json",
-            output_directory,
-            id.as_directory_name()
-        )
-    ));
+    log_if_err!({
+        let mut tukey_file = output_directory.to_owned();
+        tukey_file.push(id.as_directory_name());
+        tukey_file.push("new");
+        tukey_file.push("tukey.json");
+        fs::save(&sample.fences(), &tukey_file)
+    });
     sample
 }
 
@@ -331,7 +324,7 @@ fn estimates(avg_times: &Sample<f64>, config: &BenchmarkConfig) -> (Distribution
     (distributions, estimates)
 }
 
-fn copy_new_dir_to_base(id: &str, baseline: &str, output_directory: &str) {
+fn copy_new_dir_to_base(id: &str, baseline: &str, output_directory: &Path) {
     let root_dir = Path::new(output_directory).join(id);
     let base_dir = root_dir.join(baseline);
     let new_dir = root_dir.join("new");

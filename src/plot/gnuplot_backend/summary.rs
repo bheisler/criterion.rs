@@ -8,7 +8,7 @@ use crate::AxisScale;
 use criterion_plot::prelude::*;
 use itertools::Itertools;
 use std::cmp::Ordering;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Child;
 
 const NUM_COLORS: usize = 8;
@@ -37,7 +37,7 @@ pub fn line_comparison(
     formatter: &dyn ValueFormatter,
     title: &str,
     all_curves: &[&(&BenchmarkId, Vec<f64>)],
-    path: &str,
+    path: &Path,
     value_type: ValueType,
     axis_scale: AxisScale,
 ) -> Child {
@@ -125,7 +125,7 @@ pub fn violin(
     formatter: &dyn ValueFormatter,
     title: &str,
     all_curves: &[&(&BenchmarkId, Vec<f64>)],
-    path: &str,
+    path: &Path,
     axis_scale: AxisScale,
 ) -> Child {
     let path = PathBuf::from(&path);
