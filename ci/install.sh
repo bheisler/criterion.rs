@@ -4,6 +4,11 @@ if [ "$CLIPPY" = "yes" ]; then
     rustup component add clippy-preview
 fi
 
+if [ "$RUSTFMT" = "yes" ]; then
+    rustup component add rustfmt
+fi
+
+
 if [ "$DOCS" = "yes" ]; then
     cargo install mdbook --no-default-features
     cargo install mdbook-linkcheck
