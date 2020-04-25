@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   or unstable `libtest` benchmarks, and using similar statistical measurements as well. Though this
   provides less information than the default format, it may be useful for supporting tools which
   parse this output format.
+- Added `--nocapture` argument. This argument does nothing, but prevents Criterion.rs from exiting
+  when running tests or benchmarks and allowing stdout output from other tests.
 
 ## [0.3.1] - 2020-01-25
 ### Added
