@@ -751,7 +751,7 @@ impl Report for BencherReport {
         _estimate_ns: f64,
         _iter_count: u64,
     ) {
-        print!("test {} ...", id);
+        print!("test {} ... ", id);
     }
 
     fn measurement_complete(
@@ -768,7 +768,7 @@ impl Report for BencherReport {
         let unit = formatter.scale_for_machines(&mut values);
 
         println!(
-            ": {:>11} {}/iter (+/- {})",
+            "bench: {:>11} {}/iter (+/- {})",
             format::integer(values[0]),
             unit,
             format::integer(values[1])
