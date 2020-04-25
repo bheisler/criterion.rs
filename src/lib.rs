@@ -99,7 +99,7 @@ pub use crate::benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmar
 pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};
 
 lazy_static! {
-    static ref DEBUG_ENABLED: bool = std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG");
+    static ref DEBUG_ENABLED: bool = std::env::var_os("CRITERION_DEBUG").is_some();
     static ref GNUPLOT_VERSION: Result<Version, VersionError> = criterion_plot::version();
     static ref DEFAULT_PLOTTING_BACKEND: PlottingBackend = {
         match &*GNUPLOT_VERSION {
@@ -704,11 +704,14 @@ impl Default for Criterion {
         reports.push(Box::new(CliReport::new(false, false, false)));
         reports.push(Box::new(FileCsvReport));
 
-        let output_directory =
-            match std::env::vars().find(|&(ref key, _)| key == "CARGO_TARGET_DIR") {
-                Some((_, value)) => format!("{}/criterion", value).into(),
-                None => "target/criterion".into(),
-            };
+        let output_directory = match std::env::var_os("CARGO_TARGET_DIR") {
+            Some(value) => {
+                let mut target_dir = PathBuf::from(value);
+                target_dir.push("criterion");
+                target_dir
+            }
+            None => "target/criterion".into(),
+        };
 
         Criterion {
             config: BenchmarkConfig {
