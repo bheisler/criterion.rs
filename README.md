@@ -50,7 +50,7 @@ Criterion.<span></span>rs helps you write fast code by detecting and measuring p
 
 ### Quickstart
 
-In order to generate plots, you must have [gnuplot](http://www.gnuplot.info/) installed. See the gnuplot website for installation instructions. Criterion.rs also currently requires Rust 1.28 or later (see [Compatibility Policy](#compatibility-policy) for more details).
+In order to generate plots, you must have [gnuplot](http://www.gnuplot.info/) installed. See the gnuplot website for installation instructions. See [Compatibility Policy](#compatibility-policy) for details on the minimum supported Rust version.
 
 To start with Criterion.<span></span>rs, add the following to your `Cargo.toml` file:
 
@@ -117,9 +117,9 @@ For more details, see the [CONTRIBUTING.md file](https://github.com/bheisler/cri
 ### Compatibility Policy
 
 Criterion.<span></span>rs supports the last three stable minor releases of Rust. At time of
-writing, this means Rust 1.33 or later. Older versions may work, but are not tested or guaranteed.
+writing, this means Rust 1.40 or later. Older versions may work, but are not tested or guaranteed.
 
-Currently, the oldest version of Rust believed to work is 1.32. Future versions of Criterion.rs may
+Currently, the oldest version of Rust believed to work is 1.33. Future versions of Criterion.<span></span>rs may
 break support for such old versions, and this will not be considered a breaking change. If you
 require Criterion.<span></span>rs to work on old versions of Rust, you will need to stick to a
 specific patch version of Criterion.<span></span>rs.
