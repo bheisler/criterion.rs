@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added `--nocapture` argument. This argument does nothing, but prevents Criterion.rs from exiting
   when running tests or benchmarks and allowing stdout output from other tests.
 
+### Fixed
+- Fixed panic when environment variables contains non-UTF8 characters.
+- Fixed panic when `CRITERION_DEBUG` or `CRITERION_TARGET_DIR` environment variables contain 
+  non-UTF8 characters.
+
 ## [0.3.1] - 2020-01-25
 ### Added
 - Added new plotting backend using the `plotters` crate. Implementation generously provided by Hao 
