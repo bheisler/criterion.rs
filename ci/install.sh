@@ -1,5 +1,9 @@
 set -ex
 
+if [ "$CLIPPY" = "yes" ]; then
+    rustup component add clippy-preview
+fi
+
 if [ "$DOCS" = "yes" ]; then
     cargo install mdbook --no-default-features
     cargo install mdbook-linkcheck
