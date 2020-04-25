@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 /// PRIVATE
-pub trait Routine<M: Measurement, T> {
+pub trait Routine<M: Measurement, T: ?Sized> {
     /// PRIVATE
     fn bench(&mut self, m: &M, iters: &[u64], parameter: &T) -> Vec<f64>;
     /// PRIVATE
@@ -165,6 +165,7 @@ fn recommend_sample_size(target_time: f64, met: f64) -> u64 {
 pub struct Function<M: Measurement, F, T>
 where
     F: FnMut(&mut Bencher<'_, M>, &T),
+    T: ?Sized,
 {
     f: F,
     // TODO: Is there some way to remove these?
@@ -174,6 +175,7 @@ where
 impl<M: Measurement, F, T> Function<M, F, T>
 where
     F: FnMut(&mut Bencher<'_, M>, &T),
+    T: ?Sized,
 {
     pub fn new(f: F) -> Function<M, F, T> {
         Function {
@@ -187,6 +189,7 @@ where
 impl<M: Measurement, F, T> Routine<M, T> for Function<M, F, T>
 where
     F: FnMut(&mut Bencher<'_, M>, &T),
+    T: ?Sized,
 {
     fn bench(&mut self, m: &M, iters: &[u64], parameter: &T) -> Vec<f64> {
         let f = &mut self.f;
