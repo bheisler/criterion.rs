@@ -11,6 +11,7 @@ This results in several limitations:
   are compiled as a separate crate, and non-`pub` functions are not visible to the benchmarks.
 * It is not possible to benchmark functions in binary crates. Binary crates cannot be dependencies of other
   crates, and that includes external tests and benchmarks ([see here](https://github.com/rust-lang/cargo/issues/4316) for more details)
+* Is is not possible to benchmark functions in crates that do not provide an `rlib`.
 
 Criterion.rs cannot currently solve these issues. An [experimental RFC](https://github.com/rust-lang/rust/issues/50297) is being implemented to enable custom test and benchmarking frameworks.
 

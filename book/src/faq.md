@@ -69,7 +69,7 @@ records to `Cargo.toml` like this:
 
 ```toml
 [[bin]]
-name = "ny-binary"
+name = "my-binary"
 path = "src/bin/my-binary.rs"
 bench = false
 ```
@@ -233,3 +233,23 @@ run in test mode. In particular, when you run `cargo test --benches` (run tests,
 benchmarks) Cargo does not pass either of these arguments. This is perhaps strange, since `cargo
 bench --test` passes both `--bench` and `--test`. In any case, Criterion.rs benchmarks run in test
 mode when `--bench` is not present, or when `--bench` and `--test` are both present.
+
+### My benchmark fails to compile with the error "use of undeclared type or module `<my_crate>`
+
+First, check the [Getting Started](https://bheisler.github.io/criterion.rs/book/getting_started.html) 
+guide and ensure that the `[[bench]]` section of your Cargo.toml is set up correctly. If it's
+correct, read on.
+
+This can be caused by two different things.
+
+Most commonly, this problem happens when trying to benchmark a binary (as opposed to library) crate.
+Criterion.rs cannot be used to benchmark binary crates (see the 
+[Known Limitations](https://bheisler.github.io/criterion.rs/book/user_guide/known_limitations.html)
+page for more details on why). The usual workaround is to structure your application as a library
+crate that implements most of the functionality of the application and a binary crate which acts
+as a thin wrapper around the library crate to provide things like a CLI. Then, you can create
+Criterion.rs benchmarks that depend on the library crate.
+
+Less often, the problem is that the library crate is configured to compile as a `cdylib`. In order
+to benchmark your crate with Criterion.rs, you will need to set your Cargo.toml to enable generating
+an `rlib` as well.
