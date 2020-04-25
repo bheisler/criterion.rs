@@ -17,6 +17,9 @@ regular expression matching the benchmark ID. For example, running
 * To save a baseline, use `cargo bench -- --save-baseline <name>`. To compare against an existing baseline, use `cargo bench -- --baseline <name>`. For more on baselines, see below.
 * To test that the benchmarks run successfully without performing the measurement or analysis (eg. in a CI setting), use `cargo test --benches`.
 * To override the default plotting backend, use `cargo bench -- --plotting-backend gnuplot` or `cargo bench --plotting-backend plotters`. `gnuplot` is used by default if it is installed.
+* To change the CLI output format, use `cargo bench -- --output-format <name>`. Supported output formats are:
+ * `criterion` - Use Criterion's normal output format
+ * `bencher` - An output format similar to the output produced by the `bencher` crate or nightly `libtest` benchmarks. Though this provides less information than the `criterion` format, it may be useful to support external tools that can parse this output.
 
 ## Baselines
 

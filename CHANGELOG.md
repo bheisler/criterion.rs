@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Added `?Sized` bound to benchmark parameter types, which allows dynamically sized types like
   `&str` and `&[T]` to be used as benchmark parameters.
+- Added the `--output-format <format>` command-line option. If `--output-format bencher` is passed,
+  Criterion.rs will print its measurements in a format similar to that used by the `bencher` crate
+  or unstable `libtest` benchmarks, and using similar statistical measurements as well. Though this
+  provides less information than the default format, it may be useful for supporting tools which
+  parse this output format.
 
 ## [0.3.1] - 2020-01-25
 ### Added
