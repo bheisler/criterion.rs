@@ -43,7 +43,6 @@ use std::slice;
 
 use crate::stats::float::Float;
 use crate::stats::univariate::Sample;
-use cast;
 
 use self::Label::*;
 

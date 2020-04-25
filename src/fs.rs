@@ -1,6 +1,5 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use serde_json;
 use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::io::Read;

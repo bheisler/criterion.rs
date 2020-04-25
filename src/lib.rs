@@ -22,9 +22,9 @@
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
-        clippy::used_underscore_binding,
-        clippy::just_underscores_and_digits,
-        clippy::transmute_ptr_to_ptr
+        clippy::just_underscores_and_digits, // Used in the stats code
+        clippy::transmute_ptr_to_ptr, // Used in the stats code
+        clippy::option_as_ref_deref, // Remove when MSRV bumped above 1.40
     )
 )]
 
@@ -41,8 +41,6 @@ use regex::Regex;
 
 #[macro_use]
 extern crate lazy_static;
-use atty;
-use criterion_plot;
 
 #[cfg(feature = "real_blackbox")]
 extern crate test;
@@ -100,8 +98,8 @@ pub use crate::benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmar
 pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};
 
 lazy_static! {
-    static ref DEBUG_ENABLED: bool = { std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG") };
-    static ref GNUPLOT_VERSION: Result<Version, VersionError> = { criterion_plot::version() };
+    static ref DEBUG_ENABLED: bool = std::env::vars().any(|(key, _)| key == "CRITERION_DEBUG");
+    static ref GNUPLOT_VERSION: Result<Version, VersionError> = criterion_plot::version();
     static ref DEFAULT_PLOTTING_BACKEND: PlottingBackend = {
         match &*GNUPLOT_VERSION {
             Ok(_) => PlottingBackend::Gnuplot,
