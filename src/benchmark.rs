@@ -99,7 +99,6 @@ pub trait BenchmarkDefinition<M: Measurement = WallTime>: Sized {
 
 macro_rules! benchmark_config {
     ($type:tt) => {
-
         /// Changes the size of the sample for this benchmark
         ///
         /// A bigger sample should yield more accurate results if paired with a sufficiently large
@@ -165,18 +164,18 @@ macro_rules! benchmark_config {
             self
         }
 
-    /// Changes the default noise threshold for this benchmark. The noise threshold
-    /// is used to filter out small changes in performance, even if they are statistically
-    /// significant. Sometimes benchmarking the same code twice will result in small but
-    /// statistically significant differences solely because of noise. This provides a way to filter
-    /// out some of these false positives at the cost of making it harder to detect small changes
-    /// to the true performance of the benchmark.
-    ///
-    /// The default is 0.01, meaning that changes smaller than 1% will be ignored.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the threshold is set to a negative value
+        /// Changes the default noise threshold for this benchmark. The noise threshold
+        /// is used to filter out small changes in performance, even if they are statistically
+        /// significant. Sometimes benchmarking the same code twice will result in small but
+        /// statistically significant differences solely because of noise. This provides a way to filter
+        /// out some of these false positives at the cost of making it harder to detect small changes
+        /// to the true performance of the benchmark.
+        ///
+        /// The default is 0.01, meaning that changes smaller than 1% will be ignored.
+        ///
+        /// # Panics
+        ///
+        /// Panics if the threshold is set to a negative value
         pub fn noise_threshold(mut self, threshold: f64) -> Self {
             assert!(threshold >= 0.0);
 
@@ -234,8 +233,7 @@ macro_rules! benchmark_config {
             self.config.plot_config = new_config;
             self
         }
-
-    }
+    };
 }
 
 impl<M> Benchmark<M>
