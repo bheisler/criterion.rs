@@ -93,7 +93,7 @@ use crate::html::Html;
 use crate::measurement::{Measurement, WallTime};
 use crate::plot::{Gnuplot, Plotter, PlottersBackend};
 use crate::profiler::{ExternalProfiler, Profiler};
-use crate::report::{CliReport, Report, ReportContext, Reports};
+use crate::report::{BencherReport, CliReport, Report, ReportContext, Reports};
 use crate::routine::Function;
 
 pub use crate::benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
@@ -1106,7 +1106,13 @@ impl<M: Measurement> Criterion<M> {
                  .long("plotting-backend")
                  .takes_value(true)
                  .possible_values(&["gnuplot", "plotters"])
-                 .help("Set the plotting backend. By default, Criterion will use the gnuplot backend if gnuplot is available, or the plotters backend if it isn't."))
+                 .help("Set the plotting backend. By default, Criterion.rs will use the gnuplot backend if gnuplot is available, or the plotters backend if it isn't."))
+            .arg(Arg::with_name("output-format")
+                .long("output-format")
+                .takes_value(true)
+                .possible_values(&["criterion", "bencher"])
+                .default_value("criterion")
+                .help("Change the CLI output format. By default, Criterion.rs will use its own format. If output format is set to 'bencher', Criterion.rs will print output in a format that resembles the 'bencher' crate."))
             .arg(Arg::with_name("version")
                 .hidden(true)
                 .short("V")
@@ -1125,21 +1131,6 @@ To test that the benchmarks work, run `cargo test --benches`
 
         if let Some(filter) = matches.value_of("FILTER") {
             self = self.with_filter(filter);
-        }
-
-        let verbose = matches.is_present("verbose");
-        let stdout_isatty = atty::is(atty::Stream::Stdout);
-        let mut enable_text_overwrite = stdout_isatty && !verbose && !debug_enabled();
-        let enable_text_coloring;
-        match matches.value_of("color") {
-            Some("always") => {
-                enable_text_coloring = true;
-            }
-            Some("never") => {
-                enable_text_coloring = false;
-                enable_text_overwrite = false;
-            }
-            _ => enable_text_coloring = stdout_isatty,
         }
 
         match matches.value_of("plotting-backend") {
@@ -1166,11 +1157,33 @@ To test that the benchmarks work, run `cargo test --benches`
         }
 
         let mut reports: Vec<Box<dyn Report>> = vec![];
-        reports.push(Box::new(CliReport::new(
-            enable_text_overwrite,
-            enable_text_coloring,
-            verbose,
-        )));
+
+        let cli_report: Box<dyn Report> = match matches.value_of("output-format") {
+            Some("bencher") => Box::new(BencherReport),
+            _ => {
+                let verbose = matches.is_present("verbose");
+                let stdout_isatty = atty::is(atty::Stream::Stdout);
+                let mut enable_text_overwrite = stdout_isatty && !verbose && !debug_enabled();
+                let enable_text_coloring;
+                match matches.value_of("color") {
+                    Some("always") => {
+                        enable_text_coloring = true;
+                    }
+                    Some("never") => {
+                        enable_text_coloring = false;
+                        enable_text_overwrite = false;
+                    }
+                    _ => enable_text_coloring = stdout_isatty,
+                };
+                Box::new(CliReport::new(
+                    enable_text_overwrite,
+                    enable_text_coloring,
+                    verbose,
+                ))
+            }
+        };
+
+        reports.push(cli_report);
         reports.push(Box::new(FileCsvReport));
 
         if matches.is_present("profile-time") {

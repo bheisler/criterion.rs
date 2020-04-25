@@ -72,6 +72,10 @@ pub fn iter_count(iterations: u64) -> String {
     }
 }
 
+pub fn integer(n: f64) -> String {
+    format!("{}", n as u64)
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
