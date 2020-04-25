@@ -12,7 +12,7 @@ The plots and saved data are stored under `target/criterion/$BENCHMARK_NAME/`. H
 the folder structure:
 
 ```
-$BENCHMARK/
+$BENCHMARK_NAME/
 ├── base/
 │  ├── raw.csv
 │  ├── estimates.json
