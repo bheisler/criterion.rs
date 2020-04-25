@@ -9,11 +9,9 @@ If you only have one input to your function, you can use a simple interface on t
 to run that benchmark.
 
 ```rust
-use std::iter;
-
 use criterion::BenchmarkId;
 use criterion::Criterion;
-use criterion::Throughput;
+use criterion::{criterion_group, criterion_main};
 
 fn do_something(size: usize) {
     // Do something with the size
@@ -22,7 +20,7 @@ fn do_something(size: usize) {
 fn from_elem(c: &mut Criterion) {
     let size: usize = 1024;
 
-    c.bench_with_input(BenchmarkId::new("input_example", size), size, |b, &s| {
+    c.bench_with_input(BenchmarkId::new("input_example", size), &size, |b, &s| {
         b.iter(|| do_something(s));
     });
 }
