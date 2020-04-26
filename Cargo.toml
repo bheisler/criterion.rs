@@ -52,6 +52,7 @@ real_blackbox = []
 default = []
 
 [workspace]
+exclude = ["cargo-criterion"]
 
 [[bench]]
 name = "bench_main"
