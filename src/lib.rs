@@ -717,13 +717,16 @@ impl Default for Criterion {
         reports.push(Box::new(CliReport::new(false, false, false)));
         reports.push(Box::new(FileCsvReport));
 
-        let output_directory = match std::env::var_os("CARGO_TARGET_DIR") {
-            Some(value) => {
-                let mut target_dir = PathBuf::from(value);
-                target_dir.push("criterion");
-                target_dir
-            }
-            None => "target/criterion".into(),
+        // Set criterion home to (in descending order of preference):
+        // - $CRITERION_HOME (cargo-criterion sets this, but other users could as well)
+        // - $CARGO_TARGET_DIR/criterion
+        // - ./target/criterion
+        let output_directory = if let Some(value) = std::env::var_os("CRITERION_HOME") {
+            PathBuf::from(value)
+        } else if let Some(value) = std::env::var_os("CARGO_TARGET_DIR") {
+            PathBuf::from(value).join("criterion")
+        } else {
+            PathBuf::from("target/criterion")
         };
 
         Criterion {
