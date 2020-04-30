@@ -78,7 +78,9 @@ use std::default::Default;
 use std::fmt;
 use std::iter::IntoIterator;
 use std::marker::PhantomData;
+use std::net::TcpStream;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 use std::time::Duration;
 use std::time::Instant;
 
@@ -114,6 +116,16 @@ lazy_static! {
                 };
                 PlottingBackend::Plotters
             }
+        }
+    };
+    static ref CARGO_CRITERION_CONNECTION: Option<Mutex<TcpStream>> = {
+        match std::env::var("CARGO_CRITERION_PORT") {
+            Ok(port_str) => {
+                let port: u16 = port_str.parse().ok()?;
+                let stream = TcpStream::connect(("localhost", port)).ok()?;
+                Some(Mutex::new(stream))
+            }
+            Err(_) => None,
         }
     };
 }
@@ -685,6 +697,7 @@ pub struct Criterion<M: Measurement = WallTime> {
     all_titles: HashSet<String>,
     measurement: M,
     profiler: Box<RefCell<dyn Profiler>>,
+    connection: Option<&'static Mutex<TcpStream>>,
 }
 
 impl Default for Criterion {
@@ -738,6 +751,7 @@ impl Default for Criterion {
             all_titles: HashSet::new(),
             measurement: WallTime,
             profiler: Box::new(RefCell::new(ExternalProfiler)),
+            connection: CARGO_CRITERION_CONNECTION.as_ref(),
         }
     }
 }
@@ -763,6 +777,7 @@ impl<M: Measurement> Criterion<M> {
             all_titles: self.all_titles,
             measurement: m,
             profiler: self.profiler,
+            connection: self.connection,
         }
     }
 
@@ -1151,6 +1166,10 @@ To test that the benchmarks work, run `cargo test --benches`
             self = self.without_plots();
         } else {
             self = self.with_plots();
+        }
+
+        if self.connection.is_some() {
+            self = self.without_plots();
         }
 
         if let Some(dir) = matches.value_of("save-baseline") {
