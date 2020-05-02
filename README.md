@@ -142,3 +142,4 @@ Criterion.<span></span>rs is dual licensed under the Apache 2.0 license and the 
 ### Criterion.rs Extensions
 
 - [criterion-cycles-per-byte](https://crates.io/crates/criterion-cycles-per-byte) - A custom-measurement plugin that counts the number of CPU cycles used by the benchmark
+- [criterion-perf-events](https://crates.io/crates/criterion-perf-events) - A custom-measurement plugin that counts perf events created by the benchmark
