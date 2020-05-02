@@ -57,6 +57,7 @@ mod analysis;
 mod benchmark;
 #[macro_use]
 mod benchmark_group;
+mod connection;
 mod csv_report;
 mod error;
 mod estimate;
@@ -80,7 +81,7 @@ use std::iter::IntoIterator;
 use std::marker::PhantomData;
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 use std::time::Instant;
 
@@ -88,6 +89,7 @@ use criterion_plot::{Version, VersionError};
 
 use crate::benchmark::BenchmarkConfig;
 use crate::benchmark::NamedRoutine;
+use crate::connection::Connection;
 use crate::csv_report::FileCsvReport;
 use crate::estimate::{Distributions, Estimates, Statistic};
 use crate::html::Html;
@@ -118,12 +120,12 @@ lazy_static! {
             }
         }
     };
-    static ref CARGO_CRITERION_CONNECTION: Option<Mutex<TcpStream>> = {
+    static ref CARGO_CRITERION_CONNECTION: Option<Mutex<Connection>> = {
         match std::env::var("CARGO_CRITERION_PORT") {
             Ok(port_str) => {
                 let port: u16 = port_str.parse().ok()?;
                 let stream = TcpStream::connect(("localhost", port)).ok()?;
-                Some(Mutex::new(stream))
+                Some(Mutex::new(Connection::new(stream)))
             }
             Err(_) => None,
         }
@@ -697,7 +699,7 @@ pub struct Criterion<M: Measurement = WallTime> {
     all_titles: HashSet<String>,
     measurement: M,
     profiler: Box<RefCell<dyn Profiler>>,
-    connection: Option<&'static Mutex<TcpStream>>,
+    connection: Option<MutexGuard<'static, Connection>>,
 }
 
 impl Default for Criterion {
@@ -754,7 +756,9 @@ impl Default for Criterion {
             all_titles: HashSet::new(),
             measurement: WallTime,
             profiler: Box::new(RefCell::new(ExternalProfiler)),
-            connection: CARGO_CRITERION_CONNECTION.as_ref(),
+            connection: CARGO_CRITERION_CONNECTION
+                .as_ref()
+                .map(|mtx| mtx.lock().unwrap()),
         }
     }
 }

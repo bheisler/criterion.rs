@@ -1,5 +1,6 @@
 use crate::analysis;
 use crate::benchmark::PartialBenchmarkConfig;
+use crate::connection::OutgoingMessage;
 use crate::measurement::Measurement;
 use crate::report::BenchmarkId as InternalBenchmarkId;
 use crate::report::ReportContext;
@@ -294,6 +295,11 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
         self.criterion.all_titles.insert(id.as_title().to_owned());
 
         if self.criterion.filter_matches(id.id()) {
+            if let Some(conn) = &mut self.criterion.connection {
+                conn.send(&OutgoingMessage::BeginningBenchmark { id: (&id).into() })
+                    .unwrap();
+            }
+
             self.any_matched = true;
 
             let mut func = Function::new(f);
@@ -307,6 +313,11 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
                 input,
                 self.throughput.clone(),
             );
+        } else {
+            if let Some(conn) = &mut self.criterion.connection {
+                conn.send(&OutgoingMessage::SkippingBenchmark { id: (&id).into() })
+                    .unwrap();
+            }
         }
 
         self.all_ids.push(id);
