@@ -106,8 +106,8 @@ lazy_static! {
             Ok(_) => PlottingBackend::Gnuplot,
             Err(e) => {
                 match e {
-                    VersionError::Exec(_) => println!("Gnuplot not found, using plotters backend"),
-                    e => println!(
+                    VersionError::Exec(_) => eprintln!("Gnuplot not found, using plotters backend"),
+                    e => eprintln!(
                         "Gnuplot not found or not usable, using plotters backend\n{}",
                         e
                     ),
