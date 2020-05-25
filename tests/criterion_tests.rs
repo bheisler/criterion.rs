@@ -12,7 +12,7 @@ use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::{Duration, SystemTime};
-use tempdir::TempDir;
+use tempfile::{tempdir, TempDir};
 use walkdir::WalkDir;
 
 /*
@@ -20,7 +20,7 @@ use walkdir::WalkDir;
  * Criterion.rs. See the benches folder for actual examples.
  */
 fn temp_dir() -> TempDir {
-    TempDir::new("").unwrap()
+    tempdir().unwrap()
 }
 
 // Configure a Criterion struct to perform really fast benchmarks. This is not
