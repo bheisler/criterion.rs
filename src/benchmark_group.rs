@@ -340,6 +340,13 @@ impl<'a, M: Measurement> Drop for BenchmarkGroup<'a, M> {
             && self.criterion.profile_time.is_none()
             && !self.criterion.test_mode
         {
+            if let Some(conn) = &mut self.criterion.connection {
+                conn.send(&OutgoingMessage::FinishedBenchmarkGroup {
+                    group: &self.group_name,
+                })
+                .unwrap();
+            }
+
             let report_context = ReportContext {
                 output_directory: self.criterion.output_directory.clone(),
                 plot_config: self.partial_config.plot_config.clone(),

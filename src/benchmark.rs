@@ -313,6 +313,11 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
         let mut all_ids = vec![];
         let mut any_matched = false;
 
+        if let Some(conn) = &c.connection {
+            conn.send(&OutgoingMessage::BeginningBenchmarkGroup { group: group_id })
+                .unwrap();
+        }
+
         for routine in self.routines {
             let function_id = if num_routines == 1 && group_id == routine.id {
                 None
@@ -356,6 +361,11 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
             }
 
             all_ids.push(id);
+        }
+
+        if let Some(conn) = &c.connection {
+            conn.send(&OutgoingMessage::FinishedBenchmarkGroup { group: group_id })
+                .unwrap();
         }
 
         if all_ids.len() > 1 && any_matched && c.profile_time.is_none() && !c.test_mode {
@@ -473,6 +483,11 @@ where
         let mut all_ids = vec![];
         let mut any_matched = false;
 
+        if let Some(conn) = &c.connection {
+            conn.send(&OutgoingMessage::BeginningBenchmarkGroup { group: group_id })
+                .unwrap();
+        }
+
         for routine in self.routines {
             for value in &self.values {
                 let function_id = if num_routines == 1 && group_id == routine.id {
@@ -501,7 +516,7 @@ where
                 c.all_titles.insert(id.as_title().to_owned());
 
                 if c.filter_matches(id.id()) {
-                    if let Some(conn) = &mut c.connection {
+                    if let Some(conn) = &c.connection {
                         conn.send(&OutgoingMessage::BeginningBenchmark { id: (&id).into() })
                             .unwrap();
                     }
@@ -517,7 +532,7 @@ where
                         throughput,
                     );
                 } else {
-                    if let Some(conn) = &mut c.connection {
+                    if let Some(conn) = &c.connection {
                         conn.send(&OutgoingMessage::SkippingBenchmark { id: (&id).into() })
                             .unwrap();
                     }
@@ -525,6 +540,11 @@ where
 
                 all_ids.push(id);
             }
+        }
+
+        if let Some(conn) = &c.connection {
+            conn.send(&OutgoingMessage::FinishedBenchmarkGroup { group: group_id })
+                .unwrap();
         }
 
         if all_ids.len() > 1 && any_matched && c.profile_time.is_none() && !c.test_mode {

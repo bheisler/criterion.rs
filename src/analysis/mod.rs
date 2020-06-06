@@ -8,6 +8,7 @@ use crate::stats::univariate::Sample;
 use crate::stats::{Distribution, Tails};
 
 use crate::benchmark::BenchmarkConfig;
+use crate::connection::OutgoingMessage;
 use crate::estimate::{Distributions, Estimates, Statistic};
 use crate::fs;
 use crate::measurement::Measurement;
@@ -101,7 +102,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
             }
         }
     } else {
-        let samples = routine.sample(
+        let sample = routine.sample(
             &criterion.measurement,
             id,
             config,
@@ -109,8 +110,18 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
             report_context,
             parameter,
         );
-        iters = samples.0;
-        times = samples.1;
+        iters = sample.0;
+        times = sample.1;
+
+        if let Some(conn) = &criterion.connection {
+            let iters: Vec<_> = iters.iter().map(|iter_count| *iter_count as u64).collect();
+            conn.send(&OutgoingMessage::MeasurementComplete {
+                id: id.into(),
+                iters: &iters,
+                times: &times,
+            })
+            .unwrap();
+        }
     }
 
     criterion.report.analysis(id, report_context);

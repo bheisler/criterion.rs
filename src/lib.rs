@@ -90,6 +90,7 @@ use criterion_plot::{Version, VersionError};
 use crate::benchmark::BenchmarkConfig;
 use crate::benchmark::NamedRoutine;
 use crate::connection::Connection;
+use crate::connection::OutgoingMessage;
 use crate::csv_report::FileCsvReport;
 use crate::estimate::{Distributions, Estimates, Statistic};
 use crate::html::Html;
@@ -125,7 +126,7 @@ lazy_static! {
             Ok(port_str) => {
                 let port: u16 = port_str.parse().ok()?;
                 let stream = TcpStream::connect(("localhost", port)).ok()?;
-                Some(Mutex::new(Connection::new(stream)))
+                Some(Mutex::new(Connection::new(stream).ok()?))
             }
             Err(_) => None,
         }
@@ -1364,7 +1365,14 @@ To test that the benchmarks work, run `cargo test --benches`
     /// criterion_main!(benches);
     /// ```
     pub fn benchmark_group<S: Into<String>>(&mut self, group_name: S) -> BenchmarkGroup<'_, M> {
-        BenchmarkGroup::new(self, group_name.into())
+        let group_name = group_name.into();
+
+        if let Some(conn) = &self.connection {
+            conn.send(&OutgoingMessage::BeginningBenchmarkGroup { group: &group_name })
+                .unwrap();
+        }
+
+        BenchmarkGroup::new(self, group_name)
     }
 }
 impl<M> Criterion<M>

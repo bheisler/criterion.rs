@@ -1,4 +1,5 @@
 use crate::benchmark::BenchmarkConfig;
+use crate::connection::OutgoingMessage;
 use crate::measurement::Measurement;
 use crate::report::{BenchmarkId, ReportContext};
 use crate::{Bencher, Criterion, DurationExt};
@@ -87,6 +88,14 @@ pub trait Routine<M: Measurement, T: ?Sized> {
             .report
             .warmup(id, report_context, wu.to_nanos() as f64);
 
+        if let Some(conn) = &criterion.connection {
+            conn.send(&OutgoingMessage::Warmup {
+                id: id.into(),
+                nanos: wu.to_nanos() as f64,
+            })
+            .unwrap();
+        }
+
         let (wu_elapsed, wu_iters) = self.warm_up(measurement, wu, parameter);
         if crate::debug_enabled() {
             println!(
@@ -128,6 +137,17 @@ pub trait Routine<M: Measurement, T: ?Sized> {
             expected_ns,
             m_iters.iter().sum(),
         );
+
+        if let Some(conn) = &criterion.connection {
+            conn.send(&OutgoingMessage::MeasurementStart {
+                id: id.into(),
+                sample_count: n,
+                estimate_ns: expected_ns,
+                iter_count: m_iters.iter().sum(),
+            })
+            .unwrap();
+        }
+
         let m_elapsed = self.bench(measurement, &m_iters, parameter);
 
         let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();

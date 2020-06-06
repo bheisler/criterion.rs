@@ -1,7 +1,9 @@
 use crate::report::BenchmarkId as InternalBenchmarkId;
 use serde::de::DeserializeOwned;
+use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::io::{ErrorKind, Read, Write};
+use std::mem::size_of;
 use std::net::TcpStream;
 
 #[derive(Debug)]
@@ -44,19 +46,42 @@ impl std::error::Error for MessageError {
     }
 }
 
+const MAGIC_NUMBER: &'static str = "Criterion";
+const HELLO_SIZE: usize = MAGIC_NUMBER.len() // magic number
+    + (size_of::<u8>() * 3) // criterion.rs version
+    + size_of::<u16>() // protocol version
+    + size_of::<u16>(); // protocol format
+const PROTOCOL_VERSION: u16 = 1;
+const PROTOCOL_FORMAT: u16 = 1;
+
 #[derive(Debug)]
-pub struct Connection {
+struct InnerConnection {
     socket: TcpStream,
     receive_buffer: Vec<u8>,
     send_buffer: Vec<u8>,
 }
-impl Connection {
-    pub fn new(socket: TcpStream) -> Self {
-        Connection {
+impl InnerConnection {
+    pub fn new(mut socket: TcpStream) -> Result<Self, std::io::Error> {
+        // Send the connection hello message right away.
+        let mut hello_buf = [0u8; HELLO_SIZE];
+        let mut i = 0usize;
+        &mut hello_buf[i..i + MAGIC_NUMBER.len()].copy_from_slice(MAGIC_NUMBER.as_bytes());
+        i += MAGIC_NUMBER.len();
+        hello_buf[i + 0] = env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap();
+        hello_buf[i + 1] = env!("CARGO_PKG_VERSION_MINOR").parse().unwrap();
+        hello_buf[i + 2] = env!("CARGO_PKG_VERSION_PATCH").parse().unwrap();
+        i += 3;
+        &mut hello_buf[i..i + 2].clone_from_slice(&PROTOCOL_VERSION.to_be_bytes());
+        i += 2;
+        &mut hello_buf[i..i + 2].clone_from_slice(&PROTOCOL_FORMAT.to_be_bytes());
+
+        socket.write_all(&hello_buf)?;
+
+        Ok(InnerConnection {
             socket,
             receive_buffer: vec![],
             send_buffer: vec![],
-        }
+        })
     }
 
     #[allow(dead_code)]
@@ -85,15 +110,63 @@ impl Connection {
     }
 }
 
+/// This is really just a holder to allow us to send messages through a shared reference to the
+/// connection.
+#[derive(Debug)]
+pub struct Connection {
+    inner: RefCell<InnerConnection>,
+}
+impl Connection {
+    pub fn new(socket: TcpStream) -> Result<Self, std::io::Error> {
+        Ok(Connection {
+            inner: RefCell::new(InnerConnection::new(socket)?),
+        })
+    }
+
+    #[allow(dead_code)]
+    pub fn recv<T: DeserializeOwned>(&self) -> Result<Option<T>, MessageError> {
+        self.inner.borrow_mut().recv()
+    }
+
+    pub fn send(&self, message: &OutgoingMessage) -> Result<(), MessageError> {
+        self.inner.borrow_mut().send(message)
+    }
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(tag = "event")]
 pub enum IncomingMessage {}
 
 #[derive(Debug, Serialize)]
 #[serde(tag = "event")]
-pub enum OutgoingMessage {
-    BeginningBenchmark { id: RawBenchmarkId },
-    SkippingBenchmark { id: RawBenchmarkId },
+pub enum OutgoingMessage<'a> {
+    BeginningBenchmarkGroup {
+        group: &'a str,
+    },
+    FinishedBenchmarkGroup {
+        group: &'a str,
+    },
+    BeginningBenchmark {
+        id: RawBenchmarkId,
+    },
+    SkippingBenchmark {
+        id: RawBenchmarkId,
+    },
+    Warmup {
+        id: RawBenchmarkId,
+        nanos: f64,
+    },
+    MeasurementStart {
+        id: RawBenchmarkId,
+        sample_count: u64,
+        estimate_ns: f64,
+        iter_count: u64,
+    },
+    MeasurementComplete {
+        id: RawBenchmarkId,
+        iters: &'a [u64],
+        times: &'a [f64],
+    },
 }
 
 #[derive(Debug, Serialize)]
