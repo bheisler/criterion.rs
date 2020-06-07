@@ -1,8 +1,7 @@
 use crate::report::BenchmarkId as InternalBenchmarkId;
-use serde::de::DeserializeOwned;
 use std::cell::RefCell;
 use std::convert::TryFrom;
-use std::io::{ErrorKind, Read, Write};
+use std::io::{Read, Write};
 use std::mem::size_of;
 use std::net::TcpStream;
 
@@ -46,7 +45,7 @@ impl std::error::Error for MessageError {
     }
 }
 
-const MAGIC_NUMBER: &'static str = "Criterion";
+const MAGIC_NUMBER: &str = "Criterion";
 const HELLO_SIZE: usize = MAGIC_NUMBER.len() // magic number
     + (size_of::<u8>() * 3) // criterion.rs version
     + size_of::<u16>() // protocol version
@@ -65,15 +64,15 @@ impl InnerConnection {
         // Send the connection hello message right away.
         let mut hello_buf = [0u8; HELLO_SIZE];
         let mut i = 0usize;
-        &mut hello_buf[i..i + MAGIC_NUMBER.len()].copy_from_slice(MAGIC_NUMBER.as_bytes());
+        hello_buf[i..i + MAGIC_NUMBER.len()].copy_from_slice(MAGIC_NUMBER.as_bytes());
         i += MAGIC_NUMBER.len();
-        hello_buf[i + 0] = env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap();
+        hello_buf[i] = env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap();
         hello_buf[i + 1] = env!("CARGO_PKG_VERSION_MINOR").parse().unwrap();
         hello_buf[i + 2] = env!("CARGO_PKG_VERSION_PATCH").parse().unwrap();
         i += 3;
-        &mut hello_buf[i..i + 2].clone_from_slice(&PROTOCOL_VERSION.to_be_bytes());
+        hello_buf[i..i + 2].clone_from_slice(&PROTOCOL_VERSION.to_be_bytes());
         i += 2;
-        &mut hello_buf[i..i + 2].clone_from_slice(&PROTOCOL_FORMAT.to_be_bytes());
+        hello_buf[i..i + 2].clone_from_slice(&PROTOCOL_FORMAT.to_be_bytes());
 
         socket.write_all(&hello_buf)?;
 
@@ -85,18 +84,14 @@ impl InnerConnection {
     }
 
     #[allow(dead_code)]
-    pub fn recv<T: DeserializeOwned>(&mut self) -> Result<Option<T>, MessageError> {
+    pub fn recv(&mut self) -> Result<IncomingMessage, MessageError> {
         let mut length_buf = [0u8; 4];
-        match self.socket.read_exact(&mut length_buf) {
-            Err(err) if err.kind() == ErrorKind::UnexpectedEof => return Ok(None),
-            Err(err) => return Err(err.into()),
-            Ok(val) => val,
-        };
+        self.socket.read_exact(&mut length_buf)?;
         let length = u32::from_be_bytes(length_buf);
         self.receive_buffer.resize(length as usize, 0u8);
         self.socket.read_exact(&mut self.receive_buffer)?;
-        let value: T = serde_json::from_slice(&self.receive_buffer)?;
-        Ok(Some(value))
+        let value = serde_json::from_slice(&self.receive_buffer)?;
+        Ok(value)
     }
 
     pub fn send(&mut self, message: &OutgoingMessage) -> Result<(), MessageError> {
@@ -124,7 +119,7 @@ impl Connection {
     }
 
     #[allow(dead_code)]
-    pub fn recv<T: DeserializeOwned>(&self) -> Result<Option<T>, MessageError> {
+    pub fn recv(&self) -> Result<IncomingMessage, MessageError> {
         self.inner.borrow_mut().recv()
     }
 
@@ -135,7 +130,11 @@ impl Connection {
 
 #[derive(Debug, Deserialize)]
 #[serde(tag = "event")]
-pub enum IncomingMessage {}
+pub enum IncomingMessage {
+    RunBenchmark,
+    SkipBenchmark,
+    __Other,
+}
 
 #[derive(Debug, Serialize)]
 #[serde(tag = "event")]

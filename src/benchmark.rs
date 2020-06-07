@@ -1,5 +1,5 @@
 use crate::analysis;
-use crate::connection::OutgoingMessage;
+use crate::connection::{IncomingMessage, OutgoingMessage};
 use crate::measurement::{Measurement, WallTime};
 use crate::report::{BenchmarkId, ReportContext};
 use crate::routine::{Function, Routine};
@@ -337,12 +337,20 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
             id.ensure_title_unique(&c.all_titles);
             c.all_titles.insert(id.as_title().to_owned());
 
-            if c.filter_matches(id.id()) {
-                if let Some(conn) = &mut c.connection {
-                    conn.send(&OutgoingMessage::BeginningBenchmark { id: (&id).into() })
-                        .unwrap();
-                }
+            let do_run = if let Some(conn) = &c.connection {
+                conn.send(&OutgoingMessage::BeginningBenchmark { id: (&id).into() })
+                    .unwrap();
 
+                match conn.recv().unwrap() {
+                    IncomingMessage::RunBenchmark => true,
+                    IncomingMessage::SkipBenchmark => false,
+                    other => panic!("Unexpected message {:?}", other),
+                }
+            } else {
+                c.filter_matches(id.id())
+            };
+
+            if do_run {
                 any_matched = true;
                 analysis::common(
                     &id,
@@ -353,11 +361,9 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
                     &(),
                     self.throughput.clone(),
                 );
-            } else {
-                if let Some(conn) = &mut c.connection {
-                    conn.send(&OutgoingMessage::SkippingBenchmark { id: (&id).into() })
-                        .unwrap();
-                }
+            } else if let Some(conn) = &mut c.connection {
+                conn.send(&OutgoingMessage::SkippingBenchmark { id: (&id).into() })
+                    .unwrap();
             }
 
             all_ids.push(id);
@@ -515,11 +521,20 @@ where
                 id.ensure_title_unique(&c.all_titles);
                 c.all_titles.insert(id.as_title().to_owned());
 
-                if c.filter_matches(id.id()) {
-                    if let Some(conn) = &c.connection {
-                        conn.send(&OutgoingMessage::BeginningBenchmark { id: (&id).into() })
-                            .unwrap();
+                let do_run = if let Some(conn) = &c.connection {
+                    conn.send(&OutgoingMessage::BeginningBenchmark { id: (&id).into() })
+                        .unwrap();
+
+                    match conn.recv().unwrap() {
+                        IncomingMessage::RunBenchmark => true,
+                        IncomingMessage::SkipBenchmark => false,
+                        other => panic!("Unexpected message {:?}", other),
                     }
+                } else {
+                    c.filter_matches(id.id())
+                };
+
+                if do_run {
                     any_matched = true;
 
                     analysis::common(
@@ -531,11 +546,9 @@ where
                         value,
                         throughput,
                     );
-                } else {
-                    if let Some(conn) = &c.connection {
-                        conn.send(&OutgoingMessage::SkippingBenchmark { id: (&id).into() })
-                            .unwrap();
-                    }
+                } else if let Some(conn) = &c.connection {
+                    conn.send(&OutgoingMessage::SkippingBenchmark { id: (&id).into() })
+                        .unwrap();
                 }
 
                 all_ids.push(id);

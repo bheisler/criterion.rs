@@ -516,7 +516,7 @@ impl Report for Html {
         for id in found_ids.iter() {
             id_groups
                 .entry(&id.group_id)
-                .or_insert_with(|| vec![])
+                .or_insert_with(Vec::new)
                 .push(id);
         }
 
