@@ -341,18 +341,18 @@ impl<'a, M: Measurement> Drop for BenchmarkGroup<'a, M> {
     fn drop(&mut self) {
         // I don't really like having a bunch of non-trivial code in drop, but this is the only way
         // to really write linear types like this in Rust...
+        if let Some(conn) = &mut self.criterion.connection {
+            conn.send(&OutgoingMessage::FinishedBenchmarkGroup {
+                group: &self.group_name,
+            })
+            .unwrap();
+        }
+
         if self.all_ids.len() > 1
             && self.any_matched
             && self.criterion.profile_time.is_none()
             && !self.criterion.test_mode
         {
-            if let Some(conn) = &mut self.criterion.connection {
-                conn.send(&OutgoingMessage::FinishedBenchmarkGroup {
-                    group: &self.group_name,
-                })
-                .unwrap();
-            }
-
             let report_context = ReportContext {
                 output_directory: self.criterion.output_directory.clone(),
                 plot_config: self.partial_config.plot_config.clone(),

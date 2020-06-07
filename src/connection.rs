@@ -7,11 +7,11 @@ use std::net::TcpStream;
 
 #[derive(Debug)]
 pub enum MessageError {
-    SerializationError(serde_json::Error),
+    SerializationError(serde_cbor::Error),
     IoError(std::io::Error),
 }
-impl From<serde_json::Error> for MessageError {
-    fn from(other: serde_json::Error) -> Self {
+impl From<serde_cbor::Error> for MessageError {
+    fn from(other: serde_cbor::Error) -> Self {
         MessageError::SerializationError(other)
     }
 }
@@ -90,13 +90,13 @@ impl InnerConnection {
         let length = u32::from_be_bytes(length_buf);
         self.receive_buffer.resize(length as usize, 0u8);
         self.socket.read_exact(&mut self.receive_buffer)?;
-        let value = serde_json::from_slice(&self.receive_buffer)?;
+        let value = serde_cbor::from_slice(&self.receive_buffer)?;
         Ok(value)
     }
 
     pub fn send(&mut self, message: &OutgoingMessage) -> Result<(), MessageError> {
         self.send_buffer.truncate(0);
-        serde_json::to_writer(&mut self.send_buffer, message)?;
+        serde_cbor::to_writer(&mut self.send_buffer, message)?;
         let size = u32::try_from(self.send_buffer.len()).unwrap();
         let length_buf = size.to_be_bytes();
         self.socket.write_all(&length_buf)?;
@@ -129,7 +129,7 @@ impl Connection {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(tag = "event")]
+//#[serde(tag = "event")]
 pub enum IncomingMessage {
     RunBenchmark,
     SkipBenchmark,
@@ -137,7 +137,7 @@ pub enum IncomingMessage {
 }
 
 #[derive(Debug, Serialize)]
-#[serde(tag = "event")]
+//#[serde(tag = "event")]
 pub enum OutgoingMessage<'a> {
     BeginningBenchmarkGroup {
         group: &'a str,
