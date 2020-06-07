@@ -8,13 +8,15 @@ use crate::stats::univariate::Sample;
 use crate::stats::{Distribution, Tails};
 
 use crate::benchmark::BenchmarkConfig;
-use crate::connection::OutgoingMessage;
-use crate::estimate::{Distributions, Estimates, Statistic};
+use crate::connection::{OutgoingMessage, SamplingMethod};
+use crate::estimate::{
+    build_estimates, ConfidenceInterval, Distributions, Estimate, Estimates, Statistic,
+};
 use crate::fs;
 use crate::measurement::Measurement;
 use crate::report::{BenchmarkId, ReportContext};
 use crate::routine::Routine;
-use crate::{build_estimates, Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
+use crate::{Baseline, Criterion, Throughput};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => {{
@@ -114,13 +116,18 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         times = sample.1;
 
         if let Some(conn) = &criterion.connection {
-            let iters: Vec<_> = iters.iter().map(|iter_count| *iter_count as u64).collect();
             conn.send(&OutgoingMessage::MeasurementComplete {
                 id: id.into(),
                 iters: &iters,
                 times: &times,
+                plot_config: (&report_context.plot_config).into(),
+                sampling_method: SamplingMethod::Linear,
+                benchmark_config: config.into(),
             })
             .unwrap();
+
+            conn.serve_value_formatter(criterion.measurement.formatter())
+                .unwrap();
         }
     }
 

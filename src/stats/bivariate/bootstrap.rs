@@ -3,6 +3,8 @@ macro_rules! test {
     ($ty:ident) => {
         mod $ty {
             use quickcheck::TestResult;
+            use quickcheck::quickcheck;
+            use approx::relative_eq;
 
             use crate::stats::bivariate::regression::Slope;
             use crate::stats::bivariate::Data;

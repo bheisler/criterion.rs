@@ -1,9 +1,9 @@
 use super::*;
+use crate::estimate::Estimate;
 use crate::estimate::Statistic;
 use crate::measurement::ValueFormatter;
 use crate::report::{BenchmarkId, MeasurementData, ReportContext};
 use crate::stats::Distribution;
-use crate::Estimate;
 
 fn abs_distribution(
     id: &BenchmarkId,

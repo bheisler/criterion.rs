@@ -2,12 +2,11 @@ use crate::stats::bivariate::regression::Slope;
 use crate::stats::bivariate::Data;
 use crate::stats::univariate::outliers::tukey::LabeledSample;
 
-use crate::estimate::{Distributions, Estimates, Statistic};
+use crate::estimate::{Distributions, Estimate, Estimates, Statistic};
 use crate::format;
 use crate::measurement::ValueFormatter;
 use crate::stats::univariate::Sample;
 use crate::stats::Distribution;
-use crate::Estimate;
 use crate::{PlotConfiguration, Throughput};
 use std::cell::Cell;
 use std::cmp;

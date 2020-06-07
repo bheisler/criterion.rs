@@ -8,7 +8,7 @@ use super::*;
 use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
 use crate::stats::bivariate::Data;
 
-use crate::{ConfidenceInterval, Estimate};
+use crate::estimate::{ConfidenceInterval, Estimate};
 
 use crate::measurement::ValueFormatter;
 

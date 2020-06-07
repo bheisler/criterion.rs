@@ -3,9 +3,9 @@ use super::*;
 use std::path::Path;
 
 use crate::estimate::Statistic;
+use crate::estimate::{ConfidenceInterval, Estimate};
 use crate::stats::bivariate::regression::Slope;
 use crate::stats::bivariate::Data;
-use crate::{ConfidenceInterval, Estimate};
 
 pub(crate) fn regression_figure(
     title: Option<&str>,

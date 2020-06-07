@@ -1,4 +1,5 @@
 use crate::report::BenchmarkId as InternalBenchmarkId;
+use crate::Throughput;
 use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::io::{Read, Write};
@@ -126,18 +127,92 @@ impl Connection {
     pub fn send(&self, message: &OutgoingMessage) -> Result<(), MessageError> {
         self.inner.borrow_mut().send(message)
     }
+
+    pub fn serve_value_formatter(
+        &self,
+        formatter: &dyn crate::measurement::ValueFormatter,
+    ) -> Result<(), MessageError> {
+        loop {
+            let response = match self.recv()? {
+                IncomingMessage::FormatValue { value } => OutgoingMessage::FormattedValue {
+                    value: formatter.format_value(value),
+                },
+                IncomingMessage::FormatThroughput { value, throughput } => {
+                    OutgoingMessage::FormattedValue {
+                        value: formatter.format_throughput(&throughput, value),
+                    }
+                }
+                IncomingMessage::ScaleValues {
+                    typical_value,
+                    mut values,
+                } => {
+                    let unit = formatter.scale_values(typical_value, &mut values);
+                    OutgoingMessage::ScaledValues {
+                        unit,
+                        scaled_values: values,
+                    }
+                }
+                IncomingMessage::ScaleThroughputs {
+                    typical_value,
+                    throughput,
+                    mut values,
+                } => {
+                    let unit = formatter.scale_throughputs(typical_value, &throughput, &mut values);
+                    OutgoingMessage::ScaledValues {
+                        unit,
+                        scaled_values: values,
+                    }
+                }
+                IncomingMessage::ScaleForMachines { mut values } => {
+                    let unit = formatter.scale_for_machines(&mut values);
+                    OutgoingMessage::ScaledValues {
+                        unit,
+                        scaled_values: values,
+                    }
+                }
+                IncomingMessage::Continue => break,
+                _ => panic!(),
+            };
+            self.send(&response)?;
+        }
+        Ok(())
+    }
 }
 
+/// Enum defining the messages we can receive
 #[derive(Debug, Deserialize)]
-//#[serde(tag = "event")]
 pub enum IncomingMessage {
+    // Benchmark lifecycle messages
     RunBenchmark,
     SkipBenchmark,
+
+    // Value formatter requests
+    FormatValue {
+        value: f64,
+    },
+    FormatThroughput {
+        value: f64,
+        throughput: Throughput,
+    },
+    ScaleValues {
+        typical_value: f64,
+        values: Vec<f64>,
+    },
+    ScaleThroughputs {
+        typical_value: f64,
+        values: Vec<f64>,
+        throughput: Throughput,
+    },
+    ScaleForMachines {
+        values: Vec<f64>,
+    },
+    Continue,
+
     __Other,
 }
 
+/// Enum defining the messages we can send
 #[derive(Debug, Serialize)]
-//#[serde(tag = "event")]
 pub enum OutgoingMessage<'a> {
     BeginningBenchmarkGroup {
         group: &'a str,
@@ -163,16 +238,32 @@ pub enum OutgoingMessage<'a> {
     },
     MeasurementComplete {
         id: RawBenchmarkId,
-        iters: &'a [u64],
+        iters: &'a [f64],
         times: &'a [f64],
+        plot_config: PlotConfiguration,
+        sampling_method: SamplingMethod,
+        benchmark_config: BenchmarkConfig,
+    },
+    // value formatter responses
+    FormattedValue {
+        value: String,
+    },
+    ScaledValues {
+        scaled_values: Vec<f64>,
+        unit: &'a str,
     },
 }
+
+// Also define serializable variants of certain things, either to avoid leaking
+// serializability into the public interface or because the serialized form
+// is a bit different from the regular one.
 
 #[derive(Debug, Serialize)]
 pub struct RawBenchmarkId {
     group_id: String,
     function_id: Option<String>,
     value_str: Option<String>,
+    throughput: Option<Throughput>,
 }
 impl From<&InternalBenchmarkId> for RawBenchmarkId {
     fn from(other: &InternalBenchmarkId) -> RawBenchmarkId {
@@ -180,6 +271,77 @@ impl From<&InternalBenchmarkId> for RawBenchmarkId {
             group_id: other.group_id.clone(),
             function_id: other.function_id.clone(),
             value_str: other.value_str.clone(),
+            throughput: other.throughput.clone(),
         }
     }
+}
+
+#[derive(Debug, Serialize)]
+pub enum AxisScale {
+    Linear,
+    Logarithmic,
+}
+impl From<crate::AxisScale> for AxisScale {
+    fn from(other: crate::AxisScale) -> Self {
+        match other {
+            crate::AxisScale::Linear => AxisScale::Linear,
+            crate::AxisScale::Logarithmic => AxisScale::Logarithmic,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct PlotConfiguration {
+    summary_scale: AxisScale,
+}
+impl From<&crate::PlotConfiguration> for PlotConfiguration {
+    fn from(other: &crate::PlotConfiguration) -> Self {
+        PlotConfiguration {
+            summary_scale: other.summary_scale.into(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+struct Duration {
+    secs: u64,
+    nanos: u32,
+}
+impl From<std::time::Duration> for Duration {
+    fn from(other: std::time::Duration) -> Self {
+        Duration {
+            secs: other.as_secs(),
+            nanos: other.subsec_nanos(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct BenchmarkConfig {
+    confidence_level: f64,
+    measurement_time: Duration,
+    noise_threshold: f64,
+    nresamples: usize,
+    sample_size: usize,
+    significance_level: f64,
+    warm_up_time: Duration,
+}
+impl From<&crate::benchmark::BenchmarkConfig> for BenchmarkConfig {
+    fn from(other: &crate::benchmark::BenchmarkConfig) -> Self {
+        BenchmarkConfig {
+            confidence_level: other.confidence_level,
+            measurement_time: other.measurement_time.into(),
+            noise_threshold: other.noise_threshold,
+            nresamples: other.nresamples,
+            sample_size: other.sample_size,
+            significance_level: other.significance_level,
+            warm_up_time: other.warm_up_time.into(),
+        }
+    }
+}
+
+/// Currently not used; defined for forwards compatibility with cargo-criterion.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum SamplingMethod {
+    Linear,
 }

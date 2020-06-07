@@ -7,10 +7,10 @@ use crate::stats::Distribution;
 use crate::benchmark::BenchmarkConfig;
 use crate::error::Result;
 use crate::estimate::Statistic;
-use crate::estimate::{Distributions, Estimates};
+use crate::estimate::{build_estimates, Distributions, Estimates};
 use crate::measurement::Measurement;
 use crate::report::BenchmarkId;
-use crate::{build_estimates, fs, Criterion};
+use crate::{fs, Criterion};
 
 // Common comparison procedure
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::type_complexity))]

@@ -29,11 +29,9 @@
 )]
 
 #[cfg(test)]
-#[macro_use]
 extern crate approx;
 
 #[cfg(test)]
-#[macro_use]
 extern crate quickcheck;
 
 use clap::value_t;
@@ -74,7 +72,7 @@ mod routine;
 mod stats;
 
 use std::cell::RefCell;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::HashSet;
 use std::default::Default;
 use std::fmt;
 use std::iter::IntoIterator;
@@ -92,7 +90,6 @@ use crate::benchmark::NamedRoutine;
 use crate::connection::Connection;
 use crate::connection::OutgoingMessage;
 use crate::csv_report::FileCsvReport;
-use crate::estimate::{Distributions, Estimates, Statistic};
 use crate::html::Html;
 use crate::measurement::{Measurement, WallTime};
 use crate::plot::{Gnuplot, Plotter, PlottersBackend};
@@ -717,7 +714,9 @@ impl Default for Criterion {
     /// - No filter
     fn default() -> Criterion {
         let mut reports: Vec<Box<dyn Report>> = vec![];
-        reports.push(Box::new(CliReport::new(false, false, false)));
+        if CARGO_CRITERION_CONNECTION.is_none() {
+            reports.push(Box::new(CliReport::new(false, false, false)));
+        }
         reports.push(Box::new(FileCsvReport));
 
         // Set criterion home to (in descending order of preference):
@@ -957,7 +956,9 @@ impl<M: Measurement> Criterion<M> {
     pub fn with_plots(mut self) -> Criterion<M> {
         self.plotting_enabled = true;
         let mut reports: Vec<Box<dyn Report>> = vec![];
-        reports.push(Box::new(CliReport::new(false, false, false)));
+        if self.connection.is_none() {
+            reports.push(Box::new(CliReport::new(false, false, false)));
+        }
         reports.push(Box::new(FileCsvReport));
         reports.push(Box::new(Html::new(self.create_plotter())));
         self.report = Box::new(Reports::new(reports));
@@ -969,7 +970,9 @@ impl<M: Measurement> Criterion<M> {
     pub fn without_plots(mut self) -> Criterion<M> {
         self.plotting_enabled = false;
         let mut reports: Vec<Box<dyn Report>> = vec![];
-        reports.push(Box::new(CliReport::new(false, false, false)));
+        if self.connection.is_none() {
+            reports.push(Box::new(CliReport::new(false, false, false)));
+        }
         reports.push(Box::new(FileCsvReport));
         self.report = Box::new(Reports::new(reports));
         self
@@ -1216,7 +1219,9 @@ To test that the benchmarks work, run `cargo test --benches`
             }
         };
 
-        reports.push(cli_report);
+        if self.connection.is_none() {
+            reports.push(cli_report);
+        }
         reports.push(Box::new(FileCsvReport));
 
         if matches.is_present("profile-time") {
@@ -1588,53 +1593,10 @@ impl DurationExt for Duration {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Deserialize, Serialize, Debug)]
-struct ConfidenceInterval {
-    confidence_level: f64,
-    lower_bound: f64,
-    upper_bound: f64,
-}
-
-#[derive(Clone, Copy, PartialEq, Deserialize, Serialize, Debug)]
-struct Estimate {
-    /// The confidence interval for this estimate
-    confidence_interval: ConfidenceInterval,
-    ///
-    point_estimate: f64,
-    /// The standard error of this estimate
-    standard_error: f64,
-}
-
-fn build_estimates(
-    distributions: &Distributions,
-    points: &BTreeMap<Statistic, f64>,
-    cl: f64,
-) -> Estimates {
-    distributions
-        .iter()
-        .map(|(&statistic, distribution)| {
-            let point_estimate = points[&statistic];
-            let (lb, ub) = distribution.confidence_interval(cl);
-
-            (
-                statistic,
-                Estimate {
-                    confidence_interval: ConfidenceInterval {
-                        confidence_level: cl,
-                        lower_bound: lb,
-                        upper_bound: ub,
-                    },
-                    point_estimate,
-                    standard_error: distribution.std_dev(None),
-                },
-            )
-        })
-        .collect()
-}
-
 /// Enum representing different ways of measuring the throughput of benchmarked code.
 /// If the throughput setting is configured for a benchmark then the estimated throughput will
 /// be reported as well as the time per iteration.
+// TODO: Remove serialize/deserialize from the public API.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Throughput {
     /// Measure throughput in terms of bytes/second. The value should be the number of bytes
