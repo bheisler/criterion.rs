@@ -14,7 +14,7 @@ fn abs_distribution(
     estimate: &Estimate,
     size: Option<(u32, u32)>,
 ) {
-    let ci = estimate.confidence_interval;
+    let ci = &estimate.confidence_interval;
     let typical = ci.upper_bound;
     let mut ci_values = [ci.lower_bound, ci.upper_bound, estimate.point_estimate];
     let unit = formatter.scale_values(typical, &mut ci_values);
@@ -126,20 +126,17 @@ pub(crate) fn abs_distributions(
     measurements: &MeasurementData<'_>,
     size: Option<(u32, u32)>,
 ) {
-    measurements
-        .distributions
-        .iter()
-        .for_each(|(&statistic, distribution)| {
-            abs_distribution(
-                id,
-                context,
-                formatter,
-                statistic,
-                distribution,
-                &measurements.absolute_estimates[&statistic],
-                size,
-            )
-        })
+    crate::plot::REPORT_STATS.iter().for_each(|&statistic| {
+        abs_distribution(
+            id,
+            context,
+            formatter,
+            statistic,
+            measurements.distributions.get(statistic),
+            measurements.absolute_estimates.get(statistic),
+            size,
+        )
+    })
 }
 
 fn rel_distribution(
@@ -151,7 +148,7 @@ fn rel_distribution(
     noise_threshold: f64,
     size: Option<(u32, u32)>,
 ) {
-    let ci = estimate.confidence_interval;
+    let ci = &estimate.confidence_interval;
     let (lb, ub) = (ci.lower_bound, ci.upper_bound);
 
     let start = lb - (ub - lb) / 9.;
@@ -277,18 +274,15 @@ pub(crate) fn rel_distributions(
     comparison: &ComparisonData,
     size: Option<(u32, u32)>,
 ) {
-    comparison
-        .relative_distributions
-        .iter()
-        .for_each(|(&statistic, distribution)| {
-            rel_distribution(
-                id,
-                context,
-                statistic,
-                distribution,
-                &comparison.relative_estimates[&statistic],
-                comparison.noise_threshold,
-                size,
-            )
-        });
+    crate::plot::CHANGE_STATS.iter().for_each(|&statistic| {
+        rel_distribution(
+            id,
+            context,
+            statistic,
+            comparison.relative_distributions.get(statistic),
+            comparison.relative_estimates.get(statistic),
+            comparison.noise_threshold,
+            size,
+        )
+    });
 }

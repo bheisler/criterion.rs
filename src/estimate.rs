@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use std::fmt;
 
 use crate::stats::Distribution;
@@ -10,6 +9,7 @@ pub enum Statistic {
     MedianAbsDev,
     Slope,
     StdDev,
+    Typical,
 }
 
 impl fmt::Display for Statistic {
@@ -20,18 +20,19 @@ impl fmt::Display for Statistic {
             Statistic::MedianAbsDev => f.pad("MAD"),
             Statistic::Slope => f.pad("slope"),
             Statistic::StdDev => f.pad("SD"),
+            Statistic::Typical => f.pad("typical"),
         }
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Deserialize, Serialize, Debug)]
+#[derive(Clone, PartialEq, Deserialize, Serialize, Debug)]
 pub struct ConfidenceInterval {
     pub confidence_level: f64,
     pub lower_bound: f64,
     pub upper_bound: f64,
 }
 
-#[derive(Clone, Copy, PartialEq, Deserialize, Serialize, Debug)]
+#[derive(Clone, PartialEq, Deserialize, Serialize, Debug)]
 pub struct Estimate {
     /// The confidence interval for this estimate
     pub confidence_interval: ConfidenceInterval,
@@ -43,31 +44,142 @@ pub struct Estimate {
 
 pub fn build_estimates(
     distributions: &Distributions,
-    points: &BTreeMap<Statistic, f64>,
+    points: &PointEstimates,
     cl: f64,
 ) -> Estimates {
-    distributions
-        .iter()
-        .map(|(&statistic, distribution)| {
-            let point_estimate = points[&statistic];
-            let (lb, ub) = distribution.confidence_interval(cl);
+    let to_estimate = |point_estimate, distribution: &Distribution<f64>| {
+        let (lb, ub) = distribution.confidence_interval(cl);
 
-            (
-                statistic,
-                Estimate {
-                    confidence_interval: ConfidenceInterval {
-                        confidence_level: cl,
-                        lower_bound: lb,
-                        upper_bound: ub,
-                    },
-                    point_estimate,
-                    standard_error: distribution.std_dev(None),
-                },
-            )
-        })
-        .collect()
+        Estimate {
+            confidence_interval: ConfidenceInterval {
+                confidence_level: cl,
+                lower_bound: lb,
+                upper_bound: ub,
+            },
+            point_estimate,
+            standard_error: distribution.std_dev(None),
+        }
+    };
+
+    Estimates {
+        mean: to_estimate(points.mean, &distributions.mean),
+        median: to_estimate(points.median, &distributions.median),
+        median_abs_dev: to_estimate(points.median_abs_dev, &distributions.median_abs_dev),
+        slope: to_estimate(points.slope, &distributions.slope),
+        std_dev: to_estimate(points.std_dev, &distributions.std_dev),
+    }
 }
 
-pub type Estimates = BTreeMap<Statistic, Estimate>;
+pub fn build_change_estimates(
+    distributions: &ChangeDistributions,
+    points: &ChangePointEstimates,
+    cl: f64,
+) -> ChangeEstimates {
+    let to_estimate = |point_estimate, distribution: &Distribution<f64>| {
+        let (lb, ub) = distribution.confidence_interval(cl);
 
-pub type Distributions = BTreeMap<Statistic, Distribution<f64>>;
+        Estimate {
+            confidence_interval: ConfidenceInterval {
+                confidence_level: cl,
+                lower_bound: lb,
+                upper_bound: ub,
+            },
+            point_estimate,
+            standard_error: distribution.std_dev(None),
+        }
+    };
+
+    ChangeEstimates {
+        mean: to_estimate(points.mean, &distributions.mean),
+        median: to_estimate(points.median, &distributions.median),
+    }
+}
+
+pub struct PointEstimates {
+    pub mean: f64,
+    pub median: f64,
+    pub median_abs_dev: f64,
+    pub slope: f64,
+    pub std_dev: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Estimates {
+    pub mean: Estimate,
+    pub median: Estimate,
+    pub median_abs_dev: Estimate,
+    pub slope: Estimate,
+    pub std_dev: Estimate,
+}
+impl Estimates {
+    pub fn typical(&self) -> &Estimate {
+        &self.slope
+    }
+    pub fn get(&self, stat: Statistic) -> &Estimate {
+        match stat {
+            Statistic::Mean => &self.mean,
+            Statistic::Median => &self.median,
+            Statistic::MedianAbsDev => &self.median_abs_dev,
+            Statistic::Slope => &self.slope,
+            Statistic::StdDev => &self.std_dev,
+            Statistic::Typical => self.typical(),
+        }
+    }
+}
+
+pub struct Distributions {
+    pub mean: Distribution<f64>,
+    pub median: Distribution<f64>,
+    pub median_abs_dev: Distribution<f64>,
+    pub slope: Distribution<f64>,
+    pub std_dev: Distribution<f64>,
+}
+impl Distributions {
+    pub fn typical(&self) -> &Distribution<f64> {
+        &self.slope
+    }
+    pub fn get(&self, stat: Statistic) -> &Distribution<f64> {
+        match stat {
+            Statistic::Mean => &self.mean,
+            Statistic::Median => &self.median,
+            Statistic::MedianAbsDev => &self.median_abs_dev,
+            Statistic::Slope => &self.slope,
+            Statistic::StdDev => &self.std_dev,
+            Statistic::Typical => self.typical(),
+        }
+    }
+}
+
+pub struct ChangePointEstimates {
+    pub mean: f64,
+    pub median: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ChangeEstimates {
+    pub mean: Estimate,
+    pub median: Estimate,
+}
+impl ChangeEstimates {
+    pub fn get(&self, stat: Statistic) -> &Estimate {
+        match stat {
+            Statistic::Mean => &self.mean,
+            Statistic::Median => &self.median,
+            _ => panic!("Unexpected statistic"),
+        }
+    }
+}
+
+pub struct ChangeDistributions {
+    pub mean: Distribution<f64>,
+    pub median: Distribution<f64>,
+}
+impl ChangeDistributions {
+    pub fn get(&self, stat: Statistic) -> &Distribution<f64> {
+        match stat {
+            Statistic::Mean => &self.mean,
+            Statistic::Median => &self.median,
+            _ => panic!("Unexpected statistic"),
+        }
+    }
+}

@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use std::path::Path;
 
 use crate::stats::bivariate::regression::Slope;
@@ -10,7 +9,7 @@ use crate::stats::{Distribution, Tails};
 use crate::benchmark::BenchmarkConfig;
 use crate::connection::{OutgoingMessage, SamplingMethod};
 use crate::estimate::{
-    build_estimates, ConfidenceInterval, Distributions, Estimate, Estimates, Statistic,
+    build_estimates, ConfidenceInterval, Distributions, Estimate, Estimates, PointEstimates,
 };
 use crate::fs;
 use crate::measurement::Measurement;
@@ -154,8 +153,8 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
     let (distribution, slope) = regression(&data, config);
     let (mut distributions, mut estimates) = estimates(avg_times, config);
 
-    estimates.insert(Statistic::Slope, slope);
-    distributions.insert(Statistic::Slope, distribution);
+    estimates.slope = slope;
+    distributions.slope = distribution;
 
     if criterion.load_baseline.is_none() {
         log_if_err!({
@@ -320,24 +319,28 @@ fn estimates(avg_times: &Sample<f64>, config: &BenchmarkConfig) -> (Distribution
     let nresamples = config.nresamples;
 
     let (mean, std_dev, median, mad) = stats(avg_times);
-    let mut point_estimates = BTreeMap::new();
-    point_estimates.insert(Statistic::Mean, mean);
-    point_estimates.insert(Statistic::StdDev, std_dev);
-    point_estimates.insert(Statistic::Median, median);
-    point_estimates.insert(Statistic::MedianAbsDev, mad);
+    let points = PointEstimates {
+        mean,
+        median,
+        std_dev,
+        slope: mean,
+        median_abs_dev: mad,
+    };
 
     let (dist_mean, dist_stddev, dist_median, dist_mad) = elapsed!(
         "Bootstrapping the absolute statistics.",
         avg_times.bootstrap(nresamples, stats)
     );
 
-    let mut distributions = Distributions::new();
-    distributions.insert(Statistic::Mean, dist_mean);
-    distributions.insert(Statistic::StdDev, dist_stddev);
-    distributions.insert(Statistic::Median, dist_median);
-    distributions.insert(Statistic::MedianAbsDev, dist_mad);
+    let distributions = Distributions {
+        mean: dist_mean.clone(),
+        slope: dist_mean,
+        median: dist_median,
+        median_abs_dev: dist_mad,
+        std_dev: dist_stddev,
+    };
 
-    let estimates = build_estimates(&distributions, &point_estimates, cl);
+    let estimates = build_estimates(&distributions, &points, cl);
 
     (distributions, estimates)
 }

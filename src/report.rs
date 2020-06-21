@@ -2,7 +2,7 @@ use crate::stats::bivariate::regression::Slope;
 use crate::stats::bivariate::Data;
 use crate::stats::univariate::outliers::tukey::LabeledSample;
 
-use crate::estimate::{Distributions, Estimate, Estimates, Statistic};
+use crate::estimate::{ChangeDistributions, ChangeEstimates, Distributions, Estimate, Estimates};
 use crate::format;
 use crate::measurement::ValueFormatter;
 use crate::stats::univariate::Sample;
@@ -23,8 +23,8 @@ pub(crate) struct ComparisonData {
     pub p_value: f64,
     pub t_distribution: Distribution<f64>,
     pub t_value: f64,
-    pub relative_estimates: Estimates,
-    pub relative_distributions: Distributions,
+    pub relative_estimates: ChangeEstimates,
+    pub relative_distributions: ChangeDistributions,
     pub significance_threshold: f64,
     pub noise_threshold: f64,
     pub base_iter_counts: Vec<f64>,
@@ -568,7 +568,7 @@ impl Report for CliReport {
     ) {
         self.text_overwrite();
 
-        let slope_estimate = meas.absolute_estimates[&Statistic::Slope];
+        let slope_estimate = &meas.absolute_estimates.slope;
 
         {
             let mut id = id.as_title().to_owned();
@@ -611,7 +611,7 @@ impl Report for CliReport {
 
         if let Some(ref comp) = meas.comparison {
             let different_mean = comp.p_value < comp.significance_threshold;
-            let mean_est = comp.relative_estimates[&Statistic::Mean];
+            let mean_est = &comp.relative_estimates.mean;
             let point_estimate = mean_est.point_estimate;
             let mut point_estimate_str = format::change(point_estimate, true);
             // The change in throughput is related to the change in timing. Reducing the timing by
@@ -710,7 +710,7 @@ impl Report for CliReport {
             };
 
             let data = &meas.data;
-            let slope_estimate = &meas.absolute_estimates[&Statistic::Slope];
+            let slope_estimate = &meas.absolute_estimates.slope;
 
             println!(
                 "{:<7}{} {:<15}[{:0.7} {:0.7}]",
@@ -723,16 +723,16 @@ impl Report for CliReport {
             println!(
                 "{:<7}{} {:<15}{}",
                 "mean",
-                format_short_estimate(&meas.absolute_estimates[&Statistic::Mean]),
+                format_short_estimate(&meas.absolute_estimates.mean),
                 "std. dev.",
-                format_short_estimate(&meas.absolute_estimates[&Statistic::StdDev]),
+                format_short_estimate(&meas.absolute_estimates.std_dev),
             );
             println!(
                 "{:<7}{} {:<15}{}",
                 "median",
-                format_short_estimate(&meas.absolute_estimates[&Statistic::Median]),
+                format_short_estimate(&meas.absolute_estimates.median),
                 "med. abs. dev.",
-                format_short_estimate(&meas.absolute_estimates[&Statistic::MedianAbsDev]),
+                format_short_estimate(&meas.absolute_estimates.median_abs_dev),
             );
         }
     }
@@ -759,8 +759,8 @@ impl Report for BencherReport {
         formatter: &dyn ValueFormatter,
     ) {
         let mut values = [
-            meas.absolute_estimates[&Statistic::Median].point_estimate,
-            meas.absolute_estimates[&Statistic::StdDev].point_estimate,
+            meas.absolute_estimates.median.point_estimate,
+            meas.absolute_estimates.std_dev.point_estimate,
         ];
         let unit = formatter.scale_for_machines(&mut values);
 
@@ -780,7 +780,7 @@ enum ComparisonResult {
 }
 
 fn compare_to_threshold(estimate: &Estimate, noise: f64) -> ComparisonResult {
-    let ci = estimate.confidence_interval;
+    let ci = &estimate.confidence_interval;
     let lb = ci.lower_bound;
     let ub = ci.upper_bound;
 
