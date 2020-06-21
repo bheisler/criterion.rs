@@ -1,5 +1,5 @@
 use crate::analysis;
-use crate::connection::{IncomingMessage, OutgoingMessage};
+use crate::connection::OutgoingMessage;
 use crate::measurement::{Measurement, WallTime};
 use crate::report::{BenchmarkId, ReportContext};
 use crate::routine::{Function, Routine};
@@ -337,18 +337,17 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
             id.ensure_title_unique(&c.all_titles);
             c.all_titles.insert(id.as_title().to_owned());
 
-            let do_run = if let Some(conn) = &c.connection {
-                conn.send(&OutgoingMessage::BeginningBenchmark { id: (&id).into() })
-                    .unwrap();
+            let do_run = c.filter_matches(id.id());
 
-                match conn.recv().unwrap() {
-                    IncomingMessage::RunBenchmark => true,
-                    IncomingMessage::SkipBenchmark => false,
-                    other => panic!("Unexpected message {:?}", other),
+            if let Some(conn) = &c.connection {
+                if do_run {
+                    conn.send(&OutgoingMessage::BeginningBenchmark { id: (&id).into() })
+                        .unwrap();
+                } else {
+                    conn.send(&OutgoingMessage::SkippingBenchmark { id: (&id).into() })
+                        .unwrap();
                 }
-            } else {
-                c.filter_matches(id.id())
-            };
+            }
 
             if do_run {
                 any_matched = true;
@@ -361,9 +360,6 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
                     &(),
                     self.throughput.clone(),
                 );
-            } else if let Some(conn) = &mut c.connection {
-                conn.send(&OutgoingMessage::SkippingBenchmark { id: (&id).into() })
-                    .unwrap();
             }
 
             all_ids.push(id);
@@ -523,18 +519,17 @@ where
                 id.ensure_title_unique(&c.all_titles);
                 c.all_titles.insert(id.as_title().to_owned());
 
-                let do_run = if let Some(conn) = &c.connection {
-                    conn.send(&OutgoingMessage::BeginningBenchmark { id: (&id).into() })
-                        .unwrap();
+                let do_run = c.filter_matches(id.id());
 
-                    match conn.recv().unwrap() {
-                        IncomingMessage::RunBenchmark => true,
-                        IncomingMessage::SkipBenchmark => false,
-                        other => panic!("Unexpected message {:?}", other),
+                if let Some(conn) = &c.connection {
+                    if do_run {
+                        conn.send(&OutgoingMessage::BeginningBenchmark { id: (&id).into() })
+                            .unwrap();
+                    } else {
+                        conn.send(&OutgoingMessage::SkippingBenchmark { id: (&id).into() })
+                            .unwrap();
                     }
-                } else {
-                    c.filter_matches(id.id())
-                };
+                }
 
                 if do_run {
                     any_matched = true;
@@ -548,9 +543,6 @@ where
                         value,
                         throughput,
                     );
-                } else if let Some(conn) = &c.connection {
-                    conn.send(&OutgoingMessage::SkippingBenchmark { id: (&id).into() })
-                        .unwrap();
                 }
 
                 all_ids.push(id);

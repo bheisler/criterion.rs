@@ -1,6 +1,6 @@
 use crate::analysis;
 use crate::benchmark::PartialBenchmarkConfig;
-use crate::connection::{IncomingMessage, OutgoingMessage};
+use crate::connection::OutgoingMessage;
 use crate::measurement::Measurement;
 use crate::report::BenchmarkId as InternalBenchmarkId;
 use crate::report::ReportContext;
@@ -294,19 +294,16 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
         id.ensure_title_unique(&self.criterion.all_titles);
         self.criterion.all_titles.insert(id.as_title().to_owned());
 
-        let do_run = if let Some(conn) = &self.criterion.connection {
-            conn.send(&OutgoingMessage::BeginningBenchmark { id: (&id).into() })
-                .unwrap();
-
-            match conn.recv().unwrap() {
-                IncomingMessage::RunBenchmark => true,
-                IncomingMessage::SkipBenchmark => false,
-                other => panic!("Unexpected message {:?}", other),
+        let do_run = self.criterion.filter_matches(id.id());
+        if let Some(conn) = &self.criterion.connection {
+            if do_run {
+                conn.send(&OutgoingMessage::BeginningBenchmark { id: (&id).into() })
+                    .unwrap();
+            } else {
+                conn.send(&OutgoingMessage::SkippingBenchmark { id: (&id).into() })
+                    .unwrap();
             }
-        } else {
-            self.criterion.filter_matches(id.id())
-        };
-
+        }
         if do_run {
             self.any_matched = true;
 
@@ -321,9 +318,6 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
                 input,
                 self.throughput.clone(),
             );
-        } else if let Some(conn) = &mut self.criterion.connection {
-            conn.send(&OutgoingMessage::SkippingBenchmark { id: (&id).into() })
-                .unwrap();
         }
 
         self.all_ids.push(id);

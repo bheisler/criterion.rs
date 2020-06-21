@@ -42,7 +42,7 @@ fn debug_script(path: &PathBuf, figure: &Figure) {
     if crate::debug_enabled() {
         let mut script_path = path.clone();
         script_path.set_extension("gnuplot");
-        println!("Writing gnuplot script to {:?}", script_path);
+        info!("Writing gnuplot script to {:?}", script_path);
         let result = figure.save(script_path.as_path());
         if let Err(e) = result {
             error!("Failed to write debug output: {}", e);

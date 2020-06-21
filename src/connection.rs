@@ -46,9 +46,13 @@ impl std::error::Error for MessageError {
     }
 }
 
-const MAGIC_NUMBER: &str = "Criterion";
-const HELLO_SIZE: usize = MAGIC_NUMBER.len() // magic number
-    + (size_of::<u8>() * 3) // criterion.rs version
+const RUNNER_MAGIC_NUMBER: &str = "cargo-criterion";
+const RUNNER_HELLO_SIZE: usize = RUNNER_MAGIC_NUMBER.len() // magic number
+    + (size_of::<u8>() * 3); // version number
+
+const BENCHMARK_MAGIC_NUMBER: &str = "Criterion";
+const BENCHMARK_HELLO_SIZE: usize = BENCHMARK_MAGIC_NUMBER.len() // magic number
+    + (size_of::<u8>() * 3) // version number
     + size_of::<u16>() // protocol version
     + size_of::<u16>(); // protocol format
 const PROTOCOL_VERSION: u16 = 1;
@@ -59,14 +63,26 @@ struct InnerConnection {
     socket: TcpStream,
     receive_buffer: Vec<u8>,
     send_buffer: Vec<u8>,
+    runner_version: [u8; 3],
 }
 impl InnerConnection {
     pub fn new(mut socket: TcpStream) -> Result<Self, std::io::Error> {
-        // Send the connection hello message right away.
-        let mut hello_buf = [0u8; HELLO_SIZE];
-        let mut i = 0usize;
-        hello_buf[i..i + MAGIC_NUMBER.len()].copy_from_slice(MAGIC_NUMBER.as_bytes());
-        i += MAGIC_NUMBER.len();
+        // read the runner-hello
+        let mut hello_buf = [0u8; RUNNER_HELLO_SIZE];
+        socket.read_exact(&mut hello_buf)?;
+        if &hello_buf[0..RUNNER_MAGIC_NUMBER.len()] != RUNNER_MAGIC_NUMBER.as_bytes() {
+            panic!("Not connected to cargo-criterion.");
+        }
+        let i = RUNNER_MAGIC_NUMBER.len();
+        let runner_version = [hello_buf[i], hello_buf[i + 1], hello_buf[i + 2]];
+
+        info!("Runner version: {:?}", runner_version);
+
+        // now send the benchmark-hello
+        let mut hello_buf = [0u8; BENCHMARK_HELLO_SIZE];
+        hello_buf[0..BENCHMARK_MAGIC_NUMBER.len()]
+            .copy_from_slice(BENCHMARK_MAGIC_NUMBER.as_bytes());
+        let mut i = BENCHMARK_MAGIC_NUMBER.len();
         hello_buf[i] = env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap();
         hello_buf[i + 1] = env!("CARGO_PKG_VERSION_MINOR").parse().unwrap();
         hello_buf[i + 2] = env!("CARGO_PKG_VERSION_PATCH").parse().unwrap();
@@ -81,6 +97,7 @@ impl InnerConnection {
             socket,
             receive_buffer: vec![],
             send_buffer: vec![],
+            runner_version,
         })
     }
 
@@ -182,10 +199,6 @@ impl Connection {
 /// Enum defining the messages we can receive
 #[derive(Debug, Deserialize)]
 pub enum IncomingMessage {
-    // Benchmark lifecycle messages
-    RunBenchmark,
-    SkipBenchmark,
-
     // Value formatter requests
     FormatValue {
         value: f64,
