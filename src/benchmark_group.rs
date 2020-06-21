@@ -346,6 +346,9 @@ impl<'a, M: Measurement> Drop for BenchmarkGroup<'a, M> {
                 group: &self.group_name,
             })
             .unwrap();
+
+            conn.serve_value_formatter(self.criterion.measurement.formatter())
+                .unwrap();
         }
 
         if self.all_ids.len() > 1

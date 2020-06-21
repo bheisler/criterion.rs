@@ -372,6 +372,8 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
         if let Some(conn) = &c.connection {
             conn.send(&OutgoingMessage::FinishedBenchmarkGroup { group: group_id })
                 .unwrap();
+            conn.serve_value_formatter(c.measurement.formatter())
+                .unwrap();
         }
 
         if all_ids.len() > 1 && any_matched && c.profile_time.is_none() && !c.test_mode {
@@ -557,6 +559,8 @@ where
 
         if let Some(conn) = &c.connection {
             conn.send(&OutgoingMessage::FinishedBenchmarkGroup { group: group_id })
+                .unwrap();
+            conn.serve_value_formatter(c.measurement.formatter())
                 .unwrap();
         }
 
