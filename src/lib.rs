@@ -1182,6 +1182,36 @@ To test that the benchmarks work, run `cargo test --benches`
 ")
             .get_matches();
 
+        if self.connection.is_some() {
+            if let Some(color) = matches.value_of("color") {
+                if color != "auto" {
+                    println!("Warning: --color will be ignored when running with cargo-criterion. Use `cargo criterion --color {} -- <args>` instead.", color);
+                }
+            }
+            if matches.is_present("verbose") {
+                println!("Warning: --verbose will be ignored when running with cargo-criterion. Use `cargo criterion --output-format verbose -- <args>` instead.");
+            }
+            if matches.is_present("noplot") {
+                println!("Warning: --noplot will be ignored when running with cargo-criterion. Use `cargo criterion --plotting-backend disabled -- <args>` instead.");
+            }
+            if let Some(backend) = matches.value_of("plotting-backend") {
+                println!("Warning: --plotting-backend will be ignored when running with cargo-criterion. Use `cargo criterion --plotting-backend {} -- <args>` instead.", backend);
+            }
+            if let Some(format) = matches.value_of("output-format") {
+                if format != "criterion" {
+                    println!("Warning: --output-format will be ignored when running with cargo-criterion. Use `cargo criterion --output-format {} -- <args>` instead.", format);
+                }
+            }
+
+            if matches.is_present("baseline")
+                || matches.is_present("save-baseline")
+                || matches.is_present("load-baseline")
+            {
+                println!("Error: baselines are not supported when running with cargo-criterion.");
+                std::process::exit(1);
+            }
+        }
+
         let bench = matches.is_present("bench");
         let test = matches.is_present("test");
         let test_mode = match (bench, test) {

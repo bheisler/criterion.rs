@@ -365,7 +365,7 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
                 .summarize(&report_context, &all_ids, c.measurement.formatter());
         }
         if any_matched {
-            println!();
+            c.report.group_separator();
         }
     }
 }
@@ -536,7 +536,7 @@ where
                 .summarize(&report_context, &all_ids, c.measurement.formatter());
         }
         if any_matched {
-            println!();
+            c.report.group_separator();
         }
     }
 }

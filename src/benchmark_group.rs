@@ -385,7 +385,7 @@ impl<'a, M: Measurement> Drop for BenchmarkGroup<'a, M> {
             );
         }
         if self.any_matched {
-            println!();
+            self.criterion.report.group_separator();
         }
     }
 }

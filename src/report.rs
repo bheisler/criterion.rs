@@ -295,6 +295,7 @@ pub(crate) trait Report {
     ) {
     }
     fn final_summary(&self, _context: &ReportContext) {}
+    fn group_separator(&self) {}
 }
 
 pub(crate) struct Reports {
@@ -386,6 +387,11 @@ impl Report for Reports {
     fn final_summary(&self, context: &ReportContext) {
         for report in &self.reports {
             report.final_summary(context);
+        }
+    }
+    fn group_separator(&self) {
+        for report in &self.reports {
+            report.group_separator();
         }
     }
 }
@@ -748,6 +754,10 @@ impl Report for CliReport {
             );
         }
     }
+
+    fn group_separator(&self) {
+        println!();
+    }
 }
 
 pub struct BencherReport;
@@ -782,6 +792,10 @@ impl Report for BencherReport {
             unit,
             format::integer(values[1])
         );
+    }
+
+    fn group_separator(&self) {
+        println!();
     }
 }
 
