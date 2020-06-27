@@ -250,7 +250,6 @@ impl fmt::Debug for BenchmarkId {
 pub struct ReportContext {
     pub output_directory: PathBuf,
     pub plot_config: PlotConfiguration,
-    pub test_mode: bool,
 }
 impl ReportContext {
     pub fn report_path<P: AsRef<Path> + ?Sized>(&self, id: &BenchmarkId, file_name: &P) -> PathBuf {
@@ -263,6 +262,9 @@ impl ReportContext {
 }
 
 pub(crate) trait Report {
+    fn test_start(&self, _id: &BenchmarkId, _context: &ReportContext) {}
+    fn test_pass(&self, _id: &BenchmarkId, _context: &ReportContext) {}
+
     fn benchmark_start(&self, _id: &BenchmarkId, _context: &ReportContext) {}
     fn profile(&self, _id: &BenchmarkId, _context: &ReportContext, _profile_ns: f64) {}
     fn warmup(&self, _id: &BenchmarkId, _context: &ReportContext, _warmup_ns: f64) {}
@@ -304,6 +306,17 @@ impl Reports {
     }
 }
 impl Report for Reports {
+    fn test_start(&self, id: &BenchmarkId, context: &ReportContext) {
+        for report in &self.reports {
+            report.test_start(id, context);
+        }
+    }
+    fn test_pass(&self, id: &BenchmarkId, context: &ReportContext) {
+        for report in &self.reports {
+            report.test_pass(id, context);
+        }
+    }
+
     fn benchmark_start(&self, id: &BenchmarkId, context: &ReportContext) {
         for report in &self.reports {
             report.benchmark_start(id, context);
@@ -495,12 +508,15 @@ impl CliReport {
     }
 }
 impl Report for CliReport {
-    fn benchmark_start(&self, id: &BenchmarkId, ctx: &ReportContext) {
-        if ctx.test_mode {
-            println!("Testing {}", id);
-        } else {
-            self.print_overwritable(format!("Benchmarking {}", id));
-        }
+    fn test_start(&self, id: &BenchmarkId, _: &ReportContext) {
+        println!("Testing {}", id);
+    }
+    fn test_pass(&self, _: &BenchmarkId, _: &ReportContext) {
+        println!("Success");
+    }
+
+    fn benchmark_start(&self, id: &BenchmarkId, _: &ReportContext) {
+        self.print_overwritable(format!("Benchmarking {}", id));
     }
 
     fn profile(&self, id: &BenchmarkId, _: &ReportContext, warmup_ns: f64) {
@@ -521,13 +537,9 @@ impl Report for CliReport {
         ));
     }
 
-    fn terminated(&self, id: &BenchmarkId, ctx: &ReportContext) {
-        if ctx.test_mode {
-            println!("Success");
-        } else {
-            self.text_overwrite();
-            println!("Benchmarking {}: Complete (Analysis Disabled)", id);
-        }
+    fn terminated(&self, id: &BenchmarkId, _: &ReportContext) {
+        self.text_overwrite();
+        println!("Benchmarking {}: Complete (Analysis Disabled)", id);
     }
 
     fn analysis(&self, id: &BenchmarkId, _: &ReportContext) {

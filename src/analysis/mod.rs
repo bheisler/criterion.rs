@@ -45,18 +45,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
     parameter: &T,
     throughput: Option<Throughput>,
 ) {
-    if criterion.list_mode {
-        println!("{}: bench", id);
-        return;
-    }
     criterion.report.benchmark_start(id, report_context);
-
-    // In test mode, run the benchmark exactly once, then exit.
-    if criterion.test_mode {
-        routine.test(&criterion.measurement, parameter);
-        criterion.report.terminated(id, report_context);
-        return;
-    }
 
     if let Baseline::Compare = criterion.baseline {
         if !base_dir_exists(
@@ -69,19 +58,6 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
                 base=criterion.baseline_directory,
             ));
         }
-    }
-
-    // In profiling mode, skip all of the analysis.
-    if let Some(time) = criterion.profile_time {
-        routine.profile(
-            &criterion.measurement,
-            id,
-            criterion,
-            report_context,
-            time,
-            parameter,
-        );
-        return;
     }
 
     let (iters, times);

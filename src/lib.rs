@@ -666,6 +666,27 @@ pub enum PlottingBackend {
     Plotters,
 }
 
+#[derive(Debug, Clone)]
+/// Enum representing the execution mode.
+pub(crate) enum Mode {
+    /// Run benchmarks normally
+    Benchmark,
+    /// List all benchmarks but do not run them.
+    List,
+    /// Run bennchmarks once to verify that they work, but otherwise do not measure them.
+    Test,
+    /// Iterate benchmarks for a given length of time but do not analyze or report on them.
+    Profile(Duration),
+}
+impl Mode {
+    pub fn is_benchmark(&self) -> bool {
+        match self {
+            Mode::Benchmark => true,
+            _ => false,
+        }
+    }
+}
+
 /// The benchmark manager
 ///
 /// `Criterion` lets you configure and execute benchmarks
@@ -689,15 +710,13 @@ pub struct Criterion<M: Measurement = WallTime> {
     output_directory: PathBuf,
     baseline_directory: String,
     baseline: Baseline,
-    profile_time: Option<Duration>,
     load_baseline: Option<String>,
-    test_mode: bool,
-    list_mode: bool,
     all_directories: HashSet<String>,
     all_titles: HashSet<String>,
     measurement: M,
     profiler: Box<RefCell<dyn Profiler>>,
     connection: Option<MutexGuard<'static, Connection>>,
+    mode: Mode,
 }
 
 impl Default for Criterion {
@@ -747,10 +766,7 @@ impl Default for Criterion {
             report: Box::new(Reports::new(reports)),
             baseline_directory: "base".to_owned(),
             baseline: Baseline::Save,
-            profile_time: None,
             load_baseline: None,
-            test_mode: false,
-            list_mode: false,
             output_directory,
             all_directories: HashSet::new(),
             all_titles: HashSet::new(),
@@ -759,6 +775,7 @@ impl Default for Criterion {
             connection: CARGO_CRITERION_CONNECTION
                 .as_ref()
                 .map(|mtx| mtx.lock().unwrap()),
+            mode: Mode::Benchmark,
         }
     }
 }
@@ -767,6 +784,7 @@ impl<M: Measurement> Criterion<M> {
     /// Changes the measurement for the benchmarks run with this runner. See the
     /// Measurement trait for more details
     pub fn with_measurement<M2: Measurement>(self, m: M2) -> Criterion<M2> {
+        // Can't use struct update syntax here because they're technically different types.
         Criterion {
             config: self.config,
             plotting_backend: self.plotting_backend,
@@ -775,16 +793,14 @@ impl<M: Measurement> Criterion<M> {
             report: self.report,
             baseline_directory: self.baseline_directory,
             baseline: self.baseline,
-            profile_time: self.profile_time,
             load_baseline: self.load_baseline,
-            test_mode: self.test_mode,
-            list_mode: self.list_mode,
             output_directory: self.output_directory,
             all_directories: self.all_directories,
             all_titles: self.all_titles,
             measurement: m,
             profiler: self.profiler,
             connection: self.connection,
+            mode: self.mode,
         }
     }
 
@@ -1025,7 +1041,10 @@ impl<M: Measurement> Criterion<M> {
     /// Set the profile time (currently for testing only)
     #[doc(hidden)]
     pub fn profile_time(mut self, profile_time: Option<Duration>) -> Criterion<M> {
-        self.profile_time = profile_time;
+        match profile_time {
+            Some(time) => self.mode = Mode::Profile(time),
+            None => self.mode = Mode::Benchmark,
+        }
 
         self
     }
@@ -1033,14 +1052,13 @@ impl<M: Measurement> Criterion<M> {
     /// Generate the final summary at the end of a run.
     #[doc(hidden)]
     pub fn final_summary(&self) {
-        if self.profile_time.is_some() || self.test_mode {
+        if !self.mode.is_benchmark() {
             return;
         }
 
         let report_context = ReportContext {
             output_directory: self.output_directory.clone(),
             plot_config: PlotConfiguration::default(),
-            test_mode: self.test_mode,
         };
 
         self.report.final_summary(&report_context);
@@ -1084,11 +1102,13 @@ impl<M: Measurement> Criterion<M> {
                 .help("Compare to a named baseline."))
             .arg(Arg::with_name("list")
                 .long("list")
-                .help("List all benchmarks"))
+                .help("List all benchmarks")
+                .conflicts_with_all(&["test", "profile-time"]))
             .arg(Arg::with_name("profile-time")
                 .long("profile-time")
                 .takes_value(true)
-                .help("Iterate each benchmark for approximately the given number of seconds, doing no analysis and without storing the results. Useful for running the benchmarks in a profiler."))
+                .help("Iterate each benchmark for approximately the given number of seconds, doing no analysis and without storing the results. Useful for running the benchmarks in a profiler.")
+                .conflicts_with_all(&["test", "list"]))
             .arg(Arg::with_name("load-baseline")
                  .long("load-baseline")
                  .takes_value(true)
@@ -1126,7 +1146,8 @@ impl<M: Measurement> Criterion<M> {
             .arg(Arg::with_name("test")
                 .hidden(true)
                 .long("test")
-                .help("Run the benchmarks once, to verify that they execute successfully, but do not measure or report the results."))
+                .help("Run the benchmarks once, to verify that they execute successfully, but do not measure or report the results.")
+                .conflicts_with_all(&["list", "profile-time"]))
             .arg(Arg::with_name("bench")
                 .hidden(true)
                 .long("bench"))
@@ -1161,6 +1182,39 @@ To test that the benchmarks work, run `cargo test --benches`
 ")
             .get_matches();
 
+        let bench = matches.is_present("bench");
+        let test = matches.is_present("test");
+        let test_mode = match (bench, test) {
+            (true, true) => true,   // cargo bench -- --test should run tests
+            (true, false) => false, // cargo bench should run benchmarks
+            (false, _) => true,     // cargo test --benches should run tests
+        };
+
+        self.mode = if test_mode {
+            Mode::Test
+        } else if matches.is_present("list") {
+            Mode::List
+        } else if matches.is_present("profile-time") {
+            let num_seconds = value_t!(matches.value_of("profile-time"), u64).unwrap_or_else(|e| {
+                println!("{}", e);
+                std::process::exit(1)
+            });
+
+            if num_seconds < 1 {
+                println!("Profile time must be at least one second.");
+                std::process::exit(1);
+            }
+
+            Mode::Profile(Duration::from_secs(num_seconds))
+        } else {
+            Mode::Benchmark
+        };
+
+        // This is kind of a hack, but disable the connection to the runner if we're not benchmarking.
+        if !self.mode.is_benchmark() {
+            self.connection = None;
+        }
+
         if let Some(filter) = matches.value_of("FILTER") {
             self = self.with_filter(filter);
         }
@@ -1173,14 +1227,10 @@ To test that the benchmarks work, run `cargo test --benches`
             None => {}
         }
 
-        if matches.is_present("noplot") || matches.is_present("test") {
+        if matches.is_present("noplot") {
             self = self.without_plots();
         } else {
             self = self.with_plots();
-        }
-
-        if self.connection.is_some() {
-            self = self.without_plots();
         }
 
         if let Some(dir) = matches.value_of("save-baseline") {
@@ -1192,63 +1242,47 @@ To test that the benchmarks work, run `cargo test --benches`
             self.baseline_directory = dir.to_owned();
         }
 
-        let mut reports: Vec<Box<dyn Report>> = vec![];
+        if self.connection.is_some() {
+            // disable all reports when connected to cargo-criterion; it will do the reporting.
+            self.report = Box::new(Reports::new(vec![]));
+        } else {
+            let cli_report: Box<dyn Report> = match matches.value_of("output-format") {
+                Some("bencher") => Box::new(BencherReport),
+                _ => {
+                    let verbose = matches.is_present("verbose");
+                    let stdout_isatty = atty::is(atty::Stream::Stdout);
+                    let mut enable_text_overwrite = stdout_isatty && !verbose && !debug_enabled();
+                    let enable_text_coloring;
+                    match matches.value_of("color") {
+                        Some("always") => {
+                            enable_text_coloring = true;
+                        }
+                        Some("never") => {
+                            enable_text_coloring = false;
+                            enable_text_overwrite = false;
+                        }
+                        _ => enable_text_coloring = stdout_isatty,
+                    };
+                    Box::new(CliReport::new(
+                        enable_text_overwrite,
+                        enable_text_coloring,
+                        verbose,
+                    ))
+                }
+            };
 
-        let cli_report: Box<dyn Report> = match matches.value_of("output-format") {
-            Some("bencher") => Box::new(BencherReport),
-            _ => {
-                let verbose = matches.is_present("verbose");
-                let stdout_isatty = atty::is(atty::Stream::Stdout);
-                let mut enable_text_overwrite = stdout_isatty && !verbose && !debug_enabled();
-                let enable_text_coloring;
-                match matches.value_of("color") {
-                    Some("always") => {
-                        enable_text_coloring = true;
-                    }
-                    Some("never") => {
-                        enable_text_coloring = false;
-                        enable_text_overwrite = false;
-                    }
-                    _ => enable_text_coloring = stdout_isatty,
-                };
-                Box::new(CliReport::new(
-                    enable_text_overwrite,
-                    enable_text_coloring,
-                    verbose,
-                ))
-            }
-        };
-
-        if self.connection.is_none() {
+            let mut reports: Vec<Box<dyn Report>> = vec![];
             reports.push(cli_report);
-        }
-        reports.push(Box::new(FileCsvReport));
-
-        if matches.is_present("profile-time") {
-            let num_seconds = value_t!(matches.value_of("profile-time"), u64).unwrap_or_else(|e| {
-                println!("{}", e);
-                std::process::exit(1)
-            });
-
-            if num_seconds < 1 {
-                println!("Profile time must be at least one second.");
-                std::process::exit(1);
+            reports.push(Box::new(FileCsvReport));
+            if self.plotting_enabled {
+                reports.push(Box::new(Html::new(self.create_plotter())));
             }
-
-            self.profile_time = Some(Duration::from_secs(num_seconds));
+            self.report = Box::new(Reports::new(reports));
         }
 
         if let Some(dir) = matches.value_of("load-baseline") {
             self.load_baseline = Some(dir.to_owned());
         }
-
-        let bench = matches.is_present("bench");
-        let test = matches.is_present("test");
-        self.test_mode = match (bench, test) {
-            (true, true) => true,   // cargo bench -- --test should run tests
-            (true, false) => false, // cargo bench should run benchmarks
-            (false, _) => true,     // cargo test --benches should run tests
-        };
 
         if matches.is_present("sample-size") {
             let num_size = value_t!(matches.value_of("sample-size"), usize).unwrap_or_else(|e| {
@@ -1326,17 +1360,6 @@ To test that the benchmarks work, run `cargo test --benches`
 
             self.config.significance_level = num_significance_level;
         }
-
-        if matches.is_present("list") {
-            self.test_mode = true;
-            self.list_mode = true;
-        }
-
-        if self.profile_time.is_none() && self.plotting_enabled {
-            reports.push(Box::new(Html::new(self.create_plotter())));
-        }
-
-        self.report = Box::new(Reports::new(reports));
 
         self
     }
