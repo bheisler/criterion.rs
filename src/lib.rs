@@ -1204,7 +1204,10 @@ To test that the benchmarks work, run `cargo test --benches`
             }
 
             if matches.is_present("baseline")
-                || matches.is_present("save-baseline")
+                || matches
+                    .value_of("save-baseline")
+                    .map(|base| base != "base")
+                    .unwrap_or(false)
                 || matches.is_present("load-baseline")
             {
                 println!("Error: baselines are not supported when running with cargo-criterion.");

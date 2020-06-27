@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::stats::bivariate::regression::Slope;
 use crate::stats::bivariate::Data;
-use crate::stats::univariate::outliers::tukey::{self, LabeledSample};
+use crate::stats::univariate::outliers::tukey;
 use crate::stats::univariate::Sample;
 use crate::stats::{Distribution, Tails};
 
@@ -115,7 +115,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         .collect::<Vec<f64>>();
     let avg_times = Sample::new(&avg_times);
 
-    if criterion.load_baseline.is_none() {
+    if criterion.connection.is_none() && criterion.load_baseline.is_none() {
         log_if_err!({
             let mut new_dir = criterion.output_directory.clone();
             new_dir.push(id.as_directory_name());
@@ -125,14 +125,23 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
     }
 
     let data = Data::new(&iters, &times);
-    let labeled_sample = outliers(id, &criterion.output_directory, avg_times);
+    let labeled_sample = tukey::classify(avg_times);
+    if criterion.connection.is_none() {
+        log_if_err!({
+            let mut tukey_file = criterion.output_directory.to_owned();
+            tukey_file.push(id.as_directory_name());
+            tukey_file.push("new");
+            tukey_file.push("tukey.json");
+            fs::save(&labeled_sample.fences(), &tukey_file)
+        });
+    }
     let (distribution, slope) = regression(&data, config);
     let (mut distributions, mut estimates) = estimates(avg_times, config);
 
     estimates.slope = slope;
     distributions.slope = distribution;
 
-    if criterion.load_baseline.is_none() {
+    if criterion.connection.is_none() && criterion.load_baseline.is_none() {
         log_if_err!({
             let mut sample_file = criterion.output_directory.clone();
             sample_file.push(id.as_directory_name());
@@ -206,7 +215,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         criterion.measurement.formatter(),
     );
 
-    if criterion.load_baseline.is_none() {
+    if criterion.connection.is_none() && criterion.load_baseline.is_none() {
         log_if_err!({
             let mut benchmark_file = criterion.output_directory.clone();
             benchmark_file.push(id.as_directory_name());
@@ -216,12 +225,14 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         });
     }
 
-    if let Baseline::Save = criterion.baseline {
-        copy_new_dir_to_base(
-            id.as_directory_name(),
-            &criterion.baseline_directory,
-            &criterion.output_directory,
-        );
+    if criterion.connection.is_none() {
+        if let Baseline::Save = criterion.baseline {
+            copy_new_dir_to_base(
+                id.as_directory_name(),
+                &criterion.baseline_directory,
+                &criterion.output_directory,
+            );
+        }
     }
 }
 
@@ -261,23 +272,6 @@ fn regression(
             standard_error: se,
         },
     )
-}
-
-// Classifies the outliers in the sample
-fn outliers<'a>(
-    id: &BenchmarkId,
-    output_directory: &Path,
-    avg_times: &'a Sample<f64>,
-) -> LabeledSample<'a, f64> {
-    let sample = tukey::classify(avg_times);
-    log_if_err!({
-        let mut tukey_file = output_directory.to_owned();
-        tukey_file.push(id.as_directory_name());
-        tukey_file.push("new");
-        tukey_file.push("tukey.json");
-        fs::save(&sample.fences(), &tukey_file)
-    });
-    sample
 }
 
 // Estimates the statistics of the population from the sample
