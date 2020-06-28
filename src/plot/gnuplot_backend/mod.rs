@@ -25,8 +25,8 @@ use crate::stats::bivariate::Data;
 use super::{PlotContext, PlotData, Plotter};
 use crate::format;
 
-fn escape_underscores(string: &str) -> String {
-    string.replace("_", "\\_")
+fn gnuplot_escape(string: &str) -> String {
+    string.replace("_", "\\_").replace("'", "''")
 }
 
 static DEFAULT_FONT: &str = "Helvetica";

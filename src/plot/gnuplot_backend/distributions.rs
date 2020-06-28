@@ -67,7 +67,7 @@ fn abs_distribution(
         .set(size.unwrap_or(SIZE))
         .set(Title(format!(
             "{}: {}",
-            escape_underscores(id.as_title()),
+            gnuplot_escape(id.as_title()),
             statistic
         )))
         .configure(Axis::BottomX, |a| {
@@ -227,7 +227,7 @@ fn rel_distribution(
         })
         .set(Title(format!(
             "{}: {}",
-            escape_underscores(id.as_title()),
+            gnuplot_escape(id.as_title()),
             statistic
         )))
         .configure(Axis::BottomX, |a| {

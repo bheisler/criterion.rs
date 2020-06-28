@@ -441,7 +441,10 @@ impl Figure {
     fn script(&self) -> Vec<u8> {
         let mut s = String::new();
 
-        s.push_str(&format!("set output '{}'\n", self.output.display()));
+        s.push_str(&format!(
+            "set output '{}'\n",
+            self.output.display().to_string().replace("'", "''")
+        ));
 
         if let Some(width) = self.box_width {
             s.push_str(&format!("set boxwidth {}\n", width))

@@ -101,7 +101,7 @@ pub(crate) fn regression(
     size: Option<Size>,
 ) -> Child {
     let mut figure = regression_figure(formatter, measurements, size);
-    figure.set(Title(escape_underscores(id.as_title())));
+    figure.set(Title(gnuplot_escape(id.as_title())));
     figure.configure(Key, |k| {
         k.set(Justification::Left)
             .set(Order::SampleText)
@@ -253,7 +253,7 @@ pub(crate) fn regression_comparison(
 ) -> Child {
     let mut figure =
         regression_comparison_figure(formatter, measurements, comparison, base_data, size);
-    figure.set(Title(escape_underscores(id.as_title())));
+    figure.set(Title(gnuplot_escape(id.as_title())));
 
     let path = context.report_path(id, "both/regression.svg");
     debug_script(&path, &figure);
