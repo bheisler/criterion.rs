@@ -15,9 +15,8 @@
 //! * Produces detailed charts, providing thorough understanding of your code's
 //!   performance behavior.
 
-#![deny(missing_docs)]
-#![deny(bare_trait_objects)]
-#![deny(warnings)]
+#![warn(missing_docs)]
+#![warn(bare_trait_objects)]
 #![cfg_attr(feature = "real_blackbox", feature(test))]
 #![cfg_attr(
     feature = "cargo-clippy",
