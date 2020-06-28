@@ -8,11 +8,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Added `CRITERION_HOME` environment variable to set the directory for Criterion to store
   its results and charts in. 
+- Added support for [cargo-criterion](https://github.com/bheisler/cargo-criterion). The long-term
+  goal here is to remove code from Criterion-rs itself to improve compile times, as well as to add
+  features to `cargo-criterion` that are difficult to implement in Criterion-rs.
+- Add sampling mode option for benchmarks. This allows the user to change how Criterion.rs chooses
+  the iteration counts in each sample. By default, nothing will change for most benchmarks, but
+  very slow benchmarks will now run fewer iterations to fit in the desired number of samples.
+  This affects the statistics and plots generated.
 
 ### Changed
 - The serialization format for some of the files has changed. This may cause your first benchmark
   run after updating to produce errors, but they're harmless and will go away after running the
   benchmarks once.
+
+### Fixed
+- Fixed a bug where the current measurement was not shown on the relative regression plot.
 
 ## [0.3.2] - 2020-04-26
 ### Added

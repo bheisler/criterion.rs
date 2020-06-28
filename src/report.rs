@@ -586,7 +586,7 @@ impl Report for CliReport {
     ) {
         self.text_overwrite();
 
-        let slope_estimate = &meas.absolute_estimates.slope;
+        let typical_estimate = &meas.absolute_estimates.typical();
 
         {
             let mut id = id.as_title().to_owned();
@@ -601,9 +601,13 @@ impl Report for CliReport {
                 "{}{}time:   [{} {} {}]",
                 self.green(id),
                 " ".repeat(24 - id_len),
-                self.faint(formatter.format_value(slope_estimate.confidence_interval.lower_bound)),
-                self.bold(formatter.format_value(slope_estimate.point_estimate)),
-                self.faint(formatter.format_value(slope_estimate.confidence_interval.upper_bound))
+                self.faint(
+                    formatter.format_value(typical_estimate.confidence_interval.lower_bound)
+                ),
+                self.bold(formatter.format_value(typical_estimate.point_estimate)),
+                self.faint(
+                    formatter.format_value(typical_estimate.confidence_interval.upper_bound)
+                )
             );
         }
 
@@ -611,19 +615,15 @@ impl Report for CliReport {
             println!(
                 "{}thrpt:  [{} {} {}]",
                 " ".repeat(24),
-                self.faint(
-                    formatter.format_throughput(
-                        throughput,
-                        slope_estimate.confidence_interval.upper_bound
-                    )
-                ),
-                self.bold(formatter.format_throughput(throughput, slope_estimate.point_estimate)),
-                self.faint(
-                    formatter.format_throughput(
-                        throughput,
-                        slope_estimate.confidence_interval.lower_bound
-                    )
-                ),
+                self.faint(formatter.format_throughput(
+                    throughput,
+                    typical_estimate.confidence_interval.upper_bound
+                )),
+                self.bold(formatter.format_throughput(throughput, typical_estimate.point_estimate)),
+                self.faint(formatter.format_throughput(
+                    throughput,
+                    typical_estimate.confidence_interval.lower_bound
+                )),
             )
         }
 
@@ -728,16 +728,16 @@ impl Report for CliReport {
             };
 
             let data = &meas.data;
-            let slope_estimate = &meas.absolute_estimates.slope;
-
-            println!(
-                "{:<7}{} {:<15}[{:0.7} {:0.7}]",
-                "slope",
-                format_short_estimate(slope_estimate),
-                "R^2",
-                Slope(slope_estimate.confidence_interval.lower_bound).r_squared(data),
-                Slope(slope_estimate.confidence_interval.upper_bound).r_squared(data),
-            );
+            if let Some(slope_estimate) = meas.absolute_estimates.slope.as_ref() {
+                println!(
+                    "{:<7}{} {:<15}[{:0.7} {:0.7}]",
+                    "slope",
+                    format_short_estimate(slope_estimate),
+                    "R^2",
+                    Slope(slope_estimate.confidence_interval.lower_bound).r_squared(data),
+                    Slope(slope_estimate.confidence_interval.upper_bound).r_squared(data),
+                );
+            }
             println!(
                 "{:<7}{} {:<15}{}",
                 "mean",

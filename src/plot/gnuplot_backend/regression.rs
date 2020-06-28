@@ -16,8 +16,8 @@ fn regression_figure(
     measurements: &MeasurementData<'_>,
     size: Option<Size>,
 ) -> Figure {
-    let slope_estimate = &measurements.absolute_estimates.slope;
-    let slope_dist = &measurements.distributions.slope;
+    let slope_estimate = measurements.absolute_estimates.slope.as_ref().unwrap();
+    let slope_dist = measurements.distributions.slope.as_ref().unwrap();
     let (lb, ub) =
         slope_dist.confidence_interval(slope_estimate.confidence_interval.confidence_level);
 
@@ -157,7 +157,7 @@ fn regression_comparison_figure(
             },
         point_estimate: base_point,
         ..
-    } = comparison.base_estimates.slope;
+    } = comparison.base_estimates.slope.as_ref().unwrap();
 
     let Estimate {
         confidence_interval:
@@ -168,7 +168,7 @@ fn regression_comparison_figure(
             },
         point_estimate: point,
         ..
-    } = comparison.base_estimates.slope;
+    } = measurements.absolute_estimates.slope.as_ref().unwrap();
 
     let mut points = [
         base_lb * max_iters,

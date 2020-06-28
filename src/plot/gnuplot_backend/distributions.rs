@@ -131,14 +131,22 @@ pub(crate) fn abs_distributions(
 ) -> Vec<Child> {
     crate::plot::REPORT_STATS
         .iter()
-        .map(|&statistic| {
+        .filter_map(|stat| {
+            measurements.distributions.get(*stat).and_then(|dist| {
+                measurements
+                    .absolute_estimates
+                    .get(*stat)
+                    .map(|est| (*stat, dist, est))
+            })
+        })
+        .map(|(statistic, distribution, estimate)| {
             abs_distribution(
                 id,
                 context,
                 formatter,
                 statistic,
-                measurements.distributions.get(statistic),
-                measurements.absolute_estimates.get(statistic),
+                distribution,
+                estimate,
                 size,
             )
         })

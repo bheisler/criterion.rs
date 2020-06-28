@@ -5,7 +5,7 @@ use crate::measurement::Measurement;
 use crate::report::BenchmarkId as InternalBenchmarkId;
 use crate::report::ReportContext;
 use crate::routine::{Function, Routine};
-use crate::{Bencher, Criterion, DurationExt, Mode, PlotConfiguration, Throughput};
+use crate::{Bencher, Criterion, DurationExt, Mode, PlotConfiguration, SamplingMode, Throughput};
 use std::time::Duration;
 
 /// Structure used to group together a set of related benchmarks, along with custom configuration
@@ -225,6 +225,12 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     /// throughput.
     pub fn throughput(&mut self, throughput: Throughput) -> &mut Self {
         self.throughput = Some(throughput);
+        self
+    }
+
+    /// Set the sampling mode for this benchmark group.
+    pub fn sampling_mode(&mut self, new_mode: SamplingMode) -> &mut Self {
+        self.partial_config.sampling_mode = Some(new_mode);
         self
     }
 

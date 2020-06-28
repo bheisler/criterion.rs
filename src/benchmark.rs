@@ -3,7 +3,7 @@ use crate::connection::OutgoingMessage;
 use crate::measurement::{Measurement, WallTime};
 use crate::report::{BenchmarkId, ReportContext};
 use crate::routine::{Function, Routine};
-use crate::{Bencher, Criterion, DurationExt, Mode, PlotConfiguration, Throughput};
+use crate::{Bencher, Criterion, DurationExt, Mode, PlotConfiguration, SamplingMode, Throughput};
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::marker::Sized;
@@ -20,6 +20,7 @@ pub struct BenchmarkConfig {
     pub sample_size: usize,
     pub significance_level: f64,
     pub warm_up_time: Duration,
+    pub sampling_mode: SamplingMode,
 }
 
 /// Struct representing a partially-complete per-benchmark configuration.
@@ -32,6 +33,7 @@ pub(crate) struct PartialBenchmarkConfig {
     pub(crate) sample_size: Option<usize>,
     pub(crate) significance_level: Option<f64>,
     pub(crate) warm_up_time: Option<Duration>,
+    pub(crate) sampling_mode: Option<SamplingMode>,
     pub(crate) plot_config: PlotConfiguration,
 }
 
@@ -46,6 +48,7 @@ impl Default for PartialBenchmarkConfig {
             significance_level: None,
             warm_up_time: None,
             plot_config: PlotConfiguration::default(),
+            sampling_mode: None,
         }
     }
 }
@@ -62,13 +65,14 @@ impl PartialBenchmarkConfig {
                 .significance_level
                 .unwrap_or(defaults.significance_level),
             warm_up_time: self.warm_up_time.unwrap_or(defaults.warm_up_time),
+            sampling_mode: self.sampling_mode.unwrap_or(defaults.sampling_mode),
         }
     }
 }
 
-pub struct NamedRoutine<T, M: Measurement = WallTime> {
+pub(crate) struct NamedRoutine<T, M: Measurement = WallTime> {
     pub id: String,
-    pub f: Box<RefCell<dyn Routine<M, T>>>,
+    pub(crate) f: Box<RefCell<dyn Routine<M, T>>>,
 }
 
 /// Structure representing a benchmark (or group of benchmarks)
@@ -232,6 +236,12 @@ macro_rules! benchmark_config {
         /// Changes the plot configuration for this benchmark.
         pub fn plot_config(mut self, new_config: PlotConfiguration) -> Self {
             self.config.plot_config = new_config;
+            self
+        }
+
+        /// Changes the sampling mode for this benchmark.
+        pub fn sampling_mode(mut self, new_mode: SamplingMode) -> Self {
+            self.config.sampling_mode = Some(new_mode);
             self
         }
     };

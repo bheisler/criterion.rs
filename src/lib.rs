@@ -758,6 +758,7 @@ impl Default for Criterion {
                 sample_size: 100,
                 significance_level: 0.05,
                 warm_up_time: Duration::new(3, 0),
+                sampling_mode: SamplingMode::Auto,
             },
             plotting_backend: *DEFAULT_PLOTTING_BACKEND,
             plotting_enabled: true,
@@ -1712,6 +1713,175 @@ impl PlotConfiguration {
         self.summary_scale = new_scale;
         self
     }
+}
+
+/// This enum allows the user to control how Criterion.rs chooses the iteration count when sampling.
+/// The default is Auto, which will choose a method automatically based on the iteration time during
+/// the warm-up phase.
+#[derive(Debug, Clone, Copy)]
+pub enum SamplingMode {
+    /// Criterion.rs should choose a sampling method automatically. This is the default, and is
+    /// recommended for most users and most benchmarks.
+    Auto,
+
+    /// Scale the iteration count in each sample linearly. This is suitable for most benchmarks,
+    /// but it tends to require many iterations which can make it very slow for very long benchmarks.
+    Linear,
+
+    /// Keep the iteration count the same for all samples. This is not recommended, as it affects
+    /// the statistics that Criterion.rs can compute. However, it requires fewer iterations than
+    /// the Linear method and therefore is more suitable for very long-running benchmarks where
+    /// benchmark execution time is more of a problem and statistical precision is less important.
+    Flat,
+}
+impl SamplingMode {
+    pub(crate) fn choose_sampling_mode(
+        &self,
+        warmup_mean_execution_time: f64,
+        sample_count: u64,
+        target_time: f64,
+    ) -> ActualSamplingMode {
+        match self {
+            SamplingMode::Linear => ActualSamplingMode::Linear,
+            SamplingMode::Flat => ActualSamplingMode::Flat,
+            SamplingMode::Auto => {
+                // Estimate execution time with linear sampling
+                let total_runs = sample_count * (sample_count + 1) / 2;
+                let d =
+                    (target_time / warmup_mean_execution_time / total_runs as f64).ceil() as u64;
+                let expected_ns = total_runs as f64 * d as f64 * warmup_mean_execution_time;
+
+                if expected_ns > (2.0 * target_time) {
+                    ActualSamplingMode::Flat
+                } else {
+                    ActualSamplingMode::Linear
+                }
+            }
+        }
+    }
+}
+
+/// Enum to represent the sampling mode without Auto.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub(crate) enum ActualSamplingMode {
+    Linear,
+    Flat,
+}
+impl ActualSamplingMode {
+    pub(crate) fn iteration_counts(
+        &self,
+        warmup_mean_execution_time: f64,
+        sample_count: u64,
+        target_time: &Duration,
+    ) -> Vec<u64> {
+        match self {
+            ActualSamplingMode::Linear => {
+                let n = sample_count;
+                let met = warmup_mean_execution_time;
+                let m_ns = target_time.to_nanos();
+                // Solve: [d + 2*d + 3*d + ... + n*d] * met = m_ns
+                let total_runs = n * (n + 1) / 2;
+                let d = (m_ns as f64 / met / total_runs as f64).ceil() as u64;
+                let expected_ns = total_runs as f64 * d as f64 * met;
+
+                if d == 1 {
+                    let recommended_sample_size =
+                        ActualSamplingMode::recommend_linear_sample_size(m_ns as f64, met);
+                    let actual_time = Duration::from_nanos(expected_ns as u64);
+                    print!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?}",
+                            n, target_time, actual_time);
+
+                    if recommended_sample_size != n {
+                        println!(
+                            ", enable flat sampling, or reduce sample count to {}.",
+                            recommended_sample_size
+                        );
+                    } else {
+                        println!("or enable flat sampling.");
+                    }
+                }
+
+                (1..(n + 1) as u64).map(|a| a * d).collect::<Vec<u64>>()
+            }
+            ActualSamplingMode::Flat => {
+                let n = sample_count;
+                let met = warmup_mean_execution_time;
+                let m_ns = target_time.to_nanos() as f64;
+                let time_per_sample = m_ns / (n as f64);
+                // This is pretty simplistic; we could do something smarter to fit into the allotted time.
+                let iterations_per_sample = (time_per_sample / met).ceil() as u64;
+
+                let expected_ns = met * (iterations_per_sample * n) as f64;
+
+                if iterations_per_sample == 1 {
+                    let recommended_sample_size =
+                        ActualSamplingMode::recommend_flat_sample_size(m_ns, met);
+                    let actual_time = Duration::from_nanos(expected_ns as u64);
+                    print!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?}",
+                            n, target_time, actual_time);
+
+                    if recommended_sample_size != n {
+                        println!(", or reduce sample count to {}.", recommended_sample_size);
+                    } else {
+                        println!(".");
+                    }
+                }
+
+                vec![iterations_per_sample; n as usize]
+            }
+        }
+    }
+
+    fn is_linear(&self) -> bool {
+        match self {
+            ActualSamplingMode::Linear => true,
+            _ => false,
+        }
+    }
+
+    fn recommend_linear_sample_size(target_time: f64, met: f64) -> u64 {
+        // Some math shows that n(n+1)/2 * d * met = target_time. d = 1, so it can be ignored.
+        // This leaves n(n+1) = (2*target_time)/met, or n^2 + n - (2*target_time)/met = 0
+        // Which can be solved with the quadratic formula. Since A and B are constant 1,
+        // this simplifies to sample_size = (-1 +- sqrt(1 - 4C))/2, where C = (2*target_time)/met.
+        // We don't care about the negative solution. Experimentation shows that this actually tends to
+        // result in twice the desired execution time (probably because of the ceil used to calculate
+        // d) so instead I use c = target_time/met.
+        let c = target_time / met;
+        let sample_size = (-1.0 + (4.0 * c).sqrt()) / 2.0;
+        let sample_size = sample_size as u64;
+
+        // Round down to the nearest 10 to give a margin and avoid excessive precision
+        let sample_size = (sample_size / 10) * 10;
+
+        // Clamp it to be at least 10, since criterion.rs doesn't allow sample sizes smaller than 10.
+        if sample_size < 10 {
+            10
+        } else {
+            sample_size
+        }
+    }
+
+    fn recommend_flat_sample_size(target_time: f64, met: f64) -> u64 {
+        let sample_size = (target_time / met) as u64;
+
+        // Round down to the nearest 10 to give a margin and avoid excessive precision
+        let sample_size = (sample_size / 10) * 10;
+
+        // Clamp it to be at least 10, since criterion.rs doesn't allow sample sizes smaller than 10.
+        if sample_size < 10 {
+            10
+        } else {
+            sample_size
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub(crate) struct SavedSample {
+    sampling_mode: ActualSamplingMode,
+    iters: Vec<f64>,
+    times: Vec<f64>,
 }
 
 /// Custom-test-framework runner. Should not be called directly.

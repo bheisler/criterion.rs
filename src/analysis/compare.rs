@@ -9,7 +9,7 @@ use crate::estimate::{
 };
 use crate::measurement::Measurement;
 use crate::report::BenchmarkId;
-use crate::{fs, Criterion};
+use crate::{fs, Criterion, SavedSample};
 
 // Common comparison procedure
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::type_complexity))]
@@ -32,7 +32,8 @@ pub(crate) fn common<M: Measurement>(
     sample_file.push(id.as_directory_name());
     sample_file.push(&criterion.baseline_directory);
     sample_file.push("sample.json");
-    let (iters, times): (Vec<f64>, Vec<f64>) = fs::load(&sample_file)?;
+    let sample: SavedSample = fs::load(&sample_file)?;
+    let SavedSample { iters, times, .. } = sample;
 
     let mut estimates_file = criterion.output_directory.clone();
     estimates_file.push(id.as_directory_name());

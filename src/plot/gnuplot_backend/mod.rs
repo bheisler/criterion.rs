@@ -6,15 +6,17 @@ use crate::stats::univariate::Sample;
 use criterion_plot::prelude::*;
 
 mod distributions;
+mod iteration_times;
 mod pdf;
 mod regression;
 mod summary;
 mod t_test;
-pub(crate) use self::distributions::*;
-pub(crate) use self::pdf::*;
-pub(crate) use self::regression::*;
-pub(crate) use self::summary::*;
-pub(crate) use self::t_test::*;
+use self::distributions::*;
+use self::iteration_times::*;
+use self::pdf::*;
+use self::regression::*;
+use self::summary::*;
+use self::t_test::*;
 
 use crate::measurement::ValueFormatter;
 use crate::report::{BenchmarkId, ValueType};
@@ -129,6 +131,35 @@ impl Plotter for Gnuplot {
             )
         } else {
             regression(ctx.id, ctx.context, data.formatter, data.measurements, size)
+        });
+    }
+
+    fn iteration_times(&mut self, ctx: PlotContext<'_>, data: PlotData<'_>) {
+        let size = ctx.size.map(|(w, h)| Size(w, h));
+        self.process_list.push(if ctx.is_thumbnail {
+            if let Some(cmp) = data.comparison {
+                iteration_times_comparison_small(
+                    ctx.id,
+                    ctx.context,
+                    data.formatter,
+                    data.measurements,
+                    cmp,
+                    size,
+                )
+            } else {
+                iteration_times_small(ctx.id, ctx.context, data.formatter, data.measurements, size)
+            }
+        } else if let Some(cmp) = data.comparison {
+            iteration_times_comparison(
+                ctx.id,
+                ctx.context,
+                data.formatter,
+                data.measurements,
+                cmp,
+                size,
+            )
+        } else {
+            iteration_times(ctx.id, ctx.context, data.formatter, data.measurements, size)
         });
     }
 

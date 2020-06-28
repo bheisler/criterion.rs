@@ -7,7 +7,7 @@ use crate::stats::univariate::Sample;
 use crate::stats::{Distribution, Tails};
 
 use crate::benchmark::BenchmarkConfig;
-use crate::connection::{OutgoingMessage, SamplingMethod};
+use crate::connection::OutgoingMessage;
 use crate::estimate::{
     build_estimates, ConfidenceInterval, Distributions, Estimate, Estimates, PointEstimates,
 };
@@ -15,7 +15,7 @@ use crate::fs;
 use crate::measurement::Measurement;
 use crate::report::{BenchmarkId, ReportContext};
 use crate::routine::Routine;
-use crate::{Baseline, Criterion, Throughput};
+use crate::{Baseline, Criterion, SavedSample, Throughput};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => {{
@@ -60,13 +60,13 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         }
     }
 
-    let (iters, times);
+    let (sampling_mode, iters, times);
     if let Some(baseline) = &criterion.load_baseline {
         let mut sample_path = criterion.output_directory.clone();
         sample_path.push(id.as_directory_name());
         sample_path.push(baseline);
         sample_path.push("sample.json");
-        let loaded = fs::load::<(Box<[f64]>, Box<[f64]>), _>(&sample_path);
+        let loaded = fs::load::<SavedSample, _>(&sample_path);
 
         match loaded {
             Err(err) => panic!(
@@ -74,8 +74,9 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
                 base = baseline, err = err
             ),
             Ok(samples) => {
-                iters = samples.0;
-                times = samples.1;
+                sampling_mode = samples.sampling_mode;
+                iters = samples.iters.into_boxed_slice();
+                times = samples.times.into_boxed_slice();
             }
         }
     } else {
@@ -87,8 +88,9 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
             report_context,
             parameter,
         );
-        iters = sample.0;
-        times = sample.1;
+        sampling_mode = sample.0;
+        iters = sample.1;
+        times = sample.2;
 
         if let Some(conn) = &criterion.connection {
             conn.send(&OutgoingMessage::MeasurementComplete {
@@ -96,7 +98,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
                 iters: &iters,
                 times: &times,
                 plot_config: (&report_context.plot_config).into(),
-                sampling_method: SamplingMethod::Linear,
+                sampling_method: sampling_mode.into(),
                 benchmark_config: config.into(),
             })
             .unwrap();
@@ -135,11 +137,13 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
             fs::save(&labeled_sample.fences(), &tukey_file)
         });
     }
-    let (distribution, slope) = regression(&data, config);
     let (mut distributions, mut estimates) = estimates(avg_times, config);
+    if sampling_mode.is_linear() {
+        let (distribution, slope) = regression(&data, config);
 
-    estimates.slope = slope;
-    distributions.slope = distribution;
+        estimates.slope = Some(slope);
+        distributions.slope = Some(distribution);
+    }
 
     if criterion.connection.is_none() && criterion.load_baseline.is_none() {
         log_if_err!({
@@ -147,7 +151,14 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
             sample_file.push(id.as_directory_name());
             sample_file.push("new");
             sample_file.push("sample.json");
-            fs::save(&(data.x().as_ref(), data.y().as_ref()), &sample_file)
+            fs::save(
+                &SavedSample {
+                    sampling_mode,
+                    iters: data.x().as_ref().to_vec(),
+                    times: data.y().as_ref().to_vec(),
+                },
+                &sample_file,
+            )
         });
         log_if_err!({
             let mut estimates_file = criterion.output_directory.clone();
@@ -293,7 +304,6 @@ fn estimates(avg_times: &Sample<f64>, config: &BenchmarkConfig) -> (Distribution
         mean,
         median,
         std_dev,
-        slope: mean,
         median_abs_dev: mad,
     };
 
@@ -303,8 +313,8 @@ fn estimates(avg_times: &Sample<f64>, config: &BenchmarkConfig) -> (Distribution
     );
 
     let distributions = Distributions {
-        mean: dist_mean.clone(),
-        slope: dist_mean,
+        mean: dist_mean,
+        slope: None,
         median: dist_median,
         median_abs_dev: dist_mad,
         std_dev: dist_stddev,
