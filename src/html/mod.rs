@@ -1,12 +1,11 @@
 use crate::report::{make_filename_safe, BenchmarkId, MeasurementData, Report, ReportContext};
 use crate::stats::bivariate::regression::Slope;
 
-use crate::estimate::Statistic;
+use crate::estimate::Estimate;
 use crate::format;
 use crate::fs;
 use crate::measurement::ValueFormatter;
 use crate::plot::{PlotContext, PlotData, Plotter};
-use crate::Estimate;
 use criterion_plot::Size;
 use serde::Serialize;
 use std::cell::RefCell;
@@ -296,7 +295,7 @@ impl Report for Html {
             fs::mkdirp(&report_dir)
         });
 
-        let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
+        let slope_estimate = &measurements.absolute_estimates.slope;
 
         let time_interval = |est: &Estimate| -> ConfidenceInterval {
             ConfidenceInterval {
@@ -332,10 +331,10 @@ impl Report for Html {
             thumbnail_height: THUMBNAIL_SIZE.unwrap().1,
 
             slope: time_interval(slope_estimate),
-            mean: time_interval(&measurements.absolute_estimates[&Statistic::Mean]),
-            median: time_interval(&measurements.absolute_estimates[&Statistic::Median]),
-            mad: time_interval(&measurements.absolute_estimates[&Statistic::MedianAbsDev]),
-            std_dev: time_interval(&measurements.absolute_estimates[&Statistic::StdDev]),
+            mean: time_interval(&measurements.absolute_estimates.mean),
+            median: time_interval(&measurements.absolute_estimates.median),
+            mad: time_interval(&measurements.absolute_estimates.median_abs_dev),
+            std_dev: time_interval(&measurements.absolute_estimates.std_dev),
             throughput,
 
             r2: ConfidenceInterval {
@@ -516,7 +515,7 @@ impl Report for Html {
         for id in found_ids.iter() {
             id_groups
                 .entry(&id.group_id)
-                .or_insert_with(|| vec![])
+                .or_insert_with(Vec::new)
                 .push(id);
         }
 
@@ -545,7 +544,7 @@ impl Html {
     fn comparison(&self, measurements: &MeasurementData<'_>) -> Option<Comparison> {
         if let Some(ref comp) = measurements.comparison {
             let different_mean = comp.p_value < comp.significance_threshold;
-            let mean_est = comp.relative_estimates[&Statistic::Mean];
+            let mean_est = &comp.relative_estimates.mean;
             let explanation_str: String;
 
             if !different_mean {
@@ -775,7 +774,7 @@ enum ComparisonResult {
 }
 
 fn compare_to_threshold(estimate: &Estimate, noise: f64) -> ComparisonResult {
-    let ci = estimate.confidence_interval;
+    let ci = &estimate.confidence_interval;
     let lb = ci.lower_bound;
     let ub = ci.upper_bound;
 

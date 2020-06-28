@@ -61,6 +61,7 @@ where
 
 #[cfg(test)]
 mod test {
+    use quickcheck::quickcheck;
     use quickcheck::TestResult;
     use std::collections::HashSet;
 

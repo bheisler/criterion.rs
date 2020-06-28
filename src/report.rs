@@ -2,12 +2,11 @@ use crate::stats::bivariate::regression::Slope;
 use crate::stats::bivariate::Data;
 use crate::stats::univariate::outliers::tukey::LabeledSample;
 
-use crate::estimate::{Distributions, Estimates, Statistic};
+use crate::estimate::{ChangeDistributions, ChangeEstimates, Distributions, Estimate, Estimates};
 use crate::format;
 use crate::measurement::ValueFormatter;
 use crate::stats::univariate::Sample;
 use crate::stats::Distribution;
-use crate::Estimate;
 use crate::{PlotConfiguration, Throughput};
 use std::cell::Cell;
 use std::cmp;
@@ -24,8 +23,8 @@ pub(crate) struct ComparisonData {
     pub p_value: f64,
     pub t_distribution: Distribution<f64>,
     pub t_value: f64,
-    pub relative_estimates: Estimates,
-    pub relative_distributions: Distributions,
+    pub relative_estimates: ChangeEstimates,
+    pub relative_distributions: ChangeDistributions,
     pub significance_threshold: f64,
     pub noise_threshold: f64,
     pub base_iter_counts: Vec<f64>,
@@ -251,7 +250,6 @@ impl fmt::Debug for BenchmarkId {
 pub struct ReportContext {
     pub output_directory: PathBuf,
     pub plot_config: PlotConfiguration,
-    pub test_mode: bool,
 }
 impl ReportContext {
     pub fn report_path<P: AsRef<Path> + ?Sized>(&self, id: &BenchmarkId, file_name: &P) -> PathBuf {
@@ -264,6 +262,9 @@ impl ReportContext {
 }
 
 pub(crate) trait Report {
+    fn test_start(&self, _id: &BenchmarkId, _context: &ReportContext) {}
+    fn test_pass(&self, _id: &BenchmarkId, _context: &ReportContext) {}
+
     fn benchmark_start(&self, _id: &BenchmarkId, _context: &ReportContext) {}
     fn profile(&self, _id: &BenchmarkId, _context: &ReportContext, _profile_ns: f64) {}
     fn warmup(&self, _id: &BenchmarkId, _context: &ReportContext, _warmup_ns: f64) {}
@@ -294,6 +295,7 @@ pub(crate) trait Report {
     ) {
     }
     fn final_summary(&self, _context: &ReportContext) {}
+    fn group_separator(&self) {}
 }
 
 pub(crate) struct Reports {
@@ -305,6 +307,17 @@ impl Reports {
     }
 }
 impl Report for Reports {
+    fn test_start(&self, id: &BenchmarkId, context: &ReportContext) {
+        for report in &self.reports {
+            report.test_start(id, context);
+        }
+    }
+    fn test_pass(&self, id: &BenchmarkId, context: &ReportContext) {
+        for report in &self.reports {
+            report.test_pass(id, context);
+        }
+    }
+
     fn benchmark_start(&self, id: &BenchmarkId, context: &ReportContext) {
         for report in &self.reports {
             report.benchmark_start(id, context);
@@ -374,6 +387,11 @@ impl Report for Reports {
     fn final_summary(&self, context: &ReportContext) {
         for report in &self.reports {
             report.final_summary(context);
+        }
+    }
+    fn group_separator(&self) {
+        for report in &self.reports {
+            report.group_separator();
         }
     }
 }
@@ -496,12 +514,15 @@ impl CliReport {
     }
 }
 impl Report for CliReport {
-    fn benchmark_start(&self, id: &BenchmarkId, ctx: &ReportContext) {
-        if ctx.test_mode {
-            println!("Testing {}", id);
-        } else {
-            self.print_overwritable(format!("Benchmarking {}", id));
-        }
+    fn test_start(&self, id: &BenchmarkId, _: &ReportContext) {
+        println!("Testing {}", id);
+    }
+    fn test_pass(&self, _: &BenchmarkId, _: &ReportContext) {
+        println!("Success");
+    }
+
+    fn benchmark_start(&self, id: &BenchmarkId, _: &ReportContext) {
+        self.print_overwritable(format!("Benchmarking {}", id));
     }
 
     fn profile(&self, id: &BenchmarkId, _: &ReportContext, warmup_ns: f64) {
@@ -522,13 +543,9 @@ impl Report for CliReport {
         ));
     }
 
-    fn terminated(&self, id: &BenchmarkId, ctx: &ReportContext) {
-        if ctx.test_mode {
-            println!("Success");
-        } else {
-            self.text_overwrite();
-            println!("Benchmarking {}: Complete (Analysis Disabled)", id);
-        }
+    fn terminated(&self, id: &BenchmarkId, _: &ReportContext) {
+        self.text_overwrite();
+        println!("Benchmarking {}: Complete (Analysis Disabled)", id);
     }
 
     fn analysis(&self, id: &BenchmarkId, _: &ReportContext) {
@@ -569,7 +586,7 @@ impl Report for CliReport {
     ) {
         self.text_overwrite();
 
-        let slope_estimate = meas.absolute_estimates[&Statistic::Slope];
+        let slope_estimate = &meas.absolute_estimates.slope;
 
         {
             let mut id = id.as_title().to_owned();
@@ -612,7 +629,7 @@ impl Report for CliReport {
 
         if let Some(ref comp) = meas.comparison {
             let different_mean = comp.p_value < comp.significance_threshold;
-            let mean_est = comp.relative_estimates[&Statistic::Mean];
+            let mean_est = &comp.relative_estimates.mean;
             let point_estimate = mean_est.point_estimate;
             let mut point_estimate_str = format::change(point_estimate, true);
             // The change in throughput is related to the change in timing. Reducing the timing by
@@ -711,7 +728,7 @@ impl Report for CliReport {
             };
 
             let data = &meas.data;
-            let slope_estimate = &meas.absolute_estimates[&Statistic::Slope];
+            let slope_estimate = &meas.absolute_estimates.slope;
 
             println!(
                 "{:<7}{} {:<15}[{:0.7} {:0.7}]",
@@ -724,18 +741,22 @@ impl Report for CliReport {
             println!(
                 "{:<7}{} {:<15}{}",
                 "mean",
-                format_short_estimate(&meas.absolute_estimates[&Statistic::Mean]),
+                format_short_estimate(&meas.absolute_estimates.mean),
                 "std. dev.",
-                format_short_estimate(&meas.absolute_estimates[&Statistic::StdDev]),
+                format_short_estimate(&meas.absolute_estimates.std_dev),
             );
             println!(
                 "{:<7}{} {:<15}{}",
                 "median",
-                format_short_estimate(&meas.absolute_estimates[&Statistic::Median]),
+                format_short_estimate(&meas.absolute_estimates.median),
                 "med. abs. dev.",
-                format_short_estimate(&meas.absolute_estimates[&Statistic::MedianAbsDev]),
+                format_short_estimate(&meas.absolute_estimates.median_abs_dev),
             );
         }
+    }
+
+    fn group_separator(&self) {
+        println!();
     }
 }
 
@@ -760,8 +781,8 @@ impl Report for BencherReport {
         formatter: &dyn ValueFormatter,
     ) {
         let mut values = [
-            meas.absolute_estimates[&Statistic::Median].point_estimate,
-            meas.absolute_estimates[&Statistic::StdDev].point_estimate,
+            meas.absolute_estimates.median.point_estimate,
+            meas.absolute_estimates.std_dev.point_estimate,
         ];
         let unit = formatter.scale_for_machines(&mut values);
 
@@ -772,6 +793,10 @@ impl Report for BencherReport {
             format::integer(values[1])
         );
     }
+
+    fn group_separator(&self) {
+        println!();
+    }
 }
 
 enum ComparisonResult {
@@ -781,7 +806,7 @@ enum ComparisonResult {
 }
 
 fn compare_to_threshold(estimate: &Estimate, noise: f64) -> ComparisonResult {
-    let ci = estimate.confidence_interval;
+    let ci = &estimate.confidence_interval;
     let lb = ci.lower_bound;
     let ub = ci.upper_bound;
 

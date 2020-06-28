@@ -22,6 +22,7 @@ use crate::stats::float::Float;
 use crate::stats::univariate::Sample;
 
 /// The bootstrap distribution of some parameter
+#[derive(Clone)]
 pub struct Distribution<A>(Box<[A]>);
 
 impl<A> Distribution<A>

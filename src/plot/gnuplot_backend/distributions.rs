@@ -6,11 +6,11 @@ use crate::stats::Distribution;
 use criterion_plot::prelude::*;
 
 use super::*;
+use crate::estimate::Estimate;
 use crate::estimate::Statistic;
 use crate::kde;
 use crate::measurement::ValueFormatter;
 use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
-use crate::Estimate;
 
 fn abs_distribution(
     id: &BenchmarkId,
@@ -21,7 +21,7 @@ fn abs_distribution(
     estimate: &Estimate,
     size: Option<Size>,
 ) -> Child {
-    let ci = estimate.confidence_interval;
+    let ci = &estimate.confidence_interval;
     let typical = ci.upper_bound;
     let mut ci_values = [ci.lower_bound, ci.upper_bound, estimate.point_estimate];
     let unit = formatter.scale_values(typical, &mut ci_values);
@@ -129,17 +129,16 @@ pub(crate) fn abs_distributions(
     measurements: &MeasurementData<'_>,
     size: Option<Size>,
 ) -> Vec<Child> {
-    measurements
-        .distributions
+    crate::plot::REPORT_STATS
         .iter()
-        .map(|(&statistic, distribution)| {
+        .map(|&statistic| {
             abs_distribution(
                 id,
                 context,
                 formatter,
                 statistic,
-                distribution,
-                &measurements.absolute_estimates[&statistic],
+                measurements.distributions.get(statistic),
+                measurements.absolute_estimates.get(statistic),
                 size,
             )
         })
@@ -155,7 +154,7 @@ fn rel_distribution(
     noise_threshold: f64,
     size: Option<Size>,
 ) -> Child {
-    let ci = estimate.confidence_interval;
+    let ci = &estimate.confidence_interval;
     let (lb, ub) = (ci.lower_bound, ci.upper_bound);
 
     let start = lb - (ub - lb) / 9.;
@@ -284,16 +283,15 @@ pub(crate) fn rel_distributions(
     comparison: &ComparisonData,
     size: Option<Size>,
 ) -> Vec<Child> {
-    comparison
-        .relative_distributions
+    crate::plot::CHANGE_STATS
         .iter()
-        .map(|(&statistic, distribution)| {
+        .map(|&statistic| {
             rel_distribution(
                 id,
                 context,
                 statistic,
-                distribution,
-                &comparison.relative_estimates[&statistic],
+                comparison.relative_distributions.get(statistic),
+                comparison.relative_estimates.get(statistic),
                 comparison.noise_threshold,
                 size,
             )

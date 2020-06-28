@@ -1,16 +1,15 @@
-use std::collections::BTreeMap;
-
 use crate::stats::univariate::Sample;
 use crate::stats::univariate::{self, mixed};
 use crate::stats::Distribution;
 
 use crate::benchmark::BenchmarkConfig;
 use crate::error::Result;
-use crate::estimate::Statistic;
-use crate::estimate::{Distributions, Estimates};
+use crate::estimate::{
+    build_change_estimates, ChangeDistributions, ChangeEstimates, ChangePointEstimates, Estimates,
+};
 use crate::measurement::Measurement;
 use crate::report::BenchmarkId;
-use crate::{build_estimates, fs, Criterion};
+use crate::{fs, Criterion};
 
 // Common comparison procedure
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::type_complexity))]
@@ -22,8 +21,8 @@ pub(crate) fn common<M: Measurement>(
 ) -> Result<(
     f64,
     Distribution<f64>,
-    Estimates,
-    Distributions,
+    ChangeEstimates,
+    ChangeDistributions,
     Vec<f64>,
     Vec<f64>,
     Vec<f64>,
@@ -104,7 +103,7 @@ fn estimates<M: Measurement>(
     base_avg_times: &Sample<f64>,
     config: &BenchmarkConfig,
     criterion: &Criterion<M>,
-) -> (Estimates, Distributions) {
+) -> (ChangeEstimates, ChangeDistributions) {
     fn stats(a: &Sample<f64>, b: &Sample<f64>) -> (f64, f64) {
         (
             a.mean() / b.mean() - 1.,
@@ -120,16 +119,15 @@ fn estimates<M: Measurement>(
         univariate::bootstrap(avg_times, base_avg_times, nresamples, stats)
     );
 
-    let mut distributions = Distributions::new();
-    distributions.insert(Statistic::Mean, dist_mean);
-    distributions.insert(Statistic::Median, dist_median);
+    let distributions = ChangeDistributions {
+        mean: dist_mean,
+        median: dist_median,
+    };
 
     let (mean, median) = stats(avg_times, base_avg_times);
-    let mut point_estimates = BTreeMap::new();
-    point_estimates.insert(Statistic::Mean, mean);
-    point_estimates.insert(Statistic::Median, median);
+    let points = ChangePointEstimates { mean, median };
 
-    let estimates = build_estimates(&distributions, &point_estimates, cl);
+    let estimates = build_change_estimates(&distributions, &points, cl);
 
     {
         log_if_err!({

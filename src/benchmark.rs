@@ -1,8 +1,9 @@
 use crate::analysis;
+use crate::connection::OutgoingMessage;
 use crate::measurement::{Measurement, WallTime};
 use crate::report::{BenchmarkId, ReportContext};
 use crate::routine::{Function, Routine};
-use crate::{Bencher, Criterion, DurationExt, PlotConfiguration, Throughput};
+use crate::{Bencher, Criterion, DurationExt, Mode, PlotConfiguration, Throughput};
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::marker::Sized;
@@ -303,7 +304,6 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
         let report_context = ReportContext {
             output_directory: c.output_directory.clone(),
             plot_config: self.config.plot_config.clone(),
-            test_mode: c.test_mode,
         };
 
         let config = self.config.to_complete(&c.config);
@@ -311,6 +311,11 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
 
         let mut all_ids = vec![];
         let mut any_matched = false;
+
+        if let Some(conn) = &c.connection {
+            conn.send(&OutgoingMessage::BeginningBenchmarkGroup { group: group_id })
+                .unwrap();
+        }
 
         for routine in self.routines {
             let function_id = if num_routines == 1 && group_id == routine.id {
@@ -331,28 +336,36 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
             id.ensure_title_unique(&c.all_titles);
             c.all_titles.insert(id.as_title().to_owned());
 
-            if c.filter_matches(id.id()) {
-                any_matched = true;
-                analysis::common(
-                    &id,
-                    &mut *routine.f.borrow_mut(),
-                    &config,
-                    c,
-                    &report_context,
-                    &(),
-                    self.throughput.clone(),
-                );
-            }
+            let do_run = c.filter_matches(id.id());
+            any_matched |= do_run;
+
+            execute_benchmark(
+                do_run,
+                &id,
+                c,
+                &config,
+                &mut *routine.f.borrow_mut(),
+                &report_context,
+                &(),
+                self.throughput.clone(),
+            );
 
             all_ids.push(id);
         }
 
-        if all_ids.len() > 1 && any_matched && c.profile_time.is_none() && !c.test_mode {
+        if let Some(conn) = &c.connection {
+            conn.send(&OutgoingMessage::FinishedBenchmarkGroup { group: group_id })
+                .unwrap();
+            conn.serve_value_formatter(c.measurement.formatter())
+                .unwrap();
+        }
+
+        if all_ids.len() > 1 && any_matched && c.mode.is_benchmark() {
             c.report
                 .summarize(&report_context, &all_ids, c.measurement.formatter());
         }
         if any_matched {
-            println!();
+            c.report.group_separator();
         }
     }
 }
@@ -452,7 +465,6 @@ where
         let report_context = ReportContext {
             output_directory: c.output_directory.clone(),
             plot_config: self.config.plot_config.clone(),
-            test_mode: c.test_mode,
         };
 
         let config = self.config.to_complete(&c.config);
@@ -461,6 +473,11 @@ where
 
         let mut all_ids = vec![];
         let mut any_matched = false;
+
+        if let Some(conn) = &c.connection {
+            conn.send(&OutgoingMessage::BeginningBenchmarkGroup { group: group_id })
+                .unwrap();
+        }
 
         for routine in self.routines {
             for value in &self.values {
@@ -489,30 +506,95 @@ where
                 id.ensure_title_unique(&c.all_titles);
                 c.all_titles.insert(id.as_title().to_owned());
 
-                if c.filter_matches(id.id()) {
-                    any_matched = true;
+                let do_run = c.filter_matches(id.id());
+                any_matched |= do_run;
 
-                    analysis::common(
-                        &id,
-                        &mut *routine.f.borrow_mut(),
-                        &config,
-                        c,
-                        &report_context,
-                        value,
-                        throughput,
-                    );
-                }
+                execute_benchmark(
+                    do_run,
+                    &id,
+                    c,
+                    &config,
+                    &mut *routine.f.borrow_mut(),
+                    &report_context,
+                    value,
+                    throughput,
+                );
 
                 all_ids.push(id);
             }
         }
 
-        if all_ids.len() > 1 && any_matched && c.profile_time.is_none() && !c.test_mode {
+        if let Some(conn) = &c.connection {
+            conn.send(&OutgoingMessage::FinishedBenchmarkGroup { group: group_id })
+                .unwrap();
+            conn.serve_value_formatter(c.measurement.formatter())
+                .unwrap();
+        }
+
+        if all_ids.len() > 1 && any_matched && c.mode.is_benchmark() {
             c.report
                 .summarize(&report_context, &all_ids, c.measurement.formatter());
         }
         if any_matched {
-            println!();
+            c.report.group_separator();
+        }
+    }
+}
+
+fn execute_benchmark<T, M>(
+    do_run: bool,
+    id: &BenchmarkId,
+    c: &Criterion<M>,
+    config: &BenchmarkConfig,
+    routine: &mut dyn Routine<M, T>,
+    report_context: &ReportContext,
+    parameter: &T,
+    throughput: Option<Throughput>,
+) where
+    T: Debug,
+    M: Measurement,
+{
+    match c.mode {
+        Mode::Benchmark => {
+            if let Some(conn) = &c.connection {
+                if do_run {
+                    conn.send(&OutgoingMessage::BeginningBenchmark { id: id.into() })
+                        .unwrap();
+                } else {
+                    conn.send(&OutgoingMessage::SkippingBenchmark { id: id.into() })
+                        .unwrap();
+                }
+            }
+
+            if do_run {
+                analysis::common(
+                    id,
+                    routine,
+                    config,
+                    c,
+                    report_context,
+                    parameter,
+                    throughput,
+                );
+            }
+        }
+        Mode::List => {
+            if do_run {
+                println!("{}: bench", id);
+            }
+        }
+        Mode::Test => {
+            if do_run {
+                // In test mode, run the benchmark exactly once, then exit.
+                c.report.test_start(id, report_context);
+                routine.test(&c.measurement, parameter);
+                c.report.test_pass(id, report_context);
+            }
+        }
+        Mode::Profile(duration) => {
+            if do_run {
+                routine.profile(&c.measurement, id, c, report_context, duration, parameter);
+            }
         }
     }
 }

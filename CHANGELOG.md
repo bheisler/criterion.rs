@@ -5,8 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added `CRITERION_HOME` environment variable to set the directory for Criterion to store
+  its results and charts in. 
 
-## [ 0.3.2] - 2020-04-26
+### Changed
+- The serialization format for some of the files has changed. This may cause your first benchmark
+  run after updating to produce errors, but they're harmless and will go away after running the
+  benchmarks once.
+
+## [0.3.2] - 2020-04-26
 ### Added
 - Added `?Sized` bound to benchmark parameter types, which allows dynamically sized types like
   `&str` and `&[T]` to be used as benchmark parameters.

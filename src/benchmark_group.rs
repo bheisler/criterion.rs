@@ -1,10 +1,11 @@
 use crate::analysis;
 use crate::benchmark::PartialBenchmarkConfig;
+use crate::connection::OutgoingMessage;
 use crate::measurement::Measurement;
 use crate::report::BenchmarkId as InternalBenchmarkId;
 use crate::report::ReportContext;
-use crate::routine::Function;
-use crate::{Bencher, Criterion, DurationExt, PlotConfiguration, Throughput};
+use crate::routine::{Function, Routine};
+use crate::{Bencher, Criterion, DurationExt, Mode, PlotConfiguration, Throughput};
 use std::time::Duration;
 
 /// Structure used to group together a set of related benchmarks, along with custom configuration
@@ -271,7 +272,6 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
         let report_context = ReportContext {
             output_directory: self.criterion.output_directory.clone(),
             plot_config: self.partial_config.plot_config.clone(),
-            test_mode: self.criterion.test_mode,
         };
 
         let mut id = InternalBenchmarkId::new(
@@ -293,20 +293,58 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
         id.ensure_title_unique(&self.criterion.all_titles);
         self.criterion.all_titles.insert(id.as_title().to_owned());
 
-        if self.criterion.filter_matches(id.id()) {
-            self.any_matched = true;
+        let do_run = self.criterion.filter_matches(id.id());
+        self.any_matched |= do_run;
+        let mut func = Function::new(f);
 
-            let mut func = Function::new(f);
-
-            analysis::common(
-                &id,
-                &mut func,
-                &config,
-                self.criterion,
-                &report_context,
-                input,
-                self.throughput.clone(),
-            );
+        match self.criterion.mode {
+            Mode::Benchmark => {
+                if let Some(conn) = &self.criterion.connection {
+                    if do_run {
+                        conn.send(&OutgoingMessage::BeginningBenchmark { id: (&id).into() })
+                            .unwrap();
+                    } else {
+                        conn.send(&OutgoingMessage::SkippingBenchmark { id: (&id).into() })
+                            .unwrap();
+                    }
+                }
+                if do_run {
+                    analysis::common(
+                        &id,
+                        &mut func,
+                        &config,
+                        self.criterion,
+                        &report_context,
+                        input,
+                        self.throughput.clone(),
+                    );
+                }
+            }
+            Mode::List => {
+                if do_run {
+                    println!("{}: bench", id);
+                }
+            }
+            Mode::Test => {
+                if do_run {
+                    // In test mode, run the benchmark exactly once, then exit.
+                    self.criterion.report.test_start(&id, &report_context);
+                    func.test(&self.criterion.measurement, input);
+                    self.criterion.report.test_pass(&id, &report_context);
+                }
+            }
+            Mode::Profile(duration) => {
+                if do_run {
+                    func.profile(
+                        &self.criterion.measurement,
+                        &id,
+                        &self.criterion,
+                        &report_context,
+                        duration,
+                        input,
+                    );
+                }
+            }
         }
 
         self.all_ids.push(id);
@@ -324,15 +362,20 @@ impl<'a, M: Measurement> Drop for BenchmarkGroup<'a, M> {
     fn drop(&mut self) {
         // I don't really like having a bunch of non-trivial code in drop, but this is the only way
         // to really write linear types like this in Rust...
-        if self.all_ids.len() > 1
-            && self.any_matched
-            && self.criterion.profile_time.is_none()
-            && !self.criterion.test_mode
-        {
+        if let Some(conn) = &mut self.criterion.connection {
+            conn.send(&OutgoingMessage::FinishedBenchmarkGroup {
+                group: &self.group_name,
+            })
+            .unwrap();
+
+            conn.serve_value_formatter(self.criterion.measurement.formatter())
+                .unwrap();
+        }
+
+        if self.all_ids.len() > 1 && self.any_matched && self.criterion.mode.is_benchmark() {
             let report_context = ReportContext {
                 output_directory: self.criterion.output_directory.clone(),
                 plot_config: self.partial_config.plot_config.clone(),
-                test_mode: self.criterion.test_mode,
             };
 
             self.criterion.report.summarize(
@@ -342,7 +385,7 @@ impl<'a, M: Measurement> Drop for BenchmarkGroup<'a, M> {
             );
         }
         if self.any_matched {
-            println!();
+            self.criterion.report.group_separator();
         }
     }
 }

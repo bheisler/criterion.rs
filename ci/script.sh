@@ -16,6 +16,8 @@ elif [ "$MINIMAL_VERSIONS" = "yes" ]; then
     rm Cargo.lock || true
     cargo build -Z minimal-versions
 else
+    export RUSTFLAGS="-D warnings"
+
     cargo build $BUILD_ARGS --release
 
     cargo test --all --release
