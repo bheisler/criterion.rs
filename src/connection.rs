@@ -276,7 +276,7 @@ pub struct RawBenchmarkId {
     group_id: String,
     function_id: Option<String>,
     value_str: Option<String>,
-    throughput: Option<Throughput>,
+    throughput: Vec<Throughput>,
 }
 impl From<&InternalBenchmarkId> for RawBenchmarkId {
     fn from(other: &InternalBenchmarkId) -> RawBenchmarkId {
@@ -284,7 +284,7 @@ impl From<&InternalBenchmarkId> for RawBenchmarkId {
             group_id: other.group_id.clone(),
             function_id: other.function_id.clone(),
             value_str: other.value_str.clone(),
-            throughput: other.throughput.clone(),
+            throughput: other.throughput.iter().cloned().collect(),
         }
     }
 }
@@ -357,4 +357,5 @@ impl From<&crate::benchmark::BenchmarkConfig> for BenchmarkConfig {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum SamplingMethod {
     Linear,
+    Flat,
 }
