@@ -484,8 +484,13 @@ impl IntoBenchmarkId for BenchmarkId {
 }
 impl<S: Into<String>> IntoBenchmarkId for S {
     fn into_benchmark_id(self) -> BenchmarkId {
+        let function_name = self.into();
+        if function_name.is_empty() {
+            panic!("Function name must not be empty.");
+        }
+
         BenchmarkId {
-            function_name: Some(self.into()),
+            function_name: Some(function_name),
             parameter: None,
         }
     }

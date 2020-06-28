@@ -1425,8 +1425,13 @@ To test that the benchmarks work, run `cargo test --benches`
     /// criterion_group!(benches, bench_simple);
     /// criterion_main!(benches);
     /// ```
+    /// # Panics:
+    /// Panics if the group name is empty
     pub fn benchmark_group<S: Into<String>>(&mut self, group_name: S) -> BenchmarkGroup<'_, M> {
         let group_name = group_name.into();
+        if group_name.is_empty() {
+            panic!("Group name must not be empty.");
+        }
 
         if let Some(conn) = &self.connection {
             conn.send(&OutgoingMessage::BeginningBenchmarkGroup { group: &group_name })
