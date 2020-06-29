@@ -34,11 +34,12 @@ fn abs_distribution(
     let scaled_xs_sample = Sample::new(&scaled_xs);
     let (kde_xs, ys) = kde::sweep(scaled_xs_sample, KDE_POINTS, Some((start, end)));
 
+    // interpolate between two points of the KDE sweep to find the Y position at the point estimate.
     let n_point = kde_xs
         .iter()
         .position(|&x| x >= point)
-        .unwrap_or(kde_xs.len() - 1);
-    let n_point = n_point.max(1); // Must be at least the second element or this will panic
+        .unwrap_or(kde_xs.len() - 1)
+        .max(1); // Must be at least the second element or this will panic
     let slope = (ys[n_point] - ys[n_point - 1]) / (kde_xs[n_point] - kde_xs[n_point - 1]);
     let y_point = ys[n_point - 1] + (slope * (point - kde_xs[n_point - 1]));
 
@@ -170,6 +171,7 @@ fn rel_distribution(
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, Some((start, end)));
     let xs_ = Sample::new(&xs);
 
+    // interpolate between two points of the KDE sweep to find the Y position at the point estimate.
     let point = estimate.point_estimate;
     let n_point = xs
         .iter()
