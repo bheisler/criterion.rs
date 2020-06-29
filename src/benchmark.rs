@@ -551,6 +551,7 @@ where
     }
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
 fn execute_benchmark<T, M>(
     do_run: bool,
     id: &BenchmarkId,
