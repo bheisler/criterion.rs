@@ -29,7 +29,7 @@ matrix:
       env: DOCS=yes
     - os: linux
       env: GNUPLOT=yes
-      rust: 1.33.0
+      rust: 1.36.0
       addons:
         apt:
           packages:

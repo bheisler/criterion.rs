@@ -46,12 +46,13 @@ impl std::error::Error for MessageError {
     }
 }
 
+// Use str::len as a const fn once we bump MSRV over 1.39.
 const RUNNER_MAGIC_NUMBER: &str = "cargo-criterion";
-const RUNNER_HELLO_SIZE: usize = RUNNER_MAGIC_NUMBER.len() // magic number
+const RUNNER_HELLO_SIZE: usize = 15 //RUNNER_MAGIC_NUMBER.len() // magic number
     + (size_of::<u8>() * 3); // version number
 
 const BENCHMARK_MAGIC_NUMBER: &str = "Criterion";
-const BENCHMARK_HELLO_SIZE: usize = BENCHMARK_MAGIC_NUMBER.len() // magic number
+const BENCHMARK_HELLO_SIZE: usize = 9 //BENCHMARK_MAGIC_NUMBER.len() // magic number
     + (size_of::<u8>() * 3) // version number
     + size_of::<u16>() // protocol version
     + size_of::<u16>(); // protocol format
