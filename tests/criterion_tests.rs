@@ -30,7 +30,7 @@ fn short_benchmark(dir: &TempDir) -> Criterion {
         .output_directory(dir.path())
         .warm_up_time(Duration::from_millis(250))
         .measurement_time(Duration::from_millis(500))
-        .nresamples(1000)
+        .nresamples(2000)
         .with_plots()
 }
 
@@ -413,6 +413,45 @@ fn test_output_files() {
     if short_benchmark(&tempdir).can_plot() {
         let dir = tempdir.path().to_owned();
 
+        verify_html(&dir, "report/index.html");
+    }
+}
+
+#[test]
+fn test_output_files_flat_sampling() {
+    let tempdir = temp_dir();
+    // Run benchmark twice to produce comparisons
+    for _ in 0..2 {
+        short_benchmark(&tempdir).bench(
+            "test_output",
+            Benchmark::new("output_flat", |b| b.iter(|| 10)).sampling_mode(SamplingMode::Flat),
+        );
+    }
+
+    let dir = tempdir.path().join("test_output/output_flat");
+
+    verify_stats(&dir, "new");
+    verify_stats(&dir, "base");
+    verify_json(&dir, "change/estimates.json");
+
+    if short_benchmark(&tempdir).can_plot() {
+        verify_svg(&dir, "report/MAD.svg");
+        verify_svg(&dir, "report/mean.svg");
+        verify_svg(&dir, "report/median.svg");
+        verify_svg(&dir, "report/pdf.svg");
+        verify_svg(&dir, "report/iteration_times.svg");
+        verify_svg(&dir, "report/SD.svg");
+        verify_svg(&dir, "report/typical.svg");
+        verify_svg(&dir, "report/both/pdf.svg");
+        verify_svg(&dir, "report/both/iteration_times.svg");
+        verify_svg(&dir, "report/change/mean.svg");
+        verify_svg(&dir, "report/change/median.svg");
+        verify_svg(&dir, "report/change/t-test.svg");
+
+        verify_svg(&dir, "report/pdf_small.svg");
+        verify_svg(&dir, "report/iteration_times_small.svg");
+        verify_svg(&dir, "report/relative_pdf_small.svg");
+        verify_svg(&dir, "report/relative_iteration_times_small.svg");
         verify_html(&dir, "report/index.html");
     }
 }
