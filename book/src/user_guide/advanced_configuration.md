@@ -2,6 +2,57 @@
 
 Criterion.rs provides a number of configuration options for more-complex use cases. These options are documented here.
 
+## Configuring Sample Count & Other Statistical Settings
+
+Criterion.rs allows the user to adjust certain statistical parameters. The most common way to set
+these is using the `BenchmarkGroup` structure - see the documentation for that structure for a list
+of which settings are available.
+
+```rust
+use criterion::*;
+
+fn my_function() {
+    ...
+}
+
+fn bench(c: &mut Criterion) {
+    let mut group = c.benchmark_group("sample-size-example");
+    // Configure Criterion.rs to detect smaller differences and increase sample size to improve
+    // precision and counteract the resulting noise.
+    group.significance_level(0.1).sample_size(500);
+    group.bench_function("my-function", |b| b.iter(|| my_function());
+    group.finish();
+}
+
+criterion_group!(benches, bench);
+criterion_main!(benches);
+```
+
+It is also possible to change Criterion.rs' default values for these settings, by using the full
+form of the `criterion_group` macro:
+
+```rust
+use criterion::*;
+
+fn my_function() {
+    ...
+}
+
+fn bench(c: &mut Criterion) {
+    let mut group = c.benchmark_group("sample-size-example");
+    group.bench_function("my-function", |b| b.iter(|| my_function());
+    group.finish();
+}
+
+criterion_group!{
+    name = benches;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().significance_level(0.1).sample_size(500);
+    targets = bench
+}
+criterion_main!(benches);
+```
+
 ## Throughput Measurements
 
 When benchmarking some types of code it is useful to measure the throughput as well as the iteration time, either in bytes per second or elements per second. Criterion.rs can estimate the throughput of a benchmark, but it needs to know how many bytes or elements each iteration will process.
@@ -120,7 +171,6 @@ Currently three options are available:
 The Flat sampling mode does change some of the statistical analysis and the charts that are 
 generated. It is not recommended to use Flat sampling except where necessary.
 
-```rust
 ```rust
 use criterion::*;
 use std::time::Duration;
