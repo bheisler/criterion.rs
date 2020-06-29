@@ -9,13 +9,14 @@ use crate::measurement::ValueFormatter;
 use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext, ValueType};
 use std::path::PathBuf;
 
-const REPORT_STATS: [Statistic; 6] = [
+const REPORT_STATS: [Statistic; 7] = [
     Statistic::Typical,
     Statistic::Slope,
     Statistic::Mean,
     Statistic::Median,
     Statistic::MedianAbsDev,
     Statistic::MedianAbsDev,
+    Statistic::StdDev,
 ];
 const CHANGE_STATS: [Statistic; 2] = [Statistic::Mean, Statistic::Median];
 #[derive(Clone, Copy)]

@@ -3,7 +3,7 @@ use serde_json;
 
 use criterion::{
     criterion_group, criterion_main, profiler::Profiler, BatchSize, Benchmark, BenchmarkId,
-    Criterion, Fun, ParameterizedBenchmark, Throughput,
+    Criterion, Fun, ParameterizedBenchmark, SamplingMode, Throughput,
 };
 use serde_json::value::Value;
 use std::cell::{Cell, RefCell};
@@ -359,7 +359,8 @@ fn test_output_files() {
             "test_output",
             Benchmark::new("output_1", |b| b.iter(|| 10))
                 .with_function("output_2", |b| b.iter(|| 20))
-                .with_function("output_\\/*\"?", |b| b.iter(|| 30)),
+                .with_function("output_\\/*\"?", |b| b.iter(|| 30))
+                .sampling_mode(SamplingMode::Linear),
         );
     }
 
@@ -384,6 +385,7 @@ fn test_output_files() {
             verify_svg(&dir, "report/regression.svg");
             verify_svg(&dir, "report/SD.svg");
             verify_svg(&dir, "report/slope.svg");
+            verify_svg(&dir, "report/typical.svg");
             verify_svg(&dir, "report/both/pdf.svg");
             verify_svg(&dir, "report/both/regression.svg");
             verify_svg(&dir, "report/change/mean.svg");
