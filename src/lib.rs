@@ -665,6 +665,12 @@ pub enum PlottingBackend {
     Plotters,
 }
 
+#[derive(Debug, Clone, Copy)]
+enum DefaultCliMode {
+    Benchmark,
+    Test,
+}
+
 #[derive(Debug, Clone)]
 /// Enum representing the execution mode.
 pub(crate) enum Mode {
@@ -715,6 +721,7 @@ pub struct Criterion<M: Measurement = WallTime> {
     measurement: M,
     profiler: Box<RefCell<dyn Profiler>>,
     connection: Option<MutexGuard<'static, Connection>>,
+    default_cli_mode: DefaultCliMode,
     mode: Mode,
 }
 
@@ -775,6 +782,7 @@ impl Default for Criterion {
             connection: CARGO_CRITERION_CONNECTION
                 .as_ref()
                 .map(|mtx| mtx.lock().unwrap()),
+            default_cli_mode: DefaultCliMode::Test,
             mode: Mode::Benchmark,
         }
     }
@@ -800,6 +808,7 @@ impl<M: Measurement> Criterion<M> {
             measurement: m,
             profiler: self.profiler,
             connection: self.connection,
+            default_cli_mode: self.default_cli_mode,
             mode: self.mode,
         }
     }
@@ -1030,6 +1039,31 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    /// When parsing command-line arguments, sets the default mode to '--bench' instead of '--test'.
+    ///
+    /// This is useful if you want to use Criterion.rs in a standalone executable not invoked by
+    /// `cargo bench`.
+    ///
+    /// You need to call `default_mode_bench` *before* `configure_from_args` for this function to
+    /// have any effect.
+    pub fn default_mode_bench(mut self) -> Criterion<M> {
+        self.default_cli_mode = DefaultCliMode::Benchmark;
+
+        self
+    }
+
+    /// When parsing command-line arguments, sets the deafult mode to '--test'.
+    ///
+    /// This is the default policy for parsing command-line arguments.
+    ///
+    /// You need to call `default_mode_test` *before* `configure_from_args` for this function to
+    /// have any effect.
+    pub fn default_mode_test(mut self) -> Criterion<M> {
+        self.default_cli_mode = DefaultCliMode::Test;
+
+        self
+    }
+
     /// Set the output directory (currently for testing only)
     #[doc(hidden)]
     pub fn output_directory(mut self, path: &Path) -> Criterion<M> {
@@ -1220,7 +1254,11 @@ To test that the benchmarks work, run `cargo test --benches`
         let test_mode = match (bench, test) {
             (true, true) => true,   // cargo bench -- --test should run tests
             (true, false) => false, // cargo bench should run benchmarks
-            (false, _) => true,     // cargo test --benches should run tests
+            (false, true) => true,  // cargo test --benches should run tests
+            (false, false) => match self.default_cli_mode {
+                DefaultCliMode::Benchmark => false,
+                DefaultCliMode::Test => true,
+            },
         };
 
         self.mode = if test_mode {
