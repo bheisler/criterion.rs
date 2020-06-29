@@ -101,3 +101,41 @@ criterion_main!(benches);
 
 Currently the axis scaling is the only option that can be set on the 
 PlotConfiguration struct. More may be added in the future.
+
+## Sampling Mode
+
+By default, Criterion.rs can scale well to handle benchmarks that execute in picoseconds up to
+benchmarks that execute in milliseconds. Benchmarks that take longer will work just fine, but they
+tend to take a long time to run. The only way to deal with this was to reduce the sample count.
+
+In Criterion.rs 0.3.3, a new option was added to change the sampling mode to handle long-running
+benchmarks. The benchmark author can call `BenchmarkGroup::sampling_mode(SamplingMode)` to change
+the sampling mode.
+
+Currently three options are available:
+* `SamplingMode::Auto`, which chooses a sampling mode from the other options automatically. This is the default.
+* `SamplingMode::Linear`, the original sampling mode intended for faster benchmarks.
+* `SamplingMode::Flat`, intended for long-running benchmarks.
+
+The Flat sampling mode does change some of the statistical analysis and the charts that are 
+generated. It is not recommended to use Flat sampling except where necessary.
+
+```rust
+```rust
+use criterion::*;
+use std::time::Duration;
+
+fn my_function() {
+    ::std::thread::sleep(Duration::from_millis(10))
+}
+
+fn bench(c: &mut Criterion) {
+    let mut group = c.benchmark_group("flat-sampling-example");
+    group.sampling_mode(SamplingMode::Flat);
+    group.bench_function("my-function", |b| b.iter(|| my_function());
+    group.finish();
+}
+
+criterion_group!(benches, bench);
+criterion_main!(benches);
+```
