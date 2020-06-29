@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - Fixed a bug where the current measurement was not shown on the relative regression plot.
+- Fixed rare panic in the plotters backend.
+- Panic with a clear error message (rather than panicking messily later on) when the user sets the
+  group or function name to the empty string.
+- Escape single quotes in benchmark names when generating Gnuplot scripts.
 
 ## [0.3.2] - 2020-04-26
 ### Added
