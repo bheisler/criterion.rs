@@ -63,8 +63,8 @@ before_script:
     fi
 
 before_cache:
-- find ./target/{release,debug} -type f -maxdepth 1 -delete
-- rm -fr ./target/{release,debug}/{deps,.fingerprint}/{*criterion*}
+- find ./target/debug -type f -maxdepth 1 -delete
+- rm -fr ./target/debug/{deps,.fingerprint}/{*criterion*}
 - rm -f  ./target/.rustc_info.json
 - rm -rf ./target/criterion
 

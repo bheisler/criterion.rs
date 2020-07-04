@@ -18,9 +18,9 @@ elif [ "$MINIMAL_VERSIONS" = "yes" ]; then
 else
     export RUSTFLAGS="-D warnings"
 
-    cargo build $BUILD_ARGS --release
+    cargo build $BUILD_ARGS
 
-    cargo test --all --release
+    cargo test --all
     cargo test --benches
     
     cd bencher_compat
