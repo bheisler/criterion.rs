@@ -70,6 +70,7 @@ before_cache:
 - rm -rf ./target/debug/.fingerprint/bench*
 - rm -f  ./target/.rustc_info.json
 - rm -rf ./target/criterion
+- rm -rf ~/.cargo/registry/index/
 
 install:
   - sh ci/install.sh
