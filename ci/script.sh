@@ -1,5 +1,7 @@
 set -ex
 
+export CARGO_INCREMENTAL=0
+
 if [ "$CLIPPY" = "yes" ]; then
       cargo clippy --all -- -D warnings
 elif [ "$DOCS" = "yes" ]; then
