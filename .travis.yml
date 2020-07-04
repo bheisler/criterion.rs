@@ -62,6 +62,12 @@ before_script:
       export PATH=$HOME/.local/bin:$PATH;
     fi
 
+before_cache:
+- find ./target/{release,debug} -type f -maxdepth 1 -delete
+- rm -fr ./target/{release,debug}/{deps,.fingerprint}/{*criterion*}
+- rm -f  ./target/.rustc_info.json
+- rm -rf ./target/criterion
+
 install:
   - sh ci/install.sh
 
