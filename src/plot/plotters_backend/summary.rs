@@ -33,7 +33,7 @@ pub fn line_comparison(
         plotters::data::fitting_range(series_data.iter().map(|(_, _, ys)| ys.iter()).flatten());
     let root_area = SVGBackend::new(&path, SIZE)
         .into_drawing_area()
-        .titled(&format!("{}: Comparision", title), (DEFAULT_FONT, 20))
+        .titled(&format!("{}: Comparison", title), (DEFAULT_FONT, 20))
         .unwrap();
 
     match axis_scale {
