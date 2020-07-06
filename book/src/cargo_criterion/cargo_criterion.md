@@ -6,7 +6,7 @@ At time of writing, `cargo-criterion` provides roughly the same features as runn
 
 `cargo-criterion` is still under active development, but if you would like to try it out, you can install it with the following command:
 
-`cargo install --version=1.0.0-alpha1 cargo-criterion`
+`cargo install --version=1.0.0-alpha2 cargo-criterion`
 
 Once installed, you can run your benchmarks with:
 
