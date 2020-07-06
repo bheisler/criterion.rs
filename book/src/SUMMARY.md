@@ -19,6 +19,7 @@
     - [Profiling](./user_guide/profiling.md)
     - [Custom Test Framework](./user_guide/custom_test_framework.md)
 - [cargo-criterion](./cargo_criterion/cargo_criterion.md)
+  - [Configuring cargo-criterion](./cargo_criterion/configuring_cargo_criterion.md)
   - [External Tools](./cargo_criterion/external_tools.md)
 - [Analysis Process](./analysis.md)
 - [Frequently Asked Questions](./faq.md)
