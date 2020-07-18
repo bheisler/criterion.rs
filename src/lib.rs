@@ -1786,7 +1786,7 @@ impl ActualSamplingMode {
                 let m_ns = target_time.to_nanos();
                 // Solve: [d + 2*d + 3*d + ... + n*d] * met = m_ns
                 let total_runs = n * (n + 1) / 2;
-                let d = (m_ns as f64 / met / total_runs as f64).ceil() as u64;
+                let d = ((m_ns as f64 / met / total_runs as f64).ceil() as u64).max(1);
                 let expected_ns = total_runs as f64 * d as f64 * met;
 
                 if d == 1 {
@@ -1814,7 +1814,7 @@ impl ActualSamplingMode {
                 let m_ns = target_time.to_nanos() as f64;
                 let time_per_sample = m_ns / (n as f64);
                 // This is pretty simplistic; we could do something smarter to fit into the allotted time.
-                let iterations_per_sample = (time_per_sample / met).ceil() as u64;
+                let iterations_per_sample = ((time_per_sample / met).ceil() as u64).max(1);
 
                 let expected_ns = met * (iterations_per_sample * n) as f64;
 
