@@ -130,20 +130,22 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
             .map(|count| count as f64 * met)
             .sum();
 
-        criterion.report.measurement_start(
-            id,
-            report_context,
-            n,
-            expected_ns,
-            m_iters.iter().sum(),
-        );
+        // Use saturating_add to handle overflow.
+        let mut total_iters = 0u64;
+        for count in m_iters.iter().copied() {
+            total_iters = total_iters.saturating_add(count);
+        }
+
+        criterion
+            .report
+            .measurement_start(id, report_context, n, expected_ns, total_iters);
 
         if let Some(conn) = &criterion.connection {
             conn.send(&OutgoingMessage::MeasurementStart {
                 id: id.into(),
                 sample_count: n,
                 estimate_ns: expected_ns,
-                iter_count: m_iters.iter().sum(),
+                iter_count: total_iters,
             })
             .unwrap();
         }
@@ -234,7 +236,7 @@ where
                 return (elapsed_time.to_nanos(), total_iters);
             }
 
-            b.iters *= 2;
+            b.iters = b.iters.wrapping_mul(2);
         }
     }
 }

@@ -105,10 +105,21 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
 
             conn.serve_value_formatter(criterion.measurement.formatter())
                 .unwrap();
+            return;
         }
     }
 
     criterion.report.analysis(id, report_context);
+
+    if times.iter().any(|&f| f == 0.0) {
+        error!(
+            "At least one measurement of benchmark {} took zero time per \
+            iteration. This should not be possible. If using iter_custom, please verify \
+            that your routine is correctly measured.",
+            id.as_title()
+        );
+        return;
+    }
 
     let avg_times = iters
         .iter()

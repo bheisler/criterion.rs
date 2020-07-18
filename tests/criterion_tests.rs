@@ -485,6 +485,15 @@ fn test_benchmark_group_without_input() {
     group.finish();
 }
 
+#[test]
+fn test_criterion_doesnt_panic_if_measured_time_is_zero() {
+    let dir = temp_dir();
+    let mut c = short_benchmark(&dir);
+    c.bench_function("zero_time", |bencher| {
+        bencher.iter_custom(|_iters| Duration::new(0, 0))
+    });
+}
+
 mod macros {
     use super::{criterion, criterion_group, criterion_main};
 
