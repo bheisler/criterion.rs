@@ -16,5 +16,5 @@ fi
 
 if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$GNUPLOT" = "yes" ]; then
     brew unlink python@2 # because we're installing python3 and they both want to install stuff under /usr/local/Frameworks/Python.framework/
-    HOMEBREW_NO_AUTO_UPDATE=1 brew install gnuplot
+    HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install gnuplot
 fi
