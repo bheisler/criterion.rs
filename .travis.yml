@@ -2,8 +2,10 @@ sudo: false
 
 language: rust
 
-cache: cargo
-
+cache:
+  cargo: true
+  directories:
+    - $HOME/Library/Caches/Homebrew
 rust:
   - stable
 
@@ -63,6 +65,7 @@ before_script:
     fi
 
 before_cache:
+- if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
 - find ./target/debug -maxdepth 1 -type f -delete
 - rm -rf ./target/debug/deps/criterion*
 - rm -rf ./target/debug/deps/bench*
