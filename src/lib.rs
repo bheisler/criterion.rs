@@ -245,7 +245,7 @@ pub enum BatchSize {
 
     /// `NumIterations` fixes the batch size to a constant number, specified by the user. This
     /// allows the user to choose their own tradeoff between overhead and memory usage, but care must
-    /// be taken in tuning the batch size. In general, the measurement overhead of NumIterations
+    /// be taken in tuning the batch size. In general, the measurement overhead of `NumIterations`
     /// will be larger than that of `NumBatches`. Most benchmarks should use `SmallInput` or
     /// `LargeInput` instead.
     NumIterations(u64),
