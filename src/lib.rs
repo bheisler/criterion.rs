@@ -1802,7 +1802,7 @@ impl ActualSamplingMode {
                             recommended_sample_size
                         );
                     } else {
-                        println!("or enable flat sampling.");
+                        println!(" or enable flat sampling.");
                     }
                 }
 
