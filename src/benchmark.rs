@@ -134,7 +134,7 @@ macro_rules! benchmark_config {
         }
 
         /// Changes the target measurement time for this benchmark. Criterion will attempt
-        /// to spent approximately this amount of time measuring the benchmark.
+        /// to spend approximately this amount of time measuring the benchmark.
         /// With a longer time, the measurement will become more resilient to transitory peak loads
         /// caused by external programs.
         ///
@@ -216,7 +216,7 @@ macro_rules! benchmark_config {
         /// noise.
         ///
         /// This presents a trade-off. By setting the significance level closer to 0.0, you can increase
-        /// the statistical robustness against noise, but it also weaken's Criterion.rs' ability to
+        /// the statistical robustness against noise, but it also weakens Criterion.rs' ability to
         /// detect small but real changes in the performance. By setting the significance level
         /// closer to 1.0, Criterion.rs will be more able to detect small true changes, but will also
         /// report more spurious differences.
