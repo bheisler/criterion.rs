@@ -25,7 +25,7 @@ pub fn line_comparison(
     value_type: ValueType,
     axis_scale: AxisScale,
 ) {
-    let (unit, series_data) = line_comparision_series_data(formatter, all_curves);
+    let (unit, series_data) = line_comparison_series_data(formatter, all_curves);
 
     let x_range =
         plotters::data::fitting_range(series_data.iter().map(|(_, xs, _)| xs.iter()).flatten());
@@ -109,7 +109,7 @@ fn draw_line_comarision_figure<XR: AsRangedCoord<Value = f64>, YR: AsRangedCoord
 }
 
 #[allow(clippy::type_complexity)]
-fn line_comparision_series_data<'a>(
+fn line_comparison_series_data<'a>(
     formatter: &dyn ValueFormatter,
     all_curves: &[&(&'a BenchmarkId, Vec<f64>)],
 ) -> (&'static str, Vec<(Option<&'a String>, Vec<f64>, Vec<f64>)>) {
