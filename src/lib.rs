@@ -73,11 +73,13 @@ mod stats;
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::default::Default;
+use std::env;
 use std::fmt;
 use std::iter::IntoIterator;
 use std::marker::PhantomData;
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 use std::time::Instant;
@@ -718,6 +720,26 @@ pub struct Criterion<M: Measurement = WallTime> {
     mode: Mode,
 }
 
+/// Returns the Cargo target directory, possibly calling `cargo metadata` to
+/// figure it out.
+fn cargo_target_directory() -> Option<PathBuf> {
+    #[derive(Deserialize)]
+    struct Metadata {
+        target_directory: PathBuf,
+    }
+
+    env::var_os("CARGO_TARGET_DIR")
+        .map(PathBuf::from)
+        .or_else(|| {
+            let output = Command::new(env::var_os("CARGO")?)
+                .args(&["metadata", "--format-version", "1"])
+                .output()
+                .ok()?;
+            let metadata: Metadata = serde_json::from_slice(&output.stdout).ok()?;
+            Some(metadata.target_directory)
+        })
+}
+
 impl Default for Criterion {
     /// Creates a benchmark manager with the following default settings:
     ///
@@ -741,10 +763,10 @@ impl Default for Criterion {
         // - $CRITERION_HOME (cargo-criterion sets this, but other users could as well)
         // - $CARGO_TARGET_DIR/criterion
         // - ./target/criterion
-        let output_directory = if let Some(value) = std::env::var_os("CRITERION_HOME") {
+        let output_directory = if let Some(value) = env::var_os("CRITERION_HOME") {
             PathBuf::from(value)
-        } else if let Some(value) = std::env::var_os("CARGO_TARGET_DIR") {
-            PathBuf::from(value).join("criterion")
+        } else if let Some(path) = cargo_target_directory() {
+            path.join("criterion")
         } else {
             PathBuf::from("target/criterion")
         };
