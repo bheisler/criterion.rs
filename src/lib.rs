@@ -1179,6 +1179,9 @@ Criterion.rs will output more debug information and will save the gnuplot
 scripts alongside the generated plots.
 
 To test that the benchmarks work, run `cargo test --benches`
+
+NOTE: If you see an 'unrecognized option' error using any of the options above, see:
+https://bheisler.github.io/criterion.rs/book/faq.html
 ")
             .get_matches();
 

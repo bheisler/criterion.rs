@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Criterion.rs will now give a clear error message in case of benchmarks that take zero time.
 - Added some extra code to ensure that every sample has at least one iteration.
+- Added a notice to the `--help` output regarding "unrecognized option" errors.
 
 ## [0.3.3] - 2020-06-29
 ### Added
