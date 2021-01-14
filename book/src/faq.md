@@ -253,3 +253,27 @@ Criterion.rs benchmarks that depend on the library crate.
 Less often, the problem is that the library crate is configured to compile as a `cdylib`. In order
 to benchmark your crate with Criterion.rs, you will need to set your Cargo.toml to enable generating
 an `rlib` as well.
+
+### How can I benchmark a part of a function?
+
+The short answer is - you can't, not accurately. The longer answer is below.
+
+When people ask me this, my first response is always "extract that part of the function into a new
+function, give it a name, and then benchmark _that_". It's sort of unsatisfying, but that is also
+the only way to get really accurate measurements of that piece of your code. You can always tag it
+with `#[inline(always)]` to tell rustc to inline it back into the original callsite in the final
+executable.
+
+The problem is that your system's clock is not infinitely precise; there is a certain (often
+surprisingly large) granularity to the clock time reported by `Instant::now`. That means that,
+if it were to measure each execution individually, Criterion.rs might see a sequence of times
+like "0ms, 0ms, 0ms, 0ms, 0ms, 5ms, 0ms..." for a function that takes 1ms. To mitigate this,
+Criterion.rs runs many iterations of your benchmark, to divide that jitter across each iteration.
+There would be no way to run such a timing loop on _part_ of your code, unless that part were
+already easy to factor out and put in a separate function anyway. Instead, you'd have to 
+time each iteration individually, resulting in the maximum possible timing jitter.
+
+However, if you need to do this anyway, and you're OK with the reduced accuracy, you can use 
+`Bencher::iter_custom` to measure your code however you want to. `iter_custom` exists to allow for 
+complex cases like multi-threaded code or, yes, measuring part of a function. Just be aware that 
+you're responsible for the accuracy of your measurements.
