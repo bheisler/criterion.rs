@@ -200,9 +200,9 @@ pub fn violin(
             if is_first {
                 is_first = false;
 
-                c.set(DARK_BLUE).set(Label("PDF")).set(Opacity(0.25))
+                c.set(DARK_BLUE).set(Label("PDF"))
             } else {
-                c.set(DARK_BLUE).set(Opacity(0.25))
+                c.set(DARK_BLUE)
             }
         });
     }

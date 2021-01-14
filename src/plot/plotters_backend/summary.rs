@@ -241,7 +241,7 @@ fn draw_violin_figure<XR: AsRangedCoord<Value = f64>, YR: AsRangedCoord<Value = 
             .draw_series(AreaSeries::new(
                 x.iter().zip(y.iter()).map(|(x, y)| (*x, base + *y / 2.0)),
                 base,
-                &DARK_BLUE.mix(0.25),
+                &DARK_BLUE,
             ))
             .unwrap();
 
@@ -249,7 +249,7 @@ fn draw_violin_figure<XR: AsRangedCoord<Value = f64>, YR: AsRangedCoord<Value = 
             .draw_series(AreaSeries::new(
                 x.iter().zip(y.iter()).map(|(x, y)| (*x, base - *y / 2.0)),
                 base,
-                &DARK_BLUE.mix(0.25),
+                &DARK_BLUE,
             ))
             .unwrap();
     }
