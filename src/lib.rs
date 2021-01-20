@@ -54,6 +54,7 @@ mod analysis;
 mod benchmark;
 #[macro_use]
 mod benchmark_group;
+pub mod async_executor;
 mod bencher;
 mod connection;
 mod csv_report;
@@ -96,6 +97,8 @@ use crate::profiler::{ExternalProfiler, Profiler};
 use crate::report::{BencherReport, CliReport, Report, ReportContext, Reports};
 use crate::routine::Function;
 
+#[cfg(feature = "async")]
+pub use crate::bencher::AsyncBencher;
 pub use crate::bencher::Bencher;
 pub use crate::benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
 pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};

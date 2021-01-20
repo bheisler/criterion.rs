@@ -8,3 +8,14 @@ pub mod measurement_overhead;
 pub mod sampling_mode;
 pub mod special_characters;
 pub mod with_inputs;
+
+#[cfg(feature = "async_futures")]
+pub mod async_measurement_overhead;
+
+#[cfg(not(feature = "async_futures"))]
+pub mod async_measurement_overhead {
+    use criterion::{criterion_group, BatchSize, Criterion};
+    fn some_benchmark(c: &mut Criterion) {}
+
+    criterion_group!(benches, some_benchmark);
+}

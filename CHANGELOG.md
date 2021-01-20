@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added support for benchmarking async functions
+
 ### Fixed
 - Criterion.rs will now give a clear error message in case of benchmarks that take zero time.
 - Added some extra code to ensure that every sample has at least one iteration.

@@ -2,11 +2,13 @@ set -ex
 
 export CARGO_INCREMENTAL=0
 
+FEATURES="async_smol async_tokio async_std async_futures"
+
 if [ "$CLIPPY" = "yes" ]; then
       cargo clippy --all -- -D warnings
 elif [ "$DOCS" = "yes" ]; then
     cargo clean
-    cargo doc --all --no-deps
+    cargo doc --features "$FEATURES" --all --no-deps
     cd book
     mdbook build
     cd ..
@@ -20,10 +22,10 @@ elif [ "$MINIMAL_VERSIONS" = "yes" ]; then
 else
     export RUSTFLAGS="-D warnings"
 
-    cargo build $BUILD_ARGS
+    cargo build --features "$FEATURES" $BUILD_ARGS
 
-    cargo test --all
-    cargo test --benches
+    cargo test --features "$FEATURES" --all
+    cargo test --features "$FEATURES" --benches
     
     cd bencher_compat
     export CARGO_TARGET_DIR="../target"

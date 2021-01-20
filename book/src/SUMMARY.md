@@ -18,6 +18,7 @@
     - [Custom Measurements](./user_guide/custom_measurements.md)
     - [Profiling](./user_guide/profiling.md)
     - [Custom Test Framework](./user_guide/custom_test_framework.md)
+    - [Benchmarking async functions](./user_guide/benchmarking_async.md)
 - [cargo-criterion](./cargo_criterion/cargo_criterion.md)
   - [Configuring cargo-criterion](./cargo_criterion/configuring_cargo_criterion.md)
   - [External Tools](./cargo_criterion/external_tools.md)
