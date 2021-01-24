@@ -16,7 +16,7 @@ exclude = ["book/*"]
 [dependencies]
 lazy_static = "1.4"
 criterion-plot = { path="plot", version="0.4.3" }
-itertools = "0.9"
+itertools = "0.10"
 serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
@@ -43,9 +43,9 @@ features = ["svg_backend", "area_series", "line_series"]
 
 [dev-dependencies]
 tempfile = "3.1"
-approx = "0.3"
+approx = "0.4"
 quickcheck = { version = "0.9", default-features = false }
-rand = "0.7"
+rand = "0.8"
 futures = { version = "0.3", default_features = false, features = ["executor"] }
 
 [badges]
