@@ -1140,9 +1140,14 @@ where
     where
         F: FnMut(&mut Bencher<'_, M>, &I),
     {
-        // Guaranteed safe because external callers can't create benchmark IDs without a function
-        // name or parameter
-        let group_name = id.function_name.unwrap();
+        // It's possible to use BenchmarkId::from_parameter to create a benchmark ID with no function
+        // name. That's intended for use with BenchmarkGroups where the function name isn't necessary,
+        // but here it is.
+        let group_name = id.function_name.expect(
+            "Cannot use BenchmarkId::from_parameter with Criterion::bench_with_input. \
+                 Consider using a BenchmarkGroup or BenchmarkId::new instead.",
+        );
+        // Guaranteed safe because external callers can't create benchmark IDs without a parameter
         let parameter = id.parameter.unwrap();
         self.benchmark_group(group_name).bench_with_input(
             BenchmarkId::no_function_with_input(parameter),
