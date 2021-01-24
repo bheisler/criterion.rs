@@ -430,7 +430,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     ///
     /// fn bench(c: &mut Criterion) {
     ///     c.bench_function("iter", move |b| {
-    ///         b.to_async(FuturesExecutor).iter(async || foo().await)
+    ///         b.to_async(FuturesExecutor).iter(|| async { foo().await } )
     ///     });
     /// }
     ///
@@ -481,7 +481,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     /// fn bench(c: &mut Criterion) {
     ///     c.bench_function("iter", move |b| {
     ///         b.to_async(FuturesExecutor).iter_custom(|iters| {
-    ///             async {
+    ///             async move {
     ///                 let start = Instant::now();
     ///                 for _i in 0..iters {
     ///                     black_box(foo().await);
@@ -549,7 +549,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     /// fn bench(c: &mut Criterion) {
     ///     c.bench_function("with_drop", move |b| {
     ///         // This will avoid timing the Vec::drop.
-    ///         b.to_async(FuturesExecutor).iter_with_large_drop(async || create_vector().await)
+    ///         b.to_async(FuturesExecutor).iter_with_large_drop(|| async { create_vector().await })
     ///     });
     /// }
     ///
@@ -611,7 +611,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     ///
     ///     c.bench_function("with_setup", move |b| {
     ///         // This will avoid timing the to_vec call.
-    ///         b.iter_batched(|| data.clone(), |mut data| sort(&mut data).await, BatchSize::SmallInput)
+    ///         b.iter_batched(|| data.clone(), |mut data| async move { sort(&mut data).await }, BatchSize::SmallInput)
     ///     });
     /// }
     ///
@@ -709,7 +709,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     ///
     ///     c.bench_function("with_setup", move |b| {
     ///         // This will avoid timing the to_vec call.
-    ///         b.iter_batched(|| data.clone(), |mut data| sort(&mut data).await, BatchSize::SmallInput)
+    ///         b.iter_batched(|| data.clone(), |mut data| async move { sort(&mut data).await }, BatchSize::SmallInput)
     ///     });
     /// }
     ///
