@@ -3,6 +3,7 @@ use crate::benchmark::PartialBenchmarkConfig;
 use crate::connection::OutgoingMessage;
 use crate::measurement::Measurement;
 use crate::report::BenchmarkId as InternalBenchmarkId;
+use crate::report::Report;
 use crate::report::ReportContext;
 use crate::routine::{Function, Routine};
 use crate::{Bencher, Criterion, DurationExt, Mode, PlotConfiguration, SamplingMode, Throughput};

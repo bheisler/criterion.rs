@@ -1,7 +1,7 @@
 use crate::benchmark::BenchmarkConfig;
 use crate::connection::OutgoingMessage;
 use crate::measurement::Measurement;
-use crate::report::{BenchmarkId, ReportContext};
+use crate::report::{BenchmarkId, Report, ReportContext};
 use crate::{ActualSamplingMode, Bencher, Criterion, DurationExt};
 use std::marker::PhantomData;
 use std::time::Duration;

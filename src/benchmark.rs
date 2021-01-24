@@ -1,7 +1,7 @@
 use crate::analysis;
 use crate::connection::OutgoingMessage;
 use crate::measurement::{Measurement, WallTime};
-use crate::report::{BenchmarkId, ReportContext};
+use crate::report::{BenchmarkId, Report, ReportContext};
 use crate::routine::{Function, Routine};
 use crate::{Bencher, Criterion, DurationExt, Mode, PlotConfiguration, SamplingMode, Throughput};
 use std::cell::RefCell;

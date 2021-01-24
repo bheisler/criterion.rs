@@ -13,7 +13,7 @@ use crate::estimate::{
 };
 use crate::fs;
 use crate::measurement::Measurement;
-use crate::report::{BenchmarkId, ReportContext};
+use crate::report::{BenchmarkId, Report, ReportContext};
 use crate::routine::Routine;
 use crate::{Baseline, Criterion, SavedSample, Throughput};
 

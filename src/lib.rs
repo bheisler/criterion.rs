@@ -299,6 +299,14 @@ pub enum PlottingBackend {
     /// is not installed.
     Plotters,
 }
+impl PlottingBackend {
+    fn create_plotter(&self) -> Box<dyn Plotter> {
+        match self {
+            PlottingBackend::Gnuplot => Box::new(Gnuplot::default()),
+            PlottingBackend::Plotters => Box::new(PlottersBackend::default()),
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 /// Enum representing the execution mode.
@@ -337,10 +345,8 @@ impl Mode {
 /// benchmark.
 pub struct Criterion<M: Measurement = WallTime> {
     config: BenchmarkConfig,
-    plotting_backend: PlottingBackend,
-    plotting_enabled: bool,
     filter: Option<Regex>,
-    report: Box<dyn Report>,
+    report: Reports,
     output_directory: PathBuf,
     baseline_directory: String,
     baseline: Baseline,
@@ -366,11 +372,16 @@ impl Default for Criterion {
     /// - Plotting: enabled, using gnuplot if available or plotters if gnuplot is not available
     /// - No filter
     fn default() -> Criterion {
-        let mut reports: Vec<Box<dyn Report>> = vec![];
-        if CARGO_CRITERION_CONNECTION.is_none() {
-            reports.push(Box::new(CliReport::new(false, false, false)));
-        }
-        reports.push(Box::new(FileCsvReport));
+        let reports = Reports {
+            cli_enabled: true,
+            cli: CliReport::new(false, false, false),
+            bencher_enabled: false,
+            bencher: BencherReport,
+            html_enabled: true,
+            html: Html::new(DEFAULT_PLOTTING_BACKEND.create_plotter()),
+            csv_enabled: true,
+            csv: FileCsvReport,
+        };
 
         // Set criterion home to (in descending order of preference):
         // - $CRITERION_HOME (cargo-criterion sets this, but other users could as well)
@@ -384,7 +395,7 @@ impl Default for Criterion {
             PathBuf::from("target/criterion")
         };
 
-        Criterion {
+        let mut criterion = Criterion {
             config: BenchmarkConfig {
                 confidence_level: 0.95,
                 measurement_time: Duration::new(5, 0),
@@ -395,10 +406,8 @@ impl Default for Criterion {
                 warm_up_time: Duration::new(3, 0),
                 sampling_mode: SamplingMode::Auto,
             },
-            plotting_backend: *DEFAULT_PLOTTING_BACKEND,
-            plotting_enabled: true,
             filter: None,
-            report: Box::new(Reports::new(reports)),
+            report: reports,
             baseline_directory: "base".to_owned(),
             baseline: Baseline::Save,
             load_baseline: None,
@@ -411,7 +420,16 @@ impl Default for Criterion {
                 .as_ref()
                 .map(|mtx| mtx.lock().unwrap()),
             mode: Mode::Benchmark,
+        };
+
+        if criterion.connection.is_some() {
+            // disable all reports when connected to cargo-criterion; it will do the reporting.
+            criterion.report.cli_enabled = false;
+            criterion.report.bencher_enabled = false;
+            criterion.report.csv_enabled = false;
+            criterion.report.html_enabled = false;
         }
+        criterion
     }
 }
 
@@ -422,8 +440,6 @@ impl<M: Measurement> Criterion<M> {
         // Can't use struct update syntax here because they're technically different types.
         Criterion {
             config: self.config,
-            plotting_backend: self.plotting_backend,
-            plotting_enabled: self.plotting_enabled,
             filter: self.filter,
             report: self.report,
             baseline_directory: self.baseline_directory,
@@ -452,17 +468,15 @@ impl<M: Measurement> Criterion<M> {
     /// if not.
     ///
     /// Panics if `backend` is `PlottingBackend::Gnuplot` and gnuplot is not available.
-    pub fn plotting_backend(self, backend: PlottingBackend) -> Criterion<M> {
+    pub fn plotting_backend(mut self, backend: PlottingBackend) -> Criterion<M> {
         if let PlottingBackend::Gnuplot = backend {
             if GNUPLOT_VERSION.is_err() {
                 panic!("Gnuplot plotting backend was requested, but gnuplot is not available. To continue, either install Gnuplot or allow Criterion.rs to fall back to using plotters.");
             }
         }
 
-        Criterion {
-            plotting_backend: backend,
-            ..self
-        }
+        self.report.html = Html::new(backend.create_plotter());
+        self
     }
 
     /// Changes the default size of the sample for benchmarks run with this runner.
@@ -596,36 +610,18 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
-    fn create_plotter(&self) -> Box<dyn Plotter> {
-        match self.plotting_backend {
-            PlottingBackend::Gnuplot => Box::new(Gnuplot::default()),
-            PlottingBackend::Plotters => Box::new(PlottersBackend::default()),
-        }
-    }
-
     /// Enables plotting
     pub fn with_plots(mut self) -> Criterion<M> {
-        self.plotting_enabled = true;
-        let mut reports: Vec<Box<dyn Report>> = vec![];
+        // If running under cargo-criterion then don't re-enable the reports; let it do the reporting.
         if self.connection.is_none() {
-            reports.push(Box::new(CliReport::new(false, false, false)));
+            self.report.html_enabled = true;
         }
-        reports.push(Box::new(FileCsvReport));
-        reports.push(Box::new(Html::new(self.create_plotter())));
-        self.report = Box::new(Reports::new(reports));
-
         self
     }
 
     /// Disables plotting
     pub fn without_plots(mut self) -> Criterion<M> {
-        self.plotting_enabled = false;
-        let mut reports: Vec<Box<dyn Report>> = vec![];
-        if self.connection.is_none() {
-            reports.push(Box::new(CliReport::new(false, false, false)));
-        }
-        reports.push(Box::new(FileCsvReport));
-        self.report = Box::new(Reports::new(reports));
+        self.report.html_enabled = false;
         self
     }
 
@@ -915,10 +911,16 @@ https://bheisler.github.io/criterion.rs/book/faq.html
 
         if self.connection.is_some() {
             // disable all reports when connected to cargo-criterion; it will do the reporting.
-            self.report = Box::new(Reports::new(vec![]));
+            self.report.cli_enabled = false;
+            self.report.bencher_enabled = false;
+            self.report.csv_enabled = false;
+            self.report.html_enabled = false;
         } else {
-            let cli_report: Box<dyn Report> = match matches.value_of("output-format") {
-                Some("bencher") => Box::new(BencherReport),
+            match matches.value_of("output-format") {
+                Some("bencher") => {
+                    self.report.bencher_enabled = true;
+                    self.report.cli_enabled = false;
+                }
                 _ => {
                     let verbose = matches.is_present("verbose");
                     let stdout_isatty = atty::is(atty::Stream::Stdout);
@@ -934,21 +936,12 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                         }
                         _ => enable_text_coloring = stdout_isatty,
                     };
-                    Box::new(CliReport::new(
-                        enable_text_overwrite,
-                        enable_text_coloring,
-                        verbose,
-                    ))
+                    self.report.bencher_enabled = false;
+                    self.report.cli_enabled = true;
+                    self.report.cli =
+                        CliReport::new(enable_text_overwrite, enable_text_coloring, verbose);
                 }
             };
-
-            let mut reports: Vec<Box<dyn Report>> = vec![];
-            reports.push(cli_report);
-            reports.push(Box::new(FileCsvReport));
-            if self.plotting_enabled {
-                reports.push(Box::new(Html::new(self.create_plotter())));
-            }
-            self.report = Box::new(Reports::new(reports));
         }
 
         if let Some(dir) = matches.value_of("load-baseline") {
