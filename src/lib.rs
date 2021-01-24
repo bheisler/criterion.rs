@@ -661,6 +661,13 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    /// Override whether the CLI output will be colored or not. Usually you would use the `--color`
+    /// CLI argument, but this is available for programmmatic use as well.
+    pub fn with_output_color(mut self, enabled: bool) -> Criterion<M> {
+        self.report.cli.enable_text_coloring = enabled;
+        self
+    }
+
     /// Set the output directory (currently for testing only)
     #[doc(hidden)]
     pub fn output_directory(mut self, path: &Path) -> Criterion<M> {

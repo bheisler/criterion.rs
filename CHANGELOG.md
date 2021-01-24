@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - Added support for benchmarking async functions
+- Added `with_output_color` for enabling or disabling CLI output coloring programmatically.
 
 ### Fixed
 - Criterion.rs will now give a clear error message in case of benchmarks that take zero time.
