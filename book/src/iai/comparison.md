@@ -25,3 +25,5 @@ Iai gives more precision and scales better to larger benchmarks, while Criterion
 excluding setup time and gives you more information about the actual time your code takes and how
 strongly that is affected by non-determinism like threading or hash-table randomization. If you
 absolutely need to pick one or the other though, Iai is probably the one to go with.
+
+[Cargo-criterion]: https://github.com/bheisler/cargo-criterion
