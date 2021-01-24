@@ -102,6 +102,7 @@ use crate::routine::Function;
 #[cfg(feature = "async")]
 pub use crate::bencher::AsyncBencher;
 pub use crate::bencher::Bencher;
+#[allow(deprecated)]
 pub use crate::benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
 pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};
 
@@ -626,6 +627,10 @@ impl<M: Measurement> Criterion<M> {
     }
 
     /// Return true if generation of the plots is possible.
+    #[deprecated(
+        since = "0.3.4",
+        note = "No longer useful; since the plotters backend is available Criterion.rs can always generate plots"
+    )]
     pub fn can_plot(&self) -> bool {
         // Trivially true now that we have plotters.
         // TODO: Deprecate and remove this.
@@ -1180,7 +1185,9 @@ where
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    #[doc(hidden)] // Soft-deprecated, use benchmark groups instead
+    #[doc(hidden)]
+    #[deprecated(since = "0.3.4", note = "Please use BenchmarkGroups instead.")]
+    #[allow(deprecated)]
     pub fn bench_function_over_inputs<I, F>(
         &mut self,
         id: &str,
@@ -1231,7 +1238,9 @@ where
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    #[doc(hidden)] // Soft-deprecated, use benchmark groups instead
+    #[doc(hidden)]
+    #[deprecated(since = "0.3.4", note = "Please use BenchmarkGroups instead.")]
+    #[allow(deprecated)]
     pub fn bench_functions<I>(
         &mut self,
         id: &str,
@@ -1274,7 +1283,8 @@ where
     /// criterion_group!(benches, bench);
     /// criterion_main!(benches);
     /// ```
-    #[doc(hidden)] // Soft-deprecated, use benchmark groups instead
+    #[doc(hidden)]
+    #[deprecated(since = "0.3.4", note = "Please use BenchmarkGroups instead.")]
     pub fn bench<B: BenchmarkDefinition<M>>(
         &mut self,
         group_id: &str,

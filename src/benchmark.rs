@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use crate::analysis;
 use crate::connection::OutgoingMessage;
 use crate::measurement::{Measurement, WallTime};
@@ -78,6 +80,7 @@ pub(crate) struct NamedRoutine<T, M: Measurement = WallTime> {
 /// Structure representing a benchmark (or group of benchmarks)
 /// which take one parameter.
 #[doc(hidden)]
+#[deprecated(since = "0.3.4", note = "Please use BenchmarkGroups instead.")]
 pub struct ParameterizedBenchmark<T: Debug, M: Measurement = WallTime> {
     config: PartialBenchmarkConfig,
     values: Vec<T>,
@@ -88,6 +91,7 @@ pub struct ParameterizedBenchmark<T: Debug, M: Measurement = WallTime> {
 /// Structure representing a benchmark (or group of benchmarks)
 /// which takes no parameters.
 #[doc(hidden)]
+#[deprecated(since = "0.3.4", note = "Please use BenchmarkGroups instead.")]
 pub struct Benchmark<M: Measurement = WallTime> {
     config: PartialBenchmarkConfig,
     routines: Vec<NamedRoutine<(), M>>,

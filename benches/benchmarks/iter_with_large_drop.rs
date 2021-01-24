@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use criterion::{criterion_group, Benchmark, Criterion, Throughput};
 use std::time::Duration;
 

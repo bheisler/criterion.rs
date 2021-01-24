@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Increased opacity on violin charts.
 - Fixed violin chart X axis not starting at zero in the plotters backend.
 
+### Deprecated
+- `Criterion::can_plot` is no longer useful and is deprecated pending deletion in 0.4.0.
+- `Benchmark` and `ParameterizedBenchmark` were already hidden from documentation, but are now 
+  formally deprecated pending deletion in 0.4.0. Callers should use `BenchmarkGroup` instead.
+- `Criterion::bench_function_over_inputs`, `Criterion::bench_functions`, and `Criterion::bench` were
+  already hidden from documentation, but are now formally deprecated pending deletion in 0.4.0.
+  Callers should use `BenchmarkGroup` instead.
+
 ## [0.3.3] - 2020-06-29
 ### Added
 - Added `CRITERION_HOME` environment variable to set the directory for Criterion to store

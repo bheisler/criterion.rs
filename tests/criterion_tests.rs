@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use criterion;
 use serde_json;
 
