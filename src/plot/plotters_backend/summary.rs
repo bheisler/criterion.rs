@@ -1,7 +1,10 @@
 use super::*;
 use crate::AxisScale;
 use itertools::Itertools;
-use plotters::coord::{AsRangedCoord, Shift};
+use plotters::coord::{
+    ranged1d::{AsRangedCoord, ValueFormatter as PlottersValueFormatter},
+    Shift,
+};
 use std::cmp::Ordering;
 use std::path::Path;
 
@@ -58,7 +61,10 @@ fn draw_line_comarision_figure<XR: AsRangedCoord<Value = f64>, YR: AsRangedCoord
     y_range: YR,
     value_type: ValueType,
     data: Vec<(Option<&String>, Vec<f64>, Vec<f64>)>,
-) {
+) where
+    XR::CoordDescType: PlottersValueFormatter<f64>,
+    YR::CoordDescType: PlottersValueFormatter<f64>,
+{
     let input_suffix = match value_type {
         ValueType::Bytes => " Size (Bytes)",
         ValueType::Elements => " Size (Elements)",
@@ -69,7 +75,7 @@ fn draw_line_comarision_figure<XR: AsRangedCoord<Value = f64>, YR: AsRangedCoord
         .margin((5).percent())
         .set_label_area_size(LabelAreaPosition::Left, (5).percent_width().min(60))
         .set_label_area_size(LabelAreaPosition::Bottom, (5).percent_height().min(40))
-        .build_ranged(x_range, y_range)
+        .build_cartesian_2d(x_range, y_range)
         .unwrap();
 
     chart
@@ -217,12 +223,15 @@ fn draw_violin_figure<XR: AsRangedCoord<Value = f64>, YR: AsRangedCoord<Value = 
     x_range: XR,
     y_range: YR,
     data: Vec<(&str, Box<[f64]>, Box<[f64]>)>,
-) {
+) where
+    XR::CoordDescType: PlottersValueFormatter<f64>,
+    YR::CoordDescType: PlottersValueFormatter<f64>,
+{
     let mut chart = ChartBuilder::on(&root_area)
         .margin((5).percent())
         .set_label_area_size(LabelAreaPosition::Left, (10).percent_width().min(60))
         .set_label_area_size(LabelAreaPosition::Bottom, (5).percent_width().min(40))
-        .build_ranged(x_range, y_range)
+        .build_cartesian_2d(x_range, y_range)
         .unwrap();
 
     chart

@@ -37,9 +37,9 @@ tokio = { version = "1.0", default-features = false, features = ["rt"], optional
 async-std = { version = "1.9", optional = true }
 
 [dependencies.plotters]
-version = "^0.2.12"
+version = "^0.3.0"
 default-features = false
-features = ["svg", "area_series", "line_series"] 
+features = ["svg_backend", "area_series", "line_series"] 
 
 [dev-dependencies]
 tempfile = "3.1"
