@@ -33,7 +33,7 @@ use crate::async_executor::AsyncExecutor;
 ///   but are more complex than `iter_with_large_drop`.
 /// * Otherwise, use `iter`.
 pub struct Bencher<'a, M: Measurement = WallTime> {
-    pub(crate) iterated: bool,         // have we iterated this benchmark?
+    pub(crate) iterated: bool,         // Have we iterated this benchmark?
     pub(crate) iters: u64,             // Number of times to iterate this benchmark
     pub(crate) value: M::Value,        // The measured value
     pub(crate) measurement: &'a M,     // Reference to the measurement object

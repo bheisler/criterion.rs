@@ -15,7 +15,7 @@ use std::time::{Duration, Instant};
 /// nanoseconds, the values passed to the formatter will be in nanoseconds).
 ///
 /// Implementors are encouraged to format the values in a way that is intuitive for humans and
-/// uses the SI prefix system. For example, the format used by [WallTime](struct.Walltime.html)
+/// uses the SI prefix system. For example, the format used by [WallTime](struct.WallTime.html)
 /// can display the value in units ranging from picoseconds to seconds depending on the magnitude
 /// of the elapsed time in nanoseconds.
 pub trait ValueFormatter {
