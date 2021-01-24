@@ -190,7 +190,9 @@ pub fn violin(
         formatter.scale_values(max, xs);
     });
 
-    let x_range = plotters::data::fitting_range(kdes.iter().map(|(_, xs, _)| xs.iter()).flatten());
+    let mut x_range =
+        plotters::data::fitting_range(kdes.iter().map(|(_, xs, _)| xs.iter()).flatten());
+    x_range.start = 0.0;
     let y_range = -0.5..all_curves.len() as f64 - 0.5;
 
     let size = (960, 150 + (18 * all_curves.len() as u32));

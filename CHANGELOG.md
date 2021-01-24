@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added some extra code to ensure that every sample has at least one iteration.
 - Added a notice to the `--help` output regarding "unrecognized option" errors.
 - Increased opacity on violin charts.
+- Fixed violin chart X axis not starting at zero in the plotters backend.
 
 ## [0.3.3] - 2020-06-29
 ### Added

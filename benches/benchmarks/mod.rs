@@ -14,8 +14,8 @@ pub mod async_measurement_overhead;
 
 #[cfg(not(feature = "async_futures"))]
 pub mod async_measurement_overhead {
-    use criterion::{criterion_group, BatchSize, Criterion};
-    fn some_benchmark(c: &mut Criterion) {}
+    use criterion::{criterion_group, Criterion};
+    fn some_benchmark(_c: &mut Criterion) {}
 
     criterion_group!(benches, some_benchmark);
 }

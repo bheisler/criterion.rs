@@ -174,6 +174,7 @@ pub fn violin(
         .configure(Axis::BottomX, |a| {
             a.configure(Grid::Major, |g| g.show())
                 .configure(Grid::Minor, |g| g.hide())
+                .set(Range::Limits(0., max as f64 * one[0]))
                 .set(Label(format!("Average time ({})", unit)))
                 .set(axis_scale.to_gnuplot())
         })
