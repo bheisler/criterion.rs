@@ -1,5 +1,10 @@
 # CSV Output
 
+NOTE: The CSV output is in the process of being deprecated. For machine-readable output,
+cargo-criterion's `--message-format=json` option is recommended instead - see [External
+Tools](../cargo_criterion/external_tools.html). CSV output will become an optional feature in
+Criterion.rs 0.4.0.
+
 Criterion.rs saves its measurements in several files, as shown below:
 
 ```

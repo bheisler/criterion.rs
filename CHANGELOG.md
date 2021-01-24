@@ -23,14 +23,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `Criterion::bench_function_over_inputs`, `Criterion::bench_functions`, and `Criterion::bench` were
   already hidden from documentation, but are now formally deprecated pending deletion in 0.4.0.
   Callers should use `BenchmarkGroup` instead.
+- Three new optional features have been added; "html_reports", "csv_output" and 
+  "cargo_bench_support". These features currently do nothing except disable a warning message at 
+  runtime, but in version 0.4.0 they will be used to enable HTML report generation, CSV file 
+  generation, and the ability to run in cargo-bench (as opposed to [cargo-criterion]). 
+  "cargo_bench_support" is enabled by default, but "html_reports" and "csv_output"
+  are not. If you use Criterion.rs' HTML reports, it is recommended to switch to [cargo-criterion].
+  If you use CSV output, it is recommended to switch to [cargo-criterion] and use the 
+  `--message-format=json` option for machine-readable output instead. A warning message will be
+  printed at the start of benchmark runs which do not have "html_reports" or "cargo_bench_support"
+  enabled, but because CSV output is not widely used it has no warning.
+
+[cargo-criterion]: https://github.com/bheisler/cargo-criterion
 
 ## [0.3.3] - 2020-06-29
 ### Added
 - Added `CRITERION_HOME` environment variable to set the directory for Criterion to store
   its results and charts in. 
-- Added support for [cargo-criterion](https://github.com/bheisler/cargo-criterion). The long-term
-  goal here is to remove code from Criterion-rs itself to improve compile times, as well as to add
-  features to `cargo-criterion` that are difficult to implement in Criterion-rs.
+- Added support for [cargo-criterion]. The long-term goal here is to remove code from Criterion-rs 
+  itself to improve compile times, as well as to add  features to `cargo-criterion` that are 
+  difficult to implement in Criterion-rs.
 - Add sampling mode option for benchmarks. This allows the user to change how Criterion.rs chooses
   the iteration counts in each sample. By default, nothing will change for most benchmarks, but
   very slow benchmarks will now run fewer iterations to fit in the desired number of samples.
