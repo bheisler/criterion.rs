@@ -11,7 +11,7 @@
 //!
 //! ## Features:
 //! * Collects detailed statistics, providing strong confidence that changes
-//!   to performance are real, not measurement noise
+//!   to performance are real, not measurement noise.
 //! * Produces detailed charts, providing thorough understanding of your code's
 //!   performance behavior.
 
@@ -252,7 +252,7 @@ pub enum BatchSize {
 
     /// `NumIterations` fixes the batch size to a constant number, specified by the user. This
     /// allows the user to choose their own tradeoff between overhead and memory usage, but care must
-    /// be taken in tuning the batch size. In general, the measurement overhead of NumIterations
+    /// be taken in tuning the batch size. In general, the measurement overhead of `NumIterations`
     /// will be larger than that of `NumBatches`. Most benchmarks should use `SmallInput` or
     /// `LargeInput` instead.
     NumIterations(u64),
@@ -312,11 +312,11 @@ impl PlottingBackend {
 #[derive(Debug, Clone)]
 /// Enum representing the execution mode.
 pub(crate) enum Mode {
-    /// Run benchmarks normally
+    /// Run benchmarks normally.
     Benchmark,
     /// List all benchmarks but do not run them.
     List,
-    /// Run bennchmarks once to verify that they work, but otherwise do not measure them.
+    /// Run benchmarks once to verify that they work, but otherwise do not measure them.
     Test,
     /// Iterate benchmarks for a given length of time but do not analyze or report on them.
     Profile(Duration),
@@ -340,7 +340,7 @@ impl Mode {
 /// the new load
 /// - **Measurement**: The routine is repeatedly executed, and timing information is collected into
 /// a sample
-/// - **Analysis**: The sample is analyzed and distiled into meaningful statistics that get
+/// - **Analysis**: The sample is analyzed and distilled into meaningful statistics that get
 /// reported to stdout, stored in files, and plotted
 /// - **Comparison**: The current sample is compared with the sample obtained in the previous
 /// benchmark.
@@ -594,7 +594,7 @@ impl<M: Measurement> Criterion<M> {
     /// noise.
     ///
     /// This presents a trade-off. By setting the significance level closer to 0.0, you can increase
-    /// the statistical robustness against noise, but it also weaken's Criterion.rs' ability to
+    /// the statistical robustness against noise, but it also weakens Criterion.rs' ability to
     /// detect small but real changes in the performance. By setting the significance level
     /// closer to 1.0, Criterion.rs will be more able to detect small true changes, but will also
     /// report more spurious differences.
@@ -1455,7 +1455,7 @@ impl ActualSamplingMode {
                             recommended_sample_size
                         );
                     } else {
-                        println!("or enable flat sampling.");
+                        println!(" or enable flat sampling.");
                     }
                 }
 

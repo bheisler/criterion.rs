@@ -395,7 +395,7 @@ impl CliReport {
         }
     }
 
-    //Passing a String is the common case here.
+    // Passing a String is the common case here.
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::needless_pass_by_value))]
     fn print_overwritable(&self, s: String) {
         if self.enable_text_overwrite {
@@ -600,7 +600,7 @@ impl Report for CliReport {
             let point_estimate = mean_est.point_estimate;
             let mut point_estimate_str = format::change(point_estimate, true);
             // The change in throughput is related to the change in timing. Reducing the timing by
-            // 50% increases the througput by 100%.
+            // 50% increases the throughput by 100%.
             let to_thrpt_estimate = |ratio: f64| 1.0 / (1.0 + ratio) - 1.0;
             let mut thrpt_point_estimate_str =
                 format::change(to_thrpt_estimate(point_estimate), true);
