@@ -136,6 +136,20 @@ lazy_static! {
             Err(_) => None,
         }
     };
+    static ref DEFAULT_OUTPUT_DIRECTORY: PathBuf = {
+        // Set criterion home to (in descending order of preference):
+        // - $CRITERION_HOME (cargo-criterion sets this, but other users could as well)
+        // - $CARGO_TARGET_DIR/criterion
+        // - the cargo target dir from `cargo metadata`
+        // - ./target/criterion
+        if let Some(value) = env::var_os("CRITERION_HOME") {
+            PathBuf::from(value)
+        } else if let Some(path) = cargo_target_directory() {
+            path.join("criterion")
+        } else {
+            PathBuf::from("target/criterion")
+        }
+    };
 }
 
 fn debug_enabled() -> bool {
@@ -406,18 +420,6 @@ impl Default for Criterion {
             csv: FileCsvReport,
         };
 
-        // Set criterion home to (in descending order of preference):
-        // - $CRITERION_HOME (cargo-criterion sets this, but other users could as well)
-        // - $CARGO_TARGET_DIR/criterion
-        // - ./target/criterion
-        let output_directory = if let Some(value) = env::var_os("CRITERION_HOME") {
-            PathBuf::from(value)
-        } else if let Some(path) = cargo_target_directory() {
-            path.join("criterion")
-        } else {
-            PathBuf::from("target/criterion")
-        };
-
         let mut criterion = Criterion {
             config: BenchmarkConfig {
                 confidence_level: 0.95,
@@ -434,7 +436,7 @@ impl Default for Criterion {
             baseline_directory: "base".to_owned(),
             baseline: Baseline::Save,
             load_baseline: None,
-            output_directory,
+            output_directory: DEFAULT_OUTPUT_DIRECTORY.clone(),
             all_directories: HashSet::new(),
             all_titles: HashSet::new(),
             measurement: WallTime,

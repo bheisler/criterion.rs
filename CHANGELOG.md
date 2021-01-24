@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added a notice to the `--help` output regarding "unrecognized option" errors.
 - Increased opacity on violin charts.
 - Fixed violin chart X axis not starting at zero in the plotters backend.
+- Criterion.rs will now automatically detect the right output directory.
 
 ### Deprecated
 - `Criterion::can_plot` is no longer useful and is deprecated pending deletion in 0.4.0.
