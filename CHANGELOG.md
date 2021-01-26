@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [0.3.4]
+## [0.3.4] - 2021-01-24
 ### Added
 - Added support for benchmarking async functions
 - Added `with_output_color` for enabling or disabling CLI output coloring programmatically.
