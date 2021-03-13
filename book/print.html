@@ -1,0 +1,2271 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Criterion.rs Documentation</title>
+        
+        <meta name="robots" content="noindex" />
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="User Guide and Other Prose Documentation For Criterion.rs">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="criterion_rs.html"><strong aria-hidden="true">1.</strong> Criterion.rs</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="getting_started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li></ol></li><li class="chapter-item expanded "><a href="user_guide/user_guide.html"><strong aria-hidden="true">2.</strong> User Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user_guide/migrating_from_libtest.html"><strong aria-hidden="true">2.1.</strong> Migrating from libtest</a></li><li class="chapter-item expanded "><a href="user_guide/command_line_output.html"><strong aria-hidden="true">2.2.</strong> Command-Line Output</a></li><li class="chapter-item expanded "><a href="user_guide/command_line_options.html"><strong aria-hidden="true">2.3.</strong> Command-Line Options</a></li><li class="chapter-item expanded "><a href="user_guide/html_report.html"><strong aria-hidden="true">2.4.</strong> HTML Report</a></li><li class="chapter-item expanded "><a href="user_guide/plots_and_graphs.html"><strong aria-hidden="true">2.5.</strong> Plots &amp; Graphs</a></li><li class="chapter-item expanded "><a href="user_guide/benchmarking_with_inputs.html"><strong aria-hidden="true">2.6.</strong> Benchmarking With Inputs</a></li><li class="chapter-item expanded "><a href="user_guide/advanced_configuration.html"><strong aria-hidden="true">2.7.</strong> Advanced Configuration</a></li><li class="chapter-item expanded "><a href="user_guide/comparing_functions.html"><strong aria-hidden="true">2.8.</strong> Comparing Functions</a></li><li class="chapter-item expanded "><a href="user_guide/csv_output.html"><strong aria-hidden="true">2.9.</strong> CSV Output</a></li><li class="chapter-item expanded "><a href="user_guide/known_limitations.html"><strong aria-hidden="true">2.10.</strong> Known Limitations</a></li><li class="chapter-item expanded "><a href="user_guide/bencher_compatibility.html"><strong aria-hidden="true">2.11.</strong> Bencher Compatibility Layer</a></li><li class="chapter-item expanded "><a href="user_guide/timing_loops.html"><strong aria-hidden="true">2.12.</strong> Timing Loops</a></li><li class="chapter-item expanded "><a href="user_guide/custom_measurements.html"><strong aria-hidden="true">2.13.</strong> Custom Measurements</a></li><li class="chapter-item expanded "><a href="user_guide/profiling.html"><strong aria-hidden="true">2.14.</strong> Profiling</a></li><li class="chapter-item expanded "><a href="user_guide/custom_test_framework.html"><strong aria-hidden="true">2.15.</strong> Custom Test Framework</a></li><li class="chapter-item expanded "><a href="user_guide/benchmarking_async.html"><strong aria-hidden="true">2.16.</strong> Benchmarking async functions</a></li></ol></li><li class="chapter-item expanded "><a href="cargo_criterion/cargo_criterion.html"><strong aria-hidden="true">3.</strong> cargo-criterion</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="cargo_criterion/configuring_cargo_criterion.html"><strong aria-hidden="true">3.1.</strong> Configuring cargo-criterion</a></li><li class="chapter-item expanded "><a href="cargo_criterion/external_tools.html"><strong aria-hidden="true">3.2.</strong> External Tools</a></li></ol></li><li class="chapter-item expanded "><a href="iai/iai.html"><strong aria-hidden="true">4.</strong> Iai</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="iai/getting_started.html"><strong aria-hidden="true">4.1.</strong> Getting Started with Iai</a></li><li class="chapter-item expanded "><a href="iai/comparison.html"><strong aria-hidden="true">4.2.</strong> Comparison to Criterion.rs</a></li></ol></li><li class="chapter-item expanded "><a href="analysis.html"><strong aria-hidden="true">5.</strong> Analysis Process</a></li><li class="chapter-item expanded "><a href="faq.html"><strong aria-hidden="true">6.</strong> Frequently Asked Questions</a></li><li class="chapter-item expanded "><a href="migrating_0_2_to_0_3.html"><strong aria-hidden="true">7.</strong> Migrating from 0.2.* to 0.3.*</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Criterion.rs Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="criterionrs"><a class="header" href="#criterionrs">Criterion.rs</a></h1>
+<p>Criterion.rs is a statistics-driven micro-benchmarking tool. It is a Rust port of <a href="https://hackage.haskell.org/package/criterion">Haskell's Criterion</a> library.</p>
+<p>Criterion.rs benchmarks collect and store statistical information from run to run and can automatically detect performance regressions as well as measuring optimizations.</p>
+<p>Criterion.rs is free and open source. You can find the source on <a href="https://github.com/bheisler/criterion.rs">GitHub</a>. Issues and feature requests can be posted on <a href="https://github.com/bheisler/criterion.rs/issues">the issue tracker</a>.</p>
+<h2 id="api-docs"><a class="header" href="#api-docs">API Docs</a></h2>
+<p>In addition to this book, you may also wish to read <a href="http://bheisler.github.io/criterion.rs/criterion/">the API documentation</a>.</p>
+<h2 id="license"><a class="header" href="#license">License</a></h2>
+<p>Criterion.rs is dual-licensed under the <a href="https://github.com/bheisler/criterion.rs/blob/master/LICENSE-APACHE">Apache 2.0</a> and the <a href="https://github.com/bheisler/criterion.rs/blob/master/LICENSE-MIT">MIT</a> licenses.</p>
+<h2 id="debug-output"><a class="header" href="#debug-output">Debug Output</a></h2>
+<p>To enable debug output in Criterion.rs, define the environment variable <code>CRITERION_DEBUG</code>. For example (in bash):</p>
+<pre><code class="language-bash">CRITERION_DEBUG=1 cargo bench
+</code></pre>
+<p>This will enable extra debug output. If using gnuplot, Criterion.rs will also save the gnuplot scripts alongside the generated plot files. When raising issues with Criterion.rs (especially when reporting issues with the plot generation) please run your benchmarks with this option enabled and provide the additional output and relevant gnuplot scripts.</p>
+<h1 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h1>
+<p>This is a quick walkthrough for adding Criterion.rs benchmarks to an existing crate.</p>
+<p>I'll assume that we have a crate, <code>mycrate</code>, whose <code>lib.rs</code> contains the following code:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[inline]
+fn fibonacci(n: u64) -&gt; u64 {
+    match n {
+        0 =&gt; 1,
+        1 =&gt; 1,
+        n =&gt; fibonacci(n-1) + fibonacci(n-2),
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="step-1---add-dependency-to-cargotoml"><a class="header" href="#step-1---add-dependency-to-cargotoml">Step 1 - Add Dependency to Cargo.toml</a></h3>
+<p>To enable Criterion.rs benchmarks, add the following to your <code>Cargo.toml</code> file:</p>
+<pre><code class="language-toml">[dev-dependencies]
+criterion = &quot;0.3&quot;
+
+[[bench]]
+name = &quot;my_benchmark&quot;
+harness = false
+</code></pre>
+<p>This adds a development dependency on Criterion.rs, and declares a benchmark called <code>my_benchmark</code>
+without the standard benchmarking harness. It's important to disable the standard benchmark
+harness, because we'll later add our own and we don't want them to conflict.</p>
+<h3 id="step-2---add-benchmark"><a class="header" href="#step-2---add-benchmark">Step 2 - Add Benchmark</a></h3>
+<p>As an example, we'll benchmark our implementation of the Fibonacci function. Create a benchmark
+file at <code>$PROJECT/benches/my_benchmark.rs</code> with the following contents (see the Details section
+below for an explanation of this code):</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use mycrate::fibonacci;
+
+pub fn criterion_benchmark(c: &amp;mut Criterion) {
+    c.bench_function(&quot;fib 20&quot;, |b| b.iter(|| fibonacci(black_box(20))));
+}
+
+criterion_group!(benches, criterion_benchmark);
+criterion_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="step-3---run-benchmark"><a class="header" href="#step-3---run-benchmark">Step 3 - Run Benchmark</a></h3>
+<p>To run this benchmark, use the following command:</p>
+<p><code>cargo bench</code></p>
+<p>You should see output similar to this:</p>
+<pre><code>     Running target/release/deps/example-423eedc43b2b3a93
+Benchmarking fib 20
+Benchmarking fib 20: Warming up for 3.0000 s
+Benchmarking fib 20: Collecting 100 samples in estimated 5.0658 s (188100 iterations)
+Benchmarking fib 20: Analyzing
+fib 20                  time:   [26.029 us 26.251 us 26.505 us]
+Found 11 outliers among 99 measurements (11.11%)
+  6 (6.06%) high mild
+  5 (5.05%) high severe
+slope  [26.029 us 26.505 us] R^2            [0.8745662 0.8728027]
+mean   [26.106 us 26.561 us] std. dev.      [808.98 ns 1.4722 us]
+median [25.733 us 25.988 us] med. abs. dev. [234.09 ns 544.07 ns]
+</code></pre>
+<h3 id="details"><a class="header" href="#details">Details</a></h3>
+<p>Let's go back and walk through that benchmark code in more detail.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use mycrate::fibonacci;
+<span class="boring">}
+</span></code></pre></pre>
+<p>First, we declare the criterion crate and import the <a href="http://bheisler.github.io/criterion.rs/criterion/struct.Criterion.html">Criterion
+type</a>. Criterion is the
+main type for the Criterion.rs library. It provides methods to configure and define groups of
+benchmarks. We also import <code>black_box</code>, which will be described later.</p>
+<p>In addition to this, we declare <code>mycrate</code> as an external crate and import our fibonacci function
+from it. Cargo compiles benchmarks (or at least, the ones in <code>/benches</code>) as if each one was a
+separate crate from the main crate. This means that we need to import our library crate as an
+external crate, and it means that we can only benchmark public functions.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn criterion_benchmark(c: &amp;mut Criterion) {
+<span class="boring">}
+</span></code></pre></pre>
+<p>Here we create a function to contain our benchmark code. The name of this function doesn't matter,
+but it should be clear and understandable.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>    c.bench_function(&quot;fib 20&quot;, |b| b.iter(|| fibonacci(black_box(20))));
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>This is where the real work happens. The <code>bench_function</code> method defines a benchmark with a name
+and a closure. The name should be unique among all of the benchmarks for your project. The closure
+must accept one argument, a
+<a href="http://bheisler.github.io/criterion.rs/criterion/struct.Bencher.html">Bencher</a>. The bencher
+performs the benchmark - in this case, it simply calls our <code>fibonacci</code> function in a loop. There
+are a number of other ways to perform benchmarks, including the option to benchmark with arguments,
+and to compare the performance of two functions. See the API documentation for details on all of
+the different benchmarking options. Using the <code>black_box</code> function stops the compiler from
+constant-folding away the whole function and replacing it with a constant.</p>
+<p>You may recall that we marked the <code>fibonacci</code> function as <code>#[inline]</code>. This allows it to be inlined
+across different crates. Since the benchmarks are technically a separate crate, that means it can
+be inlined into the benchmark, improving performance.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>criterion_group!(benches, criterion_benchmark);
+criterion_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<p>Here we invoke the <code>criterion_group!</code>
+<a href="http://bheisler.github.io/criterion.rs/criterion/macro.criterion_group.html">(link)</a> macro to
+generate a benchmark group called benches, containing the <code>criterion_benchmark</code> function defined
+earlier. Finally, we invoke the <code>criterion_main!</code>
+<a href="http://bheisler.github.io/criterion.rs/criterion/macro.criterion_main.html">(link)</a> macro to
+generate a main function which executes the <code>benches</code> group. See the API documentation for more
+information on these macros.</p>
+<h3 id="step-4---optimize"><a class="header" href="#step-4---optimize">Step 4 - Optimize</a></h3>
+<p>This fibonacci function is quite inefficient. We can do better:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn fibonacci(n: u64) -&gt; u64 {
+    let mut a = 0;
+    let mut b = 1;
+
+    match n {
+        0 =&gt; b,
+        _ =&gt; {
+            for _ in 0..n {
+                let c = a + b;
+                a = b;
+                b = c;
+            }
+            b
+        }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Running the benchmark now produces output like this:</p>
+<pre><code>     Running target/release/deps/example-423eedc43b2b3a93
+Benchmarking fib 20
+Benchmarking fib 20: Warming up for 3.0000 s
+Benchmarking fib 20: Collecting 100 samples in estimated 5.0000 s (13548862800 iterations)
+Benchmarking fib 20: Analyzing
+fib 20                  time:   [353.59 ps 356.19 ps 359.07 ps]
+                        change: [-99.999% -99.999% -99.999%] (p = 0.00 &lt; 0.05)
+                        Performance has improved.
+Found 6 outliers among 99 measurements (6.06%)
+  4 (4.04%) high mild
+  2 (2.02%) high severe
+slope  [353.59 ps 359.07 ps] R^2            [0.8734356 0.8722124]
+mean   [356.57 ps 362.74 ps] std. dev.      [10.672 ps 20.419 ps]
+median [351.57 ps 355.85 ps] med. abs. dev. [4.6479 ps 10.059 ps]
+</code></pre>
+<p>As you can see, Criterion is statistically confident that our optimization has made an improvement.
+If we introduce a performance regression, Criterion will instead print a message indicating this.</p>
+<h1 id="user-guide"><a class="header" href="#user-guide">User Guide</a></h1>
+<p>This chapter covers the output produced by Criterion.rs benchmarks, both the command-line reports and the charts. It also details more advanced usages of Criterion.rs such as benchmarking external programs and comparing the performance of multiple functions.</p>
+<h1 id="migrating-from-libtest"><a class="header" href="#migrating-from-libtest">Migrating from libtest</a></h1>
+<p>This page shows an example of converting a libtest or bencher benchmark to use
+Criterion.rs.</p>
+<h2 id="the-benchmark"><a class="header" href="#the-benchmark">The Benchmark</a></h2>
+<p>We'll start with this benchmark as an example:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span>#![feature(test)]
+<span class="boring">fn main() {
+</span>extern crate test;
+use test::Bencher;
+use test::black_box;
+
+fn fibonacci(n: u64) -&gt; u64 {
+    match n {
+        0 =&gt; 1,
+        1 =&gt; 1,
+        n =&gt; fibonacci(n-1) + fibonacci(n-2),
+    }
+}
+
+#[bench]
+fn bench_fib(b: &amp;mut Bencher) {
+    b.iter(|| fibonacci(black_box(20)));
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h2 id="the-migration"><a class="header" href="#the-migration">The Migration</a></h2>
+<p>The first thing to do is update the <code>Cargo.toml</code> to disable the libtest
+benchmark harness:</p>
+<pre><code class="language-toml">[[bench]]
+name = &quot;example&quot;
+harness = false
+</code></pre>
+<p>We also need to add Criterion.rs to the <code>dev-dependencies</code> section of <code>Cargo.toml</code>:</p>
+<pre><code class="language-toml">[dev-dependencies]
+criterion = &quot;0.3&quot;
+</code></pre>
+<p>The next step is to update the imports:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use criterion::{black_box, criterion_group, criterion_main, Criterion};
+<span class="boring">}
+</span></code></pre></pre>
+<p>Then, we can change the <code>bench_fib</code> function. Remove the <code>#[bench]</code> and change
+the argument to <code>&amp;mut Criterion</code> instead. The contents of this function need to
+change as well:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn bench_fib(c: &amp;mut Criterion) {
+    c.bench_function(&quot;fib 20&quot;, |b| b.iter(|| fibonacci(black_box(20))));
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Finally, we need to invoke some macros to generate a main function, since we
+no longer have libtest to provide one:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>criterion_group!(benches, bench_fib);
+criterion_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<p>And that's it! The complete migrated benchmark code is below:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use criterion::{black_box, criterion_group, criterion_main, Criterion};
+
+fn fibonacci(n: u64) -&gt; u64 {
+    match n {
+        0 =&gt; 1,
+        1 =&gt; 1,
+        n =&gt; fibonacci(n-1) + fibonacci(n-2),
+    }
+}
+
+fn bench_fib(c: &amp;mut Criterion) {
+    c.bench_function(&quot;fib 20&quot;, |b| b.iter(|| fibonacci(black_box(20))));
+}
+
+criterion_group!(benches, bench_fib);
+criterion_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<h1 id="command-line-output"><a class="header" href="#command-line-output">Command-Line Output</a></h1>
+<p>The output for this page was produced by running <code>cargo bench -- --verbose</code>. <code>cargo bench</code> omits
+some of this information. Note: If <code>cargo bench</code> fails with an error message about an unknown
+argument, see <a href="user_guide/../faq.html#cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options">the
+FAQ</a>.</p>
+<p>Every Criterion.rs benchmark calculates statistics from the measured iterations and produces a report like this:</p>
+<pre><code>Benchmarking alloc
+Benchmarking alloc: Warming up for 1.0000 s
+Benchmarking alloc: Collecting 100 samples in estimated 13.354 s (5050 iterations)
+Benchmarking alloc: Analyzing
+alloc                   time:   [2.5094 ms 2.5306 ms 2.5553 ms]
+                        thrpt:  [391.34 MiB/s 395.17 MiB/s 398.51 MiB/s]
+                        change: [-38.292% -37.342% -36.524%] (p = 0.00 &lt; 0.05)
+                        Performance has improved.
+Found 8 outliers among 100 measurements (8.00%)
+  4 (4.00%) high mild
+  4 (4.00%) high severe
+slope  [2.5094 ms 2.5553 ms] R^2            [0.8660614 0.8640630]
+mean   [2.5142 ms 2.5557 ms] std. dev.      [62.868 us 149.50 us]
+median [2.5023 ms 2.5262 ms] med. abs. dev. [40.034 us 73.259 us]
+</code></pre>
+<h2 id="warmup"><a class="header" href="#warmup">Warmup</a></h2>
+<p>Every Criterion.rs benchmark iterates the benchmarked function automatically for a configurable warmup period (by default, for three seconds). For Rust function benchmarks, this is to warm up the processor caches and (if applicable) file system caches.</p>
+<h2 id="collecting-samples"><a class="header" href="#collecting-samples">Collecting Samples</a></h2>
+<p>Criterion iterates the function to be benchmarked with a varying number of iterations to generate an estimate of the time taken by each iteration. The number of samples is configurable. It also prints an estimate of the time the sampling process will take based on the time per iteration during the warmup period.</p>
+<h2 id="time"><a class="header" href="#time">Time</a></h2>
+<pre><code>time:   [2.5094 ms 2.5306 ms 2.5553 ms]
+thrpt:  [391.34 MiB/s 395.17 MiB/s 398.51 MiB/s]
+</code></pre>
+<p>This shows a confidence interval over the measured per-iteration time for this benchmark. The left and right values show the lower and upper bounds of the confidence interval respectively, while the center value shows Criterion.rs' best estimate of the time taken for each iteration of the benchmarked routine.</p>
+<p>The confidence level is configurable. A greater confidence level (eg. 99%) will widen the interval and thus provide the user with less information about the true slope. On the other hand, a lesser confidence interval (eg. 90%) will narrow the interval but then the user is less confident that the interval contains the true slope. 95% is generally a good balance.</p>
+<p>Criterion.rs performs <a href="https://en.wikipedia.org/wiki/Bootstrapping_(statistics)">bootstrap resampling</a> to generate these confidence intervals. The number of bootstrap samples is configurable, and defaults to 100,000.</p>
+<p>Optionally, Criterion.rs can also report the throughput of the benchmarked code in units of bytes or elements per second.</p>
+<h2 id="change"><a class="header" href="#change">Change</a></h2>
+<p>When a Criterion.rs benchmark is run, it saves statistical information in the <code>target/criterion</code> directory. Subsequent executions of the benchmark will load this data and compare it with the current sample to show the effects of changes in the code.</p>
+<pre><code>change: [-38.292% -37.342% -36.524%] (p = 0.00 &lt; 0.05)
+Performance has improved.
+</code></pre>
+<p>This shows a confidence interval over the difference between this run of the benchmark and the last one, as well as the probability that the measured difference could have occurred by chance. These lines will be omitted if no saved data could be read for this benchmark.</p>
+<p>The second line shows a quick summary. This line will indicate that the performance has improved or regressed if Criterion.rs has strong statistical evidence that this is the case. It may also indicate that the change was within the noise threshold. Criterion.rs attempts to reduce the effects of noise as much as possible, but differences in benchmark environment (eg. different load from other processes, memory usage, etc.) can influence the results. For highly-deterministic benchmarks, Criterion.rs can be sensitive enough to detect these small fluctuations, so benchmark results that overlap the range <code>+-noise_threshold</code> are assumed to be noise and considered insignificant. The noise threshold is configurable, and defaults to <code>+-2%</code>.</p>
+<p>Additional examples:</p>
+<pre><code>alloc                   time:   [1.2421 ms 1.2540 ms 1.2667 ms]
+                        change: [+40.772% +43.934% +47.801%] (p = 0.00 &lt; 0.05)
+                        Performance has regressed.
+</code></pre>
+<pre><code>alloc                   time:   [1.2508 ms 1.2630 ms 1.2756 ms]
+                        change: [-1.8316% +0.9121% +3.4704%] (p = 0.52 &gt; 0.05)
+                        No change in performance detected.
+</code></pre>
+<pre><code>benchmark               time:   [442.92 ps 453.66 ps 464.78 ps]
+                        change: [-0.7479% +3.2888% +7.5451%] (p = 0.04 &gt; 0.05)
+                        Change within noise threshold.
+</code></pre>
+<h2 id="detecting-outliers"><a class="header" href="#detecting-outliers">Detecting Outliers</a></h2>
+<pre><code>Found 8 outliers among 100 measurements (8.00%)
+  4 (4.00%) high mild
+  4 (4.00%) high severe
+</code></pre>
+<p>Criterion.rs attempts to detect unusually high or low samples and reports them as outliers. A large number of outliers suggests that the benchmark results are noisy and should be viewed with appropriate skepticism. In this case, you can see that there are some samples which took much longer than normal. This might be caused by unpredictable load on the computer running the benchmarks, thread or process scheduling, or irregularities in the time taken by the code being benchmarked.</p>
+<p>In order to ensure reliable results, benchmarks should be run on a quiet computer and should be designed to do approximately the same amount of work for each iteration. If this is not possible, consider increasing the measurement time to reduce the influence of outliers on the results at the cost of longer benchmarking period. Alternately, the warmup period can be extended (to ensure that any JIT compilers or similar are warmed up) or other iteration loops can be used to perform setup before each benchmark to prevent that from affecting the results.</p>
+<h2 id="additional-statistics"><a class="header" href="#additional-statistics">Additional Statistics</a></h2>
+<pre><code>slope  [2.5094 ms 2.5553 ms] R^2            [0.8660614 0.8640630]
+mean   [2.5142 ms 2.5557 ms] std. dev.      [62.868 us 149.50 us]
+median [2.5023 ms 2.5262 ms] med. abs. dev. [40.034 us 73.259 us]
+</code></pre>
+<p>This shows additional confidence intervals based on other statistics.</p>
+<p>Criterion.rs performs a linear regression to calculate the time per iteration. The first line shows the confidence interval of the slopes from the linear regressions, while the R^2 area shows the goodness-of-fit values for the lower and upper bounds of that confidence interval. If the R^2 value is low, this may indicate the benchmark isn't doing the same amount of work on each iteration. You may wish to examine the plot output and consider improving the consistency of your benchmark routine.</p>
+<p>The second line shows confidence intervals on the mean and standard deviation of the per-iteration times (calculated naively). If std. dev. is large compared to the time values from above, the benchmarks are noisy. You may need to change your benchmark to reduce the noise.</p>
+<p>The median/med. abs. dev. line is similar to the mean/std. dev. line, except that it uses the median and <a href="https://en.wikipedia.org/wiki/Median_absolute_deviation">median absolute deviation</a>. As with the std. dev., if the med. abs. dev. is large, this indicates the benchmarks are noisy.</p>
+<h2 id="a-note-of-caution"><a class="header" href="#a-note-of-caution">A Note Of Caution</a></h2>
+<p>Criterion.rs is designed to produce robust statistics when possible, but it can't account for everything. For example, the performance improvements and regressions listed in the above examples were created just by switching my laptop between battery power and wall power rather than changing the code under test. Care must be taken to ensure that benchmarks are performed under similar conditions in order to produce meaningful results.</p>
+<h1 id="command-line-options"><a class="header" href="#command-line-options">Command-Line Options</a></h1>
+<p><strong>Note: If <code>cargo bench</code> fails with an error message about an unknown argument, see <a href="user_guide/../faq.html#cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options">the FAQ</a>.</strong></p>
+<p>Criterion.rs benchmarks accept a number of custom command-line parameters. This
+is a list of the most common options. Run <code>cargo bench -- -h</code> to see a full
+list.</p>
+<ul>
+<li>To filter benchmarks, use <code>cargo bench -- &lt;filter&gt;</code> where <code>&lt;filter&gt;</code> is a
+regular expression matching the benchmark ID. For example, running 
+<code>cargo bench -- fib_20</code> would only run benchmarks whose ID contains the string 
+<code>fib_20</code>, while <code>cargo bench -- fib_\d+</code> would also match <code>fib_300</code>.</li>
+<li>To print more detailed output, use <code>cargo bench -- --verbose</code></li>
+<li>To disable colored output, use <code>cargo bench -- --color never</code></li>
+<li>To disable plot generation, use <code>cargo bench -- --noplot</code></li>
+<li>To iterate each benchmark for a fixed length of time without saving, analyzing or plotting the results, use <code>cargo bench -- --profile-time &lt;num_seconds&gt;</code>. This is useful when profiling the benchmarks. It reduces the amount of unrelated clutter in the profiling results and prevents Criterion.rs' normal dynamic sampling logic from greatly increasing the runtime of the benchmarks.</li>
+<li>To save a baseline, use <code>cargo bench -- --save-baseline &lt;name&gt;</code>. To compare against an existing baseline, use <code>cargo bench -- --baseline &lt;name&gt;</code>. For more on baselines, see below.</li>
+<li>To test that the benchmarks run successfully without performing the measurement or analysis (eg. in a CI setting), use <code>cargo test --benches</code>.</li>
+<li>To override the default plotting backend, use <code>cargo bench -- --plotting-backend gnuplot</code> or <code>cargo bench --plotting-backend plotters</code>. <code>gnuplot</code> is used by default if it is installed.</li>
+<li>To change the CLI output format, use <code>cargo bench -- --output-format &lt;name&gt;</code>. Supported output formats are:</li>
+<li><code>criterion</code> - Use Criterion's normal output format</li>
+<li><code>bencher</code> - An output format similar to the output produced by the <code>bencher</code> crate or nightly <code>libtest</code> benchmarks. Though this provides less information than the <code>criterion</code> format, it may be useful to support external tools that can parse this output.</li>
+</ul>
+<h2 id="baselines"><a class="header" href="#baselines">Baselines</a></h2>
+<p>By default, Criterion.rs will compare the measurements against the previous run (if any). Sometimes it's useful to keep a set of measurements around for several runs. For example, you might want to make multiple changes to the code while comparing against the master branch. For this situation, Criterion.rs supports custom baselines.</p>
+<ul>
+<li><code>--save-baseline &lt;name&gt;</code> will compare against the named baseline, then overwrite it. </li>
+<li><code>--baseline &lt;name&gt;</code> will compare against the named baseline without overwriting it.</li>
+<li><code>--load-baseline &lt;name&gt;</code> will load the named baseline as the new data set rather than the previous baseline.</li>
+</ul>
+<p>Using these options, you can manage multiple baseline measurements. For instance, if you want to compare against a static reference point such as the master branch, you might run:</p>
+<pre><code class="language-sh">git checkout master
+cargo bench -- --save-baseline master
+git checkout feature
+cargo bench -- --save-baseline feature
+git checkout optimizations
+
+# Some optimization work here
+
+# Measure again
+cargo bench
+# Now compare against the stored baselines without overwriting it or re-running the measurements
+cargo bench -- --load-baseline new --baseline master
+cargo bench -- --load-baseline new --baseline feature
+</code></pre>
+<h1 id="html-report"><a class="header" href="#html-report">HTML Report</a></h1>
+<p>Criterion.rs can generate an HTML report displaying the results of the benchmark under
+<code>target/criterion/report/index.html</code>. By default, the plots are generated using
+<a href="http://www.gnuplot.info/">gnuplot</a> if it is available, or the
+<a href="https://github.com/38/plotters">plotters</a> crate if it is not. The example below was generated
+using the gnuplot backend, but the charts generated by plotters are similar.</p>
+<p>To see an example report, <a href="user_guide/html_report/report/index.html">click here</a>. For more details on the
+charts and statistics displayed, check the other pages of this book.</p>
+<h1 id="plots--graphs"><a class="header" href="#plots--graphs">Plots &amp; Graphs</a></h1>
+<p>Criterion.rs can generate a number of useful charts and graphs which you can check to get a better
+understanding of the behavior of the benchmark. These charts will be generated with
+<a href="http://www.gnuplot.info/">gnuplot</a> by default, but will fall back on using the <code>plotters</code> crate if
+it is not available. The examples below were generated using the gnuplot backend, but the plotters
+ones are similar.</p>
+<h2 id="file-structure"><a class="header" href="#file-structure">File Structure</a></h2>
+<p>The plots and saved data are stored under <code>target/criterion/$BENCHMARK_NAME/</code>. Here's an example of
+the folder structure:</p>
+<pre><code>$BENCHMARK_NAME/
+├── base/
+│  ├── raw.csv
+│  ├── estimates.json
+│  ├── sample.json
+│  └── tukey.json
+├── change/
+│  └── estimates.json
+├── new/
+│  ├── raw.csv
+│  ├── estimates.json
+│  ├── sample.json
+│  └── tukey.json
+└── report/
+   ├── both/
+   │  ├── pdf.svg
+   │  ├── regression.svg
+   │  └── iteration_times.svg
+   ├── change/
+   │  ├── mean.svg
+   │  ├── median.svg
+   │  └── t-test.svg
+   ├── index.html
+   ├── MAD.svg
+   ├── mean.svg
+   ├── median.svg
+   ├── pdf.svg
+   ├── pdf_small.svg
+   ├── regression.svg (optional)
+   ├── regression_small.svg (optional)
+   ├── iteration_times.svg (optional)
+   ├── iteration_times_small.svg (optional)
+   ├── relative_pdf_small.svg
+   ├── relative_regression_small.svg (optional)
+   ├── relative_iteration_times_small.svg (optional)
+   ├── SD.svg
+   └── slope.svg
+</code></pre>
+<p>The <code>new</code> folder contains the statistics for the last benchmarking run, while the <code>base</code> folder
+contains those for the last run on the <code>base</code> baseline (see <a href="user_guide/./command_line_options.html#baselines">Command-Line
+Options</a> for more information on baselines). The plots are in
+the <code>report</code> folder. Criterion.rs only keeps historical data for the last run. The <code>report/both</code>
+folder contains plots which show both runs on one plot, while the <code>report/change</code> folder contains
+plots showing the differences between the last two runs. This example shows the plots produced by
+the default <code>bench_function</code> benchmark method. Other methods may produce additional charts, which
+will be detailed in their respective pages.</p>
+<h2 id="madmeanmediansdslope"><a class="header" href="#madmeanmediansdslope">MAD/Mean/Median/SD/Slope</a></h2>
+<p><img src="user_guide/./mean.svg" alt="Mean Chart" /></p>
+<p>These are the simplest of the plots generated by Criterion.rs. They display the bootstrapped
+distributions and confidence intervals for the given statistics.</p>
+<h2 id="regression"><a class="header" href="#regression">Regression</a></h2>
+<p><img src="user_guide/./regression.svg" alt="Regression Chart" /></p>
+<p>The regression plot shows each data point plotted on an X-Y plane showing the number of iterations
+vs the time taken. It also shows the line representing Criterion.rs' best guess at the time per
+iteration. A good benchmark will show the data points all closely following the line. If the data
+points are scattered widely, this indicates that there is a lot of noise in the data and that the
+benchmark may not be reliable. If the data points follow a consistent trend but don't match the
+line (eg. if they follow a curved pattern or show several discrete line segments) this indicates
+that the benchmark is doing different amounts of work depending on the number of iterations, which
+prevents Criterion.rs from generating accurate statistics and means that the benchmark may need to
+be reworked.</p>
+<p>The combined regression plot in the <code>report/both</code> folder shows only the regression lines and is a
+useful visual indicator of the difference in performance between the two runs.</p>
+<p>The regression chart can only be displayed when Criterion.rs uses the linear sampling mode.
+In the flat sampling mode, the iteration times chart is displayed instead.</p>
+<h2 id="iteration-times"><a class="header" href="#iteration-times">Iteration Times</a></h2>
+<p><img src="user_guide/./iteration_times.svg" alt="Iteration Times Chart" /></p>
+<p>The iteration times chart displays a collection of the average iteration times. It is less useful
+than the regression chart, but since the regression chart cannot be displayed in the flat sampling
+mode, this is shown instead.</p>
+<h2 id="pdf"><a class="header" href="#pdf">PDF</a></h2>
+<p><img src="user_guide/./pdf.svg" alt="PDF Chart" /></p>
+<p>The PDF chart shows the probability distribution function for the samples. It also shows the ranges
+used to classify samples as outliers. In this example (as in the regression example above) we can
+see that the performance trend changes noticeably below ~35 iterations, which we may wish to
+investigate.</p>
+<h1 id="benchmarking-with-inputs"><a class="header" href="#benchmarking-with-inputs">Benchmarking With Inputs</a></h1>
+<p>Criterion.rs can run benchmarks with one or more different input values to investigate how the
+performance behavior changes with different inputs.</p>
+<h2 id="benchmarking-with-one-input"><a class="header" href="#benchmarking-with-one-input">Benchmarking With One Input</a></h2>
+<p>If you only have one input to your function, you can use a simple interface on the <code>Criterion</code> struct
+to run that benchmark.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use criterion::BenchmarkId;
+use criterion::Criterion;
+use criterion::{criterion_group, criterion_main};
+
+fn do_something(size: usize) {
+    // Do something with the size
+}
+
+fn from_elem(c: &amp;mut Criterion) {
+    let size: usize = 1024;
+
+    c.bench_with_input(BenchmarkId::new(&quot;input_example&quot;, size), &amp;size, |b, &amp;s| {
+        b.iter(|| do_something(s));
+    });
+}
+
+criterion_group!(benches, from_elem);
+criterion_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<p>This is convenient in that it automatically passes the input through a <code>black_box</code> so that you don't
+need to call that directly. It also includes the size in the benchmark description.</p>
+<h2 id="benchmarking-with-a-range-of-values"><a class="header" href="#benchmarking-with-a-range-of-values">Benchmarking With A Range Of Values</a></h2>
+<p>Criterion.rs can compare the performance of a function over a range of inputs using a 
+<code>BenchmarkGroup</code>.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::iter;
+
+use criterion::BenchmarkId;
+use criterion::Criterion;
+use criterion::Throughput;
+
+fn from_elem(c: &amp;mut Criterion) {
+    static KB: usize = 1024;
+
+    let mut group = c.benchmark_group(&quot;from_elem&quot;);
+    for size in [KB, 2 * KB, 4 * KB, 8 * KB, 16 * KB].iter() {
+        group.throughput(Throughput::Bytes(*size as u64));
+        group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, &amp;size| {
+            b.iter(|| iter::repeat(0u8).take(size).collect::&lt;Vec&lt;_&gt;&gt;());
+        });
+    }
+    group.finish();
+}
+
+criterion_group!(benches, from_elem);
+criterion_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<p>In this example, we're benchmarking the time it takes to collect an iterator producing a sequence of
+N bytes into a Vec. First, we create a benchmark group, which is a way of telling Criterion.rs that
+a set of benchmarks are all related. Criterion.rs will generate extra summary pages for benchmark
+groups. Then we simply iterate over a set of desired inputs; we could just as easily unroll this
+loop manually, generate inputs of a particular size, etc.</p>
+<p>Inside the loop, we call the <code>throughput</code> function which informs Criterion.rs that the benchmark
+operates on <code>size</code> bytes per iteration. Criterion.rs will use this to estimate the number of bytes
+per second that our function can process. Next we call <code>bench_with_input</code>, providing a unique
+benchmark ID (in this case it's just the size, but you could generate custom strings as needed),
+passing in the size and a lambda that takes the size and a <code>Bencher</code> and performs the actual
+measurement.</p>
+<p>Finally, we <code>finish</code> the benchmark group; this generates the summary pages for that group. It is
+recommended to call <code>finish</code> explicitly, but if you forget it will be called automatically when the
+group is dropped.</p>
+<p><img src="user_guide/./line.svg" alt="Line Chart" /></p>
+<p>Here we can see that there is a approximately-linear relationship between the length of an iterator and the time taken to collect it into a Vec.</p>
+<h1 id="advanced-configuration"><a class="header" href="#advanced-configuration">Advanced Configuration</a></h1>
+<p>Criterion.rs provides a number of configuration options for more-complex use cases. These options are documented here.</p>
+<h2 id="configuring-sample-count--other-statistical-settings"><a class="header" href="#configuring-sample-count--other-statistical-settings">Configuring Sample Count &amp; Other Statistical Settings</a></h2>
+<p>Criterion.rs allows the user to adjust certain statistical parameters. The most common way to set
+these is using the <code>BenchmarkGroup</code> structure - see the documentation for that structure for a list
+of which settings are available.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use criterion::*;
+
+fn my_function() {
+    ...
+}
+
+fn bench(c: &amp;mut Criterion) {
+    let mut group = c.benchmark_group(&quot;sample-size-example&quot;);
+    // Configure Criterion.rs to detect smaller differences and increase sample size to improve
+    // precision and counteract the resulting noise.
+    group.significance_level(0.1).sample_size(500);
+    group.bench_function(&quot;my-function&quot;, |b| b.iter(|| my_function());
+    group.finish();
+}
+
+criterion_group!(benches, bench);
+criterion_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<p>It is also possible to change Criterion.rs' default values for these settings, by using the full
+form of the <code>criterion_group</code> macro:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use criterion::*;
+
+fn my_function() {
+    ...
+}
+
+fn bench(c: &amp;mut Criterion) {
+    let mut group = c.benchmark_group(&quot;sample-size-example&quot;);
+    group.bench_function(&quot;my-function&quot;, |b| b.iter(|| my_function());
+    group.finish();
+}
+
+criterion_group!{
+    name = benches;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().significance_level(0.1).sample_size(500);
+    targets = bench
+}
+criterion_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<h2 id="throughput-measurements"><a class="header" href="#throughput-measurements">Throughput Measurements</a></h2>
+<p>When benchmarking some types of code it is useful to measure the throughput as well as the iteration time, either in bytes per second or elements per second. Criterion.rs can estimate the throughput of a benchmark, but it needs to know how many bytes or elements each iteration will process.</p>
+<p>Throughput measurements are only supported when using the <code>BenchmarkGroup</code> structure; it is not available when using the simpler <code>bench_function</code> interface.</p>
+<p>To measure throughput, use the <code>throughput</code> method on <code>BenchmarkGroup</code>, like so:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use criterion::*;
+
+fn decode(bytes: &amp;[u8]) {
+    // Decode the bytes
+    ...
+}
+
+fn bench(c: &amp;mut Criterion) {
+    let bytes : &amp;[u8] = ...;
+
+    let mut group = c.benchmark_group(&quot;throughput-example&quot;);
+    group.throughput(Throughput::Bytes(bytes.len() as u64));
+    group.bench_function(&quot;decode&quot;, |b| b.iter(|| decode(bytes));
+    group.finish();
+}
+
+criterion_group!(benches, bench);
+criterion_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<p>For parameterized benchmarks, you can simply call the throughput function inside a loop:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use criterion::*;
+
+type Element = ...;
+
+fn encode(elements: &amp;[Element]) {
+    // Encode the elements
+    ...
+}
+
+fn bench(c: &amp;mut Criterion) {
+    let elements_1 : &amp;[u8] = ...;
+    let elements_2 : &amp;[u8] = ...;
+
+    let mut group = c.benchmark_group(&quot;throughput-example&quot;);
+    for (i, elements) in [elements_1, elements_2].iter().enumerate() {
+        group.throughput(Throughput::Elements(elems.len() as u64));
+        group.bench_with_input(format!(&quot;Encode {}&quot;, i), elements, |elems, b| {
+            b.iter(||encode(elems))
+        });
+    }
+    group.finish();
+}
+
+criterion_group!(benches, bench);
+criterion_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<p>Setting the throughput causes a throughput estimate to appear in the output:</p>
+<pre><code>alloc                   time:   [5.9846 ms 6.0192 ms 6.0623 ms]
+                        thrpt:  [164.95 MiB/s 166.14 MiB/s 167.10 MiB/s]  
+</code></pre>
+<h2 id="chart-axis-scaling"><a class="header" href="#chart-axis-scaling">Chart Axis Scaling</a></h2>
+<p>By default, Criterion.rs generates plots using a linear-scale axis. When using parameterized benchmarks, it is common for the input sizes to scale exponentially in order to cover a wide range of possible inputs. In this situation, it may be easier to read the resulting plots with a logarithmic axis.</p>
+<p>As with throughput measurements above, this option is only available when using the <code>BenchmarkGroup</code> structure.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use criterion::*;
+
+fn do_a_thing(x: u64) {
+    // Do something
+    ...
+}
+
+fn bench(c: &amp;mut Criterion) {
+    let plot_config = PlotConfiguration::default()
+        .summary_scale(AxisScale::Logarithmic);
+
+    let mut group = c.benchmark_group(&quot;log_scale_example&quot;);
+    group.plot_config(plot_config);
+    
+    for i in [1u64, 10u64, 100u64, 1000u64, 10000u64, 100000u64, 1000000u64].iter() {
+        group.bench_function(BenchmarkId::from_parameter(i), i, |b, i| b.iter(|| do_a_thing(i)));
+    }
+    group.finish();
+}
+
+criterion_group!(benches, bench);
+criterion_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<p>Currently the axis scaling is the only option that can be set on the 
+PlotConfiguration struct. More may be added in the future.</p>
+<h2 id="sampling-mode"><a class="header" href="#sampling-mode">Sampling Mode</a></h2>
+<p>By default, Criterion.rs can scale well to handle benchmarks that execute in picoseconds up to
+benchmarks that execute in milliseconds. Benchmarks that take longer will work just fine, but they
+tend to take a long time to run. The only way to deal with this was to reduce the sample count.</p>
+<p>In Criterion.rs 0.3.3, a new option was added to change the sampling mode to handle long-running
+benchmarks. The benchmark author can call <code>BenchmarkGroup::sampling_mode(SamplingMode)</code> to change
+the sampling mode.</p>
+<p>Currently three options are available:</p>
+<ul>
+<li><code>SamplingMode::Auto</code>, which chooses a sampling mode from the other options automatically. This is the default.</li>
+<li><code>SamplingMode::Linear</code>, the original sampling mode intended for faster benchmarks.</li>
+<li><code>SamplingMode::Flat</code>, intended for long-running benchmarks.</li>
+</ul>
+<p>The Flat sampling mode does change some of the statistical analysis and the charts that are 
+generated. It is not recommended to use Flat sampling except where necessary.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use criterion::*;
+use std::time::Duration;
+
+fn my_function() {
+    ::std::thread::sleep(Duration::from_millis(10))
+}
+
+fn bench(c: &amp;mut Criterion) {
+    let mut group = c.benchmark_group(&quot;flat-sampling-example&quot;);
+    group.sampling_mode(SamplingMode::Flat);
+    group.bench_function(&quot;my-function&quot;, |b| b.iter(|| my_function());
+    group.finish();
+}
+
+criterion_group!(benches, bench);
+criterion_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<h1 id="comparing-functions"><a class="header" href="#comparing-functions">Comparing Functions</a></h1>
+<p>Criterion.rs can automatically benchmark multiple implementations of a function and produce summary
+graphs to show the differences in performance between them. First, lets create a comparison
+benchmark. We can even combine this with benchmarking over a range of inputs.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
+
+fn fibonacci_slow(n: u64) -&gt; u64 {
+    match n {
+        0 =&gt; 1,
+        1 =&gt; 1,
+        n =&gt; fibonacci_slow(n-1) + fibonacci_slow(n-2),
+    }
+}
+
+fn fibonacci_fast(n: u64) -&gt; u64 {
+    let mut a = 0;
+    let mut b = 1;
+
+    match n {
+        0 =&gt; b,
+        _ =&gt; {
+            for _ in 0..n {
+                let c = a + b;
+                a = b;
+                b = c;
+            }
+            b
+        }
+    }
+}
+
+
+fn bench_fibs(c: &amp;mut Criterion) {
+    let mut group = c.benchmark_group(&quot;Fibonacci&quot;);
+    for i in [20u64, 21u64].iter() {
+        group.bench_with_input(BenchmarkId::new(&quot;Recursive&quot;, i), i, 
+            |b, i| b.iter(|| fibonacci_slow(*i)));
+        group.bench_with_input(BenchmarkId::new(&quot;Iterative&quot;, i), i, 
+            |b, i| b.iter(|| fibonacci_fast(*i)));
+    }
+    group.finish();
+}
+
+criterion_group!(benches, bench_fibs);
+criterion_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<p>These are the same two fibonacci functions from the <a href="user_guide/../getting_started.html">Getting Started</a> page.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn bench_fibs(c: &amp;mut Criterion) {
+    let mut group = c.benchmark_group(&quot;Fibonacci&quot;);
+    for i in [20u64, 21u64].iter() {
+        group.bench_with_input(BenchmarkId::new(&quot;Recursive&quot;, i), i, 
+            |b, i| b.iter(|| fibonacci_slow(*i)));
+        group.bench_with_input(BenchmarkId::new(&quot;Iterative&quot;, i), i, 
+            |b, i| b.iter(|| fibonacci_fast(*i)));
+    }
+    group.finish();
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>As in the earlier example of benchmarking over a range of inputs, we create a benchmark group and
+iterate over our inputs. To compare multiple functions, we simply call <code>bench_with_input</code> multiple
+times inside the loop. Criterion will generate a report for each individual benchmark/input pair,
+as well as summary reports for each benchmark (across all inputs) and each input (across all
+benchmarks), as well as an overall summary of the whole benchmark group.</p>
+<p>Naturally, the benchmark group could just as easily be used to benchmark non-parameterized functions
+as well.</p>
+<h2 id="violin-plot"><a class="header" href="#violin-plot">Violin Plot</a></h2>
+<p><img src="user_guide/./violin_plot.svg" alt="Violin Plot" /></p>
+<p>The <a href="https://en.wikipedia.org/wiki/Violin_plot">Violin Plot</a> shows the median times and the PDF of
+each implementation.</p>
+<h2 id="line-chart"><a class="header" href="#line-chart">Line Chart</a></h2>
+<p><img src="user_guide/./lines.svg" alt="Line Chart" /></p>
+<p>The line chart shows a comparison of the different functions as the input or input size increases,
+which can be generated with <code>Criterion::benchmark_group</code>.</p>
+<h1 id="csv-output"><a class="header" href="#csv-output">CSV Output</a></h1>
+<p>NOTE: The CSV output is in the process of being deprecated. For machine-readable output,
+cargo-criterion's <code>--message-format=json</code> option is recommended instead - see <a href="user_guide/../cargo_criterion/external_tools.html">External
+Tools</a>. CSV output will become an optional feature in
+Criterion.rs 0.4.0.</p>
+<p>Criterion.rs saves its measurements in several files, as shown below:</p>
+<pre><code>$BENCHMARK/
+├── base/
+│  ├── raw.csv
+│  ├── estimates.json
+│  ├── sample.json
+│  └── tukey.json
+├── change/
+│  └── estimates.json
+├── new/
+│  ├── raw.csv
+│  ├── estimates.json
+│  ├── sample.json
+│  └── tukey.json
+</code></pre>
+<p>The JSON files are all considered private implementation details of Criterion.rs, and their
+structure may change at any time without warning.</p>
+<p>However, there is a need for some sort of stable and machine-readable output to enable projects like
+<a href="https://github.com/anp/lolbench">lolbench</a> to keep historical data or perform additional analysis
+on the measurements. For this reason, Criterion.rs also writes the <code>raw.csv</code> file. The format of
+this file is expected to remain stable between different versions of Criterion.rs, so this file is
+suitable for external tools to depend on.</p>
+<p>The format of <code>raw.csv</code> is as follows:</p>
+<pre><code>group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+Fibonacci,Iterative,,,,915000,ns,110740
+Fibonacci,Iterative,,,,1964000,ns,221480
+Fibonacci,Iterative,,,,2812000,ns,332220
+Fibonacci,Iterative,,,,3767000,ns,442960
+Fibonacci,Iterative,,,,4785000,ns,553700
+Fibonacci,Iterative,,,,6302000,ns,664440
+Fibonacci,Iterative,,,,6946000,ns,775180
+Fibonacci,Iterative,,,,7815000,ns,885920
+Fibonacci,Iterative,,,,9186000,ns,996660
+Fibonacci,Iterative,,,,9578000,ns,1107400
+Fibonacci,Iterative,,,,11206000,ns,1218140
+...
+</code></pre>
+<p>This data was taken with this benchmark code:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn compare_fibonaccis(c: &amp;mut Criterion) {
+    let mut group = c.benchmark_group(&quot;Fibonacci&quot;);
+    group.bench_with_input(&quot;Recursive&quot;, 20, |b, i| b.iter(|| fibonacci_slow(*i)));
+    group.bench_with_input(&quot;Iterative&quot;, 20, |b, i| b.iter(|| fibonacci_fast(*i)));
+    group.finish();
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p><code>raw.csv</code> contains the following columns:</p>
+<ul>
+<li><code>group</code> - This corresponds to the function group name, in this case &quot;Fibonacci&quot; as seen in the
+code above. This is the parameter given to the <code>Criterion::bench</code> functions.</li>
+<li><code>function</code> - This corresponds to the function name, in this case &quot;Iterative&quot;. When comparing
+multiple functions, each function is given a different name. Otherwise, this will be the empty
+string.</li>
+<li><code>value</code> - This is the parameter passed to the benchmarked function when using parameterized
+benchmarks. In this case, there is no parameter so the value is the empty string.</li>
+<li><code>throughput_num</code> - This is the numeric value of the Throughput configured on the benchmark 
+(if any)</li>
+<li><code>throughput_type</code> - &quot;bytes&quot; or &quot;elements&quot;, corresponding to the variant of the Throughput 
+configured on the benchmark (if any)</li>
+<li><code>iteration_count</code> - The number of times the benchmark was iterated for this sample.</li>
+<li><code>sample_measured_value</code> - The value of the measurement for this sample. Note
+that this is the measured value for the whole sample, not the time-per-iteration (see 
+<a href="user_guide/../analysis.html#measurement">Analysis Process</a> for more detail). To calculate the time-per-iteration,
+use <code>sample_measured_value/iteration_count</code>.</li>
+<li><code>unit</code> - a string representing the unit for the measured value. For the default <code>WallTime</code> 
+measurement this will be &quot;ns&quot;, for nanoseconds.</li>
+</ul>
+<p>As you can see, this is the raw measurements taken by the Criterion.rs benchmark process. There is
+one record for each sample, and one file for each benchmark.</p>
+<p>The results of Criterion.rs' analysis of these measurements are not currently available in
+machine-readable form. If you need access to this information, please raise an issue describing
+your use case.</p>
+<h2 id="known-limitations"><a class="header" href="#known-limitations">Known Limitations</a></h2>
+<p>There are currently a number of limitations to the use of Criterion.rs relative to the standard benchmark harness.</p>
+<p>First, it is necessary for Criterion.rs to provide its own <code>main</code> function using the <code>criterion_main</code> macro.
+This results in several limitations:</p>
+<ul>
+<li>It is not possible to include benchmarks in code in the <code>src/</code> directory as one might with the regular
+benchmark harness. </li>
+<li>It is not possible to benchmark non-<code>pub</code> functions. External benchmarks, including those using Criterion.rs,
+are compiled as a separate crate, and non-<code>pub</code> functions are not visible to the benchmarks.</li>
+<li>It is not possible to benchmark functions in binary crates. Binary crates cannot be dependencies of other
+crates, and that includes external tests and benchmarks (<a href="https://github.com/rust-lang/cargo/issues/4316">see here</a> for more details)</li>
+<li>Is is not possible to benchmark functions in crates that do not provide an <code>rlib</code>.</li>
+</ul>
+<p>Criterion.rs cannot currently solve these issues. An <a href="https://github.com/rust-lang/rust/issues/50297">experimental RFC</a> is being implemented to enable custom test and benchmarking frameworks.</p>
+<p>Second, Criterion.rs provides a stable-compatible replacement for the <code>black_box</code> function provided by the standard test crate. This replacement is not as reliable as the official one, and it may allow dead-code-elimination to affect the benchmarks in some circumstances. If you're using a Nightly build of Rust, you can add the <code>real_blackbox</code> feature to your dependency on Criterion.rs to use the standard <code>black_box</code> function instead.</p>
+<p>Example:</p>
+<pre><code class="language-toml">criterion = { version = '...', features=['real_blackbox'] }
+</code></pre>
+<h1 id="bencher-compatibility-layer"><a class="header" href="#bencher-compatibility-layer">Bencher Compatibility Layer</a></h1>
+<p>Criterion.rs provides a small crate which can be used as a drop-in replacement for most common
+usages of <code>bencher</code> in order to make it easy for existing <code>bencher</code> users to try out Criterion.rs.
+This page shows an example of how to use this crate.</p>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<p>We'll start with the example benchmark from <code>bencher</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use bencher::{benchmark_group, benchmark_main, Bencher};
+
+fn a(bench: &amp;mut Bencher) {
+    bench.iter(|| {
+        (0..1000).fold(0, |x, y| x + y)
+    })
+}
+
+fn b(bench: &amp;mut Bencher) {
+    const N: usize = 1024;
+    bench.iter(|| {
+        vec![0u8; N]
+    });
+
+    bench.bytes = N as u64;
+}
+
+benchmark_group!(benches, a, b);
+benchmark_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<p>The first step is to edit the Cargo.toml file to replace the bencher dependency with 
+<code>criterion_bencher_compat</code>:</p>
+<p>Change: </p>
+<pre><code class="language-toml">[dev-dependencies]
+bencher = &quot;0.1&quot;
+</code></pre>
+<p>To:</p>
+<pre><code class="language-toml">[dev-dependencies]
+criterion_bencher_compat = &quot;0.3&quot;
+</code></pre>
+<p>Then we update the benchmark file itself to change:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use bencher::{benchmark_group, benchmark_main, Bencher};
+<span class="boring">}
+</span></code></pre></pre>
+<p>To:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use criterion_bencher_compat as bencher;
+use bencher::{benchmark_group, benchmark_main, Bencher};
+<span class="boring">}
+</span></code></pre></pre>
+<p>That's all! Now just run <code>cargo bench</code>:</p>
+<pre><code class="language-text">     Running target/release/deps/bencher_example-d865087781455bd5
+a                       time:   [234.58 ps 237.68 ps 241.94 ps]
+Found 9 outliers among 100 measurements (9.00%)
+  4 (4.00%) high mild
+  5 (5.00%) high severe
+
+b                       time:   [23.972 ns 24.218 ns 24.474 ns]
+Found 4 outliers among 100 measurements (4.00%)
+  4 (4.00%) high mild
+</code></pre>
+<h2 id="limitations"><a class="header" href="#limitations">Limitations</a></h2>
+<p><code>criterion_bencher_compat</code> does not implement the full API of the <code>bencher</code> crate, only the most
+commonly-used subset. If your benchmarks require parts of the <code>bencher</code> crate which are not 
+supported, you may need to temporarily disable them while trying Criterion.rs.</p>
+<p><code>criterion_bencher_compat</code> does not provide access to most of Criterion.rs' more advanced features.
+If the Criterion.rs benchmarks work well for you, it is recommended to convert your benchmarks to
+use the Criterion.rs interface directly. See <a href="user_guide/./migrating_from_libtest.html">Migrating from libtest</a>
+for more information on that.</p>
+<h1 id="timing-loops"><a class="header" href="#timing-loops">Timing Loops</a></h1>
+<p>The <a href="https://bheisler.github.io/criterion.rs/criterion/struct.Bencher.html"><code>Bencher</code></a> structure
+provides a number of functions which implement different timing loops for measuring the performance
+of a function. This page discusses how these timing loops work and which one is appropriate for
+different situations.</p>
+<h2 id="iter"><a class="header" href="#iter"><code>iter</code></a></h2>
+<p>The simplest timing loop is <code>iter</code>. This loop should be the default for most benchmarks. <code>iter</code>
+calls the benchmark N times in a tight loop and records the elapsed time for the entire loop.
+Because it takes only two measurements (the time before and after the loop) and does nothing else in
+the loop <code>iter</code> has effectively zero measurement overhead - meaning it can accurately measure the
+performance of functions as small as a single processor instruction.</p>
+<p>However, <code>iter</code> has limitations as well. If the benchmark returns a value which implements Drop, it
+will be dropped inside the loop and the drop function's time will be included in the measurement.
+Additionally, some benchmarks need per-iteration setup. A benchmark for a sorting algorithm
+might require some unsorted data to operate on, but we don't want the generation of the unsorted
+data to affect the measurement. <code>iter</code> provides no way to do this.</p>
+<h2 id="iter_with_large_drop"><a class="header" href="#iter_with_large_drop"><code>iter_with_large_drop</code></a></h2>
+<p><code>iter_with_large_drop</code> is an answer to the first problem. In this case, the values returned by the
+benchmark are collected into a <code>Vec</code> to be dropped after the measurement is complete. This
+introduces a small amount of measurement overhead, meaning that the measured value will be slightly
+higher than the true runtime of the function. This overhead is almost always negligible, but it's
+important to be aware that it exists. Extremely fast benchmarks (such as those in the
+hundreds-of-picoseconds range or smaller) or benchmarks that return very large structures may incur
+more overhead.</p>
+<p>Aside from the measurement overhead, <code>iter_with_large_drop</code> has its own limitations. Collecting the
+returned values into a <code>Vec</code> uses heap memory, and the amount of memory used is not under the
+control of the user. Rather, it depends on the iteration count which in turn depends on the
+benchmark settings and the runtime of the benchmarked function. It is possible that a benchmark
+could run out of memory while collecting the values to drop.</p>
+<h2 id="iter_batchediter_batched_ref"><a class="header" href="#iter_batchediter_batched_ref"><code>iter_batched/iter_batched_ref</code></a></h2>
+<p><code>iter_batched</code> and <code>iter_batched_ref</code> are the next step up in complexity for timing loops. These
+timing loops take two closures rather than one. The first closure takes no arguments and returns
+a value of type <code>T</code> - this is used to generate setup data. For example, the setup function might
+clone a vector of unsorted data for use in benchmarking a sorting function. The second closure
+is the function to benchmark, and it takes a <code>T</code> (for <code>iter_batched</code>) or <code>&amp;mut T</code> (for 
+<code>iter_batched_ref</code>).</p>
+<p>These two timing loops generate a batch of inputs and measure the time to execute the benchmark on
+all values in the batch. As with <code>iter_with_large_drop</code> they also collect the values returned from
+the benchmark into a <code>Vec</code> and drop it later without timing the drop. Then another batch of inputs
+is generated and the process is repeated until enough iterations of the benchmark have been measured.
+Keep in mind that this is only necessary if the benchmark modifies the input - if the input is 
+constant then one input value can be reused and the benchmark should use <code>iter</code> instead.</p>
+<p>Both timing loops accept a third parameter which controls how large a batch is. If the batch size
+is too large, we might run out of memory generating the inputs and collecting the outputs. If it's
+too small, we could introduce more measurement overhead than is necessary. For ease of use, Criterion
+provides three pre-defined choices of batch size, defined by the 
+<a href="https://bheisler.github.io/criterion.rs/criterion/enum.BatchSize.html"><code>BatchSize</code></a> enum - 
+<code>SmallInput</code>, <code>LargeInput</code> and <code>PerIteration</code>. It is also possible (though not recommended) to set
+the batch size manually.</p>
+<p><code>SmallInput</code> should be the default for most benchmarks. It is tuned for benchmarks where the setup
+values are small (small enough that millions of values can safely be held in memory) and the output
+is likewise small or nonexistent. <code>SmallInput</code> incurs the least measurement overhead (equivalent to
+that of <code>iter_with_large_drop</code> and therefore negligible for nearly all benchmarks), but also uses
+the most memory.</p>
+<p><code>LargeInput</code> should be used if the input or output of the benchmark is large enough that <code>SmallInput</code>
+uses too much memory. <code>LargeInput</code> incurs slightly more measurement overhead than <code>SmallInput</code>, but
+the overhead is still small enough to be negligible for almost all benchmarks.</p>
+<p><code>PerIteration</code> forces the batch size to one. That is, it generates a single setup input, times the
+execution of the function once, discards the setup and output, then repeats. This results in a
+great deal of measurement overhead - several orders of magnitude more than the other options. It
+can be enough to affect benchmarks into the hundreds-of-nanoseconds range. Using <code>PerIteration</code>
+should be avoided wherever possible. However, it is sometimes necessary if the input or output of
+the benchmark is extremely large or holds a limited resource like a file handle.</p>
+<p>Although sticking to the pre-defined settings is strongly recommended, Criterion.rs does allow
+users to choose their own batch size if necessary. This can be done with <code>BatchSize::NumBatches</code> or
+<code>BatchSize::NumIterations</code>, which specify the number of batches per sample or the number of
+iterations per batch respectively. These options should be used only when necessary, as they require
+the user to tune the settings manually to get accurate results. However, they are provided as an
+option in case the pre-defined options are all unsuitable. <code>NumBatches</code> should be preferred over
+<code>NumIterations</code> as it will typically have less measurement overhead, but <code>NumIterations</code> provides
+more control over the batch size which may be necessary in some situations.</p>
+<h2 id="iter_custom"><a class="header" href="#iter_custom"><code>iter_custom</code></a></h2>
+<p>This is a special &quot;timing loop&quot; that relies on you to do your own timing. Where the other timing
+loops take a lambda to call N times in a loop, this takes a lambda of the form 
+<code>FnMut(iters: u64) -&gt; M::Value</code> - meaning that it accepts the number of iterations and returns
+the measured value. Typically, this will be a <code>Duration</code> for the default <code>WallTime</code> measurement,
+but it may be other types for other measurements (see the
+<a href="user_guide/./custom_measurements.html">Custom Measurements</a> page for more details). The lambda
+can do whatever is needed to measure the value.</p>
+<p>Use <code>iter_custom</code> when you need to do something that doesn't fit into the usual approach of calling
+a function in a loop. For example, this might be used for:</p>
+<ul>
+<li>Benchmarking external processes by sending the iteration count and receiving the elapsed time</li>
+<li>Measuring how long a thread pool takes to execute N jobs, to see how lock contention or pool-size
+affects the wall-clock time</li>
+</ul>
+<p>Try to keep the overhead in the measurement routine to a minimum; Criterion.rs will still use its
+normal warm-up/target-time logic, which is based on wall-clock time. If your measurement routine
+takes a long time to perform each measurement it could mess up the calculations and cause
+Criterion.rs to run too few iterations (not to mention that the benchmarks would take a long time).
+Because of this, it's best to do heavy setup like starting processes or threads before running the
+benchmark.</p>
+<h2 id="what-do-i-do-if-my-functions-runtime-is-smaller-than-the-measurement-overhead"><a class="header" href="#what-do-i-do-if-my-functions-runtime-is-smaller-than-the-measurement-overhead">What do I do if my function's runtime is smaller than the measurement overhead?</a></h2>
+<p>Criterion.rs' timing loops are carefully designed to minimize the measurement overhead as much as
+possible. For most benchmarks the measurement overhead can safely be ignored because the true
+runtime of most benchmarks will be very large relative to the overhead. However, benchmarks with a
+runtime that is not much larger than the overhead can be difficult to measure.</p>
+<p>If you believe that your benchmark is small compared to the measurement overhead, the first option
+is to adjust the timing loop to reduce the overhead. Using <code>iter</code> or <code>iter_batched</code> with <code>SmallInput</code>
+should be the first choice, as these options incur a minimum of measurement overhead. In general,
+using <code>iter_batched</code> with larger batches produces less overhead, so replacing <code>PerIteration</code> with
+<code>NumIterations</code> with a suitable batch size will typically reduce the overhead. It is possible for
+the batch size to be too large, however, which will increase (rather than decrease) overhead.</p>
+<p>If this is not sufficient, the only recourse is to benchmark a larger function. It's tempting to do
+this by manually executing the routine a fixed number of times inside the benchmark, but this is
+equivalent to what <code>NumIterations</code> already does. The only difference is that Criterion.rs can
+account for <code>NumIterations</code> and show the correct runtime for one iteration of the function rather
+than many. Instead, consider benchmarking at a higher level.</p>
+<p>It's important to stress that measurement overhead only matters for very fast functions which
+modify their input. For slower functions (roughly speaking, anything at the nanosecond level or
+larger, or the microsecond level for <code>PerIteration</code>, assuming a reasonably modern x86_64 processor
+and OS or equivalent) are not meaningfully affected by measurement overhead. For functions which
+only read their input and do not modify or consume it, one value can be shared by all iterations
+using the <code>iter</code> loop which has effectively no overhead.</p>
+<h2 id="deprecated-timing-loops"><a class="header" href="#deprecated-timing-loops">Deprecated Timing Loops</a></h2>
+<p>In older Criterion.rs benchmarks (pre 2.10), one might see two more timing loops, called
+<code>iter_with_setup</code> and <code>iter_with_large_setup</code>. <code>iter_with_setup</code> is equivalent to <code>iter_batched</code>
+with <code>PerIteration</code>. <code>iter_with_large_setup</code> is equivalent to <code>iter_batched</code> with <code>NumBatches(1)</code>.
+Both produce much more measurement overhead than <code>SmallInput</code>. Additionally. <code>large_setup</code> also
+uses much more memory. Both should be updated to use <code>iter_batched</code>, preferably with <code>SmallInput</code>.
+They are kept for backwards-compatibility reasons, but no longer appear in the API documentation.</p>
+<h1 id="custom-measurements"><a class="header" href="#custom-measurements">Custom Measurements</a></h1>
+<p>By default, Criterion.rs measures the wall-clock time taken by the benchmarks. However, there are
+many other ways to measure the performance of a function, such as hardware performance counters or
+POSIX's CPU time. Since version 0.3.0, Criterion.rs has had support for plugging in alternate
+timing measurements. This page details how to define and use these custom measurements.</p>
+<p>Note that as of version 0.3.0, only timing measurements are supported, and only a single measurement
+can be used for one benchmark. These restrictions may be lifted in future versions.</p>
+<h3 id="defining-custom-measurements"><a class="header" href="#defining-custom-measurements">Defining Custom Measurements</a></h3>
+<p>For developers who wish to use custom measurements provided by an existing crate, skip to 
+<a href="user_guide/custom_measurements.html#using-custom-measurements">&quot;Using Custom Measurements&quot;</a> below.</p>
+<p>Custom measurements are defined by a pair of traits, both defined in <code>criterion::measurement</code>.</p>
+<h4 id="measurement"><a class="header" href="#measurement">Measurement</a></h4>
+<p>First, we'll look at the main trait, <code>Measurement</code>.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait Measurement {
+    type Intermediate;
+    type Value: MeasuredValue;
+
+    fn start(&amp;self) -&gt; Self::Intermediate;
+    fn end(&amp;self, i: Self::Intermediate) -&gt; Self::Value;
+
+    fn add(&amp;self, v1: &amp;Self::Value, v2: &amp;Self::Value) -&gt; Self::Value;
+    fn zero(&amp;self) -&gt; Self::Value;
+    fn to_f64(&amp;self, val: &amp;Self::Value) -&gt; f64;
+
+    fn formatter(&amp;self) -&gt; &amp;dyn ValueFormatter;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>The most important methods here are <code>start</code> and <code>end</code> and their associated types, <code>Intermediate</code>
+and <code>Value</code>. <code>start</code> is called to start a measurement and <code>end</code> is called to complete it. As an
+example, the <code>start</code> method of the wall-clock time measurement returns the value of the system
+clock at the moment that <code>start</code> is called. This starting time is then passed to the <code>end</code> function,
+which reads the system clock again and calculates the elapsed time between the two calls. This
+pattern - reading some system counter before and after the benchmark and reporting the difference - 
+is a common way for code to measure performance.</p>
+<p>The next two functions, <code>add</code> and <code>zero</code> are pretty simple; Criterion.rs sometimes needs to be able
+to break up a sample into batches that are added together (eg. in <code>Bencher::iter_batched</code>) and so
+we need to have a way to calculate the sum of the measurements for each batch to get the overall
+value for the sample. </p>
+<p><code>to_f64</code> is used to convert the measured value to an <code>f64</code> value so that Criterion can perform its
+analysis. As of 0.3.0, only a single value can be returned for analysis per benchmark. Since <code>f64</code>
+doesn't carry any unit information, the implementor should be careful to choose their units to avoid
+having extremely large or extremely small values that may have floating-point precision issues. For
+wall-clock time, we convert to nanoseconds.</p>
+<p>Finally, we have <code>formatter</code>, which just returns a trait-object reference to a <code>ValueFormatter</code> 
+(more on this later).</p>
+<p>For our half-second measurement, this is all pretty straightforward; we're still measuring
+wall-clock time so we can just use <code>Instant</code> and <code>Duration</code> like <code>WallTime</code> does:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Silly &quot;measurement&quot; that is really just wall-clock time reported in half-seconds.
+struct HalfSeconds;
+impl Measurement for HalfSeconds {
+    type Intermediate = Instant;
+    type Value = Duration;
+
+    fn start(&amp;self) -&gt; Self::Intermediate {
+        Instant::now()
+    }
+    fn end(&amp;self, i: Self::Intermediate) -&gt; Self::Value {
+        i.elapsed()
+    }
+    fn add(&amp;self, v1: &amp;Self::Value, v2: &amp;Self::Value) -&gt; Self::Value {
+        *v1 + *v2
+    }
+    fn zero(&amp;self) -&gt; Self::Value {
+        Duration::from_secs(0)
+    }
+    fn to_f64(&amp;self, val: &amp;Self::Value) -&gt; f64 {
+        let nanos = val.as_secs() * NANOS_PER_SEC + u64::from(val.subsec_nanos());
+        nanos as f64
+    }
+    fn formatter(&amp;self) -&gt; &amp;dyn ValueFormatter {
+        &amp;HalfSecFormatter
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h4 id="valueformatter"><a class="header" href="#valueformatter">ValueFormatter</a></h4>
+<p>The next trait is <code>ValueFormatter</code>, which defines how a measurement is displayed to the user.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait ValueFormatter {
+    fn format_value(&amp;self, value: f64) -&gt; String {...}
+    fn format_throughput(&amp;self, throughput: &amp;Throughput, value: f64) -&gt; String {...}
+    fn scale_values(&amp;self, typical_value: f64, values: &amp;mut [f64]) -&gt; &amp;'static str;
+    fn scale_throughputs(&amp;self, typical_value: f64, throughput: &amp;Throughput, values: &amp;mut [f64]) -&gt; &amp;'static str;
+    fn scale_for_machines(&amp;self, values: &amp;mut [f64]) -&gt; &amp;'static str;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>All of these functions accept a value to format in f64 form; the values passed in will be in the
+same scale as the values returned from <code>to_f64</code>, but may not be the exact same values. That is, if
+<code>to_f64</code> returns values scaled to &quot;thousands of cycles&quot;, the values passed to <code>format_value</code> and
+the other functions will be in the same units, but may be different numbers (eg. the mean of all
+sample times).</p>
+<p>Implementors should try to format the values in a way that will make sense to humans. 
+&quot;1,500,000 ns&quot; is needlessly confusing while &quot;1.5 ms&quot; is much clearer. If you can, try to use SI
+prefixes to simplify the numbers. An easy way to do this is to have a series of conditionals like so:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>if ns &lt; 1.0 {  // ns = time in nanoseconds per iteration
+    format!(&quot;{:&gt;6} ps&quot;, ns * 1e3)
+} else if ns &lt; 10f64.powi(3) {
+    format!(&quot;{:&gt;6} ns&quot;, ns)
+} else if ns &lt; 10f64.powi(6) {
+    format!(&quot;{:&gt;6} us&quot;, ns / 1e3)
+} else if ns &lt; 10f64.powi(9) {
+    format!(&quot;{:&gt;6} ms&quot;, ns / 1e6)
+} else {
+    format!(&quot;{:&gt;6} s&quot;, ns / 1e9)
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>It's also a good idea to limit the amount of precision in floating-point output - after a few
+digits the numbers don't matter much anymore but add a lot of visual noise and make the results
+harder to interpret. For example, it's very unlikely that anyone cares about the difference between
+<code>10.2896653s</code> and <code>10.2896654s</code> - it's much more salient that their function takes &quot;about 10.290
+seconds per iteration&quot;.</p>
+<p>With that out of the way, <code>format_value</code> is pretty straightforward. <code>format_throughput</code> is also not
+too difficult; match on <code>Throughput::Bytes</code> or <code>Throughput::Elements</code> and generate an appropriate
+description. For wall-clock time, that would likely take the form of &quot;bytes per second&quot;, but a
+measurement that read CPU performance counters might want to display throughput in terms of &quot;cycles
+per byte&quot;. Note that default implementations of <code>format_value</code> and <code>format_throughput</code> are provided
+which use <code>scale_values</code> and <code>scale_throughputs</code>, but you can override them if you wish.</p>
+<p><code>scale_values</code> is a bit more complex. This accepts a &quot;typical&quot; value chosen by Criterion.rs, and a
+mutable slice of values to scale. This function should choose an appropriate unit based on the
+typical value, and convert all values in the slice to that unit. It should also return a string
+representing the chosen unit. So, for our wall-clock times where the measured values are in
+nanoseconds, if we wanted to display plots in milliseconds we would multiply all of the input
+values by <code>10.0f64.powi(-6)</code> and return <code>&quot;ms&quot;</code>, because multiplying a value in nanoseconds by 10^-6
+gives a value in milliseconds. <code>scale_throughputs</code> does the same thing, only it converts a slice of
+measured values to their corresponding scaled throughput values.</p>
+<p><code>scale_for_machines</code> is similar to <code>scale_values</code>, except that it's used for generating
+machine-readable outputs. It does not accept a typical value, because this function should always
+return values in the same unit.</p>
+<p>Our half-second measurement formatter thus looks like this:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct HalfSecFormatter;
+impl ValueFormatter for HalfSecFormatter {
+    fn format_value(&amp;self, value: f64) -&gt; String {
+        // The value will be in nanoseconds so we have to convert to half-seconds.
+        format!(&quot;{} s/2&quot;, value * 2f64 * 10f64.powi(-9))
+    }
+
+    fn format_throughput(&amp;self, throughput: &amp;Throughput, value: f64) -&gt; String {
+        match *throughput {
+            Throughput::Bytes(bytes) =&gt; format!(
+                &quot;{} b/s/2&quot;,
+                f64::from(bytes) / (value * 2f64 * 10f64.powi(-9))
+            ),
+            Throughput::Elements(elems) =&gt; format!(
+                &quot;{} elem/s/2&quot;,
+                f64::from(elems) / (value * 2f64 * 10f64.powi(-9))
+            ),
+        }
+    }
+
+    fn scale_values(&amp;self, ns: f64, values: &amp;mut [f64]) -&gt; &amp;'static str {
+        for val in values {
+            *val *= 2f64 * 10f64.powi(-9);
+        }
+
+        &quot;s/2&quot;
+    }
+
+    fn scale_throughputs(
+        &amp;self,
+        _typical: f64,
+        throughput: &amp;Throughput,
+        values: &amp;mut [f64],
+    ) -&gt; &amp;'static str {
+        match *throughput {
+            Throughput::Bytes(bytes) =&gt; {
+                // Convert nanoseconds/iteration to bytes/half-second.
+                for val in values {
+                    *val = (bytes as f64) / (*val * 2f64 * 10f64.powi(-9))
+                }
+
+                &quot;b/s/2&quot;
+            }
+            Throughput::Elements(elems) =&gt; {
+                for val in values {
+                    *val = (elems as f64) / (*val * 2f64 * 10f64.powi(-9))
+                }
+
+                &quot;elem/s/2&quot;
+            }
+        }
+    }
+
+    fn scale_for_machines(&amp;self, values: &amp;mut [f64]) -&gt; &amp;'static str {
+        // Convert values in nanoseconds to half-seconds.
+        for val in values {
+            *val *= 2f64 * 10f64.powi(-9);
+        }
+
+        &quot;s/2&quot;
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="using-custom-measurements"><a class="header" href="#using-custom-measurements">Using Custom Measurements</a></h3>
+<p>Once you (or an external crate) have defined a custom measurement, using it is relatively easy.
+You will need to override the <code>Criterion</code> struct (which defaults to <code>WallTime</code>) by providing your
+own measurement using the <code>with_measurement</code> function and overriding the default <code>Criterion</code> object
+configuration. Your benchmark functions will also have to declare the measurement type they work
+with.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn fibonacci_cycles(criterion: &amp;mut Criterion&lt;HalfSeconds&gt;) {
+    // Use the criterion struct as normal here.
+}
+
+fn alternate_measurement() -&gt; Criterion&lt;HalfSeconds&gt; {
+    Criterion::default().with_measurement(HalfSeconds)
+}
+
+criterion_group! {
+    name = benches;
+    config = alternate_measurement();
+    targets = fibonacci_cycles
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h1 id="profiling"><a class="header" href="#profiling">Profiling</a></h1>
+<p>When optimizing code, it's often helpful to profile it to help understand why
+it produces the measured performance characteristics. Criterion.rs has several
+features to assist with profiling benchmarks.</p>
+<h3 id="note-on-running-benchmark-executables-directly"><a class="header" href="#note-on-running-benchmark-executables-directly">Note on running benchmark executables directly</a></h3>
+<p>Because of how Cargo passes certain command-line flags (see the FAQ for more details) when running
+benchmarks, Criterion.rs benchmark executables expect a <code>--bench</code> argument on their command line.
+Cargo adds this automatically, but when running the executables directly (eg. in a profiler) you
+will need to add the <code>--bench</code> argument.</p>
+<h3 id="--profile-time"><a class="header" href="#--profile-time"><code>--profile-time</code></a></h3>
+<p>Criterion.rs benchmark executables accept a <code>--profile-time &lt;num_seconds&gt;</code> 
+argument. If this argument is provided to a run, the benchmark executable will
+attempt to iterate the benchmark executable for approximately the given number
+of seconds, but will not perform its usual analysis or save any results.
+This way, Criterion.rs' analysis code won't appear in the profiling
+measurements.</p>
+<p>For users of external profilers such as Linux perf, simply run the benchmark
+executable(s) under your favorite profiler, passing the profile-time argument.
+For users of in-process profilers such as Google's <code>cpuprofiler</code>, read on.</p>
+<h3 id="implementing-in-process-profiling-hooks"><a class="header" href="#implementing-in-process-profiling-hooks">Implementing In-Process Profiling Hooks</a></h3>
+<p>For developers who wish to use profiling hooks provided by an existing crate, skip to 
+<a href="user_guide/profiling.html#enabling-in-process-profiling">&quot;Enabling In-Process Profiling&quot;</a> below.</p>
+<p>Since version 0.3.0, Criterion.rs has supported adding hooks to start and stop
+an in-process profiler such as <a href="https://crates.io/crates/cpuprofiler">cpuprofiler</a>.
+This hook takes the form of a trait, <code>criterion::profiler::Profiler</code>.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait Profiler {
+    fn start_profiling(&amp;mut self, benchmark_id: &amp;str, benchmark_dir: &amp;Path);
+    fn stop_profiling(&amp;mut self, benchmark_id: &amp;str, benchmark_dir: &amp;Path);
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>These functions will be called before and after each benchmark when running in
+<code>--profile-time</code> mode, and will not be called otherwise. This makes it easy to
+integrate in-process profiling into benchmarks when wanted, without having the
+profiling instrumentation affect regular benchmark measurements.</p>
+<h3 id="enabling-in-process-profiling"><a class="header" href="#enabling-in-process-profiling">Enabling In-Process Profiling</a></h3>
+<p>Once you (or an external crate) have defined a profiler hook, using it is relatively easy.
+You will need to override the <code>Criterion</code> struct (which defaults to <code>ExternalProfiler</code>) by providing your
+own measurement using the <code>with_profiler</code> function and overriding the default <code>Criterion</code> object
+configuration.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>extern crate my_custom_profiler;
+use my_custom_profiler::MyCustomProfiler;
+
+fn fibonacci_profiled(criterion: &amp;mut Criterion) {
+    // Use the criterion struct as normal here.
+}
+
+fn profiled() -&gt; Criterion {
+    Criterion::default().with_profiler(MyCustomProfiler)
+}
+
+criterion_group! {
+    name = benches;
+    config = profiled();
+    targets = fibonacci_profiled
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>The profiler hook will only take effect when running in <code>--profile-time</code> mode.</p>
+<h1 id="custom-test-framework"><a class="header" href="#custom-test-framework">Custom Test Framework</a></h1>
+<p>Nightly versions of the rust compiler support custom test frameworks. Criterion.rs provides an
+experimental implementation of a custom test framework, meaning that you can use <code>#[criterion]</code>
+attributes to mark your benchmarks instead of the normal <code>criterion_group!/criterion_main!</code> macros.
+Right now this requires some unstable features, but at some point in the future 
+<code>criterion_group!/criterion_main!</code> will be deprecated and <code>#[criterion]</code> will become the standard
+way to define a Criterion.rs benchmark. If you'd like to try this feature out early, see the 
+documentation below.</p>
+<h2 id="using-criterion"><a class="header" href="#using-criterion">Using <code>#[criterion]</code></a></h2>
+<p>Since custom test frameworks are still unstable, you will need to be using a recent nightly compiler.
+Once that's installed, add the dependencies to your Cargo.toml:</p>
+<pre><code class="language-toml">[dev-dependencies]
+criterion = &quot;0.3&quot;
+criterion-macro = &quot;0.3&quot;
+</code></pre>
+<p>Note that for <code>#[criterion]</code> benchmarks, we don't need to disable the normal testing harness
+as we do with regular Criterion.rs benchmarks.</p>
+<p>Let's take a look at an example benchmark (note that this example assumes you're using Rust 2018):</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span>#![feature(custom_test_frameworks)]
+#![test_runner(criterion::runner)]
+
+<span class="boring">fn main() {
+</span>use criterion::{Criterion, black_box};
+use criterion_macro::criterion;
+
+fn fibonacci(n: u64) -&gt; u64 {
+    match n {
+        0 | 1 =&gt; 1,
+        n =&gt; fibonacci(n - 1) + fibonacci(n - 2),
+    }
+}
+
+fn custom_criterion() -&gt; Criterion {
+    Criterion::default()
+        .sample_size(50)
+}
+
+#[criterion]
+fn bench_simple(c: &amp;mut Criterion) {
+    c.bench_function(&quot;Fibonacci-Simple&quot;, |b| b.iter(|| fibonacci(black_box(10))));
+}
+
+#[criterion(custom_criterion())]
+fn bench_custom(c: &amp;mut Criterion) {
+    c.bench_function(&quot;Fibonacci-Custom&quot;, |b| b.iter(|| fibonacci(black_box(20))));
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>The first thing to note is that we enable the <code>custom_test_framework</code> feature and declare that we
+want to use <code>criterion::runner</code> as the test runner. We also import <code>criterion_macro::criterion</code>,
+which is the <code>#[criterion]</code> macro itself. In future versions this will likely be re-exported from
+the <code>criterion</code> crate so that it can be imported from there, but for now we have to import it from
+<code>criterion_macro</code>.</p>
+<p>After that we define our old friend the Fibonacci function and the benchmarks. To create a
+benchmark with <code>#[criterion]</code> you simply attach the attribute to a function that accepts an <code>&amp;mut Criterion</code>. To provide a custom Criterion object (to override default settings or similar) you can
+instead use <code>#[criterion(&lt;some_expression_that_returns_a_criterion_object&gt;)]</code> - here we're calling
+the <code>custom_criterion</code> function. And that's all there is to it!</p>
+<p>Keep in mind that in addition to being built on unstable compiler features, the API design for
+Criterion.rs and its test framework is still experimental. The macro subcrate will respect SemVer,
+but future breaking changes are quite likely.</p>
+<h2 id="benchmarking-async-functions"><a class="header" href="#benchmarking-async-functions">Benchmarking async functions</a></h2>
+<p>As of version 0.3.4, Criterion.rs has optional support for benchmarking async functions.
+Benchmarking async functions works just like benchmarking regular functions, except that the
+caller must provide a futures executor to run the benchmark in.</p>
+<h3 id="example-1"><a class="header" href="#example-1">Example:</a></h3>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use criterion::BenchmarkId;
+use criterion::Criterion;
+use criterion::{criterion_group, criterion_main};
+
+// This is a struct that tells Criterion.rs to use the &quot;futures&quot; crate's current-thread executor
+use criterion::async_executor::FuturesExecutor;
+
+// Here we have an async function to benchmark
+async fn do_something(size: usize) {
+    // Do something async with the size
+}
+
+fn from_elem(c: &amp;mut Criterion) {
+    let size: usize = 1024;
+
+    c.bench_with_input(BenchmarkId::new(&quot;input_example&quot;, size), &amp;size, |b, &amp;s| {
+        // Insert a call to `to_async` to convert the bencher to async mode.
+        // The timing loops are the same as with the normal bencher.
+        b.to_async(FuturesExecutor).iter(|| do_something(s));
+    });
+}
+
+criterion_group!(benches, from_elem);
+criterion_main!(benches);
+<span class="boring">}
+</span></code></pre></pre>
+<p>As can be seen in the code above, to benchmark async functions we must provide an async runtime to
+the bencher to run the benchmark in. The runtime structs are listed in the table below.</p>
+<h3 id="enabling-async-benchmarking"><a class="header" href="#enabling-async-benchmarking">Enabling Async Benchmarking</a></h3>
+<p>To enable async benchmark support, Criterion.rs must be compiled with one or more of the following
+features, depending on which futures executor(s) you want to benchmark on. It is recommended to use
+the same executor that you would use in production. If your executor is not listed here, you can
+implement the <code>criterion::async_executor::AsyncExecutor</code> trait for it to add support, or send a pull
+request.</p>
+<table><thead><tr><th>Crate</th><th>Feature</th><th>Executor Struct</th></tr></thead><tbody>
+<tr><td>Tokio</td><td>&quot;async_tokio&quot;</td><td><code>tokio::runtime::Runtime</code>, <code>&amp;tokio::runtime::Runtime</code></td></tr>
+<tr><td>async-std</td><td>&quot;async_std&quot; (note underscore)</td><td><code>AsyncStdExecutor</code></td></tr>
+<tr><td>Smol</td><td>&quot;async_smol&quot;</td><td><code>SmolExecutor</code></td></tr>
+<tr><td>futures</td><td>&quot;async_futures&quot;</td><td><code>FuturesExecutor</code></td></tr>
+<tr><td>Other</td><td>&quot;async&quot;</td><td></td></tr>
+</tbody></table>
+<h3 id="considerations-when-benchmarking-async-functions"><a class="header" href="#considerations-when-benchmarking-async-functions">Considerations when benchmarking async functions</a></h3>
+<p>Async functions naturally result in more measurement overhead than synchronous functions. It is
+recommended to prefer synchronous functions when benchmarking where possible, especially for small
+functions.</p>
+<h1 id="cargo-criterion"><a class="header" href="#cargo-criterion">cargo-criterion</a></h1>
+<p>cargo-criterion is an experimental Cargo extension which can act as a replacement for <code>cargo bench</code>. The long-term goal for cargo-criterion is to handle all of the statistical analysis and report generation in a single tool. Then, the code for that can be removed from Criterion.rs (or made optional), reducing benchmark compilation and linking time. Since it manages the whole lifecycle of a benchmark run, <code>cargo-criterion</code> is also in a good position to provide features that would be difficult to implement in Criterion.rs itself.</p>
+<p>Currently, <code>cargo-criterion</code> provides most of the same features as running Criterion.rs benchmarks in <code>cargo bench</code>, but with some differences:</p>
+<ul>
+<li><code>cargo-criterion</code> does not currently support baselines</li>
+<li><code>cargo-criterion</code> is more configurable than Criterion.rs</li>
+<li><code>cargo-criterion</code> supports machine-readable output using <code>--message-format=json</code></li>
+</ul>
+<p><code>cargo-criterion</code> is still under active development, but if you would like to try it out, you can install it with the following command:</p>
+<p><code>cargo install --version=1.0.0-alpha3 cargo-criterion</code></p>
+<p>Once installed, you can run your benchmarks with:</p>
+<p><code>cargo criterion</code></p>
+<p>If you encounter any issues or have any suggestions for future features, please raise an issue at <a href="https://github.com/bheisler/cargo-criterion">the GitHub repository</a>.</p>
+<h1 id="configuring-cargo-criterion"><a class="header" href="#configuring-cargo-criterion">Configuring cargo-criterion</a></h1>
+<p>cargo-criterion can be configured by placing a <code>criterion.toml</code> file in your crate, alongside your
+<code>Cargo.toml</code>.</p>
+<p>The available settings are documented below:</p>
+<pre><code class="language-toml"># This is used to override the directory where cargo-criterion saves 
+# its data and generates reports.
+criterion_home = &quot;./target/criterion&quot;
+
+# This is used to configure the format of cargo-criterion's command-line output.
+# Options are:
+# criterion: Prints confidence intervals for measurement and throughput, and 
+#   indicates whether a change was detected from the previous run. The default.
+# quiet: Like criterion, but does not indicate changes. Useful for simply 
+#   presenting output numbers, eg. on a library's README.
+# verbose: Like criterion, but prints additional statistics.
+# bencher: Emulates the output format of the bencher crate and nightly-only 
+#   libtest benchmarks.
+output_format = &quot;criterion&quot;
+
+# This is used to configure the plotting backend used by cargo-criterion. 
+# Options are &quot;gnuplot&quot; and &quot;plotters&quot;, or &quot;auto&quot;, which will use gnuplot if it's
+# available or plotters if it isn't.
+ploting_backend = &quot;auto&quot;
+
+# The colors table allows users to configure the colors used by the charts 
+# cargo-criterion generates.
+[colors]
+# These are used in many charts to compare the current measurement against 
+# the previous one.
+current_sample = {r = 31, g = 120, b = 180}
+previous_sample = {r = 7, g = 26, b = 28}
+
+# These are used by the full PDF chart to highlight which samples were outliers.
+not_an_outlier = {r = 31, g = 120, b = 180}
+mild_outlier = {r = 5, g = 127, b = 0}
+severe_outlier = {r = 7, g = 26, b = 28}
+
+# These are used for the line chart to compare multiple different functions.
+comparison_colors = [
+    {r = 8, g = 34, b = 34},
+    {r = 6, g = 139, b = 87},
+    {r = 0, g = 139, b = 139},
+    {r = 5, g = 215, b = 0},
+    {r = 0, g = 0, b = 139},
+    {r = 0, g = 20, b = 60},
+    {r = 9, g = 0, b = 139},
+    {r = 0, g = 255, b = 127},
+]
+
+</code></pre>
+<h1 id="external-tools"><a class="header" href="#external-tools">External Tools</a></h1>
+<p>cargo-criterion provides a machine-readable output stream which other tools can consume to collect
+information about the Criterion.rs benchmarks.</p>
+<p>To enable this output stream, pass the <code>--message-format</code> argument when running cargo-criterion.</p>
+<h2 id="json-messages"><a class="header" href="#json-messages">JSON messages</a></h2>
+<p>When passing <code>--message-format=json</code> cargo-criterion will output information about:</p>
+<ul>
+<li>Benchmarks, including the basic statistics about the measurements</li>
+<li>Benchmark groups</li>
+</ul>
+<p>The output goes to stdout, with one JSON object per line. The <code>reason</code> field distinguishes different
+kinds of messages.</p>
+<p>Additional messages or fields may be added to the output in the future.</p>
+<h3 id="benchmark-complete-messages"><a class="header" href="#benchmark-complete-messages">Benchmark Complete Messages</a></h3>
+<p>The &quot;benchmark-complete&quot; message includes the measurements and basic statistics from a single 
+Criterion.rs benchmark. The message format is as follows:</p>
+<pre><code class="language-json">{
+  /* The &quot;reason&quot; indicates which kind of message this is. */
+  &quot;reason&quot;: &quot;benchmark-complete&quot;,
+  /* The id is the identifier of this benchmark */
+  &quot;id&quot;: &quot;norm&quot;,
+  /* Path to the directory containing the report for this benchmark */
+  &quot;report_directory&quot;: &quot;target/criterion/reports/norm&quot;,
+  /* List of integer iteration counts */
+  &quot;iteration_count&quot;: [
+    30,
+    /* ... */
+    3000
+  ],
+  /* List of floating point measurements (eg. time, CPU cycles) taken 
+  from the benchmark */
+  &quot;measured_values&quot;: [
+    124200.0,
+    /* ... */
+    9937100.0
+  ],
+  /* The unit associated with measured_values. */
+  &quot;unit&quot;: &quot;ns&quot;,
+  /* The throughput value associated with this benchmark. This can be used 
+  to calculate throughput rates, eg. in bytes or elements per second. */
+  &quot;throughput&quot;: [
+    {
+      &quot;per_iteration&quot;: 1024,
+      &quot;unit&quot;: &quot;elements&quot;
+    }
+  ],
+  /* Confidence intervals for the basic statistics that cargo-criterion 
+  computes. */
+  /* 
+  &quot;typical&quot; is either the slope (if available) or the mean (if not). It
+  makes a good general-purpose estimate of the typical performance of a
+  function.
+  */
+  &quot;typical&quot;: {
+    &quot;estimate&quot;: 3419.4923993891925,
+    &quot;lower_bound&quot;: 3375.24221103098,
+    &quot;upper_bound&quot;: 3465.458469579234,
+    &quot;unit&quot;: &quot;ns&quot;
+  },
+  &quot;mean&quot;: {
+    &quot;estimate&quot;: 3419.5340743105917,
+    &quot;lower_bound&quot;: 3374.4765622217083,
+    &quot;upper_bound&quot;: 3474.096214164006,
+    &quot;unit&quot;: &quot;ns&quot;
+  },
+  &quot;median&quot;: {
+    &quot;estimate&quot;: 3362.8249818445897,
+    &quot;lower_bound&quot;: 3334.259259259259,
+    &quot;upper_bound&quot;: 3387.5146198830407,
+    &quot;unit&quot;: &quot;ns&quot;
+  },
+  &quot;median_abs_dev&quot;: {
+    &quot;estimate&quot;: 130.7846461816652,
+    &quot;lower_bound&quot;: 96.55619525548211,
+    &quot;upper_bound&quot;: 161.1643711235156,
+    &quot;unit&quot;: &quot;ns&quot;
+  },
+  
+  /* Note that not all benchmarks can measure the slope, so it may be 
+  missing. */
+  &quot;slope&quot;: {
+    &quot;estimate&quot;: 3419.4923993891925,
+    &quot;lower_bound&quot;: 3375.24221103098,
+    &quot;upper_bound&quot;: 3465.458469579234,
+    &quot;unit&quot;: &quot;ns&quot;
+  },
+
+  /* &quot;change&quot; contains some additional statistics about the difference 
+  between this run and the last */
+  &quot;change&quot;: {
+    /* Percentage differences in the mean &amp; median values */
+    &quot;mean&quot;: {
+      &quot;estimate&quot;: 0.014278477848724602,
+      &quot;lower_bound&quot;: -0.01790259435189548,
+      &quot;upper_bound&quot;: 0.03912764721581533,
+      &quot;unit&quot;: &quot;%&quot;
+    },
+    &quot;median&quot;: {
+      &quot;estimate&quot;: 0.012211662837601445,
+      &quot;lower_bound&quot;: -0.0005448009516478807,
+      &quot;upper_bound&quot;: 0.024243170768727857,
+      &quot;unit&quot;: &quot;%&quot;
+    },
+    /* 
+    Indicates whether cargo-criterion found a statistically-significant 
+    change. Values are NoChange, Improved, or Regressed
+    */
+    &quot;change&quot;: &quot;NoChange&quot;
+  }
+}
+</code></pre>
+<h3 id="group-complete-messages"><a class="header" href="#group-complete-messages">Group Complete Messages</a></h3>
+<p>When a benchmark group is completed, cargo-criterion emits a &quot;group-complete&quot; message containing
+some information about the group.</p>
+<pre><code class="language-json">{
+  &quot;reason&quot;: &quot;group-complete&quot;,
+  /* The name of the benchmark group */
+  &quot;group_name&quot;: &quot;throughput&quot;,
+  /* List of the benchmark IDs in this group */
+  &quot;benchmarks&quot;: [
+    &quot;throughput/Bytes&quot;,
+    &quot;throughput/Bytes&quot;,
+    &quot;throughput/Elem&quot;
+  ],
+  /* Path to the directory that contains the report for this group */
+  &quot;report_directory&quot;: &quot;target/criterion/reports/throughput&quot;
+}
+</code></pre>
+<h1 id="iai"><a class="header" href="#iai">Iai</a></h1>
+<p><a href="https://github.com/bheisler/iai">Iai</a> is an experimental benchmarking harness that uses Cachegrind
+to perform extremely precise single-shot measurements of Rust code. It is intended as a complement
+to Criterion.rs; among other things, it's useful for reliable benchmarking in CI.</p>
+<h2 id="api-docs-1"><a class="header" href="#api-docs-1">API Docs</a></h2>
+<p>In addition to this book, you may also wish to read <a href="https://docs.rs/iai/">the API documentation</a>.</p>
+<h2 id="getting-started-1"><a class="header" href="#getting-started-1">Getting Started</a></h2>
+<p>Iai is designed to be similar in interface to Criterion.rs, so using it is easy. To get started,
+add the following to your Cargo.toml file:</p>
+<pre><code class="language-toml">[dev-dependencies]
+iai = &quot;0.1&quot;
+
+[[bench]]
+name = &quot;my_benchmark&quot;
+harness = false
+</code></pre>
+<p>Next, define a benchmark by creating a file at <code>$PROJECT/benches/my_benchmark.rs</code> with the following contents:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use iai::{black_box, main};
+
+fn fibonacci(n: u64) -&gt; u64 {
+    match n {
+        0 =&gt; 1,
+        1 =&gt; 1,
+        n =&gt; fibonacci(n-1) + fibonacci(n-2),
+    }
+}
+
+fn iai_benchmark_short() -&gt; u64 {
+    fibonacci(black_box(10))
+}
+
+fn iai_benchmark_long() -&gt; u64 {
+    fibonacci(black_box(30));
+}
+
+
+iai::main!(iai_benchmark_short, iai_benchmark_long);
+<span class="boring">}
+</span></code></pre></pre>
+<p>Finally, run this benchmark with <code>cargo bench</code>. You should see output similar to the following:</p>
+<pre><code>     Running target/release/deps/test_regular_bench-8b173c29ce041afa
+
+bench_fibonacci_short
+  Instructions:                1735
+  L1 Accesses:                 2364
+  L2 Accesses:                    1
+  RAM Accesses:                   1
+  Estimated Cycles:            2404
+
+bench_fibonacci_long
+  Instructions:            26214735
+  L1 Accesses:             35638623
+  L2 Accesses:                    2
+  RAM Accesses:                   1
+  Estimated Cycles:        35638668
+</code></pre>
+<h3 id="comparison-with-criterion-rs"><a class="header" href="#comparison-with-criterion-rs">Comparison with Criterion-rs</a></h3>
+<p>I intend Iai to be a complement to Criterion-rs, not a competitor. The two projects measure different
+things in different ways and have different pros, cons, and limitations, so for most projects the
+best approach is to use both.</p>
+<p>Here's an overview of the important differences:</p>
+<ul>
+<li><strong>Temporary Con:</strong> Right now, Iai is lacking many features of Criterion-rs, including reports and configuration of any kind.
+<ul>
+<li>The current intent is to add support to <a href="https://github.com/bheisler/cargo-criterion">Cargo-criterion</a> for configuring and reporting on Iai benchmarks.</li>
+</ul>
+</li>
+<li><strong>Pro:</strong> Iai can reliably detect much smaller changes in performance than Criterion-rs can.</li>
+<li><strong>Pro:</strong> Iai can work reliably in noisy CI environments or even cloud CI providers like GitHub Actions or Travis-CI, where Criterion-rs cannot.</li>
+<li><strong>Pro:</strong> Iai also generates profile output from the benchmark without further effort.</li>
+<li><strong>Pro:</strong> Although Cachegrind adds considerable runtime overhead, running each benchmark exactly once is still usually faster than Criterion-rs' statistical measurements.</li>
+<li><strong>Mixed:</strong> Because Iai can detect such small changes, it may report performance differences from changes to the order of functions in memory and other compiler details.</li>
+<li><strong>Con:</strong> Iai's measurements merely correlate with wall-clock time (which is usually what you actually care about), where Criterion-rs measures it directly.</li>
+<li><strong>Con:</strong> Iai cannot exclude setup code from the measurements, where Criterion-rs can.</li>
+<li><strong>Con:</strong> Because Cachegrind does not measure system calls, IO time is not accurately measured.</li>
+<li><strong>Con:</strong> Because Iai runs the benchmark exactly once, it cannot measure variation in the performance such as might be caused by OS thread scheduling or hash-table randomization.</li>
+<li><strong>Limitation:</strong> Iai can only be used on platforms supported by Valgrind. Notably, this does not include Windows.</li>
+</ul>
+<p>For benchmarks that run in CI (especially if you're checking for performance regressions in pull 
+requests on cloud CI) you should use Iai. For benchmarking on Windows or other platforms that
+Valgrind doesn't support, you should use Criterion-rs. For other cases, I would advise using both.
+Iai gives more precision and scales better to larger benchmarks, while Criterion-rs allows for
+excluding setup time and gives you more information about the actual time your code takes and how
+strongly that is affected by non-determinism like threading or hash-table randomization. If you
+absolutely need to pick one or the other though, Iai is probably the one to go with.</p>
+<h1 id="analysis-process"><a class="header" href="#analysis-process">Analysis Process</a></h1>
+<p>This page details the data collection and analysis process used by Criterion.rs. This is a bit more advanced than the user guide; it is assumed the reader is somewhat familiar with statistical concepts. In particular, the reader should know what bootstrap sampling means.</p>
+<p>So, without further ado, let's start with a general overview. Each benchmark in Criterion.rs goes through four phases:</p>
+<ul>
+<li>Warmup - The routine is executed repeatedly to fill the CPU and OS caches and (if applicable) give the JIT time to compile the code</li>
+<li>Measurement - The routine is executed repeatedly and the execution times are recorded</li>
+<li>Analysis - The recorded samples are analyzed and distilled into meaningful statistics, which are then reported to the user</li>
+<li>Comparison - The performance of the current run is compared to the stored data from the last run to determine whether it has changed, and if so by how much</li>
+</ul>
+<h2 id="warmup-1"><a class="header" href="#warmup-1">Warmup</a></h2>
+<p>The first step in the process is warmup. In this phase, the routine is executed repeatedly to give the OS, CPU and JIT time to adapt to the new workload. This helps prevent things like cold caches and JIT compilation time from throwing off the measurements later. The warmup period is controlled by the <code>warm_up_time</code> value in the Criterion struct.</p>
+<p>The warmup period is quite simple. The routine is executed once, then twice, four times and so on until the total accumulated execution time is greater than the configured warm up time. The number of iterations that were completed during this period is recorded, along with the elapsed time.</p>
+<h2 id="measurement-1"><a class="header" href="#measurement-1">Measurement</a></h2>
+<p>The measurement phase is when Criterion.rs collects the performance data that will be analyzed and used in later stages. This phase is mainly controlled by the <code>measurement_time</code> value in the Criterion struct.</p>
+<p>The measurements are done in a number of samples (see the <code>sample_size</code> parameter). Each sample consists of one or more (typically many) iterations of the routine. The elapsed time between the beginning and the end of the iterations, divided by the number of iterations, gives an estimate of the time taken by each iteration.</p>
+<p>As measurement progresses, the sample iteration counts are increased. Suppose that the first sample contains 10 iterations. The second sample will contain 20, the third will contain 30 and so on. More formally, the iteration counts are calculated like so:</p>
+<p><code>iterations = [d, 2d, 3d, ... Nd]</code></p>
+<p>Where <code>N</code> is the total number of samples and <code>d</code> is a factor, calculated from the rough estimate of iteration time measured during the warmup period, which is used to scale the number of iterations to meet the configured measurement time. Note that <code>d</code> cannot be less than 1, and therefore the actual measurment time may exceed the configured measurement time if the iteration time is large or the configured measurement time is small.</p>
+<p>Note that Criterion.rs does not measure each individual iteration, only the complete sample. The resulting samples are stored for use in later stages. The sample data is also written to the local disk so that it can be used in the comparison phase of future benchmark runs.</p>
+<h2 id="analysis"><a class="header" href="#analysis">Analysis</a></h2>
+<p>During this phase Criterion.rs calculates useful statistics from the samples collected during the measurement phase.</p>
+<h3 id="outlier-classification"><a class="header" href="#outlier-classification">Outlier Classification</a></h3>
+<p>The first step in analysis is outlier classification. Each sample is classified using a modified version of Tukey's Method, which will be summarized here. First, the interquartile range (IQR) is calculated from the difference between the 25th and 75th percentile. In Tukey's Method, values less than (25th percentile - 1.5 * IQR) or greater than (75th percentile + 1.5 * IQR) are considered outliers. Criterion.rs creates additional fences at (25pct - 3 * IQR) and (75pct + 3 * IQR); values outside that range are considered severe outliers.</p>
+<p>Outlier classification is important because the analysis method used to estimate the average iteration time is sensitive to outliers. Thus, when Criterion.rs detects outliers, a warning is printed to inform the user that the benchmark may be less reliable. Additionally, a plot is generated showing which data points are considered outliers, where the fences are, etc.</p>
+<p>Note, however, that outlier samples are <em>not</em> dropped from the data, and are used in the following analysis steps along with all other samples.</p>
+<h3 id="linear-regression"><a class="header" href="#linear-regression">Linear Regression</a></h3>
+<p>The samples collected from a good benchmark should form a rough line when plotted on a chart showing the number of iterations and the time for each sample. The slope of that line gives an estimate of the time per iteration. A single estimate is difficult to interpret, however, since it contains no context. A confidence interval is generally more helpful. In order to generate a confidence interval, a large number of bootstrap samples are generated from the measured samples. A line is fitted to each of the bootstrap samples, and the result is a statistical distribution of slopes that gives a reliable confidence interval around the single estimate calculated from the measured samples.</p>
+<p>This resampling process is repeated to generate the mean, standard deviation, median and median absolute deviation of the measured iteration times as well. All of this information is printed to the user and charts are generated. Finally, if there are saved statistics from a previous run, the two benchmark runs are compared.</p>
+<h2 id="comparison"><a class="header" href="#comparison">Comparison</a></h2>
+<p>In the comparison phase, the statistics calculated from the current benchmark run are compared against those saved by the previous run to determine if the performance has changed in the meantime, and if so, by how much.</p>
+<p>Once again, Criterion.rs generates many bootstrap samples, based on the measured samples from the two runs. The new and old bootstrap samples are compared and their T score is calculated using a T-test. The fraction of the bootstrapped T scores which are more extreme than the T score calculated by comparing the two measured samples gives the probability that the observed difference between the two sets of samples is merely by chance. Thus, if that probability is very low or zero, Criterion.rs can be confident that there is truly a difference in execution time between the two samples. In that case, the mean and median differences are bootstrapped and printed for the user, and the entire process begins again with the next benchmark.</p>
+<p>This process can be extremely sensitive to changes, especially when combined with a small, highly deterministic benchmark routine. In these circumstances even very small changes (eg. differences in the load from background processes) can change the measurements enough that the comparison process detects an optimization or regression. Since these sorts of unpredictable fluctuations are rarely of interest while benchmarking, there is also a configurable noise threshold. Optimizations or regressions within (for example) +-1% are considered noise and ignored. It is best to benchmark on a quiet computer where possible to minimize this noise, but it is not always possible to eliminate it entirely.</p>
+<h2 id="frequently-asked-questions"><a class="header" href="#frequently-asked-questions">Frequently Asked Questions</a></h2>
+<h3 id="how-should-i-run-criterionrs-benchmarks-in-a-ci-pipeline"><a class="header" href="#how-should-i-run-criterionrs-benchmarks-in-a-ci-pipeline">How Should I Run Criterion.rs Benchmarks In A CI Pipeline?</a></h3>
+<p>You probably shouldn't (or, if you do, don't rely on the results). The virtualization used by
+Cloud-CI providers like Travis-CI and Github Actions introduces a great deal of noise into the
+benchmarking process, and Criterion.rs' statistical analysis can only do so much to mitigate that.
+This can result in the appearance of large changes in the measured performance even if the actual
+performance of the code is not changing. A better alternative is to use
+<a href="https://github.com/bheisler/iai">Iai</a> instead. Iai runs benchmarks inside Cachegrind to directly
+count the instructions and memory accesses. Iai's measurements won't be thrown off by the virtual
+machine slowing down or pausing for a time, so it should be more reliable in virtualized
+environments.</p>
+<p>Whichever benchmarking tool you use, though, the process is basically the same. You'll need to:</p>
+<ul>
+<li>Check out the main branch of your code</li>
+<li>Build it and run the benchmarks once, to establish a baseline</li>
+<li>Then switch to the pull request branch</li>
+<li>Built it again and run the benchmarks a second time to compare against the baseline.</li>
+</ul>
+<h3 id="cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options"><a class="header" href="#cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options"><code>cargo bench</code> Gives &quot;Unrecognized Option&quot; Errors for Valid Command-line Options</a></h3>
+<p>By default, Cargo implicitly adds a <code>libtest</code> benchmark harness to your crate when benchmarking, to
+handle any <code>#[bench]</code> functions, even if you have none. It compiles and runs this executable first,
+before any of the other benchmarks. Normally, this is fine - it detects that there are no <code>libtest</code>
+benchmarks to execute and exits, allowing Cargo to move on to the real benchmarks. Unfortunately,
+it checks the command-line arguments first, and panics when it finds one it doesn't understand.
+This causes Cargo to stop benchmarking early, and it never executes the Criterion.rs benchmarks.</p>
+<p>This will occur when running <code>cargo bench</code> with any argument that Criterion.rs supports but <code>libtest</code>
+does not. For example, <code>--verbose</code> and <code>--save-baseline</code> will cause this issue, while <code>--help</code> will
+not. There are two ways to work around this at present:</p>
+<p>You could run only your Criterion benchmark, like so:</p>
+<p><code>cargo bench --bench my_benchmark -- --verbose</code></p>
+<p>Note that <code>my_benchmark</code> here corresponds to the name of your benchmark in your
+<code>Cargo.toml</code> file.</p>
+<p>Another option is to disable benchmarks for your lib or app crate. For example,
+for library crates, you could add this to your <code>Cargo.toml</code> file:</p>
+<pre><code class="language-toml">[lib]
+bench = false
+</code></pre>
+<p>If your crate produces one or more binaries as well as a library, you may need to add additional
+records to <code>Cargo.toml</code> like this:</p>
+<pre><code class="language-toml">[[bin]]
+name = &quot;my-binary&quot;
+path = &quot;src/bin/my-binary.rs&quot;
+bench = false
+</code></pre>
+<p>This is because Cargo automatically discovers some kinds of binaries and it will enable the default
+benchmark harness for these as well.</p>
+<p>Of course, this only works if you define all of your benchmarks in the
+<code>benches</code> directory.</p>
+<p>See <a href="https://github.com/rust-lang/rust/issues/47241">Rust Issue #47241</a> for
+more details.</p>
+<h3 id="how-should-i-benchmark-small-functions"><a class="header" href="#how-should-i-benchmark-small-functions">How Should I Benchmark Small Functions?</a></h3>
+<p>Exactly the same way as you would benchmark any other function.</p>
+<p>It is sometimes suggested that benchmarks of small (nanosecond-scale) functions should iterate the
+function to be benchmarked many times internally to reduce the impact of measurement overhead.
+This is <em>not</em> required with Criterion.rs, and it is not recommended.</p>
+<p>To see this, consider the following benchmark:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn compare_small(c: &amp;mut Criterion) {
+    use criterion::black_box;
+
+    let mut group = c.benchmark_group(&quot;small&quot;);
+    group.bench_with_input(&quot;unlooped&quot;, 10, |b, i| b.iter(|| i + 10));
+    group.bench_with_input(&quot;looped&quot;, 10, |b, i| b.iter(|| {
+        for _ in 0..10000 {
+            black_box(i + 10);
+        }
+    }));
+    group.finish();
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>This benchmark simply adds two numbers - just about the smallest function that could be performed.
+On my computer, this produces the following output:</p>
+<pre><code>small/unlooped          time:   [270.00 ps 270.78 ps 271.56 ps]
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high severe
+small/looped            time:   [2.7051 us 2.7142 us 2.7238 us]
+Found 5 outliers among 100 measurements (5.00%)
+  3 (3.00%) high mild
+  2 (2.00%) high severe
+</code></pre>
+<p>2.714 microseconds/10000 gives 271.4 picoseconds, or pretty much the same result. Interestingly,
+this is slightly more than one cycle of my 4th-gen Core i7's maximum clock frequency of 4.4 GHz,
+which shows how good the pipelining is on modern CPUs. Regardless, Criterion.rs is able to
+accurately measure functions all the way down to single instructions. See the <a href="./analysis.html">Analysis
+Process</a> page for more details on how Criterion.rs performs its measurements, or see
+the <a href="./user_guide/timing_loops.html">Timing Loops</a> page for details on choosing a timing loop to minimize
+measurement overhead.</p>
+<h3 id="when-should-i-use-criterionblack_box"><a class="header" href="#when-should-i-use-criterionblack_box">When Should I Use <code>criterion::black_box</code>?</a></h3>
+<p><code>black_box</code> is a function which prevents certain compiler optimizations. Benchmarks are often
+slightly artificial in nature and the compiler can take advantage of that to generate faster code
+when compiling the benchmarks than it would in real usage. In particular, it is common for
+benchmarked functions to be called with constant parameters, and in some cases rustc can
+evaluate the function entirely at compile time and replace the function call with a constant.
+This can produce unnaturally fast benchmarks that don't represent how some code would perform
+when called normally. Therefore, it's useful to black-box the constant input to prevent this
+optimization.</p>
+<p>However, you might have a function which you expect to be called with one or more constant
+parameters. In this case, you might want to write your benchmark to represent that scenario instead,
+and allow the compiler to optimize the constant parameters.</p>
+<p>For the most part, Criterion.rs handles this for you - if you use parameterized benchmarks, the
+parameters are automatically black-boxed by Criterion.rs so you don't need to do anything. If you're
+writing an un-parameterized benchmark of a function that takes an argument, however, this may be
+worth considering.</p>
+<h3 id="cargo-prints-a-warning-about-explicit-bench-sections-in-cargotoml"><a class="header" href="#cargo-prints-a-warning-about-explicit-bench-sections-in-cargotoml">Cargo Prints a Warning About Explicit [[bench]] Sections in Cargo.toml</a></h3>
+<p>Currently, Cargo treats any <code>*.rs</code> file in the <code>benches</code> directory as a
+benchmark, unless there are one or more <code>[[bench]]</code> sections in the
+<code>Cargo.toml</code> file. In that case, the auto-discovery is disabled
+entirely.</p>
+<p>In Rust 2018 edition, Cargo will be changed so that <code>[[bench]]</code> no longer
+disables the auto-discovery. If your <code>benches</code> directory contains source files
+that are not benchmarks, this could break your build when you update, as Cargo
+will attempt to compile them as benchmarks and fail.</p>
+<p>There are two ways to prevent this breakage from happening. You can explicitly
+turn off the autodiscovery like so:</p>
+<pre><code class="language-toml">[[package]]
+autobenches = false
+</code></pre>
+<p>The other option is to move those non-benchmark files to a subdirectory (eg.
+<code>benches/benchmark_code</code>) where they will no longer be detected as benchmarks.
+I would recommend the latter option.</p>
+<p>Note that a file which contains a <code>criterion_main!</code> is a valid benchmark and can
+safely stay where it is.</p>
+<h3 id="i-made-a-trivial-change-to-my-source-and-criterionrs-reports-a-large-change-in-performance-why"><a class="header" href="#i-made-a-trivial-change-to-my-source-and-criterionrs-reports-a-large-change-in-performance-why">I made a trivial change to my source and Criterion.rs reports a large change in performance. Why?</a></h3>
+<p>Don't worry, Criterion.rs isn't broken and you (probably) didn't do anything wrong. The most common
+reason for this is that the optimizer just happened to optimize your function differently after the
+change.</p>
+<p>Optimizing compiler backends such as LLVM (which is used by <code>rustc</code>) are often complex beasts full
+of hand-rolled pattern matching code that detects when a particular optimization is possible and
+tries to guess whether it would make the code faster. Unfortunately, despite all of the engineering
+work that goes into these compilers, it's pretty common for apparently-trivial changes to the source
+like changing the order of lines to be enough to cause these optimizers to act differently. On top of
+this, apparently-small changes like changing the type of a variable or calling a slightly different
+function (such as <code>unwrap</code> vs <code>expect</code>) actually have much larger impacts under the hood than the
+slight different in source text might suggest.</p>
+<p>If you want to learn more about this (and some proposals for improving this situation in the
+future), I like <a href="https://blog.regehr.org/archives/1619">this paper</a> by Regehr et al.</p>
+<p>On a similar subject, it's important to remember that a benchmark is only ever an estimate
+of the true performance of your function. If the optimizer can have significant effects on
+performance in an artificial environment like a benchmark, what about when your function is inlined
+into a variety of different calling contexts? The optimizer will almost certainly make different
+decisions for each caller. One hopes that each specialized version will be faster, but that can't
+be guaranteed. In a world of optimizing compilers, the &quot;true performance&quot; of a function is a fuzzy
+thing indeed.</p>
+<p>If you're still sure that Criterion.rs is doing something wrong, file an issue describing the
+problem.</p>
+<h3 id="i-made-no-change-to-my-source-and-criterionrs-reports-a-large-change-in-performance-why"><a class="header" href="#i-made-no-change-to-my-source-and-criterionrs-reports-a-large-change-in-performance-why">I made <em>no</em> change to my source and Criterion.rs reports a large change in performance. Why?</a></h3>
+<p>Typically this happens because the benchmark environments aren't quite the same. There are a lot of
+factors that can influence benchmarks. Other processes might be using the CPU or memory.
+Battery-powered devices often have power-saving modes that clock down the CPU (and these sometimes
+appear in desktops as well). If your benchmarks are run inside a VM, there might be other VMs on the
+same physical machine competing for resources.</p>
+<p>However, sometimes this happens even with no change. It's important to remember that Criterion.rs
+detects regressions and improvements statistically. There is always a chance that you randomly
+get unusually fast or slow samples, enough that Criterion.rs detects it as a change even though no
+change has occurred. In very large benchmark suites you might expect to see several of these
+spurious detections each time you run the benchmarks.</p>
+<p>Unfortunately, this is a fundamental trade-off in statistics. In order to decrease the rate of false
+detections, you must also decrease the sensitivity to small changes. Conversely, to increase the
+sensitivity to small changes, you must also increase the chance of false detections. Criterion.rs
+has default settings that strike a generally-good balance between the two, but you can adjust the
+settings to suit your needs.</p>
+<h3 id="when-i-run-benchmark-executables-directly-without-using-cargo-they-just-print-success-why"><a class="header" href="#when-i-run-benchmark-executables-directly-without-using-cargo-they-just-print-success-why">When I run benchmark executables directly (without using Cargo) they just print &quot;Success&quot;. Why?</a></h3>
+<p>When Cargo runs benchmarks, it passes the <code>--bench</code> or <code>--test</code> command-line arguments to the
+benchmark executables. Criterion.rs looks for these arguments and tries to either run benchmarks or
+run in test mode. In particular, when you run <code>cargo test --benches</code> (run tests, including testing
+benchmarks) Cargo does not pass either of these arguments. This is perhaps strange, since <code>cargo bench --test</code> passes both <code>--bench</code> and <code>--test</code>. In any case, Criterion.rs benchmarks run in test
+mode when <code>--bench</code> is not present, or when <code>--bench</code> and <code>--test</code> are both present.</p>
+<h3 id="my-benchmark-fails-to-compile-with-the-error-use-of-undeclared-type-or-module-my_crate"><a class="header" href="#my-benchmark-fails-to-compile-with-the-error-use-of-undeclared-type-or-module-my_crate">My benchmark fails to compile with the error &quot;use of undeclared type or module <code>&lt;my_crate&gt;</code></a></h3>
+<p>First, check the <a href="https://bheisler.github.io/criterion.rs/book/getting_started.html">Getting Started</a> 
+guide and ensure that the <code>[[bench]]</code> section of your Cargo.toml is set up correctly. If it's
+correct, read on.</p>
+<p>This can be caused by two different things.</p>
+<p>Most commonly, this problem happens when trying to benchmark a binary (as opposed to library) crate.
+Criterion.rs cannot be used to benchmark binary crates (see the 
+<a href="https://bheisler.github.io/criterion.rs/book/user_guide/known_limitations.html">Known Limitations</a>
+page for more details on why). The usual workaround is to structure your application as a library
+crate that implements most of the functionality of the application and a binary crate which acts
+as a thin wrapper around the library crate to provide things like a CLI. Then, you can create
+Criterion.rs benchmarks that depend on the library crate.</p>
+<p>Less often, the problem is that the library crate is configured to compile as a <code>cdylib</code>. In order
+to benchmark your crate with Criterion.rs, you will need to set your Cargo.toml to enable generating
+an <code>rlib</code> as well.</p>
+<h3 id="how-can-i-benchmark-a-part-of-a-function"><a class="header" href="#how-can-i-benchmark-a-part-of-a-function">How can I benchmark a part of a function?</a></h3>
+<p>The short answer is - you can't, not accurately. The longer answer is below.</p>
+<p>When people ask me this, my first response is always &quot;extract that part of the function into a new
+function, give it a name, and then benchmark <em>that</em>&quot;. It's sort of unsatisfying, but that is also
+the only way to get really accurate measurements of that piece of your code. You can always tag it
+with <code>#[inline(always)]</code> to tell rustc to inline it back into the original callsite in the final
+executable.</p>
+<p>The problem is that your system's clock is not infinitely precise; there is a certain (often
+surprisingly large) granularity to the clock time reported by <code>Instant::now</code>. That means that,
+if it were to measure each execution individually, Criterion.rs might see a sequence of times
+like &quot;0ms, 0ms, 0ms, 0ms, 0ms, 5ms, 0ms...&quot; for a function that takes 1ms. To mitigate this,
+Criterion.rs runs many iterations of your benchmark, to divide that jitter across each iteration.
+There would be no way to run such a timing loop on <em>part</em> of your code, unless that part were
+already easy to factor out and put in a separate function anyway. Instead, you'd have to 
+time each iteration individually, resulting in the maximum possible timing jitter.</p>
+<p>However, if you need to do this anyway, and you're OK with the reduced accuracy, you can use 
+<code>Bencher::iter_custom</code> to measure your code however you want to. <code>iter_custom</code> exists to allow for 
+complex cases like multi-threaded code or, yes, measuring part of a function. Just be aware that 
+you're responsible for the accuracy of your measurements.</p>
+<h2 id="migrating-from-02-to-03"><a class="header" href="#migrating-from-02-to-03">Migrating from 0.2.* to 0.3.*</a></h2>
+<p>Criterion.rs took advantage of 0.3.0 being a breaking-change release to make a number of changes
+that will require changes to user code. These changes are documented here, along with the newer
+alternatives.</p>
+<h3 id="benchmark-parameterizedbenchmark-criterionbench_functions-criterionbench_function_over_inputs-criterionbench-are-deprecated"><a class="header" href="#benchmark-parameterizedbenchmark-criterionbench_functions-criterionbench_function_over_inputs-criterionbench-are-deprecated"><code>Benchmark</code>, <code>ParameterizedBenchmark</code>, <code>Criterion::bench_functions</code>, <code>Criterion::bench_function_over_inputs</code>, <code>Criterion::bench</code> are deprecated.</a></h3>
+<p>In the interest of minimizing disruption, all of these functions still exist and still work. They
+are deliberately hidden from the documentation and should not be used in new code. At some point in
+the lifecycle of the 0.3.0 series these will be formally deprecated and will start producing
+deprecation warnings. They will be removed in 0.4.0.</p>
+<p>All of these types and functions have been superseded by the <code>BenchmarkGroup</code> type, which is cleaner
+to use as well as more powerful and flexible.</p>
+<h3 id="cargo-bench------test-is-deprecated"><a class="header" href="#cargo-bench------test-is-deprecated"><code>cargo bench -- --test</code> is deprecated.</a></h3>
+<p>Use <code>cargo test --benches</code> instead.</p>
+<h3 id="the-format-of-the-rawcsv-file-has-changed-to-accommodate-custom-measurements"><a class="header" href="#the-format-of-the-rawcsv-file-has-changed-to-accommodate-custom-measurements">The format of the <code>raw.csv</code> file has changed to accommodate custom measurements.</a></h3>
+<p>The <code>sample_time_nanos</code> field has been split into <code>sample_measured_value</code> and <code>unit</code>. For the
+default <code>WallTime</code> measurement, the <code>sample_measured_value</code> is the same as the <code>sample_time_nanos</code>
+was previously.</p>
+<h3 id="external-program-benchmarks-have-been-removed"><a class="header" href="#external-program-benchmarks-have-been-removed">External program benchmarks have been removed.</a></h3>
+<p>These were deprecated in version 0.2.6, as they were not used widely enough to justify the extra
+maintenance work. It is still possible to benchmark external programs using the <code>iter_custom</code>
+timing loop, but it does require some extra work. Although it does require extra development effort
+on the part of the benchmark author, using <code>iter_custom</code> gives more flexibility in how the benchmark
+communicates with the external process and also allows benchmarks to work with custom measurements,
+which was not possible previously. For an example of benchmarking an external process, see the 
+<code>benches/external_process.rs</code> benchmark in the Criterion.rs repository.</p>
+<h3 id="throughput-has-been-expanded-to-u64"><a class="header" href="#throughput-has-been-expanded-to-u64">Throughput has been expanded to <code>u64</code></a></h3>
+<p>Existing benchmarks with u32 Throughputs will need to be changed. Using u64 allows Throughput to
+scale up to much larger numbers of bytes/elements.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+        
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+        
+        
+
+    </body>
+</html>

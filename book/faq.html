@@ -1,0 +1,419 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Frequently Asked Questions - Criterion.rs Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="User Guide and Other Prose Documentation For Criterion.rs">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="criterion_rs.html"><strong aria-hidden="true">1.</strong> Criterion.rs</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="getting_started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li></ol></li><li class="chapter-item expanded "><a href="user_guide/user_guide.html"><strong aria-hidden="true">2.</strong> User Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user_guide/migrating_from_libtest.html"><strong aria-hidden="true">2.1.</strong> Migrating from libtest</a></li><li class="chapter-item expanded "><a href="user_guide/command_line_output.html"><strong aria-hidden="true">2.2.</strong> Command-Line Output</a></li><li class="chapter-item expanded "><a href="user_guide/command_line_options.html"><strong aria-hidden="true">2.3.</strong> Command-Line Options</a></li><li class="chapter-item expanded "><a href="user_guide/html_report.html"><strong aria-hidden="true">2.4.</strong> HTML Report</a></li><li class="chapter-item expanded "><a href="user_guide/plots_and_graphs.html"><strong aria-hidden="true">2.5.</strong> Plots &amp; Graphs</a></li><li class="chapter-item expanded "><a href="user_guide/benchmarking_with_inputs.html"><strong aria-hidden="true">2.6.</strong> Benchmarking With Inputs</a></li><li class="chapter-item expanded "><a href="user_guide/advanced_configuration.html"><strong aria-hidden="true">2.7.</strong> Advanced Configuration</a></li><li class="chapter-item expanded "><a href="user_guide/comparing_functions.html"><strong aria-hidden="true">2.8.</strong> Comparing Functions</a></li><li class="chapter-item expanded "><a href="user_guide/csv_output.html"><strong aria-hidden="true">2.9.</strong> CSV Output</a></li><li class="chapter-item expanded "><a href="user_guide/known_limitations.html"><strong aria-hidden="true">2.10.</strong> Known Limitations</a></li><li class="chapter-item expanded "><a href="user_guide/bencher_compatibility.html"><strong aria-hidden="true">2.11.</strong> Bencher Compatibility Layer</a></li><li class="chapter-item expanded "><a href="user_guide/timing_loops.html"><strong aria-hidden="true">2.12.</strong> Timing Loops</a></li><li class="chapter-item expanded "><a href="user_guide/custom_measurements.html"><strong aria-hidden="true">2.13.</strong> Custom Measurements</a></li><li class="chapter-item expanded "><a href="user_guide/profiling.html"><strong aria-hidden="true">2.14.</strong> Profiling</a></li><li class="chapter-item expanded "><a href="user_guide/custom_test_framework.html"><strong aria-hidden="true">2.15.</strong> Custom Test Framework</a></li><li class="chapter-item expanded "><a href="user_guide/benchmarking_async.html"><strong aria-hidden="true">2.16.</strong> Benchmarking async functions</a></li></ol></li><li class="chapter-item expanded "><a href="cargo_criterion/cargo_criterion.html"><strong aria-hidden="true">3.</strong> cargo-criterion</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="cargo_criterion/configuring_cargo_criterion.html"><strong aria-hidden="true">3.1.</strong> Configuring cargo-criterion</a></li><li class="chapter-item expanded "><a href="cargo_criterion/external_tools.html"><strong aria-hidden="true">3.2.</strong> External Tools</a></li></ol></li><li class="chapter-item expanded "><a href="iai/iai.html"><strong aria-hidden="true">4.</strong> Iai</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="iai/getting_started.html"><strong aria-hidden="true">4.1.</strong> Getting Started with Iai</a></li><li class="chapter-item expanded "><a href="iai/comparison.html"><strong aria-hidden="true">4.2.</strong> Comparison to Criterion.rs</a></li></ol></li><li class="chapter-item expanded "><a href="analysis.html"><strong aria-hidden="true">5.</strong> Analysis Process</a></li><li class="chapter-item expanded "><a href="faq.html" class="active"><strong aria-hidden="true">6.</strong> Frequently Asked Questions</a></li><li class="chapter-item expanded "><a href="migrating_0_2_to_0_3.html"><strong aria-hidden="true">7.</strong> Migrating from 0.2.* to 0.3.*</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Criterion.rs Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h2 id="frequently-asked-questions"><a class="header" href="#frequently-asked-questions">Frequently Asked Questions</a></h2>
+<h3 id="how-should-i-run-criterionrs-benchmarks-in-a-ci-pipeline"><a class="header" href="#how-should-i-run-criterionrs-benchmarks-in-a-ci-pipeline">How Should I Run Criterion.rs Benchmarks In A CI Pipeline?</a></h3>
+<p>You probably shouldn't (or, if you do, don't rely on the results). The virtualization used by
+Cloud-CI providers like Travis-CI and Github Actions introduces a great deal of noise into the
+benchmarking process, and Criterion.rs' statistical analysis can only do so much to mitigate that.
+This can result in the appearance of large changes in the measured performance even if the actual
+performance of the code is not changing. A better alternative is to use
+<a href="https://github.com/bheisler/iai">Iai</a> instead. Iai runs benchmarks inside Cachegrind to directly
+count the instructions and memory accesses. Iai's measurements won't be thrown off by the virtual
+machine slowing down or pausing for a time, so it should be more reliable in virtualized
+environments.</p>
+<p>Whichever benchmarking tool you use, though, the process is basically the same. You'll need to:</p>
+<ul>
+<li>Check out the main branch of your code</li>
+<li>Build it and run the benchmarks once, to establish a baseline</li>
+<li>Then switch to the pull request branch</li>
+<li>Built it again and run the benchmarks a second time to compare against the baseline.</li>
+</ul>
+<h3 id="cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options"><a class="header" href="#cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options"><code>cargo bench</code> Gives &quot;Unrecognized Option&quot; Errors for Valid Command-line Options</a></h3>
+<p>By default, Cargo implicitly adds a <code>libtest</code> benchmark harness to your crate when benchmarking, to
+handle any <code>#[bench]</code> functions, even if you have none. It compiles and runs this executable first,
+before any of the other benchmarks. Normally, this is fine - it detects that there are no <code>libtest</code>
+benchmarks to execute and exits, allowing Cargo to move on to the real benchmarks. Unfortunately,
+it checks the command-line arguments first, and panics when it finds one it doesn't understand.
+This causes Cargo to stop benchmarking early, and it never executes the Criterion.rs benchmarks.</p>
+<p>This will occur when running <code>cargo bench</code> with any argument that Criterion.rs supports but <code>libtest</code>
+does not. For example, <code>--verbose</code> and <code>--save-baseline</code> will cause this issue, while <code>--help</code> will
+not. There are two ways to work around this at present:</p>
+<p>You could run only your Criterion benchmark, like so:</p>
+<p><code>cargo bench --bench my_benchmark -- --verbose</code></p>
+<p>Note that <code>my_benchmark</code> here corresponds to the name of your benchmark in your
+<code>Cargo.toml</code> file.</p>
+<p>Another option is to disable benchmarks for your lib or app crate. For example,
+for library crates, you could add this to your <code>Cargo.toml</code> file:</p>
+<pre><code class="language-toml">[lib]
+bench = false
+</code></pre>
+<p>If your crate produces one or more binaries as well as a library, you may need to add additional
+records to <code>Cargo.toml</code> like this:</p>
+<pre><code class="language-toml">[[bin]]
+name = &quot;my-binary&quot;
+path = &quot;src/bin/my-binary.rs&quot;
+bench = false
+</code></pre>
+<p>This is because Cargo automatically discovers some kinds of binaries and it will enable the default
+benchmark harness for these as well.</p>
+<p>Of course, this only works if you define all of your benchmarks in the
+<code>benches</code> directory.</p>
+<p>See <a href="https://github.com/rust-lang/rust/issues/47241">Rust Issue #47241</a> for
+more details.</p>
+<h3 id="how-should-i-benchmark-small-functions"><a class="header" href="#how-should-i-benchmark-small-functions">How Should I Benchmark Small Functions?</a></h3>
+<p>Exactly the same way as you would benchmark any other function.</p>
+<p>It is sometimes suggested that benchmarks of small (nanosecond-scale) functions should iterate the
+function to be benchmarked many times internally to reduce the impact of measurement overhead.
+This is <em>not</em> required with Criterion.rs, and it is not recommended.</p>
+<p>To see this, consider the following benchmark:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn compare_small(c: &amp;mut Criterion) {
+    use criterion::black_box;
+
+    let mut group = c.benchmark_group(&quot;small&quot;);
+    group.bench_with_input(&quot;unlooped&quot;, 10, |b, i| b.iter(|| i + 10));
+    group.bench_with_input(&quot;looped&quot;, 10, |b, i| b.iter(|| {
+        for _ in 0..10000 {
+            black_box(i + 10);
+        }
+    }));
+    group.finish();
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>This benchmark simply adds two numbers - just about the smallest function that could be performed.
+On my computer, this produces the following output:</p>
+<pre><code>small/unlooped          time:   [270.00 ps 270.78 ps 271.56 ps]
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high severe
+small/looped            time:   [2.7051 us 2.7142 us 2.7238 us]
+Found 5 outliers among 100 measurements (5.00%)
+  3 (3.00%) high mild
+  2 (2.00%) high severe
+</code></pre>
+<p>2.714 microseconds/10000 gives 271.4 picoseconds, or pretty much the same result. Interestingly,
+this is slightly more than one cycle of my 4th-gen Core i7's maximum clock frequency of 4.4 GHz,
+which shows how good the pipelining is on modern CPUs. Regardless, Criterion.rs is able to
+accurately measure functions all the way down to single instructions. See the <a href="./analysis.html">Analysis
+Process</a> page for more details on how Criterion.rs performs its measurements, or see
+the <a href="./user_guide/timing_loops.html">Timing Loops</a> page for details on choosing a timing loop to minimize
+measurement overhead.</p>
+<h3 id="when-should-i-use-criterionblack_box"><a class="header" href="#when-should-i-use-criterionblack_box">When Should I Use <code>criterion::black_box</code>?</a></h3>
+<p><code>black_box</code> is a function which prevents certain compiler optimizations. Benchmarks are often
+slightly artificial in nature and the compiler can take advantage of that to generate faster code
+when compiling the benchmarks than it would in real usage. In particular, it is common for
+benchmarked functions to be called with constant parameters, and in some cases rustc can
+evaluate the function entirely at compile time and replace the function call with a constant.
+This can produce unnaturally fast benchmarks that don't represent how some code would perform
+when called normally. Therefore, it's useful to black-box the constant input to prevent this
+optimization.</p>
+<p>However, you might have a function which you expect to be called with one or more constant
+parameters. In this case, you might want to write your benchmark to represent that scenario instead,
+and allow the compiler to optimize the constant parameters.</p>
+<p>For the most part, Criterion.rs handles this for you - if you use parameterized benchmarks, the
+parameters are automatically black-boxed by Criterion.rs so you don't need to do anything. If you're
+writing an un-parameterized benchmark of a function that takes an argument, however, this may be
+worth considering.</p>
+<h3 id="cargo-prints-a-warning-about-explicit-bench-sections-in-cargotoml"><a class="header" href="#cargo-prints-a-warning-about-explicit-bench-sections-in-cargotoml">Cargo Prints a Warning About Explicit [[bench]] Sections in Cargo.toml</a></h3>
+<p>Currently, Cargo treats any <code>*.rs</code> file in the <code>benches</code> directory as a
+benchmark, unless there are one or more <code>[[bench]]</code> sections in the
+<code>Cargo.toml</code> file. In that case, the auto-discovery is disabled
+entirely.</p>
+<p>In Rust 2018 edition, Cargo will be changed so that <code>[[bench]]</code> no longer
+disables the auto-discovery. If your <code>benches</code> directory contains source files
+that are not benchmarks, this could break your build when you update, as Cargo
+will attempt to compile them as benchmarks and fail.</p>
+<p>There are two ways to prevent this breakage from happening. You can explicitly
+turn off the autodiscovery like so:</p>
+<pre><code class="language-toml">[[package]]
+autobenches = false
+</code></pre>
+<p>The other option is to move those non-benchmark files to a subdirectory (eg.
+<code>benches/benchmark_code</code>) where they will no longer be detected as benchmarks.
+I would recommend the latter option.</p>
+<p>Note that a file which contains a <code>criterion_main!</code> is a valid benchmark and can
+safely stay where it is.</p>
+<h3 id="i-made-a-trivial-change-to-my-source-and-criterionrs-reports-a-large-change-in-performance-why"><a class="header" href="#i-made-a-trivial-change-to-my-source-and-criterionrs-reports-a-large-change-in-performance-why">I made a trivial change to my source and Criterion.rs reports a large change in performance. Why?</a></h3>
+<p>Don't worry, Criterion.rs isn't broken and you (probably) didn't do anything wrong. The most common
+reason for this is that the optimizer just happened to optimize your function differently after the
+change.</p>
+<p>Optimizing compiler backends such as LLVM (which is used by <code>rustc</code>) are often complex beasts full
+of hand-rolled pattern matching code that detects when a particular optimization is possible and
+tries to guess whether it would make the code faster. Unfortunately, despite all of the engineering
+work that goes into these compilers, it's pretty common for apparently-trivial changes to the source
+like changing the order of lines to be enough to cause these optimizers to act differently. On top of
+this, apparently-small changes like changing the type of a variable or calling a slightly different
+function (such as <code>unwrap</code> vs <code>expect</code>) actually have much larger impacts under the hood than the
+slight different in source text might suggest.</p>
+<p>If you want to learn more about this (and some proposals for improving this situation in the
+future), I like <a href="https://blog.regehr.org/archives/1619">this paper</a> by Regehr et al.</p>
+<p>On a similar subject, it's important to remember that a benchmark is only ever an estimate
+of the true performance of your function. If the optimizer can have significant effects on
+performance in an artificial environment like a benchmark, what about when your function is inlined
+into a variety of different calling contexts? The optimizer will almost certainly make different
+decisions for each caller. One hopes that each specialized version will be faster, but that can't
+be guaranteed. In a world of optimizing compilers, the &quot;true performance&quot; of a function is a fuzzy
+thing indeed.</p>
+<p>If you're still sure that Criterion.rs is doing something wrong, file an issue describing the
+problem.</p>
+<h3 id="i-made-no-change-to-my-source-and-criterionrs-reports-a-large-change-in-performance-why"><a class="header" href="#i-made-no-change-to-my-source-and-criterionrs-reports-a-large-change-in-performance-why">I made <em>no</em> change to my source and Criterion.rs reports a large change in performance. Why?</a></h3>
+<p>Typically this happens because the benchmark environments aren't quite the same. There are a lot of
+factors that can influence benchmarks. Other processes might be using the CPU or memory.
+Battery-powered devices often have power-saving modes that clock down the CPU (and these sometimes
+appear in desktops as well). If your benchmarks are run inside a VM, there might be other VMs on the
+same physical machine competing for resources.</p>
+<p>However, sometimes this happens even with no change. It's important to remember that Criterion.rs
+detects regressions and improvements statistically. There is always a chance that you randomly
+get unusually fast or slow samples, enough that Criterion.rs detects it as a change even though no
+change has occurred. In very large benchmark suites you might expect to see several of these
+spurious detections each time you run the benchmarks.</p>
+<p>Unfortunately, this is a fundamental trade-off in statistics. In order to decrease the rate of false
+detections, you must also decrease the sensitivity to small changes. Conversely, to increase the
+sensitivity to small changes, you must also increase the chance of false detections. Criterion.rs
+has default settings that strike a generally-good balance between the two, but you can adjust the
+settings to suit your needs.</p>
+<h3 id="when-i-run-benchmark-executables-directly-without-using-cargo-they-just-print-success-why"><a class="header" href="#when-i-run-benchmark-executables-directly-without-using-cargo-they-just-print-success-why">When I run benchmark executables directly (without using Cargo) they just print &quot;Success&quot;. Why?</a></h3>
+<p>When Cargo runs benchmarks, it passes the <code>--bench</code> or <code>--test</code> command-line arguments to the
+benchmark executables. Criterion.rs looks for these arguments and tries to either run benchmarks or
+run in test mode. In particular, when you run <code>cargo test --benches</code> (run tests, including testing
+benchmarks) Cargo does not pass either of these arguments. This is perhaps strange, since <code>cargo bench --test</code> passes both <code>--bench</code> and <code>--test</code>. In any case, Criterion.rs benchmarks run in test
+mode when <code>--bench</code> is not present, or when <code>--bench</code> and <code>--test</code> are both present.</p>
+<h3 id="my-benchmark-fails-to-compile-with-the-error-use-of-undeclared-type-or-module-my_crate"><a class="header" href="#my-benchmark-fails-to-compile-with-the-error-use-of-undeclared-type-or-module-my_crate">My benchmark fails to compile with the error &quot;use of undeclared type or module <code>&lt;my_crate&gt;</code></a></h3>
+<p>First, check the <a href="https://bheisler.github.io/criterion.rs/book/getting_started.html">Getting Started</a> 
+guide and ensure that the <code>[[bench]]</code> section of your Cargo.toml is set up correctly. If it's
+correct, read on.</p>
+<p>This can be caused by two different things.</p>
+<p>Most commonly, this problem happens when trying to benchmark a binary (as opposed to library) crate.
+Criterion.rs cannot be used to benchmark binary crates (see the 
+<a href="https://bheisler.github.io/criterion.rs/book/user_guide/known_limitations.html">Known Limitations</a>
+page for more details on why). The usual workaround is to structure your application as a library
+crate that implements most of the functionality of the application and a binary crate which acts
+as a thin wrapper around the library crate to provide things like a CLI. Then, you can create
+Criterion.rs benchmarks that depend on the library crate.</p>
+<p>Less often, the problem is that the library crate is configured to compile as a <code>cdylib</code>. In order
+to benchmark your crate with Criterion.rs, you will need to set your Cargo.toml to enable generating
+an <code>rlib</code> as well.</p>
+<h3 id="how-can-i-benchmark-a-part-of-a-function"><a class="header" href="#how-can-i-benchmark-a-part-of-a-function">How can I benchmark a part of a function?</a></h3>
+<p>The short answer is - you can't, not accurately. The longer answer is below.</p>
+<p>When people ask me this, my first response is always &quot;extract that part of the function into a new
+function, give it a name, and then benchmark <em>that</em>&quot;. It's sort of unsatisfying, but that is also
+the only way to get really accurate measurements of that piece of your code. You can always tag it
+with <code>#[inline(always)]</code> to tell rustc to inline it back into the original callsite in the final
+executable.</p>
+<p>The problem is that your system's clock is not infinitely precise; there is a certain (often
+surprisingly large) granularity to the clock time reported by <code>Instant::now</code>. That means that,
+if it were to measure each execution individually, Criterion.rs might see a sequence of times
+like &quot;0ms, 0ms, 0ms, 0ms, 0ms, 5ms, 0ms...&quot; for a function that takes 1ms. To mitigate this,
+Criterion.rs runs many iterations of your benchmark, to divide that jitter across each iteration.
+There would be no way to run such a timing loop on <em>part</em> of your code, unless that part were
+already easy to factor out and put in a separate function anyway. Instead, you'd have to 
+time each iteration individually, resulting in the maximum possible timing jitter.</p>
+<p>However, if you need to do this anyway, and you're OK with the reduced accuracy, you can use 
+<code>Bencher::iter_custom</code> to measure your code however you want to. <code>iter_custom</code> exists to allow for 
+complex cases like multi-threaded code or, yes, measuring part of a function. Just be aware that 
+you're responsible for the accuracy of your measurements.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="analysis.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="migrating_0_2_to_0_3.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="analysis.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="migrating_0_2_to_0_3.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

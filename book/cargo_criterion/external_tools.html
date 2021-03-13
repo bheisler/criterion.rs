@@ -1,0 +1,343 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>External Tools - Criterion.rs Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="User Guide and Other Prose Documentation For Criterion.rs">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../criterion_rs.html"><strong aria-hidden="true">1.</strong> Criterion.rs</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../getting_started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li></ol></li><li class="chapter-item expanded "><a href="../user_guide/user_guide.html"><strong aria-hidden="true">2.</strong> User Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../user_guide/migrating_from_libtest.html"><strong aria-hidden="true">2.1.</strong> Migrating from libtest</a></li><li class="chapter-item expanded "><a href="../user_guide/command_line_output.html"><strong aria-hidden="true">2.2.</strong> Command-Line Output</a></li><li class="chapter-item expanded "><a href="../user_guide/command_line_options.html"><strong aria-hidden="true">2.3.</strong> Command-Line Options</a></li><li class="chapter-item expanded "><a href="../user_guide/html_report.html"><strong aria-hidden="true">2.4.</strong> HTML Report</a></li><li class="chapter-item expanded "><a href="../user_guide/plots_and_graphs.html"><strong aria-hidden="true">2.5.</strong> Plots &amp; Graphs</a></li><li class="chapter-item expanded "><a href="../user_guide/benchmarking_with_inputs.html"><strong aria-hidden="true">2.6.</strong> Benchmarking With Inputs</a></li><li class="chapter-item expanded "><a href="../user_guide/advanced_configuration.html"><strong aria-hidden="true">2.7.</strong> Advanced Configuration</a></li><li class="chapter-item expanded "><a href="../user_guide/comparing_functions.html"><strong aria-hidden="true">2.8.</strong> Comparing Functions</a></li><li class="chapter-item expanded "><a href="../user_guide/csv_output.html"><strong aria-hidden="true">2.9.</strong> CSV Output</a></li><li class="chapter-item expanded "><a href="../user_guide/known_limitations.html"><strong aria-hidden="true">2.10.</strong> Known Limitations</a></li><li class="chapter-item expanded "><a href="../user_guide/bencher_compatibility.html"><strong aria-hidden="true">2.11.</strong> Bencher Compatibility Layer</a></li><li class="chapter-item expanded "><a href="../user_guide/timing_loops.html"><strong aria-hidden="true">2.12.</strong> Timing Loops</a></li><li class="chapter-item expanded "><a href="../user_guide/custom_measurements.html"><strong aria-hidden="true">2.13.</strong> Custom Measurements</a></li><li class="chapter-item expanded "><a href="../user_guide/profiling.html"><strong aria-hidden="true">2.14.</strong> Profiling</a></li><li class="chapter-item expanded "><a href="../user_guide/custom_test_framework.html"><strong aria-hidden="true">2.15.</strong> Custom Test Framework</a></li><li class="chapter-item expanded "><a href="../user_guide/benchmarking_async.html"><strong aria-hidden="true">2.16.</strong> Benchmarking async functions</a></li></ol></li><li class="chapter-item expanded "><a href="../cargo_criterion/cargo_criterion.html"><strong aria-hidden="true">3.</strong> cargo-criterion</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../cargo_criterion/configuring_cargo_criterion.html"><strong aria-hidden="true">3.1.</strong> Configuring cargo-criterion</a></li><li class="chapter-item expanded "><a href="../cargo_criterion/external_tools.html" class="active"><strong aria-hidden="true">3.2.</strong> External Tools</a></li></ol></li><li class="chapter-item expanded "><a href="../iai/iai.html"><strong aria-hidden="true">4.</strong> Iai</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../iai/getting_started.html"><strong aria-hidden="true">4.1.</strong> Getting Started with Iai</a></li><li class="chapter-item expanded "><a href="../iai/comparison.html"><strong aria-hidden="true">4.2.</strong> Comparison to Criterion.rs</a></li></ol></li><li class="chapter-item expanded "><a href="../analysis.html"><strong aria-hidden="true">5.</strong> Analysis Process</a></li><li class="chapter-item expanded "><a href="../faq.html"><strong aria-hidden="true">6.</strong> Frequently Asked Questions</a></li><li class="chapter-item expanded "><a href="../migrating_0_2_to_0_3.html"><strong aria-hidden="true">7.</strong> Migrating from 0.2.* to 0.3.*</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Criterion.rs Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="external-tools"><a class="header" href="#external-tools">External Tools</a></h1>
+<p>cargo-criterion provides a machine-readable output stream which other tools can consume to collect
+information about the Criterion.rs benchmarks.</p>
+<p>To enable this output stream, pass the <code>--message-format</code> argument when running cargo-criterion.</p>
+<h2 id="json-messages"><a class="header" href="#json-messages">JSON messages</a></h2>
+<p>When passing <code>--message-format=json</code> cargo-criterion will output information about:</p>
+<ul>
+<li>Benchmarks, including the basic statistics about the measurements</li>
+<li>Benchmark groups</li>
+</ul>
+<p>The output goes to stdout, with one JSON object per line. The <code>reason</code> field distinguishes different
+kinds of messages.</p>
+<p>Additional messages or fields may be added to the output in the future.</p>
+<h3 id="benchmark-complete-messages"><a class="header" href="#benchmark-complete-messages">Benchmark Complete Messages</a></h3>
+<p>The &quot;benchmark-complete&quot; message includes the measurements and basic statistics from a single 
+Criterion.rs benchmark. The message format is as follows:</p>
+<pre><code class="language-json">{
+  /* The &quot;reason&quot; indicates which kind of message this is. */
+  &quot;reason&quot;: &quot;benchmark-complete&quot;,
+  /* The id is the identifier of this benchmark */
+  &quot;id&quot;: &quot;norm&quot;,
+  /* Path to the directory containing the report for this benchmark */
+  &quot;report_directory&quot;: &quot;target/criterion/reports/norm&quot;,
+  /* List of integer iteration counts */
+  &quot;iteration_count&quot;: [
+    30,
+    /* ... */
+    3000
+  ],
+  /* List of floating point measurements (eg. time, CPU cycles) taken 
+  from the benchmark */
+  &quot;measured_values&quot;: [
+    124200.0,
+    /* ... */
+    9937100.0
+  ],
+  /* The unit associated with measured_values. */
+  &quot;unit&quot;: &quot;ns&quot;,
+  /* The throughput value associated with this benchmark. This can be used 
+  to calculate throughput rates, eg. in bytes or elements per second. */
+  &quot;throughput&quot;: [
+    {
+      &quot;per_iteration&quot;: 1024,
+      &quot;unit&quot;: &quot;elements&quot;
+    }
+  ],
+  /* Confidence intervals for the basic statistics that cargo-criterion 
+  computes. */
+  /* 
+  &quot;typical&quot; is either the slope (if available) or the mean (if not). It
+  makes a good general-purpose estimate of the typical performance of a
+  function.
+  */
+  &quot;typical&quot;: {
+    &quot;estimate&quot;: 3419.4923993891925,
+    &quot;lower_bound&quot;: 3375.24221103098,
+    &quot;upper_bound&quot;: 3465.458469579234,
+    &quot;unit&quot;: &quot;ns&quot;
+  },
+  &quot;mean&quot;: {
+    &quot;estimate&quot;: 3419.5340743105917,
+    &quot;lower_bound&quot;: 3374.4765622217083,
+    &quot;upper_bound&quot;: 3474.096214164006,
+    &quot;unit&quot;: &quot;ns&quot;
+  },
+  &quot;median&quot;: {
+    &quot;estimate&quot;: 3362.8249818445897,
+    &quot;lower_bound&quot;: 3334.259259259259,
+    &quot;upper_bound&quot;: 3387.5146198830407,
+    &quot;unit&quot;: &quot;ns&quot;
+  },
+  &quot;median_abs_dev&quot;: {
+    &quot;estimate&quot;: 130.7846461816652,
+    &quot;lower_bound&quot;: 96.55619525548211,
+    &quot;upper_bound&quot;: 161.1643711235156,
+    &quot;unit&quot;: &quot;ns&quot;
+  },
+  
+  /* Note that not all benchmarks can measure the slope, so it may be 
+  missing. */
+  &quot;slope&quot;: {
+    &quot;estimate&quot;: 3419.4923993891925,
+    &quot;lower_bound&quot;: 3375.24221103098,
+    &quot;upper_bound&quot;: 3465.458469579234,
+    &quot;unit&quot;: &quot;ns&quot;
+  },
+
+  /* &quot;change&quot; contains some additional statistics about the difference 
+  between this run and the last */
+  &quot;change&quot;: {
+    /* Percentage differences in the mean &amp; median values */
+    &quot;mean&quot;: {
+      &quot;estimate&quot;: 0.014278477848724602,
+      &quot;lower_bound&quot;: -0.01790259435189548,
+      &quot;upper_bound&quot;: 0.03912764721581533,
+      &quot;unit&quot;: &quot;%&quot;
+    },
+    &quot;median&quot;: {
+      &quot;estimate&quot;: 0.012211662837601445,
+      &quot;lower_bound&quot;: -0.0005448009516478807,
+      &quot;upper_bound&quot;: 0.024243170768727857,
+      &quot;unit&quot;: &quot;%&quot;
+    },
+    /* 
+    Indicates whether cargo-criterion found a statistically-significant 
+    change. Values are NoChange, Improved, or Regressed
+    */
+    &quot;change&quot;: &quot;NoChange&quot;
+  }
+}
+</code></pre>
+<h3 id="group-complete-messages"><a class="header" href="#group-complete-messages">Group Complete Messages</a></h3>
+<p>When a benchmark group is completed, cargo-criterion emits a &quot;group-complete&quot; message containing
+some information about the group.</p>
+<pre><code class="language-json">{
+  &quot;reason&quot;: &quot;group-complete&quot;,
+  /* The name of the benchmark group */
+  &quot;group_name&quot;: &quot;throughput&quot;,
+  /* List of the benchmark IDs in this group */
+  &quot;benchmarks&quot;: [
+    &quot;throughput/Bytes&quot;,
+    &quot;throughput/Bytes&quot;,
+    &quot;throughput/Elem&quot;
+  ],
+  /* Path to the directory that contains the report for this group */
+  &quot;report_directory&quot;: &quot;target/criterion/reports/throughput&quot;
+}
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../cargo_criterion/configuring_cargo_criterion.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../iai/iai.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../cargo_criterion/configuring_cargo_criterion.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../iai/iai.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

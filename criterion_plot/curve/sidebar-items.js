@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Curve","Types of \"curve\" plots"]],"struct":[["Properties","Properties common to simple \"curve\" like plots"]]});

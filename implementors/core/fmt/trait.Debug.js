@@ -1,0 +1,4 @@
+(function() {var implementors = {};
+implementors["criterion"] = [{"text":"impl Debug for BatchSize","synthetic":false,"types":[]},{"text":"impl Debug for Baseline","synthetic":false,"types":[]},{"text":"impl Debug for PlottingBackend","synthetic":false,"types":[]},{"text":"impl Debug for Throughput","synthetic":false,"types":[]},{"text":"impl Debug for AxisScale","synthetic":false,"types":[]},{"text":"impl Debug for PlotConfiguration","synthetic":false,"types":[]},{"text":"impl Debug for SamplingMode","synthetic":false,"types":[]}];
+implementors["criterion_plot"] = [{"text":"impl Debug for VersionError","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

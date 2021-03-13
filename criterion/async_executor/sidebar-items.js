@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["AsyncStdExecutor","Runs futures on the 'async-std' crate's global executor"],["FuturesExecutor","Runs futures on the 'futures' crate's built-in current-thread executor"],["SmolExecutor","Runs futures on the 'soml' crate's global executor"]],"trait":[["AsyncExecutor","Plugin trait used to allow benchmarking on multiple different async runtimes."]]});

@@ -1,0 +1,295 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>CSV Output - Criterion.rs Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="User Guide and Other Prose Documentation For Criterion.rs">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../criterion_rs.html"><strong aria-hidden="true">1.</strong> Criterion.rs</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../getting_started.html"><strong aria-hidden="true">1.1.</strong> Getting Started</a></li></ol></li><li class="chapter-item expanded "><a href="../user_guide/user_guide.html"><strong aria-hidden="true">2.</strong> User Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../user_guide/migrating_from_libtest.html"><strong aria-hidden="true">2.1.</strong> Migrating from libtest</a></li><li class="chapter-item expanded "><a href="../user_guide/command_line_output.html"><strong aria-hidden="true">2.2.</strong> Command-Line Output</a></li><li class="chapter-item expanded "><a href="../user_guide/command_line_options.html"><strong aria-hidden="true">2.3.</strong> Command-Line Options</a></li><li class="chapter-item expanded "><a href="../user_guide/html_report.html"><strong aria-hidden="true">2.4.</strong> HTML Report</a></li><li class="chapter-item expanded "><a href="../user_guide/plots_and_graphs.html"><strong aria-hidden="true">2.5.</strong> Plots &amp; Graphs</a></li><li class="chapter-item expanded "><a href="../user_guide/benchmarking_with_inputs.html"><strong aria-hidden="true">2.6.</strong> Benchmarking With Inputs</a></li><li class="chapter-item expanded "><a href="../user_guide/advanced_configuration.html"><strong aria-hidden="true">2.7.</strong> Advanced Configuration</a></li><li class="chapter-item expanded "><a href="../user_guide/comparing_functions.html"><strong aria-hidden="true">2.8.</strong> Comparing Functions</a></li><li class="chapter-item expanded "><a href="../user_guide/csv_output.html" class="active"><strong aria-hidden="true">2.9.</strong> CSV Output</a></li><li class="chapter-item expanded "><a href="../user_guide/known_limitations.html"><strong aria-hidden="true">2.10.</strong> Known Limitations</a></li><li class="chapter-item expanded "><a href="../user_guide/bencher_compatibility.html"><strong aria-hidden="true">2.11.</strong> Bencher Compatibility Layer</a></li><li class="chapter-item expanded "><a href="../user_guide/timing_loops.html"><strong aria-hidden="true">2.12.</strong> Timing Loops</a></li><li class="chapter-item expanded "><a href="../user_guide/custom_measurements.html"><strong aria-hidden="true">2.13.</strong> Custom Measurements</a></li><li class="chapter-item expanded "><a href="../user_guide/profiling.html"><strong aria-hidden="true">2.14.</strong> Profiling</a></li><li class="chapter-item expanded "><a href="../user_guide/custom_test_framework.html"><strong aria-hidden="true">2.15.</strong> Custom Test Framework</a></li><li class="chapter-item expanded "><a href="../user_guide/benchmarking_async.html"><strong aria-hidden="true">2.16.</strong> Benchmarking async functions</a></li></ol></li><li class="chapter-item expanded "><a href="../cargo_criterion/cargo_criterion.html"><strong aria-hidden="true">3.</strong> cargo-criterion</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../cargo_criterion/configuring_cargo_criterion.html"><strong aria-hidden="true">3.1.</strong> Configuring cargo-criterion</a></li><li class="chapter-item expanded "><a href="../cargo_criterion/external_tools.html"><strong aria-hidden="true">3.2.</strong> External Tools</a></li></ol></li><li class="chapter-item expanded "><a href="../iai/iai.html"><strong aria-hidden="true">4.</strong> Iai</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../iai/getting_started.html"><strong aria-hidden="true">4.1.</strong> Getting Started with Iai</a></li><li class="chapter-item expanded "><a href="../iai/comparison.html"><strong aria-hidden="true">4.2.</strong> Comparison to Criterion.rs</a></li></ol></li><li class="chapter-item expanded "><a href="../analysis.html"><strong aria-hidden="true">5.</strong> Analysis Process</a></li><li class="chapter-item expanded "><a href="../faq.html"><strong aria-hidden="true">6.</strong> Frequently Asked Questions</a></li><li class="chapter-item expanded "><a href="../migrating_0_2_to_0_3.html"><strong aria-hidden="true">7.</strong> Migrating from 0.2.* to 0.3.*</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Criterion.rs Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="csv-output"><a class="header" href="#csv-output">CSV Output</a></h1>
+<p>NOTE: The CSV output is in the process of being deprecated. For machine-readable output,
+cargo-criterion's <code>--message-format=json</code> option is recommended instead - see <a href="../cargo_criterion/external_tools.html">External
+Tools</a>. CSV output will become an optional feature in
+Criterion.rs 0.4.0.</p>
+<p>Criterion.rs saves its measurements in several files, as shown below:</p>
+<pre><code>$BENCHMARK/
+├── base/
+│  ├── raw.csv
+│  ├── estimates.json
+│  ├── sample.json
+│  └── tukey.json
+├── change/
+│  └── estimates.json
+├── new/
+│  ├── raw.csv
+│  ├── estimates.json
+│  ├── sample.json
+│  └── tukey.json
+</code></pre>
+<p>The JSON files are all considered private implementation details of Criterion.rs, and their
+structure may change at any time without warning.</p>
+<p>However, there is a need for some sort of stable and machine-readable output to enable projects like
+<a href="https://github.com/anp/lolbench">lolbench</a> to keep historical data or perform additional analysis
+on the measurements. For this reason, Criterion.rs also writes the <code>raw.csv</code> file. The format of
+this file is expected to remain stable between different versions of Criterion.rs, so this file is
+suitable for external tools to depend on.</p>
+<p>The format of <code>raw.csv</code> is as follows:</p>
+<pre><code>group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+Fibonacci,Iterative,,,,915000,ns,110740
+Fibonacci,Iterative,,,,1964000,ns,221480
+Fibonacci,Iterative,,,,2812000,ns,332220
+Fibonacci,Iterative,,,,3767000,ns,442960
+Fibonacci,Iterative,,,,4785000,ns,553700
+Fibonacci,Iterative,,,,6302000,ns,664440
+Fibonacci,Iterative,,,,6946000,ns,775180
+Fibonacci,Iterative,,,,7815000,ns,885920
+Fibonacci,Iterative,,,,9186000,ns,996660
+Fibonacci,Iterative,,,,9578000,ns,1107400
+Fibonacci,Iterative,,,,11206000,ns,1218140
+...
+</code></pre>
+<p>This data was taken with this benchmark code:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn compare_fibonaccis(c: &amp;mut Criterion) {
+    let mut group = c.benchmark_group(&quot;Fibonacci&quot;);
+    group.bench_with_input(&quot;Recursive&quot;, 20, |b, i| b.iter(|| fibonacci_slow(*i)));
+    group.bench_with_input(&quot;Iterative&quot;, 20, |b, i| b.iter(|| fibonacci_fast(*i)));
+    group.finish();
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p><code>raw.csv</code> contains the following columns:</p>
+<ul>
+<li><code>group</code> - This corresponds to the function group name, in this case &quot;Fibonacci&quot; as seen in the
+code above. This is the parameter given to the <code>Criterion::bench</code> functions.</li>
+<li><code>function</code> - This corresponds to the function name, in this case &quot;Iterative&quot;. When comparing
+multiple functions, each function is given a different name. Otherwise, this will be the empty
+string.</li>
+<li><code>value</code> - This is the parameter passed to the benchmarked function when using parameterized
+benchmarks. In this case, there is no parameter so the value is the empty string.</li>
+<li><code>throughput_num</code> - This is the numeric value of the Throughput configured on the benchmark 
+(if any)</li>
+<li><code>throughput_type</code> - &quot;bytes&quot; or &quot;elements&quot;, corresponding to the variant of the Throughput 
+configured on the benchmark (if any)</li>
+<li><code>iteration_count</code> - The number of times the benchmark was iterated for this sample.</li>
+<li><code>sample_measured_value</code> - The value of the measurement for this sample. Note
+that this is the measured value for the whole sample, not the time-per-iteration (see 
+<a href="../analysis.html#measurement">Analysis Process</a> for more detail). To calculate the time-per-iteration,
+use <code>sample_measured_value/iteration_count</code>.</li>
+<li><code>unit</code> - a string representing the unit for the measured value. For the default <code>WallTime</code> 
+measurement this will be &quot;ns&quot;, for nanoseconds.</li>
+</ul>
+<p>As you can see, this is the raw measurements taken by the Criterion.rs benchmark process. There is
+one record for each sample, and one file for each benchmark.</p>
+<p>The results of Criterion.rs' analysis of these measurements are not currently available in
+machine-readable form. If you need access to this information, please raise an issue describing
+your use case.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../user_guide/comparing_functions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../user_guide/known_limitations.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../user_guide/comparing_functions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../user_guide/known_limitations.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

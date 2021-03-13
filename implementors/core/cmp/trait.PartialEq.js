@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["criterion"] = [{"text":"impl PartialEq&lt;BenchmarkId&gt; for BenchmarkId","synthetic":false,"types":[]},{"text":"impl PartialEq&lt;BatchSize&gt; for BatchSize","synthetic":false,"types":[]},{"text":"impl PartialEq&lt;Throughput&gt; for Throughput","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
