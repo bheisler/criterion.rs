@@ -26,7 +26,7 @@ where
     /// Panics if `slice` contains any `NaN` or if `slice` has less than two elements
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::new_ret_no_self))]
     pub fn new(slice: &[A]) -> &Sample<A> {
-        assert!(slice.len() > 1 && slice.iter().all(|x| !x.is_nan()));
+        assert!(slice.len() > 0 && slice.iter().all(|x| !x.is_nan()));
 
         unsafe { mem::transmute(slice) }
     }
@@ -190,7 +190,7 @@ where
             .map(|&x| (x - mean).powi(2))
             .fold(A::cast(0), Add::add);
 
-        sum / A::cast(slice.len() - 1)
+        sum / A::cast(slice.len())
     }
 
     // TODO Remove the `T` parameter in favor of `S::Output`
@@ -251,5 +251,39 @@ impl<A> ops::Deref for Sample<A> {
 
     fn deref(&self) -> &[A] {
         &self.0
+    }
+}
+
+
+#[cfg(test)]
+mod test {
+    use crate::stats::univariate::Sample;
+
+    #[test]
+    fn test_variance() {
+        let values = [1.0, 2.0, 3.0, 4.0, 5.0];
+        let sample = Sample::new(&values);
+        assert_eq!(sample.var(None), 2.0);
+    }
+
+    #[test]
+    fn test_variance_float() {
+        let values = [1.0, 3.0, 5.0, 5.0];
+        let sample = Sample::new(&values);
+        assert_eq!(sample.var(None), 11.0/4.0);
+    }
+
+    #[test]
+    fn test_variance_negative_values() {
+        let values = [-2.0, -1.0, 0.0];
+        let sample = Sample::new(&values);
+        assert_eq!(sample.var(None), 2.0/3.0);
+    }
+
+    #[test]
+    fn test_variance_single_value() {
+        let values = [1.0];
+        let sample = Sample::new(&values);
+        assert_eq!(sample.var(None), 0.0);
     }
 }
