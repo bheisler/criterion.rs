@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Candlesticks","A candlestick consists of a box and two whiskers that extend beyond the box"],["Properties","Properties common to candlestick plots"]]});
