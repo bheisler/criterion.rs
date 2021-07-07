@@ -73,7 +73,7 @@ macro_rules! criterion_group {
         }
     };
     ($name:ident, $( $target:path ),+ $(,)*) => {
-        criterion_group!{
+        $crate::criterion_group!{
             name = $name;
             config = $crate::Criterion::default();
             targets = $( $target ),+
