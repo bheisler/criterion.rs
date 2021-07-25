@@ -32,6 +32,7 @@ jobs:
           command: test
 
       - uses: actions-rs/cargo@v1
+        if: ${{ matrix.rust == 'stable' }}
         with:
           command: fmt
           args: --all -- --check
