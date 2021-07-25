@@ -53,10 +53,10 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
             &criterion.baseline_directory,
             &criterion.output_directory,
         ) {
-            panic!(format!(
+            panic!(
                 "Baseline '{base}' must exist before comparison is allowed; try --save-baseline {base}",
                 base=criterion.baseline_directory,
-            ));
+            );
         }
     }
 
