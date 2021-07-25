@@ -9,7 +9,6 @@ jobs:
       matrix:
         rust:
           - stable
-          - beta
           - nightly
           - 1.40.0  # MSRV
 
