@@ -345,7 +345,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
                     func.profile(
                         &self.criterion.measurement,
                         &id,
-                        &self.criterion,
+                        self.criterion,
                         &report_context,
                         duration,
                         input,

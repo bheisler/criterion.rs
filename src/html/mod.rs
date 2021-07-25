@@ -218,12 +218,12 @@ impl<'a> BenchmarkGroup<'a> {
         // numerically. Otherwise sort lexicographically.
         if values.iter().all(|os| parse_opt(os).is_some()) {
             values.sort_unstable_by(|v1, v2| {
-                let num1 = parse_opt(&v1);
-                let num2 = parse_opt(&v2);
+                let num1 = parse_opt(v1);
+                let num2 = parse_opt(v2);
 
                 num1.partial_cmp(&num2).unwrap_or(Ordering::Less)
             });
-            values.dedup_by_key(|os| parse_opt(&os).unwrap());
+            values.dedup_by_key(|os| parse_opt(os).unwrap());
         } else {
             values.sort_unstable();
             values.dedup();
@@ -438,14 +438,14 @@ impl Report for Html {
 
         // If all of the value strings can be parsed into a number, sort/dedupe
         // numerically. Otherwise sort lexicographically.
-        if value_strs.iter().all(|os| try_parse(&*os).is_some()) {
+        if value_strs.iter().all(|os| try_parse(*os).is_some()) {
             value_strs.sort_unstable_by(|v1, v2| {
-                let num1 = try_parse(&v1);
-                let num2 = try_parse(&v2);
+                let num1 = try_parse(v1);
+                let num2 = try_parse(v2);
 
                 num1.partial_cmp(&num2).unwrap_or(Ordering::Less)
             });
-            value_strs.dedup_by_key(|os| try_parse(&os).unwrap());
+            value_strs.dedup_by_key(|os| try_parse(os).unwrap());
         } else {
             value_strs.sort_unstable();
             value_strs.dedup();
@@ -455,7 +455,7 @@ impl Report for Html {
             let samples_with_function: Vec<_> = data
                 .iter()
                 .by_ref()
-                .filter(|&&(ref id, _)| id.function_id.as_ref() == Some(&function_id))
+                .filter(|&&(id, _)| id.function_id.as_ref() == Some(function_id))
                 .collect();
 
             if samples_with_function.len() > 1 {
@@ -476,7 +476,7 @@ impl Report for Html {
             let samples_with_value: Vec<_> = data
                 .iter()
                 .by_ref()
-                .filter(|&&(ref id, _)| id.value_str.as_ref() == Some(&value_str))
+                .filter(|&&(id, _)| id.value_str.as_ref() == Some(value_str))
                 .collect();
 
             if samples_with_value.len() > 1 {
@@ -497,7 +497,7 @@ impl Report for Html {
         // First sort the ids/data by value.
         // If all of the value strings can be parsed into a number, sort/dedupe
         // numerically. Otherwise sort lexicographically.
-        let all_values_numeric = all_data.iter().all(|(ref id, _)| {
+        let all_values_numeric = all_data.iter().all(|(id, _)| {
             id.value_str
                 .as_ref()
                 .map(String::as_str)
@@ -577,7 +577,7 @@ impl Html {
             if !different_mean {
                 explanation_str = "No change in performance detected.".to_owned();
             } else {
-                let comparison = compare_to_threshold(&mean_est, comp.noise_threshold);
+                let comparison = compare_to_threshold(mean_est, comp.noise_threshold);
                 match comparison {
                     ComparisonResult::Improved => {
                         explanation_str = "Performance has improved.".to_owned();
@@ -689,7 +689,7 @@ impl Html {
                 fs::mkdirp(&both_dir)
             });
 
-            let comp_data = plot_data.comparison(&comp);
+            let comp_data = plot_data.comparison(comp);
 
             self.plotter.borrow_mut().pdf(plot_ctx, comp_data);
             self.plotter.borrow_mut().pdf(plot_ctx_small, comp_data);
@@ -767,12 +767,12 @@ impl Html {
 
         self.plotter.borrow_mut().violin(plot_ctx, formatter, data);
 
-        let value_types: Vec<_> = data.iter().map(|&&(ref id, _)| id.value_type()).collect();
+        let value_types: Vec<_> = data.iter().map(|&&(id, _)| id.value_type()).collect();
         let mut line_path = None;
 
         if value_types.iter().all(|x| x == &value_types[0]) {
             if let Some(value_type) = value_types[0] {
-                let values: Vec<_> = data.iter().map(|&&(ref id, _)| id.as_number()).collect();
+                let values: Vec<_> = data.iter().map(|&&(id, _)| id.as_number()).collect();
                 if values.iter().any(|x| x != &values[0]) {
                     self.plotter
                         .borrow_mut()
@@ -785,7 +785,7 @@ impl Html {
         let path_prefix = if full_summary { "../.." } else { "../../.." };
         let benchmarks = data
             .iter()
-            .map(|&&(ref id, _)| {
+            .map(|&&(id, _)| {
                 IndividualBenchmark::from_id(&report_context.output_directory, path_prefix, id)
             })
             .collect();

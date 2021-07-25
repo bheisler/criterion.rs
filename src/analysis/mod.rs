@@ -278,7 +278,7 @@ fn regression(
     )
     .0;
 
-    let point = Slope::fit(&data);
+    let point = Slope::fit(data);
     let (lb, ub) = distribution.confidence_interval(config.confidence_level);
     let se = distribution.std_dev(None);
 
