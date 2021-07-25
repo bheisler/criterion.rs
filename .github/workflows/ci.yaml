@@ -1,4 +1,10 @@
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 name: tests
 
@@ -23,6 +29,8 @@ jobs:
           override: true
           components: rustfmt, clippy
 
+      - uses: Swatinem/rust-cache@v1
+
       - uses: actions-rs/cargo@v1
         with:
           command: build
@@ -38,6 +46,7 @@ jobs:
           args: --all -- --check
 
       - uses: actions-rs/cargo@v1
+        if: ${{ matrix.rust != '1.40.0' }} # 1.40 has horrible lints.
         with:
           command: clippy
           args: -- -D warnings
