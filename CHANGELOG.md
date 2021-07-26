@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - Bump plotters dependency to always include a bug-fix.
+- MSRV bumped to 1.46.
 
 ## [0.3.4] - 2021-01-24
 ### Added
