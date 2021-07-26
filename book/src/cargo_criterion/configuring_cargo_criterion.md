@@ -24,7 +24,7 @@ output_format = "criterion"
 # This is used to configure the plotting backend used by cargo-criterion. 
 # Options are "gnuplot" and "plotters", or "auto", which will use gnuplot if it's
 # available or plotters if it isn't.
-ploting_backend = "auto"
+plotting_backend = "auto"
 
 # The colors table allows users to configure the colors used by the charts 
 # cargo-criterion generates.

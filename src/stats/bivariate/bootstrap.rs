@@ -10,8 +10,12 @@ macro_rules! test {
             use crate::stats::bivariate::Data;
 
             quickcheck! {
-                fn means(size: usize, start: usize,
-                         offset: usize, nresamples: usize) -> TestResult {
+                fn means(size: u8, start: u8,
+                         offset: u8, nresamples: u8) -> TestResult {
+                    let size = size as usize;
+                    let start = start as usize;
+                    let offset = offset as usize;
+                    let nresamples = nresamples as usize;
                     if let Some(x) = crate::stats::test::vec::<$ty>(size, start) {
                         let y = crate::stats::test::vec::<$ty>(size + offset, start + offset).unwrap();
                         let data = Data::new(&x[start..], &y[start+offset..]);
@@ -48,8 +52,12 @@ macro_rules! test {
             }
 
             quickcheck! {
-                fn slope(size: usize, start: usize,
-                         offset: usize, nresamples: usize) -> TestResult {
+                fn slope(size: u8, start: u8,
+                         offset: u8, nresamples: u8) -> TestResult {
+                    let size = size as usize;
+                    let start = start as usize;
+                    let offset = offset as usize;
+                    let nresamples = nresamples as usize;
                     if let Some(x) = crate::stats::test::vec::<$ty>(size, start) {
                         let y = crate::stats::test::vec::<$ty>(size + offset, start + offset).unwrap();
                         let data = Data::new(&x[start..], &y[start+offset..]);

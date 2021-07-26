@@ -39,13 +39,15 @@ macro_rules! test {
 
                 quickcheck! {
                     fn symmetric(x: $ty) -> bool {
-                        relative_eq!(Gaussian.evaluate(-x), Gaussian.evaluate(x))
+                        x.is_nan() || relative_eq!(Gaussian.evaluate(-x), Gaussian.evaluate(x))
                     }
                 }
 
                 // Any [a b] integral should be in the range [0 1]
                 quickcheck! {
                     fn integral(a: $ty, b: $ty) -> TestResult {
+                        let a = a.sin().abs(); // map the value to [0 1]
+                        let b = b.sin().abs(); // map the value to [0 1]
                         const DX: $ty = 1e-3;
 
                         if a > b {
