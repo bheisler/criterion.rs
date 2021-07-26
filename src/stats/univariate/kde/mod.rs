@@ -5,6 +5,7 @@ pub mod kernel;
 use self::kernel::Kernel;
 use crate::stats::float::Float;
 use crate::stats::univariate::Sample;
+#[cfg(feature = "rayon")]
 use rayon::prelude::*;
 
 /// Univariate kernel density estimator
@@ -42,8 +43,13 @@ where
     ///
     /// - Multihreaded
     pub fn map(&self, xs: &[A]) -> Box<[A]> {
-        xs.par_iter()
-            .map(|&x| self.estimate(x))
+        #[cfg(feature = "rayon")]
+        let iter = xs.par_iter();
+
+        #[cfg(not(feature = "rayon"))]
+        let iter = xs.iter();
+
+        iter.map(|&x| self.estimate(x))
             .collect::<Vec<_>>()
             .into_boxed_slice()
     }

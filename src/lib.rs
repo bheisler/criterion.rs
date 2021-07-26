@@ -90,7 +90,9 @@ use crate::connection::Connection;
 use crate::connection::OutgoingMessage;
 use crate::html::Html;
 use crate::measurement::{Measurement, WallTime};
-use crate::plot::{Gnuplot, Plotter, PlottersBackend};
+#[cfg(feature = "plotters")]
+use crate::plot::PlottersBackend;
+use crate::plot::{Gnuplot, Plotter};
 use crate::profiler::{ExternalProfiler, Profiler};
 use crate::report::{BencherReport, CliReport, Report, ReportContext, Reports};
 
@@ -103,18 +105,22 @@ lazy_static! {
     static ref DEBUG_ENABLED: bool = std::env::var_os("CRITERION_DEBUG").is_some();
     static ref GNUPLOT_VERSION: Result<Version, VersionError> = criterion_plot::version();
     static ref DEFAULT_PLOTTING_BACKEND: PlottingBackend = {
-        match &*GNUPLOT_VERSION {
-            Ok(_) => PlottingBackend::Gnuplot,
-            Err(e) => {
-                match e {
-                    VersionError::Exec(_) => eprintln!("Gnuplot not found, using plotters backend"),
-                    e => eprintln!(
-                        "Gnuplot not found or not usable, using plotters backend\n{}",
-                        e
-                    ),
-                };
-                PlottingBackend::Plotters
+        if cfg!(feature = "html_reports") {
+            match &*GNUPLOT_VERSION {
+                Ok(_) => PlottingBackend::Gnuplot,
+                Err(e) => {
+                    match e {
+                        VersionError::Exec(_) => eprintln!("Gnuplot not found, using plotters backend"),
+                        e => eprintln!(
+                            "Gnuplot not found or not usable, using plotters backend\n{}",
+                            e
+                        ),
+                    };
+                    PlottingBackend::Plotters
+                }
             }
+        } else {
+            PlottingBackend::None
         }
     };
     static ref CARGO_CRITERION_CONNECTION: Option<Mutex<Connection>> = {
@@ -265,6 +271,8 @@ pub enum Baseline {
     /// Save writes the benchmark results to the baseline directory,
     /// overwriting any results that were previously there.
     Save,
+    /// Discard benchmark results.
+    Discard,
 }
 
 /// Enum used to select the plotting backend.
@@ -276,12 +284,18 @@ pub enum PlottingBackend {
     /// Plotting backend which uses the rust 'Plotters' library. This is the default if `gnuplot`
     /// is not installed.
     Plotters,
+    /// Null plotting backend which outputs nothing,
+    None,
 }
 impl PlottingBackend {
-    fn create_plotter(&self) -> Box<dyn Plotter> {
+    fn create_plotter(&self) -> Option<Box<dyn Plotter>> {
         match self {
-            PlottingBackend::Gnuplot => Box::new(Gnuplot::default()),
-            PlottingBackend::Plotters => Box::new(PlottersBackend::default()),
+            PlottingBackend::Gnuplot => Some(Box::new(Gnuplot::default())),
+            #[cfg(feature = "plotters")]
+            PlottingBackend::Plotters => Some(Box::new(PlottersBackend::default())),
+            #[cfg(not(feature = "plotters"))]
+            PlottingBackend::Plotters => panic!("Criterion was built without plotters support."),
+            PlottingBackend::None => None,
         }
     }
 }
@@ -372,8 +386,7 @@ impl Default for Criterion {
             cli: CliReport::new(false, false, false),
             bencher_enabled: false,
             bencher: BencherReport,
-            html_enabled: cfg!(feature = "html_reports"),
-            html: Html::new(DEFAULT_PLOTTING_BACKEND.create_plotter()),
+            html: DEFAULT_PLOTTING_BACKEND.create_plotter().map(Html::new),
             csv_enabled: cfg!(feature = "csv_output"),
         };
 
@@ -409,7 +422,7 @@ impl Default for Criterion {
             criterion.report.cli_enabled = false;
             criterion.report.bencher_enabled = false;
             criterion.report.csv_enabled = false;
-            criterion.report.html_enabled = false;
+            criterion.report.html = None;
         }
         criterion
     }
@@ -457,7 +470,7 @@ impl<M: Measurement> Criterion<M> {
             }
         }
 
-        self.report.html = Html::new(backend.create_plotter());
+        self.report.html = backend.create_plotter().map(Html::new);
         self
     }
 
@@ -595,15 +608,20 @@ impl<M: Measurement> Criterion<M> {
     /// Enables plotting
     pub fn with_plots(mut self) -> Criterion<M> {
         // If running under cargo-criterion then don't re-enable the reports; let it do the reporting.
-        if self.connection.is_none() {
-            self.report.html_enabled = true;
+        if self.connection.is_none() && self.report.html.is_none() {
+            let default_backend = DEFAULT_PLOTTING_BACKEND.create_plotter();
+            if let Some(backend) = default_backend {
+                self.report.html = Some(Html::new(backend));
+            } else {
+                panic!("Cannot find a default plotting backend!");
+            }
         }
         self
     }
 
     /// Disables plotting
     pub fn without_plots(mut self) -> Criterion<M> {
-        self.report.html_enabled = false;
+        self.report.html = None;
         self
     }
 
@@ -707,6 +725,10 @@ impl<M: Measurement> Criterion<M> {
                 .long("save-baseline")
                 .default_value("base")
                 .help("Save results under a named baseline."))
+            .arg(Arg::with_name("discard-baseline")
+                .long("discard-baseline")
+                .conflicts_with_all(&["save-baseline", "baseline"])
+                .help("Discard benchmark results."))
             .arg(Arg::with_name("baseline")
                 .short("b")
                 .long("baseline")
@@ -878,13 +900,14 @@ https://bheisler.github.io/criterion.rs/book/faq.html
 
         if matches.is_present("noplot") {
             self = self.without_plots();
-        } else {
-            self = self.with_plots();
         }
 
         if let Some(dir) = matches.value_of("save-baseline") {
             self.baseline = Baseline::Save;
             self.baseline_directory = dir.to_owned()
+        }
+        if matches.is_present("discard-baseline") {
+            self.baseline = Baseline::Discard;
         }
         if let Some(dir) = matches.value_of("baseline") {
             self.baseline = Baseline::Compare;
@@ -896,7 +919,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.report.cli_enabled = false;
             self.report.bencher_enabled = false;
             self.report.csv_enabled = false;
-            self.report.html_enabled = false;
+            self.report.html = None;
         } else {
             match matches.value_of("output-format") {
                 Some("bencher") => {
@@ -1015,6 +1038,14 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             Some(ref regex) => regex.is_match(id),
             None => true,
         }
+    }
+
+    /// Returns true iff we should save the benchmark results in
+    /// json files on the local disk.
+    fn should_save_baseline(&self) -> bool {
+        self.connection.is_none()
+            && self.load_baseline.is_none()
+            && !matches!(self.baseline, Baseline::Discard)
     }
 
     /// Return a benchmark group. All benchmarks performed using a benchmark group will be
