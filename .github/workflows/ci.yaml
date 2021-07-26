@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - master
+      - version-0.4
 
 name: tests
 
