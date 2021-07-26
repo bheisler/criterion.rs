@@ -5,6 +5,9 @@ environment:
     - TARGET: x86_64-pc-windows-msvc
       GNUPLOT: no
 
+cache:
+  - 'C:\Users\appveyor\.cargo'
+
 install:
   - curl -sSf -o rustup-init.exe https://win.rustup.rs/
   - rustup-init.exe -y --default-host %TARGET% --default-toolchain stable
