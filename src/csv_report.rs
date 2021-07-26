@@ -31,14 +31,14 @@ impl<W: Write> CsvReportWriter<W> {
         let mut data_scaled: Vec<f64> = data.sample_times().as_ref().into();
         let unit = formatter.scale_for_machines(&mut data_scaled);
         let group = id.group_id.as_str();
-        let function = id.function_id.as_ref().map(String::as_str);
-        let value = id.value_str.as_ref().map(String::as_str);
+        let function = id.function_id.as_deref();
+        let value = id.value_str.as_deref();
         let (throughput_num, throughput_type) = match id.throughput {
             Some(Throughput::Bytes(bytes)) => (Some(format!("{}", bytes)), Some("bytes")),
             Some(Throughput::Elements(elems)) => (Some(format!("{}", elems)), Some("elements")),
             None => (None, None),
         };
-        let throughput_num = throughput_num.as_ref().map(String::as_str);
+        let throughput_num = throughput_num.as_deref();
 
         for (count, measured_value) in data.iter_counts().iter().zip(data_scaled.into_iter()) {
             let row = CsvRow {
