@@ -1,9 +1,10 @@
 use criterion;
 use serde_json;
 
+#[cfg(feature = "plotters")]
+use criterion::SamplingMode;
 use criterion::{
     criterion_group, criterion_main, profiler::Profiler, BatchSize, BenchmarkId, Criterion,
-    SamplingMode,
 };
 use serde_json::value::Value;
 use std::cell::{Cell, RefCell};
