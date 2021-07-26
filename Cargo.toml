@@ -57,6 +57,7 @@ appveyor    = { repository = "bheisler/criterion.rs", id = "4255ads9ctpupcl2" }
 maintenance = { status = "passively-maintained" }
 
 [features]
+stable = ["async_futures", "async_smol", "async_tokio", "async_std"]
 default = ["cargo_bench_support"]
 
 # Enable use of the nightly-only test::black_box function to discourage compiler optimizations.

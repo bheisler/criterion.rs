@@ -23,9 +23,7 @@
     allow(
         clippy::just_underscores_and_digits, // Used in the stats code
         clippy::transmute_ptr_to_ptr, // Used in the stats code
-        clippy::option_as_ref_deref, // Remove when MSRV bumped above 1.40
         clippy::manual_non_exhaustive, // Remove when MSRV bumped above 1.40
-        clippy::match_like_matches_macro, // Remove when MSRV bumped above 1.42
     )
 )]
 
@@ -339,10 +337,7 @@ pub(crate) enum Mode {
 }
 impl Mode {
     pub fn is_benchmark(&self) -> bool {
-        match self {
-            Mode::Benchmark => true,
-            _ => false,
-        }
+        matches!(self, Mode::Benchmark)
     }
 }
 
@@ -1515,10 +1510,7 @@ impl ActualSamplingMode {
     }
 
     fn is_linear(&self) -> bool {
-        match self {
-            ActualSamplingMode::Linear => true,
-            _ => false,
-        }
+        matches!(self, ActualSamplingMode::Linear)
     }
 
     fn recommend_linear_sample_size(target_time: f64, met: f64) -> u64 {

@@ -224,42 +224,27 @@ pub enum Label {
 impl Label {
     /// Checks if the data point has an "unusually" high value
     pub fn is_high(&self) -> bool {
-        match *self {
-            HighMild | HighSevere => true,
-            _ => false,
-        }
+        matches!(*self, HighMild | HighSevere)
     }
 
     /// Checks if the data point is labeled as a "mild" outlier
     pub fn is_mild(&self) -> bool {
-        match *self {
-            HighMild | LowMild => true,
-            _ => false,
-        }
+        matches!(*self, HighMild | LowMild)
     }
 
     /// Checks if the data point has an "unusually" low value
     pub fn is_low(&self) -> bool {
-        match *self {
-            LowMild | LowSevere => true,
-            _ => false,
-        }
+        matches!(*self, LowMild | LowSevere)
     }
 
     /// Checks if the data point is labeled as an outlier
     pub fn is_outlier(&self) -> bool {
-        match *self {
-            NotAnOutlier => false,
-            _ => true,
-        }
+        matches!(*self, NotAnOutlier)
     }
 
     /// Checks if the data point is labeled as a "severe" outlier
     pub fn is_severe(&self) -> bool {
-        match *self {
-            HighSevere | LowSevere => true,
-            _ => false,
-        }
+        matches!(*self, HighSevere | LowSevere)
     }
 }
 
