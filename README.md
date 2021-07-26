@@ -15,8 +15,8 @@
 </div>
 
 <div align="center">
-	<a href="https://travis-ci.org/bheisler/criterion.rs">
-        <img src="https://travis-ci.org/bheisler/criterion.rs.svg?branch=master" alt="Travis-CI">
+	<a href="https://github.com/bheisler/criterion.rs/actions/workflows/ci.yaml">
+        <img src="https://img.shields.io/github/checks-status/rgeometry/rgeometry/main?label=tests&logo=github" alt="GitHub branch checks state">
     </a>
     |
     <a href="https://ci.appveyor.com/project/bheisler/criterion-rs-vt9fl">
