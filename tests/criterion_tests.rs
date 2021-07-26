@@ -310,6 +310,7 @@ fn test_timing_loops() {
 }
 
 // Verify that all expected output files are present
+#[cfg(feature = "plotters")]
 #[test]
 fn test_output_files() {
     let tempdir = temp_dir();
@@ -370,6 +371,7 @@ fn test_output_files() {
     verify_html(&dir, "report/index.html");
 }
 
+#[cfg(feature = "plotters")]
 #[test]
 fn test_output_files_flat_sampling() {
     let tempdir = temp_dir();

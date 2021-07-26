@@ -108,14 +108,18 @@ lazy_static! {
         match &*GNUPLOT_VERSION {
             Ok(_) => PlottingBackend::Gnuplot,
             Err(e) => {
-                match e {
-                    VersionError::Exec(_) => println!("Gnuplot not found, using plotters backend"),
-                    e => println!(
-                        "Gnuplot not found or not usable, using plotters backend\n{}",
-                        e
-                    ),
-                };
-                PlottingBackend::Plotters
+                if cfg!(not(feature = "plotters")) {
+                    PlottingBackend::None
+                } else {
+                    match e {
+                        VersionError::Exec(_) => println!("Gnuplot not found, using plotters backend"),
+                        e => println!(
+                            "Gnuplot not found or not usable, using plotters backend\n{}",
+                            e
+                        ),
+                    };
+                    PlottingBackend::Plotters
+                }
             }
         }
     };
@@ -278,6 +282,8 @@ pub enum PlottingBackend {
     /// Plotting backend which uses the rust 'Plotters' library. This is the default if `gnuplot`
     /// is not installed.
     Plotters,
+    /// Null plotting backend which outputs nothing,
+    None,
 }
 impl PlottingBackend {
     fn create_plotter(&self) -> Box<dyn Plotter> {
@@ -287,6 +293,7 @@ impl PlottingBackend {
             PlottingBackend::Plotters => Box::new(PlottersBackend::default()),
             #[cfg(not(feature = "plotters"))]
             PlottingBackend::Plotters => panic!("Criterion was built without plotters support."),
+            PlottingBackend::None => Box::new(plot::NullPlotter),
         }
     }
 }

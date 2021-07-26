@@ -103,3 +103,39 @@ pub(crate) trait Plotter {
 
     fn wait(&mut self);
 }
+
+#[derive(Default)]
+pub(crate) struct NullPlotter;
+
+impl Plotter for NullPlotter {
+    fn pdf(&mut self, _ctx: PlotContext<'_>, _data: PlotData<'_>) {}
+
+    fn regression(&mut self, _ctx: PlotContext<'_>, _data: PlotData<'_>) {}
+
+    fn iteration_times(&mut self, _ctx: PlotContext<'_>, _data: PlotData<'_>) {}
+
+    fn abs_distributions(&mut self, _ctx: PlotContext<'_>, _data: PlotData<'_>) {}
+
+    fn rel_distributions(&mut self, _ctx: PlotContext<'_>, _data: PlotData<'_>) {}
+
+    fn line_comparison(
+        &mut self,
+        _ctx: PlotContext<'_>,
+        _formatter: &dyn ValueFormatter,
+        _all_curves: &[&(&BenchmarkId, Vec<f64>)],
+        _value_type: ValueType,
+    ) {
+    }
+
+    fn violin(
+        &mut self,
+        _ctx: PlotContext<'_>,
+        _formatter: &dyn ValueFormatter,
+        _all_curves: &[&(&BenchmarkId, Vec<f64>)],
+    ) {
+    }
+
+    fn t_test(&mut self, _ctx: PlotContext<'_>, _data: PlotData<'_>) {}
+
+    fn wait(&mut self) {}
+}
