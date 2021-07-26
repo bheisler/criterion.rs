@@ -98,7 +98,9 @@ macro_rules! test {
 
             // The [-inf inf] integral of the estimated PDF should be one
             quickcheck! {
-                fn integral(size: usize, start: usize) -> TestResult {
+                fn integral(size: u8, start: u8) -> TestResult {
+                    let size = size as usize;
+                    let start = start as usize;
                     const DX: $ty = 1e-3;
 
                     if let Some(v) = crate::stats::test::vec::<$ty>(size, start) {

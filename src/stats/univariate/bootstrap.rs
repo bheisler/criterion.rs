@@ -9,7 +9,10 @@ macro_rules! test {
             use crate::stats::univariate::{Sample, mixed, self};
 
             quickcheck!{
-                fn mean(size: usize, start: usize, nresamples: usize) -> TestResult {
+                fn mean(size: u8, start: u8, nresamples: u8) -> TestResult {
+                    let size = size as usize;
+                    let start = start as usize;
+                    let nresamples = nresamples as usize;
                     if let Some(v) = crate::stats::test::vec::<$ty>(size, start) {
                         let sample = Sample::new(&v[start..]);
 
@@ -38,7 +41,10 @@ macro_rules! test {
             }
 
             quickcheck!{
-                fn mean_median(size: usize, start: usize, nresamples: usize) -> TestResult {
+                fn mean_median(size: u8, start: u8, nresamples: u8) -> TestResult {
+                    let size = size as usize;
+                    let start = start as usize;
+                    let nresamples = nresamples as usize;
                     if let Some(v) = crate::stats::test::vec::<$ty>(size, start) {
                         let sample = Sample::new(&v[start..]);
 
@@ -73,10 +79,15 @@ macro_rules! test {
 
             quickcheck!{
                 fn mixed_two_sample(
-                    a_size: usize, a_start: usize,
-                    b_size: usize, b_start: usize,
-                    nresamples: usize
+                    a_size: u8, a_start: u8,
+                    b_size: u8, b_start: u8,
+                    nresamples: u8
                 ) -> TestResult {
+                    let a_size = a_size as usize;
+                    let b_size = b_size as usize;
+                    let a_start = a_start as usize;
+                    let b_start = b_start as usize;
+                    let nresamples = nresamples as usize;
                     if let (Some(a), Some(b)) =
                         (crate::stats::test::vec::<$ty>(a_size, a_start), crate::stats::test::vec::<$ty>(b_size, b_start))
                     {
@@ -109,10 +120,15 @@ macro_rules! test {
 
             quickcheck!{
                 fn two_sample(
-                    a_size: usize, a_start: usize,
-                    b_size: usize, b_start: usize,
-                    nresamples: usize
+                    a_size: u8, a_start: u8,
+                    b_size: u8, b_start: u8,
+                    nresamples: u8
                 ) -> TestResult {
+                    let a_size = a_size as usize;
+                    let b_size = b_size as usize;
+                    let a_start = a_start as usize;
+                    let b_start = b_start as usize;
+                    let nresamples = nresamples as usize;
                     if let (Some(a), Some(b)) =
                         (crate::stats::test::vec::<$ty>(a_size, a_start), crate::stats::test::vec::<$ty>(b_size, b_start))
                     {
