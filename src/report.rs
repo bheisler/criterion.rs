@@ -10,7 +10,6 @@ use crate::measurement::ValueFormatter;
 use crate::stats::univariate::Sample;
 use crate::stats::Distribution;
 use crate::{PlotConfiguration, Throughput};
-use std::cell::Cell;
 use std::cmp;
 use std::collections::HashSet;
 use std::fmt;
@@ -370,8 +369,6 @@ pub(crate) struct CliReport {
     pub enable_text_overwrite: bool,
     pub enable_text_coloring: bool,
     pub verbose: bool,
-
-    last_line_len: Cell<usize>,
 }
 impl CliReport {
     pub fn new(
@@ -383,18 +380,14 @@ impl CliReport {
             enable_text_overwrite,
             enable_text_coloring,
             verbose,
-
-            last_line_len: Cell::new(0),
         }
     }
 
     fn text_overwrite(&self) {
         if self.enable_text_overwrite {
-            print!("\r");
-            for _ in 0..self.last_line_len.get() {
-                print!(" ");
-            }
-            print!("\r");
+            // Use the 'anes' crate?
+            // return carry and clear entire line.
+            print!("\r\x1B[2K")
         }
     }
 
@@ -402,7 +395,6 @@ impl CliReport {
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::needless_pass_by_value))]
     fn print_overwritable(&self, s: String) {
         if self.enable_text_overwrite {
-            self.last_line_len.set(s.len());
             print!("{}", s);
             stdout().flush().unwrap();
         } else {
