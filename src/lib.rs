@@ -723,7 +723,8 @@ impl<M: Measurement> Criterion<M> {
                 .help("Save results under a named baseline."))
             .arg(Arg::with_name("discard-baseline")
                 .long("discard-baseline")
-                .help("Save results under a named baseline."))
+                .conflicts_with_all(&["save-baseline", "baseline"])
+                .help("Discard benchmark results."))
             .arg(Arg::with_name("baseline")
                 .short("b")
                 .long("baseline")
@@ -1033,6 +1034,14 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             Some(ref regex) => regex.is_match(id),
             None => true,
         }
+    }
+
+    /// Returns true iff we should save the benchmark results in
+    /// json files on the local disk.
+    fn should_save_baseline(&self) -> bool {
+        self.connection.is_none()
+            && self.load_baseline.is_none()
+            && !matches!(self.baseline, Baseline::Discard)
     }
 
     /// Return a benchmark group. All benchmarks performed using a benchmark group will be
