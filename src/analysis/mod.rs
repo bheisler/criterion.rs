@@ -1,19 +1,21 @@
-use std::collections::BTreeMap;
 use std::path::Path;
 
 use crate::stats::bivariate::regression::Slope;
 use crate::stats::bivariate::Data;
-use crate::stats::univariate::outliers::tukey::{self, LabeledSample};
+use crate::stats::univariate::outliers::tukey;
 use crate::stats::univariate::Sample;
 use crate::stats::{Distribution, Tails};
 
 use crate::benchmark::BenchmarkConfig;
-use crate::estimate::{Distributions, Estimates, Statistic};
+use crate::connection::OutgoingMessage;
+use crate::estimate::{
+    build_estimates, ConfidenceInterval, Distributions, Estimate, Estimates, PointEstimates,
+};
 use crate::fs;
 use crate::measurement::Measurement;
-use crate::report::{BenchmarkId, ReportContext};
+use crate::report::{BenchmarkId, Report, ReportContext};
 use crate::routine::Routine;
-use crate::{build_estimates, Baseline, ConfidenceInterval, Criterion, Estimate, Throughput};
+use crate::{Baseline, Criterion, SavedSample, Throughput};
 
 macro_rules! elapsed {
     ($msg:expr, $block:expr) => {{
@@ -43,18 +45,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
     parameter: &T,
     throughput: Option<Throughput>,
 ) {
-    if criterion.list_mode {
-        println!("{}: bench", id);
-        return;
-    }
     criterion.report.benchmark_start(id, report_context);
-
-    // In test mode, run the benchmark exactly once, then exit.
-    if criterion.test_mode {
-        routine.test(&criterion.measurement, parameter);
-        criterion.report.terminated(id, report_context);
-        return;
-    }
 
     if let Baseline::Compare = criterion.baseline {
         if !base_dir_exists(
@@ -62,33 +53,20 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
             &criterion.baseline_directory,
             &criterion.output_directory,
         ) {
-            panic!(format!(
+            panic!(
                 "Baseline '{base}' must exist before comparison is allowed; try --save-baseline {base}",
                 base=criterion.baseline_directory,
-            ));
+            );
         }
     }
 
-    // In profiling mode, skip all of the analysis.
-    if let Some(time) = criterion.profile_time {
-        routine.profile(
-            &criterion.measurement,
-            id,
-            criterion,
-            report_context,
-            time,
-            parameter,
-        );
-        return;
-    }
-
-    let (iters, times);
+    let (sampling_mode, iters, times);
     if let Some(baseline) = &criterion.load_baseline {
         let mut sample_path = criterion.output_directory.clone();
         sample_path.push(id.as_directory_name());
         sample_path.push(baseline);
         sample_path.push("sample.json");
-        let loaded = fs::load::<(Box<[f64]>, Box<[f64]>), _>(&sample_path);
+        let loaded = fs::load::<SavedSample, _>(&sample_path);
 
         match loaded {
             Err(err) => panic!(
@@ -96,12 +74,13 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
                 base = baseline, err = err
             ),
             Ok(samples) => {
-                iters = samples.0;
-                times = samples.1;
+                sampling_mode = samples.sampling_mode;
+                iters = samples.iters.into_boxed_slice();
+                times = samples.times.into_boxed_slice();
             }
         }
     } else {
-        let samples = routine.sample(
+        let sample = routine.sample(
             &criterion.measurement,
             id,
             config,
@@ -109,11 +88,38 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
             report_context,
             parameter,
         );
-        iters = samples.0;
-        times = samples.1;
+        sampling_mode = sample.0;
+        iters = sample.1;
+        times = sample.2;
+
+        if let Some(conn) = &criterion.connection {
+            conn.send(&OutgoingMessage::MeasurementComplete {
+                id: id.into(),
+                iters: &iters,
+                times: &times,
+                plot_config: (&report_context.plot_config).into(),
+                sampling_method: sampling_mode.into(),
+                benchmark_config: config.into(),
+            })
+            .unwrap();
+
+            conn.serve_value_formatter(criterion.measurement.formatter())
+                .unwrap();
+            return;
+        }
     }
 
     criterion.report.analysis(id, report_context);
+
+    if times.iter().any(|&f| f == 0.0) {
+        error!(
+            "At least one measurement of benchmark {} took zero time per \
+            iteration. This should not be possible. If using iter_custom, please verify \
+            that your routine is correctly measured.",
+            id.as_title()
+        );
+        return;
+    }
 
     let avg_times = iters
         .iter()
@@ -122,7 +128,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         .collect::<Vec<f64>>();
     let avg_times = Sample::new(&avg_times);
 
-    if criterion.load_baseline.is_none() {
+    if criterion.connection.is_none() && criterion.load_baseline.is_none() {
         log_if_err!({
             let mut new_dir = criterion.output_directory.clone();
             new_dir.push(id.as_directory_name());
@@ -132,20 +138,38 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
     }
 
     let data = Data::new(&iters, &times);
-    let labeled_sample = outliers(id, &criterion.output_directory, avg_times);
-    let (distribution, slope) = regression(&data, config);
+    let labeled_sample = tukey::classify(avg_times);
+    if criterion.connection.is_none() {
+        log_if_err!({
+            let mut tukey_file = criterion.output_directory.to_owned();
+            tukey_file.push(id.as_directory_name());
+            tukey_file.push("new");
+            tukey_file.push("tukey.json");
+            fs::save(&labeled_sample.fences(), &tukey_file)
+        });
+    }
     let (mut distributions, mut estimates) = estimates(avg_times, config);
+    if sampling_mode.is_linear() {
+        let (distribution, slope) = regression(&data, config);
 
-    estimates.insert(Statistic::Slope, slope);
-    distributions.insert(Statistic::Slope, distribution);
+        estimates.slope = Some(slope);
+        distributions.slope = Some(distribution);
+    }
 
-    if criterion.load_baseline.is_none() {
+    if criterion.connection.is_none() && criterion.load_baseline.is_none() {
         log_if_err!({
             let mut sample_file = criterion.output_directory.clone();
             sample_file.push(id.as_directory_name());
             sample_file.push("new");
             sample_file.push("sample.json");
-            fs::save(&(data.x().as_ref(), data.y().as_ref()), &sample_file)
+            fs::save(
+                &SavedSample {
+                    sampling_mode,
+                    iters: data.x().as_ref().to_vec(),
+                    times: data.y().as_ref().to_vec(),
+                },
+                &sample_file,
+            )
         });
         log_if_err!({
             let mut estimates_file = criterion.output_directory.clone();
@@ -213,7 +237,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         criterion.measurement.formatter(),
     );
 
-    if criterion.load_baseline.is_none() {
+    if criterion.connection.is_none() && criterion.load_baseline.is_none() {
         log_if_err!({
             let mut benchmark_file = criterion.output_directory.clone();
             benchmark_file.push(id.as_directory_name());
@@ -223,12 +247,14 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         });
     }
 
-    if let Baseline::Save = criterion.baseline {
-        copy_new_dir_to_base(
-            id.as_directory_name(),
-            &criterion.baseline_directory,
-            &criterion.output_directory,
-        );
+    if criterion.connection.is_none() {
+        if let Baseline::Save = criterion.baseline {
+            copy_new_dir_to_base(
+                id.as_directory_name(),
+                &criterion.baseline_directory,
+                &criterion.output_directory,
+            );
+        }
     }
 }
 
@@ -252,7 +278,7 @@ fn regression(
     )
     .0;
 
-    let point = Slope::fit(&data);
+    let point = Slope::fit(data);
     let (lb, ub) = distribution.confidence_interval(config.confidence_level);
     let se = distribution.std_dev(None);
 
@@ -270,23 +296,6 @@ fn regression(
     )
 }
 
-// Classifies the outliers in the sample
-fn outliers<'a>(
-    id: &BenchmarkId,
-    output_directory: &Path,
-    avg_times: &'a Sample<f64>,
-) -> LabeledSample<'a, f64> {
-    let sample = tukey::classify(avg_times);
-    log_if_err!({
-        let mut tukey_file = output_directory.to_owned();
-        tukey_file.push(id.as_directory_name());
-        tukey_file.push("new");
-        tukey_file.push("tukey.json");
-        fs::save(&sample.fences(), &tukey_file)
-    });
-    sample
-}
-
 // Estimates the statistics of the population from the sample
 fn estimates(avg_times: &Sample<f64>, config: &BenchmarkConfig) -> (Distributions, Estimates) {
     fn stats(sample: &Sample<f64>) -> (f64, f64, f64, f64) {
@@ -302,24 +311,27 @@ fn estimates(avg_times: &Sample<f64>, config: &BenchmarkConfig) -> (Distribution
     let nresamples = config.nresamples;
 
     let (mean, std_dev, median, mad) = stats(avg_times);
-    let mut point_estimates = BTreeMap::new();
-    point_estimates.insert(Statistic::Mean, mean);
-    point_estimates.insert(Statistic::StdDev, std_dev);
-    point_estimates.insert(Statistic::Median, median);
-    point_estimates.insert(Statistic::MedianAbsDev, mad);
+    let points = PointEstimates {
+        mean,
+        median,
+        std_dev,
+        median_abs_dev: mad,
+    };
 
     let (dist_mean, dist_stddev, dist_median, dist_mad) = elapsed!(
         "Bootstrapping the absolute statistics.",
         avg_times.bootstrap(nresamples, stats)
     );
 
-    let mut distributions = Distributions::new();
-    distributions.insert(Statistic::Mean, dist_mean);
-    distributions.insert(Statistic::StdDev, dist_stddev);
-    distributions.insert(Statistic::Median, dist_median);
-    distributions.insert(Statistic::MedianAbsDev, dist_mad);
+    let distributions = Distributions {
+        mean: dist_mean,
+        slope: None,
+        median: dist_median,
+        median_abs_dev: dist_mad,
+        std_dev: dist_stddev,
+    };
 
-    let estimates = build_estimates(&distributions, &point_estimates, cl);
+    let estimates = build_estimates(&distributions, &points, cl);
 
     (distributions, estimates)
 }

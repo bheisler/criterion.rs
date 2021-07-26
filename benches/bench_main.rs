@@ -12,4 +12,6 @@ criterion_main! {
     benchmarks::special_characters::benches,
     benchmarks::measurement_overhead::benches,
     benchmarks::custom_measurement::benches,
+    benchmarks::sampling_mode::benches,
+    benchmarks::async_measurement_overhead::benches,
 }

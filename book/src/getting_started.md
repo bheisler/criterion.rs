@@ -15,9 +15,9 @@ fn fibonacci(n: u64) -> u64 {
 }
 ```
 
-### Step 1 - Add Dependency to cargo.toml ###
+### Step 1 - Add Dependency to Cargo.toml ###
 
-To enable Criterion.rs benchmarks, add the following to your `cargo.toml` file:
+To enable Criterion.rs benchmarks, add the following to your `Cargo.toml` file:
 
 ```toml
 [dev-dependencies]

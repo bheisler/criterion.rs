@@ -1,12 +1,13 @@
 use crate::benchmark::BenchmarkConfig;
+use crate::connection::OutgoingMessage;
 use crate::measurement::Measurement;
-use crate::report::{BenchmarkId, ReportContext};
-use crate::{Bencher, Criterion, DurationExt};
+use crate::report::{BenchmarkId, Report, ReportContext};
+use crate::{ActualSamplingMode, Bencher, Criterion, DurationExt};
 use std::marker::PhantomData;
 use std::time::Duration;
 
 /// PRIVATE
-pub trait Routine<M: Measurement, T: ?Sized> {
+pub(crate) trait Routine<M: Measurement, T: ?Sized> {
     /// PRIVATE
     fn bench(&mut self, m: &M, iters: &[u64], parameter: &T) -> Vec<f64>;
     /// PRIVATE
@@ -36,8 +37,15 @@ pub trait Routine<M: Measurement, T: ?Sized> {
             .profile(id, report_context, time.to_nanos() as f64);
 
         let mut profile_path = report_context.output_directory.clone();
-        profile_path.push(id.as_directory_name());
-        profile_path.push("profile");
+        if (*crate::CARGO_CRITERION_CONNECTION).is_some() {
+            // If connected to cargo-criterion, generate a cargo-criterion-style path.
+            // This is kind of a hack.
+            profile_path.push("profile");
+            profile_path.push(id.as_directory_name());
+        } else {
+            profile_path.push(id.as_directory_name());
+            profile_path.push("profile");
+        }
         criterion
             .profiler
             .borrow_mut()
@@ -79,13 +87,21 @@ pub trait Routine<M: Measurement, T: ?Sized> {
         criterion: &Criterion<M>,
         report_context: &ReportContext,
         parameter: &T,
-    ) -> (Box<[f64]>, Box<[f64]>) {
+    ) -> (ActualSamplingMode, Box<[f64]>, Box<[f64]>) {
         let wu = config.warm_up_time;
         let m_ns = config.measurement_time.to_nanos();
 
         criterion
             .report
             .warmup(id, report_context, wu.to_nanos() as f64);
+
+        if let Some(conn) = &criterion.connection {
+            conn.send(&OutgoingMessage::Warmup {
+                id: id.into(),
+                nanos: wu.to_nanos() as f64,
+            })
+            .unwrap();
+        }
 
         let (wu_elapsed, wu_iters) = self.warm_up(measurement, wu, parameter);
         if crate::debug_enabled() {
@@ -101,61 +117,48 @@ pub trait Routine<M: Measurement, T: ?Sized> {
         let met = wu_elapsed as f64 / wu_iters as f64;
 
         let n = config.sample_size as u64;
-        // Solve: [d + 2*d + 3*d + ... + n*d] * met = m_ns
-        let total_runs = n * (n + 1) / 2;
-        let d = (m_ns as f64 / met / total_runs as f64).ceil() as u64;
-        let expected_ns = total_runs as f64 * d as f64 * met;
 
-        if d == 1 {
-            let recommended_sample_size = recommend_sample_size(m_ns as f64, met);
-            let actual_time = Duration::from_nanos(expected_ns as u64);
-            print!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?}",
-                    n, config.measurement_time, actual_time);
+        let actual_sampling_mode = config
+            .sampling_mode
+            .choose_sampling_mode(met, n, m_ns as f64);
 
-            if recommended_sample_size != n {
-                println!(" or reduce sample count to {}.", recommended_sample_size);
-            } else {
-                println!(".");
-            }
+        let m_iters = actual_sampling_mode.iteration_counts(met, n, &config.measurement_time);
+
+        let expected_ns = m_iters
+            .iter()
+            .copied()
+            .map(|count| count as f64 * met)
+            .sum();
+
+        // Use saturating_add to handle overflow.
+        let mut total_iters = 0u64;
+        for count in m_iters.iter().copied() {
+            total_iters = total_iters.saturating_add(count);
         }
 
-        let m_iters = (1..(n + 1) as u64).map(|a| a * d).collect::<Vec<u64>>();
+        criterion
+            .report
+            .measurement_start(id, report_context, n, expected_ns, total_iters);
 
-        criterion.report.measurement_start(
-            id,
-            report_context,
-            n,
-            expected_ns,
-            m_iters.iter().sum(),
-        );
+        if let Some(conn) = &criterion.connection {
+            conn.send(&OutgoingMessage::MeasurementStart {
+                id: id.into(),
+                sample_count: n,
+                estimate_ns: expected_ns,
+                iter_count: total_iters,
+            })
+            .unwrap();
+        }
+
         let m_elapsed = self.bench(measurement, &m_iters, parameter);
 
         let m_iters_f: Vec<f64> = m_iters.iter().map(|&x| x as f64).collect();
 
-        (m_iters_f.into_boxed_slice(), m_elapsed.into_boxed_slice())
-    }
-}
-
-fn recommend_sample_size(target_time: f64, met: f64) -> u64 {
-    // Some math shows that n(n+1)/2 * d * met = target_time. d = 1, so it can be ignored.
-    // This leaves n(n+1) = (2*target_time)/met, or n^2 + n - (2*target_time)/met = 0
-    // Which can be solved with the quadratic formula. Since A and B are constant 1,
-    // this simplifies to sample_size = (-1 +- sqrt(1 - 4C))/2, where C = (2*target_time)/met.
-    // We don't care about the negative solution. Experimentation shows that this actually tends to
-    // result in twice the desired execution time (probably because of the ceil used to calculate
-    // d) so instead I use c = target_time/met.
-    let c = target_time / met;
-    let sample_size = (-1.0 + (4.0 * c).sqrt()) / 2.0;
-    let sample_size = sample_size as u64;
-
-    // Round down to the nearest 10 to give a margin and avoid excessive precision
-    let sample_size = (sample_size / 10) * 10;
-
-    // Clamp it to be at least 10, since criterion.rs doesn't allow sample sizes smaller than 10.
-    if sample_size < 10 {
-        10
-    } else {
-        sample_size
+        (
+            actual_sampling_mode,
+            m_iters_f.into_boxed_slice(),
+            m_elapsed.into_boxed_slice(),
+        )
     }
 }
 
@@ -233,7 +236,7 @@ where
                 return (elapsed_time.to_nanos(), total_iters);
             }
 
-            b.iters *= 2;
+            b.iters = b.iters.wrapping_mul(2);
         }
     }
 }

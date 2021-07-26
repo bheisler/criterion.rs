@@ -12,6 +12,9 @@ fi
 if [ "$DOCS" = "yes" ]; then
     cargo install mdbook --no-default-features
     cargo install mdbook-linkcheck
+    sudo apt-get update
+    sudo apt-get install python-pip
+    sudo pip install python-dateutil
 fi
 
 if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$GNUPLOT" = "yes" ]; then

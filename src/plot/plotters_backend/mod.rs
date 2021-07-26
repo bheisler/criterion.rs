@@ -18,6 +18,7 @@ const DARK_ORANGE: RGBColor = RGBColor(255, 127, 0);
 const DARK_RED: RGBColor = RGBColor(227, 26, 28);
 
 mod distributions;
+mod iteration_times;
 mod pdf;
 mod regression;
 mod summary;
@@ -110,6 +111,48 @@ impl Plotter for PlottersBackend {
             );
         } else {
             regression::regression_figure(
+                title,
+                path.as_path(),
+                data.formatter,
+                data.measurements,
+                convert_size(ctx.size),
+            );
+        }
+    }
+
+    fn iteration_times(&mut self, ctx: PlotContext<'_>, data: PlotData<'_>) {
+        let (title, path) = match (data.comparison.is_some(), ctx.is_thumbnail) {
+            (true, true) => (
+                None,
+                ctx.context
+                    .report_path(ctx.id, "relative_iteration_times_small.svg"),
+            ),
+            (true, false) => (
+                Some(ctx.id.as_title()),
+                ctx.context.report_path(ctx.id, "both/iteration_times.svg"),
+            ),
+            (false, true) => (
+                None,
+                ctx.context.report_path(ctx.id, "iteration_times_small.svg"),
+            ),
+            (false, false) => (
+                Some(ctx.id.as_title()),
+                ctx.context.report_path(ctx.id, "iteration_times.svg"),
+            ),
+        };
+
+        if let Some(cmp) = data.comparison {
+            let base_data = Data::new(&cmp.base_iter_counts, &cmp.base_sample_times);
+            iteration_times::iteration_times_comparison_figure(
+                title,
+                path.as_path(),
+                data.formatter,
+                data.measurements,
+                cmp,
+                convert_size(ctx.size),
+            );
+        } else {
+            iteration_times::iteration_times_figure(
                 title,
                 path.as_path(),
                 data.formatter,

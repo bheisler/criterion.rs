@@ -24,7 +24,7 @@ pub(crate) fn t_test(
         .set(size.unwrap_or(SIZE))
         .set(Title(format!(
             "{}: Welch t test",
-            escape_underscores(id.as_title())
+            gnuplot_escape(id.as_title())
         )))
         .configure(Axis::BottomX, |a| a.set(Label("t score")))
         .configure(Axis::LeftY, |a| a.set(Label("Density")))

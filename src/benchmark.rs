@@ -1,8 +1,11 @@
+#![allow(deprecated)]
+
 use crate::analysis;
+use crate::connection::OutgoingMessage;
 use crate::measurement::{Measurement, WallTime};
-use crate::report::{BenchmarkId, ReportContext};
+use crate::report::{BenchmarkId, Report, ReportContext};
 use crate::routine::{Function, Routine};
-use crate::{Bencher, Criterion, DurationExt, PlotConfiguration, Throughput};
+use crate::{Bencher, Criterion, DurationExt, Mode, PlotConfiguration, SamplingMode, Throughput};
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::marker::Sized;
@@ -19,6 +22,7 @@ pub struct BenchmarkConfig {
     pub sample_size: usize,
     pub significance_level: f64,
     pub warm_up_time: Duration,
+    pub sampling_mode: SamplingMode,
 }
 
 /// Struct representing a partially-complete per-benchmark configuration.
@@ -31,6 +35,7 @@ pub(crate) struct PartialBenchmarkConfig {
     pub(crate) sample_size: Option<usize>,
     pub(crate) significance_level: Option<f64>,
     pub(crate) warm_up_time: Option<Duration>,
+    pub(crate) sampling_mode: Option<SamplingMode>,
     pub(crate) plot_config: PlotConfiguration,
 }
 
@@ -45,6 +50,7 @@ impl Default for PartialBenchmarkConfig {
             significance_level: None,
             warm_up_time: None,
             plot_config: PlotConfiguration::default(),
+            sampling_mode: None,
         }
     }
 }
@@ -61,18 +67,20 @@ impl PartialBenchmarkConfig {
                 .significance_level
                 .unwrap_or(defaults.significance_level),
             warm_up_time: self.warm_up_time.unwrap_or(defaults.warm_up_time),
+            sampling_mode: self.sampling_mode.unwrap_or(defaults.sampling_mode),
         }
     }
 }
 
-pub struct NamedRoutine<T, M: Measurement = WallTime> {
+pub(crate) struct NamedRoutine<T, M: Measurement = WallTime> {
     pub id: String,
-    pub f: Box<RefCell<dyn Routine<M, T>>>,
+    pub(crate) f: Box<RefCell<dyn Routine<M, T>>>,
 }
 
 /// Structure representing a benchmark (or group of benchmarks)
 /// which take one parameter.
 #[doc(hidden)]
+#[deprecated(since = "0.3.4", note = "Please use BenchmarkGroups instead.")]
 pub struct ParameterizedBenchmark<T: Debug, M: Measurement = WallTime> {
     config: PartialBenchmarkConfig,
     values: Vec<T>,
@@ -83,6 +91,7 @@ pub struct ParameterizedBenchmark<T: Debug, M: Measurement = WallTime> {
 /// Structure representing a benchmark (or group of benchmarks)
 /// which takes no parameters.
 #[doc(hidden)]
+#[deprecated(since = "0.3.4", note = "Please use BenchmarkGroups instead.")]
 pub struct Benchmark<M: Measurement = WallTime> {
     config: PartialBenchmarkConfig,
     routines: Vec<NamedRoutine<(), M>>,
@@ -129,7 +138,7 @@ macro_rules! benchmark_config {
         }
 
         /// Changes the target measurement time for this benchmark. Criterion will attempt
-        /// to spent approximately this amount of time measuring the benchmark.
+        /// to spend approximately this amount of time measuring the benchmark.
         /// With a longer time, the measurement will become more resilient to transitory peak loads
         /// caused by external programs.
         ///
@@ -211,7 +220,7 @@ macro_rules! benchmark_config {
         /// noise.
         ///
         /// This presents a trade-off. By setting the significance level closer to 0.0, you can increase
-        /// the statistical robustness against noise, but it also weaken's Criterion.rs' ability to
+        /// the statistical robustness against noise, but it also weakens Criterion.rs' ability to
         /// detect small but real changes in the performance. By setting the significance level
         /// closer to 1.0, Criterion.rs will be more able to detect small true changes, but will also
         /// report more spurious differences.
@@ -231,6 +240,12 @@ macro_rules! benchmark_config {
         /// Changes the plot configuration for this benchmark.
         pub fn plot_config(mut self, new_config: PlotConfiguration) -> Self {
             self.config.plot_config = new_config;
+            self
+        }
+
+        /// Changes the sampling mode for this benchmark.
+        pub fn sampling_mode(mut self, new_mode: SamplingMode) -> Self {
+            self.config.sampling_mode = Some(new_mode);
             self
         }
     };
@@ -303,7 +318,6 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
         let report_context = ReportContext {
             output_directory: c.output_directory.clone(),
             plot_config: self.config.plot_config.clone(),
-            test_mode: c.test_mode,
         };
 
         let config = self.config.to_complete(&c.config);
@@ -311,6 +325,11 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
 
         let mut all_ids = vec![];
         let mut any_matched = false;
+
+        if let Some(conn) = &c.connection {
+            conn.send(&OutgoingMessage::BeginningBenchmarkGroup { group: group_id })
+                .unwrap();
+        }
 
         for routine in self.routines {
             let function_id = if num_routines == 1 && group_id == routine.id {
@@ -331,28 +350,36 @@ impl<M: Measurement> BenchmarkDefinition<M> for Benchmark<M> {
             id.ensure_title_unique(&c.all_titles);
             c.all_titles.insert(id.as_title().to_owned());
 
-            if c.filter_matches(id.id()) {
-                any_matched = true;
-                analysis::common(
-                    &id,
-                    &mut *routine.f.borrow_mut(),
-                    &config,
-                    c,
-                    &report_context,
-                    &(),
-                    self.throughput.clone(),
-                );
-            }
+            let do_run = c.filter_matches(id.id());
+            any_matched |= do_run;
+
+            execute_benchmark(
+                do_run,
+                &id,
+                c,
+                &config,
+                &mut *routine.f.borrow_mut(),
+                &report_context,
+                &(),
+                self.throughput.clone(),
+            );
 
             all_ids.push(id);
         }
 
-        if all_ids.len() > 1 && any_matched && c.profile_time.is_none() && !c.test_mode {
+        if let Some(conn) = &c.connection {
+            conn.send(&OutgoingMessage::FinishedBenchmarkGroup { group: group_id })
+                .unwrap();
+            conn.serve_value_formatter(c.measurement.formatter())
+                .unwrap();
+        }
+
+        if all_ids.len() > 1 && any_matched && c.mode.is_benchmark() {
             c.report
                 .summarize(&report_context, &all_ids, c.measurement.formatter());
         }
         if any_matched {
-            println!();
+            c.report.group_separator();
         }
     }
 }
@@ -452,7 +479,6 @@ where
         let report_context = ReportContext {
             output_directory: c.output_directory.clone(),
             plot_config: self.config.plot_config.clone(),
-            test_mode: c.test_mode,
         };
 
         let config = self.config.to_complete(&c.config);
@@ -461,6 +487,11 @@ where
 
         let mut all_ids = vec![];
         let mut any_matched = false;
+
+        if let Some(conn) = &c.connection {
+            conn.send(&OutgoingMessage::BeginningBenchmarkGroup { group: group_id })
+                .unwrap();
+        }
 
         for routine in self.routines {
             for value in &self.values {
@@ -489,30 +520,96 @@ where
                 id.ensure_title_unique(&c.all_titles);
                 c.all_titles.insert(id.as_title().to_owned());
 
-                if c.filter_matches(id.id()) {
-                    any_matched = true;
+                let do_run = c.filter_matches(id.id());
+                any_matched |= do_run;
 
-                    analysis::common(
-                        &id,
-                        &mut *routine.f.borrow_mut(),
-                        &config,
-                        c,
-                        &report_context,
-                        value,
-                        throughput,
-                    );
-                }
+                execute_benchmark(
+                    do_run,
+                    &id,
+                    c,
+                    &config,
+                    &mut *routine.f.borrow_mut(),
+                    &report_context,
+                    value,
+                    throughput,
+                );
 
                 all_ids.push(id);
             }
         }
 
-        if all_ids.len() > 1 && any_matched && c.profile_time.is_none() && !c.test_mode {
+        if let Some(conn) = &c.connection {
+            conn.send(&OutgoingMessage::FinishedBenchmarkGroup { group: group_id })
+                .unwrap();
+            conn.serve_value_formatter(c.measurement.formatter())
+                .unwrap();
+        }
+
+        if all_ids.len() > 1 && any_matched && c.mode.is_benchmark() {
             c.report
                 .summarize(&report_context, &all_ids, c.measurement.formatter());
         }
         if any_matched {
-            println!();
+            c.report.group_separator();
+        }
+    }
+}
+
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
+fn execute_benchmark<T, M>(
+    do_run: bool,
+    id: &BenchmarkId,
+    c: &Criterion<M>,
+    config: &BenchmarkConfig,
+    routine: &mut dyn Routine<M, T>,
+    report_context: &ReportContext,
+    parameter: &T,
+    throughput: Option<Throughput>,
+) where
+    T: Debug,
+    M: Measurement,
+{
+    match c.mode {
+        Mode::Benchmark => {
+            if let Some(conn) = &c.connection {
+                if do_run {
+                    conn.send(&OutgoingMessage::BeginningBenchmark { id: id.into() })
+                        .unwrap();
+                } else {
+                    conn.send(&OutgoingMessage::SkippingBenchmark { id: id.into() })
+                        .unwrap();
+                }
+            }
+
+            if do_run {
+                analysis::common(
+                    id,
+                    routine,
+                    config,
+                    c,
+                    report_context,
+                    parameter,
+                    throughput,
+                );
+            }
+        }
+        Mode::List => {
+            if do_run {
+                println!("{}: bench", id);
+            }
+        }
+        Mode::Test => {
+            if do_run {
+                // In test mode, run the benchmark exactly once, then exit.
+                c.report.test_start(id, report_context);
+                routine.test(&c.measurement, parameter);
+                c.report.test_pass(id, report_context);
+            }
+        }
+        Mode::Profile(duration) => {
+            if do_run {
+                routine.profile(&c.measurement, id, c, report_context, duration, parameter);
+            }
         }
     }
 }

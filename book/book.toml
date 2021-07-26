@@ -7,3 +7,4 @@ author = "Brook Heisler"
 
 [output.linkcheck]
 #follow-web-links = true
+exclude = [ 'crates\.io' ]

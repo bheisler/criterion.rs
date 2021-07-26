@@ -1,6 +1,5 @@
 use std::process::Child;
 
-use crate::estimate::Statistic;
 use crate::stats::bivariate::regression::Slope;
 use criterion_plot::prelude::*;
 
@@ -8,7 +7,7 @@ use super::*;
 use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
 use crate::stats::bivariate::Data;
 
-use crate::{ConfidenceInterval, Estimate};
+use crate::estimate::{ConfidenceInterval, Estimate};
 
 use crate::measurement::ValueFormatter;
 
@@ -17,8 +16,8 @@ fn regression_figure(
     measurements: &MeasurementData<'_>,
     size: Option<Size>,
 ) -> Figure {
-    let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
-    let slope_dist = &measurements.distributions[&Statistic::Slope];
+    let slope_estimate = measurements.absolute_estimates.slope.as_ref().unwrap();
+    let slope_dist = measurements.distributions.slope.as_ref().unwrap();
     let (lb, ub) =
         slope_dist.confidence_interval(slope_estimate.confidence_interval.confidence_level);
 
@@ -102,7 +101,7 @@ pub(crate) fn regression(
     size: Option<Size>,
 ) -> Child {
     let mut figure = regression_figure(formatter, measurements, size);
-    figure.set(Title(escape_underscores(id.as_title())));
+    figure.set(Title(gnuplot_escape(id.as_title())));
     figure.configure(Key, |k| {
         k.set(Justification::Left)
             .set(Order::SampleText)
@@ -158,7 +157,7 @@ fn regression_comparison_figure(
             },
         point_estimate: base_point,
         ..
-    } = comparison.base_estimates[&Statistic::Slope];
+    } = comparison.base_estimates.slope.as_ref().unwrap();
 
     let Estimate {
         confidence_interval:
@@ -169,7 +168,7 @@ fn regression_comparison_figure(
             },
         point_estimate: point,
         ..
-    } = comparison.base_estimates[&Statistic::Slope];
+    } = measurements.absolute_estimates.slope.as_ref().unwrap();
 
     let mut points = [
         base_lb * max_iters,
@@ -254,7 +253,7 @@ pub(crate) fn regression_comparison(
 ) -> Child {
     let mut figure =
         regression_comparison_figure(formatter, measurements, comparison, base_data, size);
-    figure.set(Title(escape_underscores(id.as_title())));
+    figure.set(Title(gnuplot_escape(id.as_title())));
 
     let path = context.report_path(id, "both/regression.svg");
     debug_script(&path, &figure);

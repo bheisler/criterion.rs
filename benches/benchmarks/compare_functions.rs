@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use criterion::{criterion_group, BenchmarkId, Criterion, Fun, ParameterizedBenchmark};
 
 fn fibonacci_slow(n: u64) -> u64 {

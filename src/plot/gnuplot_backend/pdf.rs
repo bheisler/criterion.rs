@@ -33,7 +33,7 @@ pub(crate) fn pdf(
         format!("Iterations (x 10^{})", exponent)
     };
 
-    let (xs, ys) = kde::sweep(&scaled_avg_times, KDE_POINTS, None);
+    let (xs, ys) = kde::sweep(scaled_avg_times, KDE_POINTS, None);
     let (lost, lomt, himt, hist) = avg_times.fences();
     let mut fences = [lost, lomt, himt, hist];
     let _ = formatter.scale_values(typical, &mut fences);
@@ -217,7 +217,7 @@ pub(crate) fn pdf(
             },
             |c| c.set(DARK_RED).set(LINEWIDTH).set(LineType::Dash),
         );
-    figure.set(Title(escape_underscores(id.as_title())));
+    figure.set(Title(gnuplot_escape(id.as_title())));
 
     let path = context.report_path(id, "pdf.svg");
     debug_script(&path, &figure);
@@ -370,7 +370,7 @@ pub(crate) fn pdf_comparison(
     size: Option<Size>,
 ) -> Child {
     let mut figure = pdf_comparison_figure(formatter, measurements, comparison, size);
-    figure.set(Title(escape_underscores(id.as_title())));
+    figure.set(Title(gnuplot_escape(id.as_title())));
     let path = context.report_path(id, "both/pdf.svg");
     debug_script(&path, &figure);
     figure.set(Output(path)).draw().unwrap()

@@ -1,4 +1,4 @@
-use super::{debug_script, escape_underscores};
+use super::{debug_script, gnuplot_escape};
 use super::{DARK_BLUE, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, POINT_SIZE, SIZE};
 use crate::kde;
 use crate::measurement::ValueFormatter;
@@ -57,7 +57,7 @@ pub fn line_comparison(
                 .set(Order::SampleText)
                 .set(Position::Outside(Vertical::Top, Horizontal::Right))
         })
-        .set(Title(format!("{}: Comparison", escape_underscores(title))))
+        .set(Title(format!("{}: Comparison", gnuplot_escape(title))))
         .configure(Axis::BottomX, |a| {
             a.set(Label(format!("Input{}", input_suffix)))
                 .set(axis_scale.to_gnuplot())
@@ -83,9 +83,9 @@ pub fn line_comparison(
     // This assumes the curves are sorted. It also assumes that the benchmark IDs all have numeric
     // values or throughputs and that value is sensible (ie. not a mix of bytes and elements
     // or whatnot)
-    for (key, group) in &all_curves.iter().group_by(|&&&(ref id, _)| &id.function_id) {
+    for (key, group) in &all_curves.iter().group_by(|&&&(id, _)| &id.function_id) {
         let mut tuples: Vec<_> = group
-            .map(|&&(ref id, ref sample)| {
+            .map(|&&(id, ref sample)| {
                 // Unwrap is fine here because it will only fail if the assumptions above are not true
                 // ie. programmer error.
                 let x = id.as_number().unwrap();
@@ -98,7 +98,7 @@ pub fn line_comparison(
         let (xs, mut ys): (Vec<_>, Vec<_>) = tuples.into_iter().unzip();
         formatter.scale_values(max, &mut ys);
 
-        let function_name = key.as_ref().map(|string| escape_underscores(string));
+        let function_name = key.as_ref().map(|string| gnuplot_escape(string));
 
         f.plot(Lines { x: &xs, y: &ys }, |c| {
             if let Some(name) = function_name {
@@ -170,10 +170,11 @@ pub fn violin(
     let mut f = Figure::new();
     f.set(Font(DEFAULT_FONT))
         .set(size)
-        .set(Title(format!("{}: Violin plot", escape_underscores(title))))
+        .set(Title(format!("{}: Violin plot", gnuplot_escape(title))))
         .configure(Axis::BottomX, |a| {
             a.configure(Grid::Major, |g| g.show())
                 .configure(Grid::Minor, |g| g.hide())
+                .set(Range::Limits(0., max as f64 * one[0]))
                 .set(Label(format!("Average time ({})", unit)))
                 .set(axis_scale.to_gnuplot())
         })
@@ -184,7 +185,7 @@ pub fn violin(
                     positions: tics(),
                     labels: all_curves
                         .iter()
-                        .map(|&&(ref id, _)| escape_underscores(id.as_title())),
+                        .map(|&&(id, _)| gnuplot_escape(id.as_title())),
                 })
         });
 
@@ -200,9 +201,9 @@ pub fn violin(
             if is_first {
                 is_first = false;
 
-                c.set(DARK_BLUE).set(Label("PDF")).set(Opacity(0.25))
+                c.set(DARK_BLUE).set(Label("PDF"))
             } else {
-                c.set(DARK_BLUE).set(Opacity(0.25))
+                c.set(DARK_BLUE)
             }
         });
     }

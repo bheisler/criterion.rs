@@ -5,8 +5,67 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Corrected `Criterion.toml` in the book.
 
-## [ 0.3.2] - 2020-04-26
+## [0.3.4] - 2021-01-24
+### Added
+- Added support for benchmarking async functions
+- Added `with_output_color` for enabling or disabling CLI output coloring programmatically.
+
+### Fixed
+- Criterion.rs will now give a clear error message in case of benchmarks that take zero time.
+- Added some extra code to ensure that every sample has at least one iteration.
+- Added a notice to the `--help` output regarding "unrecognized option" errors.
+- Increased opacity on violin charts.
+- Fixed violin chart X axis not starting at zero in the plotters backend.
+- Criterion.rs will now automatically detect the right output directory.
+
+### Deprecated
+- `Criterion::can_plot` is no longer useful and is deprecated pending deletion in 0.4.0.
+- `Benchmark` and `ParameterizedBenchmark` were already hidden from documentation, but are now 
+  formally deprecated pending deletion in 0.4.0. Callers should use `BenchmarkGroup` instead.
+- `Criterion::bench_function_over_inputs`, `Criterion::bench_functions`, and `Criterion::bench` were
+  already hidden from documentation, but are now formally deprecated pending deletion in 0.4.0.
+  Callers should use `BenchmarkGroup` instead.
+- Three new optional features have been added; "html_reports", "csv_output" and 
+  "cargo_bench_support". These features currently do nothing except disable a warning message at 
+  runtime, but in version 0.4.0 they will be used to enable HTML report generation, CSV file 
+  generation, and the ability to run in cargo-bench (as opposed to [cargo-criterion]). 
+  "cargo_bench_support" is enabled by default, but "html_reports" and "csv_output"
+  are not. If you use Criterion.rs' HTML reports, it is recommended to switch to [cargo-criterion].
+  If you use CSV output, it is recommended to switch to [cargo-criterion] and use the 
+  `--message-format=json` option for machine-readable output instead. A warning message will be
+  printed at the start of benchmark runs which do not have "html_reports" or "cargo_bench_support"
+  enabled, but because CSV output is not widely used it has no warning.
+
+[cargo-criterion]: https://github.com/bheisler/cargo-criterion
+
+## [0.3.3] - 2020-06-29
+### Added
+- Added `CRITERION_HOME` environment variable to set the directory for Criterion to store
+  its results and charts in. 
+- Added support for [cargo-criterion]. The long-term goal here is to remove code from Criterion-rs 
+  itself to improve compile times, as well as to add  features to `cargo-criterion` that are 
+  difficult to implement in Criterion-rs.
+- Add sampling mode option for benchmarks. This allows the user to change how Criterion.rs chooses
+  the iteration counts in each sample. By default, nothing will change for most benchmarks, but
+  very slow benchmarks will now run fewer iterations to fit in the desired number of samples.
+  This affects the statistics and plots generated.
+
+### Changed
+- The serialization format for some of the files has changed. This may cause your first benchmark
+  run after updating to produce errors, but they're harmless and will go away after running the
+  benchmarks once.
+
+### Fixed
+- Fixed a bug where the current measurement was not shown on the relative regression plot.
+- Fixed rare panic in the plotters backend.
+- Panic with a clear error message (rather than panicking messily later on) when the user sets the
+  group or function name to the empty string.
+- Escape single quotes in benchmark names when generating Gnuplot scripts.
+
+## [0.3.2] - 2020-04-26
 ### Added
 - Added `?Sized` bound to benchmark parameter types, which allows dynamically sized types like
   `&str` and `&[T]` to be used as benchmark parameters.
@@ -331,7 +390,7 @@ more details
 - Initial release on Crates.io.
 
 
-[Unreleased]: https://github.com/bheisler/criterion.rs/compare/0.3.2...HEAD
+[Unreleased]: https://github.com/bheisler/criterion.rs/compare/0.3.4...HEAD
 [0.1.1]: https://github.com/bheisler/criterion.rs/compare/0.1.0...0.1.1
 [0.1.2]: https://github.com/bheisler/criterion.rs/compare/0.1.1...0.1.2
 [0.2.0]: https://github.com/bheisler/criterion.rs/compare/0.1.2...0.2.0
@@ -349,3 +408,5 @@ more details
 [0.3.0]: https://github.com/bheisler/criterion.rs/compare/0.2.11...0.3.0
 [0.3.1]: https://github.com/bheisler/criterion.rs/compare/0.3.0...0.3.1
 [0.3.2]: https://github.com/bheisler/criterion.rs/compare/0.3.1...0.3.2
+[0.3.3]: https://github.com/bheisler/criterion.rs/compare/0.3.2...0.3.3
+[0.3.4]: https://github.com/bheisler/criterion.rs/compare/0.3.3...0.3.4

@@ -88,6 +88,8 @@ impl Bandwidth {
 macro_rules! test {
     ($ty:ident) => {
         mod $ty {
+            use approx::relative_eq;
+            use quickcheck::quickcheck;
             use quickcheck::TestResult;
 
             use crate::stats::univariate::kde::kernel::Gaussian;

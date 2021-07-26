@@ -6,11 +6,11 @@ use crate::stats::Distribution;
 use criterion_plot::prelude::*;
 
 use super::*;
+use crate::estimate::Estimate;
 use crate::estimate::Statistic;
 use crate::kde;
 use crate::measurement::ValueFormatter;
 use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
-use crate::Estimate;
 
 fn abs_distribution(
     id: &BenchmarkId,
@@ -21,7 +21,7 @@ fn abs_distribution(
     estimate: &Estimate,
     size: Option<Size>,
 ) -> Child {
-    let ci = estimate.confidence_interval;
+    let ci = &estimate.confidence_interval;
     let typical = ci.upper_bound;
     let mut ci_values = [ci.lower_bound, ci.upper_bound, estimate.point_estimate];
     let unit = formatter.scale_values(typical, &mut ci_values);
@@ -34,11 +34,12 @@ fn abs_distribution(
     let scaled_xs_sample = Sample::new(&scaled_xs);
     let (kde_xs, ys) = kde::sweep(scaled_xs_sample, KDE_POINTS, Some((start, end)));
 
+    // interpolate between two points of the KDE sweep to find the Y position at the point estimate.
     let n_point = kde_xs
         .iter()
         .position(|&x| x >= point)
-        .unwrap_or(kde_xs.len() - 1);
-    let n_point = n_point.max(1); // Must be at least the second element or this will panic
+        .unwrap_or(kde_xs.len() - 1)
+        .max(1); // Must be at least the second element or this will panic
     let slope = (ys[n_point] - ys[n_point - 1]) / (kde_xs[n_point] - kde_xs[n_point - 1]);
     let y_point = ys[n_point - 1] + (slope * (point - kde_xs[n_point - 1]));
 
@@ -67,7 +68,7 @@ fn abs_distribution(
         .set(size.unwrap_or(SIZE))
         .set(Title(format!(
             "{}: {}",
-            escape_underscores(id.as_title()),
+            gnuplot_escape(id.as_title()),
             statistic
         )))
         .configure(Axis::BottomX, |a| {
@@ -129,17 +130,24 @@ pub(crate) fn abs_distributions(
     measurements: &MeasurementData<'_>,
     size: Option<Size>,
 ) -> Vec<Child> {
-    measurements
-        .distributions
+    crate::plot::REPORT_STATS
         .iter()
-        .map(|(&statistic, distribution)| {
+        .filter_map(|stat| {
+            measurements.distributions.get(*stat).and_then(|dist| {
+                measurements
+                    .absolute_estimates
+                    .get(*stat)
+                    .map(|est| (*stat, dist, est))
+            })
+        })
+        .map(|(statistic, distribution, estimate)| {
             abs_distribution(
                 id,
                 context,
                 formatter,
                 statistic,
                 distribution,
-                &measurements.absolute_estimates[&statistic],
+                estimate,
                 size,
             )
         })
@@ -155,7 +163,7 @@ fn rel_distribution(
     noise_threshold: f64,
     size: Option<Size>,
 ) -> Child {
-    let ci = estimate.confidence_interval;
+    let ci = &estimate.confidence_interval;
     let (lb, ub) = (ci.lower_bound, ci.upper_bound);
 
     let start = lb - (ub - lb) / 9.;
@@ -163,6 +171,7 @@ fn rel_distribution(
     let (xs, ys) = kde::sweep(distribution, KDE_POINTS, Some((start, end)));
     let xs_ = Sample::new(&xs);
 
+    // interpolate between two points of the KDE sweep to find the Y position at the point estimate.
     let point = estimate.point_estimate;
     let n_point = xs
         .iter()
@@ -220,7 +229,7 @@ fn rel_distribution(
         })
         .set(Title(format!(
             "{}: {}",
-            escape_underscores(id.as_title()),
+            gnuplot_escape(id.as_title()),
             statistic
         )))
         .configure(Axis::BottomX, |a| {
@@ -284,16 +293,15 @@ pub(crate) fn rel_distributions(
     comparison: &ComparisonData,
     size: Option<Size>,
 ) -> Vec<Child> {
-    comparison
-        .relative_distributions
+    crate::plot::CHANGE_STATS
         .iter()
-        .map(|(&statistic, distribution)| {
+        .map(|&statistic| {
             rel_distribution(
                 id,
                 context,
                 statistic,
-                distribution,
-                &comparison.relative_estimates[&statistic],
+                comparison.relative_distributions.get(statistic),
+                comparison.relative_estimates.get(statistic),
                 comparison.noise_threshold,
                 size,
             )

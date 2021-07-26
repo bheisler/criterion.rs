@@ -1,9 +1,11 @@
+#![allow(deprecated)]
+
 use criterion;
 use serde_json;
 
 use criterion::{
     criterion_group, criterion_main, profiler::Profiler, BatchSize, Benchmark, BenchmarkId,
-    Criterion, Fun, ParameterizedBenchmark, Throughput,
+    Criterion, Fun, ParameterizedBenchmark, SamplingMode, Throughput,
 };
 use serde_json::value::Value;
 use std::cell::{Cell, RefCell};
@@ -12,7 +14,7 @@ use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::{Duration, SystemTime};
-use tempdir::TempDir;
+use tempfile::{tempdir, TempDir};
 use walkdir::WalkDir;
 
 /*
@@ -20,7 +22,7 @@ use walkdir::WalkDir;
  * Criterion.rs. See the benches folder for actual examples.
  */
 fn temp_dir() -> TempDir {
-    TempDir::new("").unwrap()
+    tempdir().unwrap()
 }
 
 // Configure a Criterion struct to perform really fast benchmarks. This is not
@@ -30,7 +32,7 @@ fn short_benchmark(dir: &TempDir) -> Criterion {
         .output_directory(dir.path())
         .warm_up_time(Duration::from_millis(250))
         .measurement_time(Duration::from_millis(500))
-        .nresamples(1000)
+        .nresamples(2000)
         .with_plots()
 }
 
@@ -359,7 +361,8 @@ fn test_output_files() {
             "test_output",
             Benchmark::new("output_1", |b| b.iter(|| 10))
                 .with_function("output_2", |b| b.iter(|| 20))
-                .with_function("output_\\/*\"?", |b| b.iter(|| 30)),
+                .with_function("output_\\/*\"?", |b| b.iter(|| 30))
+                .sampling_mode(SamplingMode::Linear),
         );
     }
 
@@ -384,6 +387,7 @@ fn test_output_files() {
             verify_svg(&dir, "report/regression.svg");
             verify_svg(&dir, "report/SD.svg");
             verify_svg(&dir, "report/slope.svg");
+            verify_svg(&dir, "report/typical.svg");
             verify_svg(&dir, "report/both/pdf.svg");
             verify_svg(&dir, "report/both/regression.svg");
             verify_svg(&dir, "report/change/mean.svg");
@@ -416,6 +420,45 @@ fn test_output_files() {
 }
 
 #[test]
+fn test_output_files_flat_sampling() {
+    let tempdir = temp_dir();
+    // Run benchmark twice to produce comparisons
+    for _ in 0..2 {
+        short_benchmark(&tempdir).bench(
+            "test_output",
+            Benchmark::new("output_flat", |b| b.iter(|| 10)).sampling_mode(SamplingMode::Flat),
+        );
+    }
+
+    let dir = tempdir.path().join("test_output/output_flat");
+
+    verify_stats(&dir, "new");
+    verify_stats(&dir, "base");
+    verify_json(&dir, "change/estimates.json");
+
+    if short_benchmark(&tempdir).can_plot() {
+        verify_svg(&dir, "report/MAD.svg");
+        verify_svg(&dir, "report/mean.svg");
+        verify_svg(&dir, "report/median.svg");
+        verify_svg(&dir, "report/pdf.svg");
+        verify_svg(&dir, "report/iteration_times.svg");
+        verify_svg(&dir, "report/SD.svg");
+        verify_svg(&dir, "report/typical.svg");
+        verify_svg(&dir, "report/both/pdf.svg");
+        verify_svg(&dir, "report/both/iteration_times.svg");
+        verify_svg(&dir, "report/change/mean.svg");
+        verify_svg(&dir, "report/change/median.svg");
+        verify_svg(&dir, "report/change/t-test.svg");
+
+        verify_svg(&dir, "report/pdf_small.svg");
+        verify_svg(&dir, "report/iteration_times_small.svg");
+        verify_svg(&dir, "report/relative_pdf_small.svg");
+        verify_svg(&dir, "report/relative_iteration_times_small.svg");
+        verify_html(&dir, "report/index.html");
+    }
+}
+
+#[test]
 #[should_panic(expected = "Benchmark function must call Bencher::iter or related method.")]
 fn test_bench_with_no_iteration_panics() {
     let dir = temp_dir();
@@ -442,6 +485,15 @@ fn test_benchmark_group_without_input() {
     group.bench_function("Test 1", |b| b.iter(|| 30));
     group.bench_function("Test 2", |b| b.iter(|| 20));
     group.finish();
+}
+
+#[test]
+fn test_criterion_doesnt_panic_if_measured_time_is_zero() {
+    let dir = temp_dir();
+    let mut c = short_benchmark(&dir);
+    c.bench_function("zero_time", |bencher| {
+        bencher.iter_custom(|_iters| Duration::new(0, 0))
+    });
 }
 
 mod macros {

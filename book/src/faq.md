@@ -2,39 +2,21 @@
 
 ### How Should I Run Criterion.rs Benchmarks In A CI Pipeline?
 
-Criterion.rs benchmarks can be run as part of a CI pipeline just as they
-normally would on the command line - simply run `cargo bench`.
+You probably shouldn't (or, if you do, don't rely on the results). The virtualization used by
+Cloud-CI providers like Travis-CI and Github Actions introduces a great deal of noise into the
+benchmarking process, and Criterion.rs' statistical analysis can only do so much to mitigate that.
+This can result in the appearance of large changes in the measured performance even if the actual
+performance of the code is not changing. A better alternative is to use
+[Iai](https://github.com/bheisler/iai) instead. Iai runs benchmarks inside Cachegrind to directly
+count the instructions and memory accesses. Iai's measurements won't be thrown off by the virtual
+machine slowing down or pausing for a time, so it should be more reliable in virtualized
+environments.
 
-To compare the master branch to a pull request, you could run the benchmarks on
-the master branch to set a baseline, then run them again with the pull request
-branch. An example script for Travis-CI might be:
-
-```bash
-#!/usr/bin/env bash
-
-if [ "${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}" != "master" ] && [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then
-    REMOTE_URL="$(git config --get remote.origin.url)";
-    cd ${TRAVIS_BUILD_DIR}/.. && \
-    git clone ${REMOTE_URL} "${TRAVIS_REPO_SLUG}-bench" && \
-    cd  "${TRAVIS_REPO_SLUG}-bench" && \
-    # Bench master
-    git checkout master && \
-    cargo bench && \
-    # Bench pull request
-    git checkout ${TRAVIS_COMMIT} && \
-    cargo bench;
-fi
-```
-
-(Thanks to [BeachApe](https://beachape.com/blog/2016/11/02/rust-performance-testing-on-travis-ci/) for the script on which this is based.)
-
-Note that cloud CI providers like Travis-CI and Appveyor introduce a great deal
-of noise into the benchmarking process. For example, unpredictable load on the
-physical hosts of their build VM's. Benchmarks measured on such services tend
-to be unreliable, so you should be skeptical of the results. In particular,
-benchmarks that detect performance regressions should not cause the build to
-fail, and apparent performance regressions should be verified manually before
-rejecting a pull request.
+Whichever benchmarking tool you use, though, the process is basically the same. You'll need to:
+* Check out the main branch of your code
+* Build it and run the benchmarks once, to establish a baseline
+* Then switch to the pull request branch
+* Built it again and run the benchmarks a second time to compare against the baseline.
 
 ### `cargo bench` Gives "Unrecognized Option" Errors for Valid Command-line Options
 
@@ -253,3 +235,27 @@ Criterion.rs benchmarks that depend on the library crate.
 Less often, the problem is that the library crate is configured to compile as a `cdylib`. In order
 to benchmark your crate with Criterion.rs, you will need to set your Cargo.toml to enable generating
 an `rlib` as well.
+
+### How can I benchmark a part of a function?
+
+The short answer is - you can't, not accurately. The longer answer is below.
+
+When people ask me this, my first response is always "extract that part of the function into a new
+function, give it a name, and then benchmark _that_". It's sort of unsatisfying, but that is also
+the only way to get really accurate measurements of that piece of your code. You can always tag it
+with `#[inline(always)]` to tell rustc to inline it back into the original callsite in the final
+executable.
+
+The problem is that your system's clock is not infinitely precise; there is a certain (often
+surprisingly large) granularity to the clock time reported by `Instant::now`. That means that,
+if it were to measure each execution individually, Criterion.rs might see a sequence of times
+like "0ms, 0ms, 0ms, 0ms, 0ms, 5ms, 0ms..." for a function that takes 1ms. To mitigate this,
+Criterion.rs runs many iterations of your benchmark, to divide that jitter across each iteration.
+There would be no way to run such a timing loop on _part_ of your code, unless that part were
+already easy to factor out and put in a separate function anyway. Instead, you'd have to 
+time each iteration individually, resulting in the maximum possible timing jitter.
+
+However, if you need to do this anyway, and you're OK with the reduced accuracy, you can use 
+`Bencher::iter_custom` to measure your code however you want to. `iter_custom` exists to allow for 
+complex cases like multi-threaded code or, yes, measuring part of a function. Just be aware that 
+you're responsible for the accuracy of your measurements.

@@ -29,7 +29,7 @@ matrix:
       env: DOCS=yes
     - os: linux
       env: GNUPLOT=yes
-      rust: 1.33.0
+      rust: 1.39.0
       addons:
         apt:
           packages:
@@ -61,6 +61,16 @@ before_script:
       pip install 'travis-cargo<0.2' --user;
       export PATH=$HOME/.local/bin:$PATH;
     fi
+
+before_cache:
+- find ./target/debug -maxdepth 1 -type f -delete
+- rm -rf ./target/debug/deps/criterion*
+- rm -rf ./target/debug/deps/bench*
+- rm -rf ./target/debug/.fingerprint/criterion*
+- rm -rf ./target/debug/.fingerprint/bench*
+- rm -f  ./target/.rustc_info.json
+- rm -rf ./target/criterion
+- rm -rf ~/.cargo/registry/index/
 
 install:
   - sh ci/install.sh

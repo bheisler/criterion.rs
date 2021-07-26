@@ -28,7 +28,8 @@ $BENCHMARK_NAME/
 └── report/
    ├── both/
    │  ├── pdf.svg
-   │  └── regression.svg
+   │  ├── regression.svg
+   │  └── iteration_times.svg
    ├── change/
    │  ├── mean.svg
    │  ├── median.svg
@@ -39,10 +40,13 @@ $BENCHMARK_NAME/
    ├── median.svg
    ├── pdf.svg
    ├── pdf_small.svg
-   ├── regression.svg
-   ├── regression_small.svg
+   ├── regression.svg (optional)
+   ├── regression_small.svg (optional)
+   ├── iteration_times.svg (optional)
+   ├── iteration_times_small.svg (optional)
    ├── relative_pdf_small.svg
-   ├── relative_regression_small.svg
+   ├── relative_regression_small.svg (optional)
+   ├── relative_iteration_times_small.svg (optional)
    ├── SD.svg
    └── slope.svg
 ```
@@ -79,6 +83,17 @@ be reworked.
 
 The combined regression plot in the `report/both` folder shows only the regression lines and is a
 useful visual indicator of the difference in performance between the two runs.
+
+The regression chart can only be displayed when Criterion.rs uses the linear sampling mode.
+In the flat sampling mode, the iteration times chart is displayed instead.
+
+## Iteration Times
+
+![Iteration Times Chart](./iteration_times.svg)
+
+The iteration times chart displays a collection of the average iteration times. It is less useful
+than the regression chart, but since the regression chart cannot be displayed in the flat sampling
+mode, this is shown instead.
 
 ## PDF
 

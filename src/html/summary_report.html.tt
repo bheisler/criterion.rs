@@ -81,10 +81,17 @@
                             </a>
                         </td>
                         <td>
+                            {{- if bench.regression_exists }}
                             <a href="{bench.path}/report/regression.svg">
                                 <img src="{bench.path}/report/regression_small.svg" alt="Regression" width="{thumbnail_width}"
                                     height="{thumbnail_height}" />
                             </a>
+                            {{- else }}
+                            <a href="{bench.path}/report/iteration_times.svg">
+                                <img src="{bench.path}/report/iteration_times_small.svg" alt="Iteration Times" width="{thumbnail_width}"
+                                    height="{thumbnail_height}" />
+                            </a>
+                            {{- endif }}
                         </td>
                     </tr>
                 </tbody>

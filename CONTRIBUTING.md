@@ -63,7 +63,7 @@ difficulty labels:
 * Beginner - Suitable for people new to Criterion.rs, or even new to Rust in general
 * Intermediate - More challenging, likely involves some non-trivial design decisions and/or knowledge
   of Criterion.<span></span>rs' internals
-* Bigger Project - Large and/or complex project such as designing a complex new feature.
+* Bigger Project - Large and/or complex project such as designing a complex new feature
 
 Additionally, there are a few other noteworthy labels:
 

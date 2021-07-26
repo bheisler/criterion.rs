@@ -2,10 +2,9 @@ use super::*;
 
 use std::path::Path;
 
-use crate::estimate::Statistic;
+use crate::estimate::{ConfidenceInterval, Estimate};
 use crate::stats::bivariate::regression::Slope;
 use crate::stats::bivariate::Data;
-use crate::{ConfidenceInterval, Estimate};
 
 pub(crate) fn regression_figure(
     title: Option<&str>,
@@ -14,8 +13,8 @@ pub(crate) fn regression_figure(
     measurements: &MeasurementData<'_>,
     size: Option<(u32, u32)>,
 ) {
-    let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
-    let slope_dist = &measurements.distributions[&Statistic::Slope];
+    let slope_estimate = measurements.absolute_estimates.slope.as_ref().unwrap();
+    let slope_dist = measurements.distributions.slope.as_ref().unwrap();
     let (lb, ub) =
         slope_dist.confidence_interval(slope_estimate.confidence_interval.confidence_level);
 
@@ -54,7 +53,7 @@ pub(crate) fn regression_figure(
         .margin((5).percent())
         .set_label_area_size(LabelAreaPosition::Left, (5).percent_width().min(60))
         .set_label_area_size(LabelAreaPosition::Bottom, (5).percent_height().min(40))
-        .build_ranged(x_range, y_range)
+        .build_cartesian_2d(x_range, y_range)
         .unwrap();
 
     chart
@@ -62,7 +61,7 @@ pub(crate) fn regression_figure(
         .x_desc(x_label)
         .y_desc(format!("Total sample time ({})", unit))
         .x_label_formatter(&|x| pretty_print_float(x * x_scale, true))
-        .line_style_2(&TRANSPARENT)
+        .light_line_style(&TRANSPARENT)
         .draw()
         .unwrap();
 
@@ -142,7 +141,7 @@ pub(crate) fn regression_comparison_figure(
             },
         point_estimate: base_point,
         ..
-    } = comparison.base_estimates[&Statistic::Slope];
+    } = comparison.base_estimates.slope.as_ref().unwrap();
 
     let Estimate {
         confidence_interval:
@@ -153,7 +152,7 @@ pub(crate) fn regression_comparison_figure(
             },
         point_estimate: point,
         ..
-    } = comparison.base_estimates[&Statistic::Slope];
+    } = measurements.absolute_estimates.slope.as_ref().unwrap();
 
     let mut points = [
         base_lb * max_iters,
@@ -180,7 +179,7 @@ pub(crate) fn regression_comparison_figure(
         .margin((5).percent())
         .set_label_area_size(LabelAreaPosition::Left, (5).percent_width().min(60))
         .set_label_area_size(LabelAreaPosition::Bottom, (5).percent_height().min(40))
-        .build_ranged(0.0..max_iters, 0.0..y_max)
+        .build_cartesian_2d(0.0..max_iters, 0.0..y_max)
         .unwrap();
 
     chart
@@ -188,7 +187,7 @@ pub(crate) fn regression_comparison_figure(
         .x_desc(x_label)
         .y_desc(format!("Total sample time ({})", unit))
         .x_label_formatter(&|x| pretty_print_float(x * x_scale, true))
-        .line_style_2(&TRANSPARENT)
+        .light_line_style(&TRANSPARENT)
         .draw()
         .unwrap();
 

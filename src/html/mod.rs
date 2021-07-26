@@ -1,12 +1,12 @@
 use crate::report::{make_filename_safe, BenchmarkId, MeasurementData, Report, ReportContext};
 use crate::stats::bivariate::regression::Slope;
 
-use crate::estimate::Statistic;
+use crate::estimate::Estimate;
 use crate::format;
 use crate::fs;
 use crate::measurement::ValueFormatter;
 use crate::plot::{PlotContext, PlotData, Plotter};
-use crate::Estimate;
+use crate::SavedSample;
 use criterion_plot::Size;
 use serde::Serialize;
 use std::cell::RefCell;
@@ -37,7 +37,7 @@ struct Context {
     thumbnail_width: usize,
     thumbnail_height: usize,
 
-    slope: ConfidenceInterval,
+    slope: Option<ConfidenceInterval>,
     r2: ConfidenceInterval,
     mean: ConfidenceInterval,
     std_dev: ConfidenceInterval,
@@ -54,12 +54,23 @@ struct Context {
 struct IndividualBenchmark {
     name: String,
     path: String,
+    regression_exists: bool,
 }
 impl IndividualBenchmark {
-    fn from_id(path_prefix: &str, id: &BenchmarkId) -> IndividualBenchmark {
+    fn from_id(
+        output_directory: &Path,
+        path_prefix: &str,
+        id: &BenchmarkId,
+    ) -> IndividualBenchmark {
+        let mut regression_path = PathBuf::from(output_directory);
+        regression_path.push(id.as_directory_name());
+        regression_path.push("report");
+        regression_path.push("regression.svg");
+
         IndividualBenchmark {
             name: id.as_title().to_owned(),
             path: format!("{}/{}", path_prefix, id.as_directory_name()),
+            regression_exists: regression_path.is_file(),
         }
     }
 }
@@ -207,12 +218,12 @@ impl<'a> BenchmarkGroup<'a> {
         // numerically. Otherwise sort lexicographically.
         if values.iter().all(|os| parse_opt(os).is_some()) {
             values.sort_unstable_by(|v1, v2| {
-                let num1 = parse_opt(&v1);
-                let num2 = parse_opt(&v2);
+                let num1 = parse_opt(v1);
+                let num2 = parse_opt(v2);
 
                 num1.partial_cmp(&num2).unwrap_or(Ordering::Less)
             });
-            values.dedup_by_key(|os| parse_opt(&os).unwrap());
+            values.dedup_by_key(|os| parse_opt(os).unwrap());
         } else {
             values.sort_unstable();
             values.dedup();
@@ -296,7 +307,7 @@ impl Report for Html {
             fs::mkdirp(&report_dir)
         });
 
-        let slope_estimate = &measurements.absolute_estimates[&Statistic::Slope];
+        let typical_estimate = &measurements.absolute_estimates.typical();
 
         let time_interval = |est: &Estimate| -> ConfidenceInterval {
             ConfidenceInterval {
@@ -313,53 +324,65 @@ impl Report for Html {
             self.generate_plots(id, report_context, formatter, measurements)
         }
 
+        let mut additional_plots = vec![
+            Plot::new("Typical", "typical.svg"),
+            Plot::new("Mean", "mean.svg"),
+            Plot::new("Std. Dev.", "SD.svg"),
+            Plot::new("Median", "median.svg"),
+            Plot::new("MAD", "MAD.svg"),
+        ];
+        if measurements.absolute_estimates.slope.is_some() {
+            additional_plots.push(Plot::new("Slope", "slope.svg"));
+        }
+
         let throughput = measurements
             .throughput
             .as_ref()
             .map(|thr| ConfidenceInterval {
                 lower: formatter
-                    .format_throughput(thr, slope_estimate.confidence_interval.upper_bound),
+                    .format_throughput(thr, typical_estimate.confidence_interval.upper_bound),
                 upper: formatter
-                    .format_throughput(thr, slope_estimate.confidence_interval.lower_bound),
-                point: formatter.format_throughput(thr, slope_estimate.point_estimate),
+                    .format_throughput(thr, typical_estimate.confidence_interval.lower_bound),
+                point: formatter.format_throughput(thr, typical_estimate.point_estimate),
             });
 
         let context = Context {
             title: id.as_title().to_owned(),
-            confidence: format!("{:.2}", slope_estimate.confidence_interval.confidence_level),
+            confidence: format!(
+                "{:.2}",
+                typical_estimate.confidence_interval.confidence_level
+            ),
 
             thumbnail_width: THUMBNAIL_SIZE.unwrap().0,
             thumbnail_height: THUMBNAIL_SIZE.unwrap().1,
 
-            slope: time_interval(slope_estimate),
-            mean: time_interval(&measurements.absolute_estimates[&Statistic::Mean]),
-            median: time_interval(&measurements.absolute_estimates[&Statistic::Median]),
-            mad: time_interval(&measurements.absolute_estimates[&Statistic::MedianAbsDev]),
-            std_dev: time_interval(&measurements.absolute_estimates[&Statistic::StdDev]),
+            slope: measurements
+                .absolute_estimates
+                .slope
+                .as_ref()
+                .map(time_interval),
+            mean: time_interval(&measurements.absolute_estimates.mean),
+            median: time_interval(&measurements.absolute_estimates.median),
+            mad: time_interval(&measurements.absolute_estimates.median_abs_dev),
+            std_dev: time_interval(&measurements.absolute_estimates.std_dev),
             throughput,
 
             r2: ConfidenceInterval {
                 lower: format!(
                     "{:0.7}",
-                    Slope(slope_estimate.confidence_interval.lower_bound).r_squared(&data)
+                    Slope(typical_estimate.confidence_interval.lower_bound).r_squared(&data)
                 ),
                 upper: format!(
                     "{:0.7}",
-                    Slope(slope_estimate.confidence_interval.upper_bound).r_squared(&data)
+                    Slope(typical_estimate.confidence_interval.upper_bound).r_squared(&data)
                 ),
                 point: format!(
                     "{:0.7}",
-                    Slope(slope_estimate.point_estimate).r_squared(&data)
+                    Slope(typical_estimate.point_estimate).r_squared(&data)
                 ),
             },
 
-            additional_plots: vec![
-                Plot::new("Slope", "slope.svg"),
-                Plot::new("Mean", "mean.svg"),
-                Plot::new("Std. Dev.", "SD.svg"),
-                Plot::new("Median", "median.svg"),
-                Plot::new("MAD", "MAD.svg"),
-            ],
+            additional_plots,
 
             comparison: self.comparison(measurements),
         };
@@ -390,6 +413,9 @@ impl Report for Html {
                 fs::is_dir(&id_dir)
             })
             .collect::<Vec<_>>();
+        if all_ids.is_empty() {
+            return;
+        }
 
         let group_id = all_ids[0].group_id.clone();
 
@@ -412,14 +438,14 @@ impl Report for Html {
 
         // If all of the value strings can be parsed into a number, sort/dedupe
         // numerically. Otherwise sort lexicographically.
-        if value_strs.iter().all(|os| try_parse(&*os).is_some()) {
+        if value_strs.iter().all(|os| try_parse(*os).is_some()) {
             value_strs.sort_unstable_by(|v1, v2| {
-                let num1 = try_parse(&v1);
-                let num2 = try_parse(&v2);
+                let num1 = try_parse(v1);
+                let num2 = try_parse(v2);
 
                 num1.partial_cmp(&num2).unwrap_or(Ordering::Less)
             });
-            value_strs.dedup_by_key(|os| try_parse(&os).unwrap());
+            value_strs.dedup_by_key(|os| try_parse(os).unwrap());
         } else {
             value_strs.sort_unstable();
             value_strs.dedup();
@@ -429,7 +455,7 @@ impl Report for Html {
             let samples_with_function: Vec<_> = data
                 .iter()
                 .by_ref()
-                .filter(|&&(ref id, _)| id.function_id.as_ref() == Some(&function_id))
+                .filter(|&&(id, _)| id.function_id.as_ref() == Some(function_id))
                 .collect();
 
             if samples_with_function.len() > 1 {
@@ -450,7 +476,7 @@ impl Report for Html {
             let samples_with_value: Vec<_> = data
                 .iter()
                 .by_ref()
-                .filter(|&&(ref id, _)| id.value_str.as_ref() == Some(&value_str))
+                .filter(|&&(id, _)| id.value_str.as_ref() == Some(value_str))
                 .collect();
 
             if samples_with_value.len() > 1 {
@@ -471,7 +497,7 @@ impl Report for Html {
         // First sort the ids/data by value.
         // If all of the value strings can be parsed into a number, sort/dedupe
         // numerically. Otherwise sort lexicographically.
-        let all_values_numeric = all_data.iter().all(|(ref id, _)| {
+        let all_values_numeric = all_data.iter().all(|(id, _)| {
             id.value_str
                 .as_ref()
                 .map(String::as_str)
@@ -516,7 +542,7 @@ impl Report for Html {
         for id in found_ids.iter() {
             id_groups
                 .entry(&id.group_id)
-                .or_insert_with(|| vec![])
+                .or_insert_with(Vec::new)
                 .push(id);
         }
 
@@ -545,13 +571,13 @@ impl Html {
     fn comparison(&self, measurements: &MeasurementData<'_>) -> Option<Comparison> {
         if let Some(ref comp) = measurements.comparison {
             let different_mean = comp.p_value < comp.significance_threshold;
-            let mean_est = comp.relative_estimates[&Statistic::Mean];
+            let mean_est = &comp.relative_estimates.mean;
             let explanation_str: String;
 
             if !different_mean {
                 explanation_str = "No change in performance detected.".to_owned();
             } else {
-                let comparison = compare_to_threshold(&mean_est, comp.noise_threshold);
+                let comparison = compare_to_threshold(mean_est, comp.noise_threshold);
                 match comparison {
                     ComparisonResult::Improved => {
                         explanation_str = "Performance has improved.".to_owned();
@@ -628,10 +654,19 @@ impl Html {
 
         self.plotter.borrow_mut().pdf(plot_ctx, plot_data);
         self.plotter.borrow_mut().pdf(plot_ctx_small, plot_data);
-        self.plotter.borrow_mut().regression(plot_ctx, plot_data);
-        self.plotter
-            .borrow_mut()
-            .regression(plot_ctx_small, plot_data);
+        if measurements.absolute_estimates.slope.is_some() {
+            self.plotter.borrow_mut().regression(plot_ctx, plot_data);
+            self.plotter
+                .borrow_mut()
+                .regression(plot_ctx_small, plot_data);
+        } else {
+            self.plotter
+                .borrow_mut()
+                .iteration_times(plot_ctx, plot_data);
+            self.plotter
+                .borrow_mut()
+                .iteration_times(plot_ctx_small, plot_data);
+        }
 
         self.plotter
             .borrow_mut()
@@ -654,14 +689,25 @@ impl Html {
                 fs::mkdirp(&both_dir)
             });
 
-            let comp_data = plot_data.comparison(&comp);
+            let comp_data = plot_data.comparison(comp);
 
             self.plotter.borrow_mut().pdf(plot_ctx, comp_data);
             self.plotter.borrow_mut().pdf(plot_ctx_small, comp_data);
-            self.plotter.borrow_mut().regression(plot_ctx, comp_data);
-            self.plotter
-                .borrow_mut()
-                .regression(plot_ctx_small, comp_data);
+            if measurements.absolute_estimates.slope.is_some()
+                && comp.base_estimates.slope.is_some()
+            {
+                self.plotter.borrow_mut().regression(plot_ctx, comp_data);
+                self.plotter
+                    .borrow_mut()
+                    .regression(plot_ctx_small, comp_data);
+            } else {
+                self.plotter
+                    .borrow_mut()
+                    .iteration_times(plot_ctx, comp_data);
+                self.plotter
+                    .borrow_mut()
+                    .iteration_times(plot_ctx_small, comp_data);
+            }
             self.plotter.borrow_mut().t_test(plot_ctx, comp_data);
             self.plotter
                 .borrow_mut()
@@ -681,7 +727,7 @@ impl Html {
             .filter_map(|id| {
                 let entry = output_directory.join(id.as_directory_name()).join("new");
 
-                let (iters, times): (Vec<f64>, Vec<f64>) =
+                let SavedSample { iters, times, .. } =
                     try_else_return!(fs::load(&entry.join("sample.json")), || None);
                 let avg_times = iters
                     .into_iter()
@@ -721,12 +767,12 @@ impl Html {
 
         self.plotter.borrow_mut().violin(plot_ctx, formatter, data);
 
-        let value_types: Vec<_> = data.iter().map(|&&(ref id, _)| id.value_type()).collect();
+        let value_types: Vec<_> = data.iter().map(|&&(id, _)| id.value_type()).collect();
         let mut line_path = None;
 
         if value_types.iter().all(|x| x == &value_types[0]) {
             if let Some(value_type) = value_types[0] {
-                let values: Vec<_> = data.iter().map(|&&(ref id, _)| id.as_number()).collect();
+                let values: Vec<_> = data.iter().map(|&&(id, _)| id.as_number()).collect();
                 if values.iter().any(|x| x != &values[0]) {
                     self.plotter
                         .borrow_mut()
@@ -739,7 +785,9 @@ impl Html {
         let path_prefix = if full_summary { "../.." } else { "../../.." };
         let benchmarks = data
             .iter()
-            .map(|&&(ref id, _)| IndividualBenchmark::from_id(path_prefix, id))
+            .map(|&&(id, _)| {
+                IndividualBenchmark::from_id(&report_context.output_directory, path_prefix, id)
+            })
             .collect();
 
         let context = SummaryContext {
@@ -775,7 +823,7 @@ enum ComparisonResult {
 }
 
 fn compare_to_threshold(estimate: &Estimate, noise: f64) -> ComparisonResult {
-    let ci = estimate.confidence_interval;
+    let ci = &estimate.confidence_interval;
     let lb = ci.lower_bound;
     let ub = ci.upper_bound;
 
