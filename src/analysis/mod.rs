@@ -365,5 +365,6 @@ fn copy_new_dir_to_base(id: &str, baseline: &str, output_directory: &Path) {
         &new_dir.join("benchmark.json"),
         &base_dir.join("benchmark.json")
     ));
+    #[cfg(feature = "csv_output")]
     try_else_return!(fs::cp(&new_dir.join("raw.csv"), &base_dir.join("raw.csv")));
 }
