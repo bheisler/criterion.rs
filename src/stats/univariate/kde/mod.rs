@@ -44,19 +44,14 @@ where
     /// - Multihreaded
     pub fn map(&self, xs: &[A]) -> Box<[A]> {
         #[cfg(feature = "rayon")]
-        {
-            xs.par_iter()
-                .map(|&x| self.estimate(x))
-                .collect::<Vec<_>>()
-                .into_boxed_slice()
-        }
+        let iter = xs.par_iter();
+
         #[cfg(not(feature = "rayon"))]
-        {
-            xs.iter()
-                .map(|&x| self.estimate(x))
-                .collect::<Vec<_>>()
-                .into_boxed_slice()
-        }
+        let iter = xs.iter();
+
+        iter.map(|&x| self.estimate(x))
+            .collect::<Vec<_>>()
+            .into_boxed_slice()
     }
 
     /// Estimates the probability density of `x`
