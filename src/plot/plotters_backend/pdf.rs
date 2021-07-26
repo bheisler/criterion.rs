@@ -197,7 +197,7 @@ pub(crate) fn pdf(
         format!("Iterations (x 10^{})", exponent)
     };
 
-    let (xs, ys) = kde::sweep(&scaled_avg_times, KDE_POINTS, None);
+    let (xs, ys) = kde::sweep(scaled_avg_times, KDE_POINTS, None);
     let (lost, lomt, himt, hist) = avg_times.fences();
     let mut fences = [lost, lomt, himt, hist];
     let _ = formatter.scale_values(typical, &mut fences);

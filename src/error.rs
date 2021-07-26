@@ -5,6 +5,7 @@ use std::fmt;
 use std::io;
 use std::path::PathBuf;
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug)]
 pub enum Error {
     AccessError {

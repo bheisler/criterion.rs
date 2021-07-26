@@ -1,5 +1,5 @@
 use std::iter;
-use std::path::PathBuf;
+use std::path::Path;
 use std::process::Child;
 
 use crate::stats::univariate::Sample;
@@ -40,9 +40,9 @@ const DARK_BLUE: Color = Color::Rgb(31, 120, 180);
 const DARK_ORANGE: Color = Color::Rgb(255, 127, 0);
 const DARK_RED: Color = Color::Rgb(227, 26, 28);
 
-fn debug_script(path: &PathBuf, figure: &Figure) {
+fn debug_script(path: &Path, figure: &Figure) {
     if crate::debug_enabled() {
-        let mut script_path = path.clone();
+        let mut script_path = path.to_path_buf();
         script_path.set_extension("gnuplot");
         info!("Writing gnuplot script to {:?}", script_path);
         let result = figure.save(script_path.as_path());
