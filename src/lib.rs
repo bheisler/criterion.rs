@@ -372,9 +372,9 @@ impl Default for Criterion {
             cli: CliReport::new(false, false, false),
             bencher_enabled: false,
             bencher: BencherReport,
-            html_enabled: true,
+            html_enabled: cfg!(feature = "html_reports"),
             html: Html::new(DEFAULT_PLOTTING_BACKEND.create_plotter()),
-            csv_enabled: true,
+            csv_enabled: cfg!(feature = "csv_output"),
             csv: FileCsvReport,
         };
 
