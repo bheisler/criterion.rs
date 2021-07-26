@@ -1,7 +1,9 @@
 mod gnuplot_backend;
+#[cfg(feature = "plotters")]
 mod plotters_backend;
 
 pub(crate) use gnuplot_backend::Gnuplot;
+#[cfg(feature = "plotters")]
 pub(crate) use plotters_backend::PlottersBackend;
 
 use crate::estimate::Statistic;

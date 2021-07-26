@@ -90,7 +90,9 @@ use crate::connection::Connection;
 use crate::connection::OutgoingMessage;
 use crate::html::Html;
 use crate::measurement::{Measurement, WallTime};
-use crate::plot::{Gnuplot, Plotter, PlottersBackend};
+#[cfg(feature = "plotters")]
+use crate::plot::PlottersBackend;
+use crate::plot::{Gnuplot, Plotter};
 use crate::profiler::{ExternalProfiler, Profiler};
 use crate::report::{BencherReport, CliReport, Report, ReportContext, Reports};
 
@@ -281,7 +283,10 @@ impl PlottingBackend {
     fn create_plotter(&self) -> Box<dyn Plotter> {
         match self {
             PlottingBackend::Gnuplot => Box::new(Gnuplot::default()),
+            #[cfg(feature = "plotters")]
             PlottingBackend::Plotters => Box::new(PlottersBackend::default()),
+            #[cfg(not(feature = "plotters"))]
+            PlottingBackend::Plotters => panic!("Criterion was built without plotters support."),
         }
     }
 }
