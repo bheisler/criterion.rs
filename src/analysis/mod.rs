@@ -128,29 +128,28 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         .collect::<Vec<f64>>();
     let avg_times = Sample::new(&avg_times);
 
-    if criterion.connection.is_none() && criterion.load_baseline.is_none() {
-        if !matches!(criterion.baseline, Baseline::Discard) {
-            log_if_err!({
-                let mut new_dir = criterion.output_directory.clone();
-                new_dir.push(id.as_directory_name());
-                new_dir.push("new");
-                fs::mkdirp(&new_dir)
-            });
-        }
+    if criterion.connection.is_none()
+        && criterion.load_baseline.is_none()
+        && !matches!(criterion.baseline, Baseline::Discard)
+    {
+        log_if_err!({
+            let mut new_dir = criterion.output_directory.clone();
+            new_dir.push(id.as_directory_name());
+            new_dir.push("new");
+            fs::mkdirp(&new_dir)
+        });
     }
 
     let data = Data::new(&iters, &times);
     let labeled_sample = tukey::classify(avg_times);
-    if criterion.connection.is_none() {
-        if !matches!(criterion.baseline, Baseline::Discard) {
-            log_if_err!({
-                let mut tukey_file = criterion.output_directory.to_owned();
-                tukey_file.push(id.as_directory_name());
-                tukey_file.push("new");
-                tukey_file.push("tukey.json");
-                fs::save(&labeled_sample.fences(), &tukey_file)
-            });
-        }
+    if criterion.connection.is_none() && !matches!(criterion.baseline, Baseline::Discard) {
+        log_if_err!({
+            let mut tukey_file = criterion.output_directory.to_owned();
+            tukey_file.push(id.as_directory_name());
+            tukey_file.push("new");
+            tukey_file.push("tukey.json");
+            fs::save(&labeled_sample.fences(), &tukey_file)
+        });
     }
     let (mut distributions, mut estimates) = estimates(avg_times, config);
     if sampling_mode.is_linear() {
@@ -160,30 +159,31 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         distributions.slope = Some(distribution);
     }
 
-    if criterion.connection.is_none() && criterion.load_baseline.is_none() {
-        if !matches!(criterion.baseline, Baseline::Discard) {
-            log_if_err!({
-                let mut sample_file = criterion.output_directory.clone();
-                sample_file.push(id.as_directory_name());
-                sample_file.push("new");
-                sample_file.push("sample.json");
-                fs::save(
-                    &SavedSample {
-                        sampling_mode,
-                        iters: data.x().as_ref().to_vec(),
-                        times: data.y().as_ref().to_vec(),
-                    },
-                    &sample_file,
-                )
-            });
-            log_if_err!({
-                let mut estimates_file = criterion.output_directory.clone();
-                estimates_file.push(id.as_directory_name());
-                estimates_file.push("new");
-                estimates_file.push("estimates.json");
-                fs::save(&estimates, &estimates_file)
-            });
-        }
+    if criterion.connection.is_none()
+        && criterion.load_baseline.is_none()
+        && !matches!(criterion.baseline, Baseline::Discard)
+    {
+        log_if_err!({
+            let mut sample_file = criterion.output_directory.clone();
+            sample_file.push(id.as_directory_name());
+            sample_file.push("new");
+            sample_file.push("sample.json");
+            fs::save(
+                &SavedSample {
+                    sampling_mode,
+                    iters: data.x().as_ref().to_vec(),
+                    times: data.y().as_ref().to_vec(),
+                },
+                &sample_file,
+            )
+        });
+        log_if_err!({
+            let mut estimates_file = criterion.output_directory.clone();
+            estimates_file.push(id.as_directory_name());
+            estimates_file.push("new");
+            estimates_file.push("estimates.json");
+            fs::save(&estimates, &estimates_file)
+        });
     }
 
     let compare_data = if base_dir_exists(
@@ -243,16 +243,17 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         criterion.measurement.formatter(),
     );
 
-    if criterion.connection.is_none() && criterion.load_baseline.is_none() {
-        if !matches!(criterion.baseline, Baseline::Discard) {
-            log_if_err!({
-                let mut benchmark_file = criterion.output_directory.clone();
-                benchmark_file.push(id.as_directory_name());
-                benchmark_file.push("new");
-                benchmark_file.push("benchmark.json");
-                fs::save(&id, &benchmark_file)
-            });
-        }
+    if criterion.connection.is_none()
+        && criterion.load_baseline.is_none()
+        && !matches!(criterion.baseline, Baseline::Discard)
+    {
+        log_if_err!({
+            let mut benchmark_file = criterion.output_directory.clone();
+            benchmark_file.push(id.as_directory_name());
+            benchmark_file.push("new");
+            benchmark_file.push("benchmark.json");
+            fs::save(&id, &benchmark_file)
+        });
     }
 
     if criterion.connection.is_none() {
