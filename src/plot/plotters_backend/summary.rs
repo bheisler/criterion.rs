@@ -46,8 +46,8 @@ pub fn line_comparison(
         AxisScale::Logarithmic => draw_line_comarision_figure(
             root_area,
             unit,
-            LogRange(x_range),
-            LogRange(y_range),
+            x_range.log_scale(),
+            y_range.log_scale(),
             value_type,
             series_data,
         ),
@@ -132,9 +132,9 @@ fn line_comparison_series_data<'a>(
     // This assumes the curves are sorted. It also assumes that the benchmark IDs all have numeric
     // values or throughputs and that value is sensible (ie. not a mix of bytes and elements
     // or whatnot)
-    for (key, group) in &all_curves.iter().group_by(|&&&(ref id, _)| &id.function_id) {
+    for (key, group) in &all_curves.iter().group_by(|&&&(id, _)| &id.function_id) {
         let mut tuples: Vec<_> = group
-            .map(|&&(ref id, ref sample)| {
+            .map(|&&(id, ref sample)| {
                 // Unwrap is fine here because it will only fail if the assumptions above are not true
                 // ie. programmer error.
                 let x = id.as_number().unwrap();
@@ -164,7 +164,7 @@ pub fn violin(
 
     let mut kdes = all_curves
         .iter()
-        .map(|&&(ref id, ref sample)| {
+        .map(|&&(id, ref sample)| {
             let (x, mut y) = kde::sweep(Sample::new(sample), KDE_POINTS, None);
             let y_max = Sample::new(&y).max();
             for y in y.iter_mut() {
@@ -211,7 +211,7 @@ pub fn violin(
     match axis_scale {
         AxisScale::Linear => draw_violin_figure(root_area, unit, x_range, y_range, kdes),
         AxisScale::Logarithmic => {
-            draw_violin_figure(root_area, unit, LogRange(x_range), y_range, kdes)
+            draw_violin_figure(root_area, unit, x_range.log_scale(), y_range, kdes)
         }
     }
 }

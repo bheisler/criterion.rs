@@ -97,12 +97,12 @@ where
 
     /// Returns a view into the `X` data
     pub fn x(&self) -> &'a Sample<X> {
-        Sample::new(&self.0)
+        Sample::new(self.0)
     }
 
     /// Returns a view into the `Y` data
     pub fn y(&self) -> &'a Sample<Y> {
-        Sample::new(&self.1)
+        Sample::new(self.1)
     }
 }
 
