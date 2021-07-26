@@ -31,7 +31,6 @@ fn short_benchmark(dir: &TempDir) -> Criterion {
         .warm_up_time(Duration::from_millis(250))
         .measurement_time(Duration::from_millis(500))
         .nresamples(2000)
-        .with_plots()
 }
 
 #[derive(Clone)]
@@ -73,10 +72,12 @@ fn verify_json(dir: &PathBuf, path: &str) {
     serde_json::from_reader::<File, Value>(f).unwrap();
 }
 
+#[cfg(feature = "html_reports")]
 fn verify_svg(dir: &PathBuf, path: &str) {
     verify_file(dir, path);
 }
 
+#[cfg(feature = "html_reports")]
 fn verify_html(dir: &PathBuf, path: &str) {
     verify_file(dir, path);
 }
@@ -337,38 +338,47 @@ fn test_output_files() {
         verify_stats(&dir, "base");
         verify_json(&dir, "change/estimates.json");
 
-        verify_svg(&dir, "report/MAD.svg");
-        verify_svg(&dir, "report/mean.svg");
-        verify_svg(&dir, "report/median.svg");
-        verify_svg(&dir, "report/pdf.svg");
-        verify_svg(&dir, "report/regression.svg");
-        verify_svg(&dir, "report/SD.svg");
-        verify_svg(&dir, "report/slope.svg");
-        verify_svg(&dir, "report/typical.svg");
-        verify_svg(&dir, "report/both/pdf.svg");
-        verify_svg(&dir, "report/both/regression.svg");
-        verify_svg(&dir, "report/change/mean.svg");
-        verify_svg(&dir, "report/change/median.svg");
-        verify_svg(&dir, "report/change/t-test.svg");
+        #[cfg(feature = "html_reports")]
+        {
+            verify_svg(&dir, "report/MAD.svg");
+            verify_svg(&dir, "report/mean.svg");
+            verify_svg(&dir, "report/median.svg");
+            verify_svg(&dir, "report/pdf.svg");
+            verify_svg(&dir, "report/regression.svg");
+            verify_svg(&dir, "report/SD.svg");
+            verify_svg(&dir, "report/slope.svg");
+            verify_svg(&dir, "report/typical.svg");
+            verify_svg(&dir, "report/both/pdf.svg");
+            verify_svg(&dir, "report/both/regression.svg");
+            verify_svg(&dir, "report/change/mean.svg");
+            verify_svg(&dir, "report/change/median.svg");
+            verify_svg(&dir, "report/change/t-test.svg");
 
-        verify_svg(&dir, "report/pdf_small.svg");
-        verify_svg(&dir, "report/regression_small.svg");
-        verify_svg(&dir, "report/relative_pdf_small.svg");
-        verify_svg(&dir, "report/relative_regression_small.svg");
+            verify_svg(&dir, "report/pdf_small.svg");
+            verify_svg(&dir, "report/regression_small.svg");
+            verify_svg(&dir, "report/relative_pdf_small.svg");
+            verify_svg(&dir, "report/relative_regression_small.svg");
+            verify_html(&dir, "report/index.html");
+        }
+    }
+
+    #[cfg(feature = "html_reports")]
+    {
+        // Check for overall report files
+        let dir = tempdir.path().join("test_output");
+
+        verify_svg(&dir, "report/violin.svg");
         verify_html(&dir, "report/index.html");
     }
 
-    // Check for overall report files
-    let dir = tempdir.path().join("test_output");
-
-    verify_svg(&dir, "report/violin.svg");
-    verify_html(&dir, "report/index.html");
-
     // Run the final summary process and check for the report that produces
     short_benchmark(&tempdir).final_summary();
-    let dir = tempdir.path().to_owned();
 
-    verify_html(&dir, "report/index.html");
+    #[cfg(feature = "html_reports")]
+    {
+        let dir = tempdir.path().to_owned();
+        verify_html(&dir, "report/index.html");
+    }
 }
 
 #[cfg(feature = "plotters")]
@@ -389,24 +399,27 @@ fn test_output_files_flat_sampling() {
     verify_stats(&dir, "base");
     verify_json(&dir, "change/estimates.json");
 
-    verify_svg(&dir, "report/MAD.svg");
-    verify_svg(&dir, "report/mean.svg");
-    verify_svg(&dir, "report/median.svg");
-    verify_svg(&dir, "report/pdf.svg");
-    verify_svg(&dir, "report/iteration_times.svg");
-    verify_svg(&dir, "report/SD.svg");
-    verify_svg(&dir, "report/typical.svg");
-    verify_svg(&dir, "report/both/pdf.svg");
-    verify_svg(&dir, "report/both/iteration_times.svg");
-    verify_svg(&dir, "report/change/mean.svg");
-    verify_svg(&dir, "report/change/median.svg");
-    verify_svg(&dir, "report/change/t-test.svg");
+    #[cfg(feature = "html_reports")]
+    {
+        verify_svg(&dir, "report/MAD.svg");
+        verify_svg(&dir, "report/mean.svg");
+        verify_svg(&dir, "report/median.svg");
+        verify_svg(&dir, "report/pdf.svg");
+        verify_svg(&dir, "report/iteration_times.svg");
+        verify_svg(&dir, "report/SD.svg");
+        verify_svg(&dir, "report/typical.svg");
+        verify_svg(&dir, "report/both/pdf.svg");
+        verify_svg(&dir, "report/both/iteration_times.svg");
+        verify_svg(&dir, "report/change/mean.svg");
+        verify_svg(&dir, "report/change/median.svg");
+        verify_svg(&dir, "report/change/t-test.svg");
 
-    verify_svg(&dir, "report/pdf_small.svg");
-    verify_svg(&dir, "report/iteration_times_small.svg");
-    verify_svg(&dir, "report/relative_pdf_small.svg");
-    verify_svg(&dir, "report/relative_iteration_times_small.svg");
-    verify_html(&dir, "report/index.html");
+        verify_svg(&dir, "report/pdf_small.svg");
+        verify_svg(&dir, "report/iteration_times_small.svg");
+        verify_svg(&dir, "report/relative_pdf_small.svg");
+        verify_svg(&dir, "report/relative_iteration_times_small.svg");
+        verify_html(&dir, "report/index.html");
+    }
 }
 
 #[test]

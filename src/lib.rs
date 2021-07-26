@@ -288,14 +288,14 @@ pub enum PlottingBackend {
     None,
 }
 impl PlottingBackend {
-    fn create_plotter(&self) -> Box<dyn Plotter> {
+    fn create_plotter(&self) -> Option<Box<dyn Plotter>> {
         match self {
-            PlottingBackend::Gnuplot => Box::new(Gnuplot::default()),
+            PlottingBackend::Gnuplot => Some(Box::new(Gnuplot::default())),
             #[cfg(feature = "plotters")]
-            PlottingBackend::Plotters => Box::new(PlottersBackend::default()),
+            PlottingBackend::Plotters => Some(Box::new(PlottersBackend::default())),
             #[cfg(not(feature = "plotters"))]
             PlottingBackend::Plotters => panic!("Criterion was built without plotters support."),
-            PlottingBackend::None => Box::new(plot::NullPlotter),
+            PlottingBackend::None => None,
         }
     }
 }
@@ -386,8 +386,7 @@ impl Default for Criterion {
             cli: CliReport::new(false, false, false),
             bencher_enabled: false,
             bencher: BencherReport,
-            html_enabled: cfg!(feature = "html_reports"),
-            html: Html::new(DEFAULT_PLOTTING_BACKEND.create_plotter()),
+            html: DEFAULT_PLOTTING_BACKEND.create_plotter().map(Html::new),
             csv_enabled: cfg!(feature = "csv_output"),
         };
 
@@ -423,7 +422,7 @@ impl Default for Criterion {
             criterion.report.cli_enabled = false;
             criterion.report.bencher_enabled = false;
             criterion.report.csv_enabled = false;
-            criterion.report.html_enabled = false;
+            criterion.report.html = None;
         }
         criterion
     }
@@ -471,7 +470,7 @@ impl<M: Measurement> Criterion<M> {
             }
         }
 
-        self.report.html = Html::new(backend.create_plotter());
+        self.report.html = backend.create_plotter().map(Html::new);
         self
     }
 
@@ -609,15 +608,20 @@ impl<M: Measurement> Criterion<M> {
     /// Enables plotting
     pub fn with_plots(mut self) -> Criterion<M> {
         // If running under cargo-criterion then don't re-enable the reports; let it do the reporting.
-        if self.connection.is_none() {
-            self.report.html_enabled = true;
+        if self.connection.is_none() && self.report.html.is_none() {
+            let default_backend = DEFAULT_PLOTTING_BACKEND.create_plotter();
+            if let Some(backend) = default_backend {
+                self.report.html = Some(Html::new(backend));
+            } else {
+                panic!("Cannot find a default plotting backend!");
+            }
         }
         self
     }
 
     /// Disables plotting
     pub fn without_plots(mut self) -> Criterion<M> {
-        self.report.html_enabled = false;
+        self.report.html = None;
         self
     }
 
@@ -915,7 +919,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.report.cli_enabled = false;
             self.report.bencher_enabled = false;
             self.report.csv_enabled = false;
-            self.report.html_enabled = false;
+            self.report.html = None;
         } else {
             match matches.value_of("output-format") {
                 Some("bencher") => {
