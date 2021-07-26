@@ -271,6 +271,8 @@ pub enum Baseline {
     /// Save writes the benchmark results to the baseline directory,
     /// overwriting any results that were previously there.
     Save,
+    /// Discard benchmark results.
+    Discard,
 }
 
 /// Enum used to select the plotting backend.
@@ -719,6 +721,9 @@ impl<M: Measurement> Criterion<M> {
                 .long("save-baseline")
                 .default_value("base")
                 .help("Save results under a named baseline."))
+            .arg(Arg::with_name("discard-baseline")
+                .long("discard-baseline")
+                .help("Save results under a named baseline."))
             .arg(Arg::with_name("baseline")
                 .short("b")
                 .long("baseline")
@@ -897,6 +902,9 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         if let Some(dir) = matches.value_of("save-baseline") {
             self.baseline = Baseline::Save;
             self.baseline_directory = dir.to_owned()
+        }
+        if matches.is_present("discard-baseline") {
+            self.baseline = Baseline::Discard;
         }
         if let Some(dir) = matches.value_of("baseline") {
             self.baseline = Baseline::Compare;
