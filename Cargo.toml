@@ -26,7 +26,6 @@ serde_derive   = "1.0"
 serde_cbor     = "0.11"
 atty           = "0.2"
 clap           = { version = "2.33", default-features = false }
-csv            = { version = "1.1", optional = true }
 walkdir        = "2.3"
 tinytemplate   = "1.1"
 cast           = "0.2"
@@ -34,10 +33,13 @@ num-traits     = { version = "0.2", default-features = false }
 oorandom       = "11.1"
 rayon          = "1.3"
 regex          = { version = "1.3", default-features = false, features = ["std"] }
-futures        = { version = "0.3", default_features = false, optional = true }
-smol           = { version = "1.2", default-features = false, optional = true }
-tokio          = { version = "1.0", default-features = false, features = ["rt"], optional = true }
-async-std      = { version = "1.9", optional = true }
+
+# Optional dependencies
+csv       = { version = "1.1", optional = true }
+futures   = { version = "0.3", default_features = false, optional = true }
+smol      = { version = "1.2", default-features = false, optional = true }
+tokio     = { version = "1.0", default-features = false, features = ["rt"], optional = true }
+async-std = { version = "1.9", optional = true }
 
 [dependencies.plotters]
 version          = "^0.3.1"
