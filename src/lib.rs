@@ -76,9 +76,6 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::default::Default;
 use std::env;
-use std::fmt;
-use std::iter::IntoIterator;
-use std::marker::PhantomData;
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -88,7 +85,6 @@ use std::time::Duration;
 use criterion_plot::{Version, VersionError};
 
 use crate::benchmark::BenchmarkConfig;
-use crate::benchmark::NamedRoutine;
 use crate::connection::Connection;
 use crate::connection::OutgoingMessage;
 use crate::csv_report::FileCsvReport;
@@ -97,13 +93,10 @@ use crate::measurement::{Measurement, WallTime};
 use crate::plot::{Gnuplot, Plotter, PlottersBackend};
 use crate::profiler::{ExternalProfiler, Profiler};
 use crate::report::{BencherReport, CliReport, Report, ReportContext, Reports};
-use crate::routine::Function;
 
 #[cfg(feature = "async")]
 pub use crate::bencher::AsyncBencher;
 pub use crate::bencher::Bencher;
-#[allow(deprecated)]
-pub use crate::benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
 pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};
 
 lazy_static! {
@@ -174,36 +167,6 @@ pub fn black_box<T>(dummy: T) -> T {
         let ret = std::ptr::read_volatile(&dummy);
         std::mem::forget(dummy);
         ret
-    }
-}
-
-/// Representing a function to benchmark together with a name of that function.
-/// Used together with `bench_functions` to represent one out of multiple functions
-/// under benchmark.
-#[doc(hidden)]
-pub struct Fun<I: fmt::Debug, M: Measurement + 'static = WallTime> {
-    f: NamedRoutine<I, M>,
-    _phantom: PhantomData<M>,
-}
-
-impl<I, M: Measurement> Fun<I, M>
-where
-    I: fmt::Debug + 'static,
-{
-    /// Create a new `Fun` given a name and a closure
-    pub fn new<F>(name: &str, f: F) -> Fun<I, M>
-    where
-        F: FnMut(&mut Bencher<'_, M>, &I) + 'static,
-    {
-        let routine = NamedRoutine {
-            id: name.to_owned(),
-            f: Box::new(RefCell::new(Function::new(f))),
-        };
-
-        Fun {
-            f: routine,
-            _phantom: PhantomData,
-        }
     }
 }
 
@@ -643,17 +606,6 @@ impl<M: Measurement> Criterion<M> {
     pub fn without_plots(mut self) -> Criterion<M> {
         self.report.html_enabled = false;
         self
-    }
-
-    /// Return true if generation of the plots is possible.
-    #[deprecated(
-        since = "0.3.4",
-        note = "No longer useful; since the plotters backend is available Criterion.rs can always generate plots"
-    )]
-    pub fn can_plot(&self) -> bool {
-        // Trivially true now that we have plotters.
-        // TODO: Deprecate and remove this.
-        true
     }
 
     /// Names an explicit baseline and enables overwriting the previous results.
@@ -1180,138 +1132,6 @@ where
         );
         self
     }
-
-    /// Benchmarks a function under various inputs
-    ///
-    /// This is a convenience method to execute several related benchmarks. Each benchmark will
-    /// receive the id: `${id}/${input}`.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # #[macro_use] extern crate criterion;
-    /// # use self::criterion::*;
-    ///
-    /// fn bench(c: &mut Criterion) {
-    ///     c.bench_function_over_inputs("from_elem",
-    ///         |b: &mut Bencher, size: &usize| {
-    ///             b.iter(|| vec![0u8; *size]);
-    ///         },
-    ///         vec![1024, 2048, 4096]
-    ///     );
-    /// }
-    ///
-    /// criterion_group!(benches, bench);
-    /// criterion_main!(benches);
-    /// ```
-    #[doc(hidden)]
-    #[deprecated(since = "0.3.4", note = "Please use BenchmarkGroups instead.")]
-    #[allow(deprecated)]
-    pub fn bench_function_over_inputs<I, F>(
-        &mut self,
-        id: &str,
-        f: F,
-        inputs: I,
-    ) -> &mut Criterion<M>
-    where
-        I: IntoIterator,
-        I::Item: fmt::Debug + 'static,
-        F: FnMut(&mut Bencher<'_, M>, &I::Item) + 'static,
-    {
-        self.bench(id, ParameterizedBenchmark::new(id, f, inputs))
-    }
-
-    /// Benchmarks multiple functions
-    ///
-    /// All functions get the same input and are compared with the other implementations.
-    /// Works similar to `bench_function`, but with multiple functions.
-    ///
-    /// # Example
-    ///
-    /// ``` rust
-    /// # #[macro_use] extern crate criterion;
-    /// # use self::criterion::*;
-    /// # fn seq_fib(i: &u32) {}
-    /// # fn par_fib(i: &u32) {}
-    ///
-    /// fn bench_seq_fib(b: &mut Bencher, i: &u32) {
-    ///     b.iter(|| {
-    ///         seq_fib(i);
-    ///     });
-    /// }
-    ///
-    /// fn bench_par_fib(b: &mut Bencher, i: &u32) {
-    ///     b.iter(|| {
-    ///         par_fib(i);
-    ///     });
-    /// }
-    ///
-    /// fn bench(c: &mut Criterion) {
-    ///     let sequential_fib = Fun::new("Sequential", bench_seq_fib);
-    ///     let parallel_fib = Fun::new("Parallel", bench_par_fib);
-    ///     let funs = vec![sequential_fib, parallel_fib];
-    ///
-    ///     c.bench_functions("Fibonacci", funs, 14);
-    /// }
-    ///
-    /// criterion_group!(benches, bench);
-    /// criterion_main!(benches);
-    /// ```
-    #[doc(hidden)]
-    #[deprecated(since = "0.3.4", note = "Please use BenchmarkGroups instead.")]
-    #[allow(deprecated)]
-    pub fn bench_functions<I>(
-        &mut self,
-        id: &str,
-        funs: Vec<Fun<I, M>>,
-        input: I,
-    ) -> &mut Criterion<M>
-    where
-        I: fmt::Debug + 'static,
-    {
-        let benchmark = ParameterizedBenchmark::with_functions(
-            funs.into_iter().map(|fun| fun.f).collect(),
-            vec![input],
-        );
-
-        self.bench(id, benchmark)
-    }
-
-    /// Executes the given benchmark. Use this variant to execute benchmarks
-    /// with complex configuration. This can be used to compare multiple
-    /// functions, execute benchmarks with custom configuration settings and
-    /// more. See the Benchmark and ParameterizedBenchmark structs for more
-    /// information.
-    ///
-    /// ```rust
-    /// # #[macro_use] extern crate criterion;
-    /// # use criterion::*;
-    /// # fn routine_1() {}
-    /// # fn routine_2() {}
-    ///
-    /// fn bench(c: &mut Criterion) {
-    ///     // Setup (construct data, allocate memory, etc)
-    ///     c.bench(
-    ///         "routines",
-    ///         Benchmark::new("routine_1", |b| b.iter(|| routine_1()))
-    ///             .with_function("routine_2", |b| b.iter(|| routine_2()))
-    ///             .sample_size(50)
-    ///     );
-    /// }
-    ///
-    /// criterion_group!(benches, bench);
-    /// criterion_main!(benches);
-    /// ```
-    #[doc(hidden)]
-    #[deprecated(since = "0.3.4", note = "Please use BenchmarkGroups instead.")]
-    pub fn bench<B: BenchmarkDefinition<M>>(
-        &mut self,
-        group_id: &str,
-        benchmark: B,
-    ) -> &mut Criterion<M> {
-        benchmark.run(group_id, self);
-        self
-    }
 }
 
 trait DurationExt {
@@ -1358,7 +1178,7 @@ pub enum AxisScale {
 /// or benchmark group.
 ///
 /// ```rust
-/// use self::criterion::{Bencher, Criterion, Benchmark, PlotConfiguration, AxisScale};
+/// use self::criterion::{Bencher, Criterion, PlotConfiguration, AxisScale};
 ///
 /// let plot_config = PlotConfiguration::default()
 ///     .summary_scale(AxisScale::Logarithmic);
