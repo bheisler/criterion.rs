@@ -57,6 +57,7 @@ mod benchmark_group;
 pub mod async_executor;
 mod bencher;
 mod connection;
+#[cfg(feature = "csv_output")]
 mod csv_report;
 mod error;
 mod estimate;
@@ -87,7 +88,6 @@ use criterion_plot::{Version, VersionError};
 use crate::benchmark::BenchmarkConfig;
 use crate::connection::Connection;
 use crate::connection::OutgoingMessage;
-use crate::csv_report::FileCsvReport;
 use crate::html::Html;
 use crate::measurement::{Measurement, WallTime};
 use crate::plot::{Gnuplot, Plotter, PlottersBackend};
@@ -375,7 +375,6 @@ impl Default for Criterion {
             html_enabled: cfg!(feature = "html_reports"),
             html: Html::new(DEFAULT_PLOTTING_BACKEND.create_plotter()),
             csv_enabled: cfg!(feature = "csv_output"),
-            csv: FileCsvReport,
         };
 
         let mut criterion = Criterion {

@@ -26,7 +26,7 @@ serde_derive   = "1.0"
 serde_cbor     = "0.11"
 atty           = "0.2"
 clap           = { version = "2.33", default-features = false }
-csv            = "1.1"
+csv            = { version = "1.1", optional = true }
 walkdir        = "2.3"
 tinytemplate   = "1.1"
 cast           = "0.2"
@@ -55,7 +55,14 @@ futures    = { version = "0.3", default_features = false, features = ["executor"
 maintenance = { status = "passively-maintained" }
 
 [features]
-stable  = ["html_reports", "async_futures", "async_smol", "async_tokio", "async_std"]
+stable  = [
+  "csv_output",
+  "html_reports",
+  "async_futures",
+  "async_smol",
+  "async_tokio",
+  "async_std",
+]
 default = ["cargo_bench_support"]
 
 # Enable use of the nightly-only test::black_box function to discourage compiler optimizations.
@@ -82,7 +89,7 @@ cargo_bench_support = []
 # This feature _currently_ does nothing, but in 0.4.0 it will be
 # required in order to have Criterion.rs generate CSV files. This feature is deprecated in favor of
 # cargo-criterion's --message-format=json option.
-csv_output = []
+csv_output = ["csv"]
 
 [workspace]
 exclude = ["cargo-criterion"]

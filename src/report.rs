@@ -1,5 +1,7 @@
+#[cfg(feature = "csv_output")]
+use crate::csv_report::FileCsvReport;
+use crate::stats::bivariate::regression::Slope;
 use crate::stats::univariate::outliers::tukey::LabeledSample;
-use crate::{csv_report::FileCsvReport, stats::bivariate::regression::Slope};
 use crate::{html::Html, stats::bivariate::Data};
 
 use crate::estimate::{ChangeDistributions, ChangeEstimates, Distributions, Estimate, Estimates};
@@ -46,6 +48,7 @@ impl<'a> MeasurementData<'a> {
         self.data.x()
     }
 
+    #[cfg(feature = "csv_output")]
     pub fn sample_times(&self) -> &Sample<f64> {
         self.data.y()
     }
@@ -304,7 +307,6 @@ pub(crate) struct Reports {
     pub(crate) bencher_enabled: bool,
     pub(crate) bencher: BencherReport,
     pub(crate) csv_enabled: bool,
-    pub(crate) csv: FileCsvReport,
     pub(crate) html_enabled: bool,
     pub(crate) html: Html,
 }
@@ -317,8 +319,9 @@ macro_rules! reports_impl {
             if self.bencher_enabled {
                 self.bencher.$name($($argn),*);
             }
+            #[cfg(feature = "csv_output")]
             if self.csv_enabled {
-                self.csv.$name($($argn),*);
+                FileCsvReport.$name($($argn),*);
             }
             if self.html_enabled {
                 self.html.$name($($argn),*);

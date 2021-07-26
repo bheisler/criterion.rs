@@ -38,6 +38,11 @@ jobs:
 
       - uses: actions-rs/cargo@v1
         with:
+          command: build
+          args: --no-default-features
+
+      - uses: actions-rs/cargo@v1
+        with:
           command: test
           args: --features stable
 
