@@ -86,6 +86,7 @@ fn verify_stats(dir: &PathBuf, baseline: &str) {
     verify_json(&dir, &format!("{}/sample.json", baseline));
     verify_json(&dir, &format!("{}/tukey.json", baseline));
     verify_json(&dir, &format!("{}/benchmark.json", baseline));
+    #[cfg(feature = "csv_output")]
     verify_file(&dir, &format!("{}/raw.csv", baseline));
 }
 
