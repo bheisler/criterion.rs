@@ -31,7 +31,7 @@ tinytemplate   = "1.1"
 cast           = "0.2"
 num-traits     = { version = "0.2", default-features = false, features = ["std"] }
 oorandom       = "11.1"
-rayon          = "1.3"
+rayon          = { version = "1.3", optional = true }
 regex          = { version = "1.3", default-features = false, features = ["std"] }
 
 # Optional dependencies
@@ -66,7 +66,7 @@ stable  = [
   "async_tokio",
   "async_std",
 ]
-default = ["plotters", "cargo_bench_support"]
+default = ["rayon", "plotters", "cargo_bench_support"]
 
 # Enable use of the nightly-only test::black_box function to discourage compiler optimizations.
 real_blackbox = []

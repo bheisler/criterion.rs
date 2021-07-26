@@ -11,6 +11,7 @@ pub mod outliers;
 
 use crate::stats::float::Float;
 use crate::stats::tuple::{Tuple, TupledDistributionsBuilder};
+#[cfg(feature = "rayon")]
 use rayon::prelude::*;
 use std::cmp;
 
@@ -42,11 +43,42 @@ where
     let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as usize;
     let per_chunk = (nresamples + nresamples_sqrt - 1) / nresamples_sqrt;
 
-    (0..nresamples_sqrt)
-        .into_par_iter()
-        .map_init(
-            || (Resamples::new(a), Resamples::new(b)),
-            |(a_resamples, b_resamples), i| {
+    #[cfg(feature = "rayon")]
+    {
+        (0..nresamples_sqrt)
+            .into_par_iter()
+            .map_init(
+                || (Resamples::new(a), Resamples::new(b)),
+                |(a_resamples, b_resamples), i| {
+                    let start = i * per_chunk;
+                    let end = cmp::min((i + 1) * per_chunk, nresamples);
+                    let a_resample = a_resamples.next();
+
+                    let mut sub_distributions: T::Builder =
+                        TupledDistributionsBuilder::new(end - start);
+
+                    for _ in start..end {
+                        let b_resample = b_resamples.next();
+                        sub_distributions.push(statistic(a_resample, b_resample));
+                    }
+                    sub_distributions
+                },
+            )
+            .reduce(
+                || T::Builder::new(0),
+                |mut a, mut b| {
+                    a.extend(&mut b);
+                    a
+                },
+            )
+            .complete()
+    }
+    #[cfg(not(feature = "rayon"))]
+    {
+        let mut a_resamples = Resamples::new(a);
+        let mut b_resamples = Resamples::new(b);
+        (0..nresamples_sqrt)
+            .map(|i| {
                 let start = i * per_chunk;
                 let end = cmp::min((i + 1) * per_chunk, nresamples);
                 let a_resample = a_resamples.next();
@@ -59,14 +91,11 @@ where
                     sub_distributions.push(statistic(a_resample, b_resample));
                 }
                 sub_distributions
-            },
-        )
-        .reduce(
-            || T::Builder::new(0),
-            |mut a, mut b| {
+            })
+            .fold(T::Builder::new(0), |mut a, mut b| {
                 a.extend(&mut b);
                 a
-            },
-        )
-        .complete()
+            })
+            .complete()
+    }
 }
