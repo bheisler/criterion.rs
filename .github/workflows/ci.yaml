@@ -33,11 +33,13 @@ jobs:
 
       - uses: actions-rs/cargo@v1
         with:
-          command: build --features stable
+          command: build
+          args: --features stable
 
       - uses: actions-rs/cargo@v1
         with:
-          command: test --features stable
+          command: test
+          args: --features stable
 
       - uses: actions-rs/cargo@v1
         if: ${{ matrix.rust == 'stable' }}
