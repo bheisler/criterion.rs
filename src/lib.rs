@@ -105,12 +105,10 @@ lazy_static! {
     static ref DEBUG_ENABLED: bool = std::env::var_os("CRITERION_DEBUG").is_some();
     static ref GNUPLOT_VERSION: Result<Version, VersionError> = criterion_plot::version();
     static ref DEFAULT_PLOTTING_BACKEND: PlottingBackend = {
-        match &*GNUPLOT_VERSION {
-            Ok(_) => PlottingBackend::Gnuplot,
-            Err(e) => {
-                if cfg!(not(feature = "plotters")) {
-                    PlottingBackend::None
-                } else {
+        if cfg!(feature = "html_reports") {
+            match &*GNUPLOT_VERSION {
+                Ok(_) => PlottingBackend::Gnuplot,
+                Err(e) => {
                     match e {
                         VersionError::Exec(_) => eprintln!("Gnuplot not found, using plotters backend"),
                         e => eprintln!(
@@ -121,6 +119,8 @@ lazy_static! {
                     PlottingBackend::Plotters
                 }
             }
+        } else {
+            PlottingBackend::None
         }
     };
     static ref CARGO_CRITERION_CONNECTION: Option<Mutex<Connection>> = {
@@ -895,8 +895,6 @@ https://bheisler.github.io/criterion.rs/book/faq.html
 
         if matches.is_present("noplot") {
             self = self.without_plots();
-        } else {
-            self = self.with_plots();
         }
 
         if let Some(dir) = matches.value_of("save-baseline") {
