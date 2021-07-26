@@ -26,7 +26,6 @@ serde_derive   = "1.0"
 serde_cbor     = "0.11"
 atty           = "0.2"
 clap           = { version = "2.33", default-features = false }
-csv            = "1.1"
 walkdir        = "2.3"
 tinytemplate   = "1.1"
 cast           = "0.2"
@@ -34,10 +33,13 @@ num-traits     = { version = "0.2", default-features = false }
 oorandom       = "11.1"
 rayon          = "1.3"
 regex          = { version = "1.3", default-features = false, features = ["std"] }
-futures        = { version = "0.3", default_features = false, optional = true }
-smol           = { version = "1.2", default-features = false, optional = true }
-tokio          = { version = "1.0", default-features = false, features = ["rt"], optional = true }
-async-std      = { version = "1.9", optional = true }
+
+# Optional dependencies
+csv       = { version = "1.1", optional = true }
+futures   = { version = "0.3", default_features = false, optional = true }
+smol      = { version = "1.2", default-features = false, optional = true }
+tokio     = { version = "1.0", default-features = false, features = ["rt"], optional = true }
+async-std = { version = "1.9", optional = true }
 
 [dependencies.plotters]
 version          = "^0.3.1"
@@ -55,7 +57,14 @@ futures    = { version = "0.3", default_features = false, features = ["executor"
 maintenance = { status = "passively-maintained" }
 
 [features]
-stable  = ["async_futures", "async_smol", "async_tokio", "async_std"]
+stable  = [
+  "csv_output",
+  "html_reports",
+  "async_futures",
+  "async_smol",
+  "async_tokio",
+  "async_std",
+]
 default = ["cargo_bench_support"]
 
 # Enable use of the nightly-only test::black_box function to discourage compiler optimizations.
@@ -82,7 +91,7 @@ cargo_bench_support = []
 # This feature _currently_ does nothing, but in 0.4.0 it will be
 # required in order to have Criterion.rs generate CSV files. This feature is deprecated in favor of
 # cargo-criterion's --message-format=json option.
-csv_output = []
+csv_output = ["csv"]
 
 [workspace]
 exclude = ["cargo-criterion"]

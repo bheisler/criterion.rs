@@ -120,9 +120,6 @@ macro_rules! criterion_group {
 macro_rules! criterion_main {
     ( $( $group:path ),+ $(,)* ) => {
         fn main() {
-            $crate::__warn_about_html_reports_feature();
-            $crate::__warn_about_cargo_bench_support_feature();
-
             $(
                 $group();
             )+

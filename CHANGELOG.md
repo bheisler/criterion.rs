@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The `Criterion::bench_functions` function has been removed.
 - The `Criterion::bench` function has been removed.
 
+### Changed
+- HTML report hidden behind non-default feature flag: 'html_reports'
+- Standalone support (ie without cargo-criterion) feature flag: 'cargo_bench_support'
+
 ## [Unreleased]
 ### Fixed
 - Corrected `Criterion.toml` in the book.

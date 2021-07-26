@@ -57,6 +57,7 @@ mod benchmark_group;
 pub mod async_executor;
 mod bencher;
 mod connection;
+#[cfg(feature = "csv_output")]
 mod csv_report;
 mod error;
 mod estimate;
@@ -87,7 +88,6 @@ use criterion_plot::{Version, VersionError};
 use crate::benchmark::BenchmarkConfig;
 use crate::connection::Connection;
 use crate::connection::OutgoingMessage;
-use crate::csv_report::FileCsvReport;
 use crate::html::Html;
 use crate::measurement::{Measurement, WallTime};
 use crate::plot::{Gnuplot, Plotter, PlottersBackend};
@@ -372,10 +372,9 @@ impl Default for Criterion {
             cli: CliReport::new(false, false, false),
             bencher_enabled: false,
             bencher: BencherReport,
-            html_enabled: true,
+            html_enabled: cfg!(feature = "html_reports"),
             html: Html::new(DEFAULT_PLOTTING_BACKEND.create_plotter()),
-            csv_enabled: true,
-            csv: FileCsvReport,
+            csv_enabled: cfg!(feature = "csv_output"),
         };
 
         let mut criterion = Criterion {
@@ -1385,54 +1384,4 @@ pub fn runner(benches: &[&dyn Fn()]) {
         bench();
     }
     Criterion::default().configure_from_args().final_summary();
-}
-
-/// Print a warning informing users about upcoming changes to features
-#[cfg(not(feature = "html_reports"))]
-#[doc(hidden)]
-pub fn __warn_about_html_reports_feature() {
-    if CARGO_CRITERION_CONNECTION.is_none() {
-        println!(
-            "WARNING: HTML report generation will become a non-default optional feature in Criterion.rs 0.4.0."
-        );
-        println!(
-            "This feature is being moved to cargo-criterion \
-            (https://github.com/bheisler/cargo-criterion) and will be optional in a future \
-            version of Criterion.rs. To silence this warning, either switch to cargo-criterion or \
-            enable the 'html_reports' feature in your Cargo.toml."
-        );
-        println!();
-    }
-}
-
-/// Print a warning informing users about upcoming changes to features
-#[cfg(feature = "html_reports")]
-#[doc(hidden)]
-pub fn __warn_about_html_reports_feature() {
-    // They have the feature enabled, so they're ready for the update.
-}
-
-/// Print a warning informing users about upcoming changes to features
-#[cfg(not(feature = "cargo_bench_support"))]
-#[doc(hidden)]
-pub fn __warn_about_cargo_bench_support_feature() {
-    if CARGO_CRITERION_CONNECTION.is_none() {
-        println!(
-            "WARNING: In Criterion.rs 0.4.0, running criterion benchmarks outside of cargo-criterion will become a default optional feature."
-        );
-        println!(
-            "The statistical analysis and reporting is being moved to cargo-criterion \
-            (https://github.com/bheisler/cargo-criterion) and will be optional in a future \
-            version of Criterion.rs. To silence this warning, either switch to cargo-criterion or \
-            enable the 'cargo_bench_support' feature in your Cargo.toml."
-        );
-        println!();
-    }
-}
-
-/// Print a warning informing users about upcoming changes to features
-#[cfg(feature = "cargo_bench_support")]
-#[doc(hidden)]
-pub fn __warn_about_cargo_bench_support_feature() {
-    // They have the feature enabled, so they're ready for the update.
 }
