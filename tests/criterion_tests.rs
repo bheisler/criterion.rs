@@ -274,7 +274,7 @@ fn test_timing_loops() {
         b.iter_with_setup(|| vec![10], |v| v[0])
     });
     group.bench_function("iter_with_large_setup", |b| {
-        b.iter_with_large_setup(|| vec![10], |v| v[0])
+        b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumBatches(1))
     });
     group.bench_function("iter_with_large_drop", |b| {
         b.iter_with_large_drop(|| vec![10; 100])

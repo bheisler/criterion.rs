@@ -189,15 +189,6 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         self.iter_batched(|| (), |_| routine(), BatchSize::SmallInput);
     }
 
-    #[doc(hidden)]
-    pub fn iter_with_large_setup<I, O, S, R>(&mut self, setup: S, routine: R)
-    where
-        S: FnMut() -> I,
-        R: FnMut(I) -> O,
-    {
-        self.iter_batched(setup, routine, BatchSize::NumBatches(1));
-    }
-
     /// Times a `routine` that requires some input by generating a batch of input, then timing the
     /// iteration of the benchmark over the input. See [`BatchSize`](enum.BatchSize.html) for
     /// details on choosing the batch size. Use this when the routine must consume its input.
