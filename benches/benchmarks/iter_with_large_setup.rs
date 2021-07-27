@@ -1,4 +1,4 @@
-use criterion::{criterion_group, Criterion, Throughput};
+use criterion::{criterion_group, BatchSize, Criterion, Throughput};
 use std::time::Duration;
 
 const SIZE: usize = 1024 * 1024;
@@ -7,10 +7,10 @@ fn large_setup(c: &mut Criterion) {
     let mut group = c.benchmark_group("iter_with_large_setup");
     group.throughput(Throughput::Bytes(SIZE as u64));
     group.bench_function("large_setup", |b| {
-        // NOTE: iter_with_large_setup is deprecated. Use iter_batched instead.
-        b.iter_with_large_setup(
+        b.iter_batched(
             || (0..SIZE).map(|i| i as u8).collect::<Vec<_>>(),
             |v| v.clone(),
+            BatchSize::NumBatches(1),
         )
     });
 }
@@ -18,8 +18,7 @@ fn large_setup(c: &mut Criterion) {
 fn small_setup(c: &mut Criterion) {
     let mut group = c.benchmark_group("iter_with_large_setup");
     group.bench_function("small_setup", |b| {
-        // NOTE: iter_with_large_setup is deprecated. Use iter_batched instead.
-        b.iter_with_large_setup(|| SIZE, |size| size)
+        b.iter_batched(|| SIZE, |size| size, BatchSize::NumBatches(1))
     });
 }
 
