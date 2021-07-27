@@ -65,5 +65,6 @@ jobs:
           args: -- -D warnings
 
       - run: |
+          curl https://wasmtime.dev/install.sh -sSf | bash
           cargo install cargo-wasi
           cargo wasi bench --no-default-features -- --test
