@@ -13,7 +13,7 @@ use crate::{PlotConfiguration, Throughput};
 use std::cmp;
 use std::collections::HashSet;
 use std::fmt;
-use std::io::stdout;
+use std::io::stderr;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
@@ -386,7 +386,7 @@ impl CliReport {
         if self.enable_text_overwrite {
             // Use the 'anes' crate?
             // return carry and clear entire line.
-            print!("\r\x1B[2K")
+            eprint!("\r\x1B[2K")
         }
     }
 
@@ -394,10 +394,10 @@ impl CliReport {
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::needless_pass_by_value))]
     fn print_overwritable(&self, s: String) {
         if self.enable_text_overwrite {
-            print!("{}", s);
-            stdout().flush().unwrap();
+            eprint!("{}", s);
+            stderr().flush().unwrap();
         } else {
-            println!("{}", s);
+            eprintln!("{}", s);
         }
     }
 
