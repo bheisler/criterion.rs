@@ -393,12 +393,12 @@ impl Default for Criterion {
         let mut criterion = Criterion {
             config: BenchmarkConfig {
                 confidence_level: 0.95,
-                measurement_time: Duration::new(5, 0),
+                measurement_time: Duration::from_secs(5),
                 noise_threshold: 0.01,
                 nresamples: 100_000,
                 sample_size: 100,
                 significance_level: 0.05,
-                warm_up_time: Duration::new(3, 0),
+                warm_up_time: Duration::from_secs(3),
                 sampling_mode: SamplingMode::Auto,
             },
             filter: None,
@@ -497,7 +497,7 @@ impl<M: Measurement> Criterion<M> {
     ///
     /// Panics if the input duration is zero
     pub fn warm_up_time(mut self, dur: Duration) -> Criterion<M> {
-        assert!(dur.to_nanos() > 0);
+        assert!(dur.as_nanos() > 0);
 
         self.config.warm_up_time = dur;
         self
@@ -514,7 +514,7 @@ impl<M: Measurement> Criterion<M> {
     ///
     /// Panics if the input duration in zero
     pub fn measurement_time(mut self, dur: Duration) -> Criterion<M> {
-        assert!(dur.to_nanos() > 0);
+        assert!(dur.as_nanos() > 0);
 
         self.config.measurement_time = dur;
         self
@@ -866,17 +866,17 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         } else if matches.is_present("list") {
             Mode::List
         } else if matches.is_present("profile-time") {
-            let num_seconds = value_t!(matches.value_of("profile-time"), u64).unwrap_or_else(|e| {
+            let num_seconds = value_t!(matches.value_of("profile-time"), f64).unwrap_or_else(|e| {
                 println!("{}", e);
                 std::process::exit(1)
             });
 
-            if num_seconds < 1 {
+            if num_seconds < 1.0 {
                 println!("Profile time must be at least one second.");
                 std::process::exit(1);
             }
 
-            Mode::Profile(Duration::from_secs(num_seconds))
+            Mode::Profile(Duration::from_secs_f64(num_seconds))
         } else {
             Mode::Benchmark
         };
@@ -963,25 +963,25 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.config.sample_size = num_size;
         }
         if matches.is_present("warm-up-time") {
-            let num_seconds = value_t!(matches.value_of("warm-up-time"), u64).unwrap_or_else(|e| {
+            let num_seconds = value_t!(matches.value_of("warm-up-time"), f64).unwrap_or_else(|e| {
                 println!("{}", e);
                 std::process::exit(1)
             });
 
-            let dur = std::time::Duration::new(num_seconds, 0);
-            assert!(dur.to_nanos() > 0);
+            let dur = std::time::Duration::from_secs_f64(num_seconds);
+            assert!(dur.as_nanos() > 0);
 
             self.config.warm_up_time = dur;
         }
         if matches.is_present("measurement-time") {
             let num_seconds =
-                value_t!(matches.value_of("measurement-time"), u64).unwrap_or_else(|e| {
+                value_t!(matches.value_of("measurement-time"), f64).unwrap_or_else(|e| {
                     println!("{}", e);
                     std::process::exit(1)
                 });
 
-            let dur = std::time::Duration::new(num_seconds, 0);
-            assert!(dur.to_nanos() > 0);
+            let dur = std::time::Duration::from_secs_f64(num_seconds);
+            assert!(dur.as_nanos() > 0);
 
             self.config.measurement_time = dur;
         }
@@ -1164,18 +1164,6 @@ where
     }
 }
 
-trait DurationExt {
-    fn to_nanos(&self) -> u64;
-}
-
-const NANOS_PER_SEC: u64 = 1_000_000_000;
-
-impl DurationExt for Duration {
-    fn to_nanos(&self) -> u64 {
-        self.as_secs() * NANOS_PER_SEC + u64::from(self.subsec_nanos())
-    }
-}
-
 /// Enum representing different ways of measuring the throughput of benchmarked code.
 /// If the throughput setting is configured for a benchmark then the estimated throughput will
 /// be reported as well as the time per iteration.
@@ -1305,7 +1293,7 @@ impl ActualSamplingMode {
             ActualSamplingMode::Linear => {
                 let n = sample_count;
                 let met = warmup_mean_execution_time;
-                let m_ns = target_time.to_nanos();
+                let m_ns = target_time.as_nanos();
                 // Solve: [d + 2*d + 3*d + ... + n*d] * met = m_ns
                 let total_runs = n * (n + 1) / 2;
                 let d = ((m_ns as f64 / met / total_runs as f64).ceil() as u64).max(1);
@@ -1333,7 +1321,7 @@ impl ActualSamplingMode {
             ActualSamplingMode::Flat => {
                 let n = sample_count;
                 let met = warmup_mean_execution_time;
-                let m_ns = target_time.to_nanos() as f64;
+                let m_ns = target_time.as_nanos() as f64;
                 let time_per_sample = m_ns / (n as f64);
                 // This is pretty simplistic; we could do something smarter to fit into the allotted time.
                 let iterations_per_sample = ((time_per_sample / met).ceil() as u64).max(1);

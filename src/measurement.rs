@@ -4,7 +4,6 @@
 //! measurement.
 
 use crate::format::short;
-use crate::DurationExt;
 use crate::Throughput;
 use std::time::{Duration, Instant};
 
@@ -204,7 +203,7 @@ impl Measurement for WallTime {
         Duration::from_secs(0)
     }
     fn to_f64(&self, val: &Self::Value) -> f64 {
-        val.to_nanos() as f64
+        val.as_nanos() as f64
     }
     fn formatter(&self) -> &dyn ValueFormatter {
         &DurationFormatter
