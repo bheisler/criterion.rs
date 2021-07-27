@@ -32,6 +32,14 @@ jobs:
 
       - uses: Swatinem/rust-cache@v1
 
+      - run: |
+          curl https://wasmtime.dev/install.sh -sSf | bash
+          source ~/.bashrc
+          echo ~/.bashrc
+          cat ~/.bashrc
+          cargo install cargo-wasi
+          cargo wasi bench --no-default-features -- --test
+
       - uses: actions-rs/cargo@v1
         with:
           command: build
@@ -64,8 +72,3 @@ jobs:
           command: clippy
           args: -- -D warnings
 
-      - run: |
-          curl https://wasmtime.dev/install.sh -sSf | bash
-          source ~/.bashrc
-          cargo install cargo-wasi
-          cargo wasi bench --no-default-features -- --test
