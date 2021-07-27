@@ -306,8 +306,7 @@ pub(crate) struct Reports {
     pub(crate) bencher_enabled: bool,
     pub(crate) bencher: BencherReport,
     pub(crate) csv_enabled: bool,
-    pub(crate) html_enabled: bool,
-    pub(crate) html: Html,
+    pub(crate) html: Option<Html>,
 }
 macro_rules! reports_impl {
     (fn $name:ident(&self, $($argn:ident: $argt:ty),*)) => {
@@ -322,8 +321,8 @@ macro_rules! reports_impl {
             if self.csv_enabled {
                 FileCsvReport.$name($($argn),*);
             }
-            if self.html_enabled {
-                self.html.$name($($argn),*);
+            if let Some(reporter) = &self.html {
+                reporter.$name($($argn),*);
             }
         }
     };
