@@ -32,16 +32,6 @@ jobs:
 
       - uses: Swatinem/rust-cache@v1
 
-      - run: |
-          curl https://wasmtime.dev/install.sh -sSf | bash
-          source ~/.bashrc
-          echo ~/.bashrc
-          cat ~/.bashrc
-          ls ~/.wasmtime/bin/
-          export PATH=$HOME/.wasmtime/bin/:$PATH
-          cargo install cargo-wasi
-          cargo wasi bench --no-default-features -- --test
-
       - uses: actions-rs/cargo@v1
         with:
           command: build
@@ -69,8 +59,13 @@ jobs:
           args: --all -- --check
 
       - uses: actions-rs/cargo@v1
-        if: ${{ matrix.rust != '1.40.0' }} # 1.40 has horrible lints.
         with:
           command: clippy
           args: -- -D warnings
 
+      - run: |
+          curl https://wasmtime.dev/install.sh -sSf | bash
+          source ~/.bashrc
+          export PATH=$WASMTIME_HOME/bin/:$PATH
+          cargo install cargo-wasi
+          cargo wasi bench --no-default-features -- --test
