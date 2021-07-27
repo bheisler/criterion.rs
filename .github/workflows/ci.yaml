@@ -63,3 +63,7 @@ jobs:
         with:
           command: clippy
           args: -- -D warnings
+
+      - run: |
+          cargo install cargo-wasi
+          cargo wasi bench --no-default-features -- --test
