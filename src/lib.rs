@@ -497,7 +497,7 @@ impl<M: Measurement> Criterion<M> {
     ///
     /// Panics if the input duration is zero
     pub fn warm_up_time(mut self, dur: Duration) -> Criterion<M> {
-        assert!(dur.to_nanos() > 0);
+        assert!(dur.as_nanos() > 0);
 
         self.config.warm_up_time = dur;
         self
@@ -514,7 +514,7 @@ impl<M: Measurement> Criterion<M> {
     ///
     /// Panics if the input duration in zero
     pub fn measurement_time(mut self, dur: Duration) -> Criterion<M> {
-        assert!(dur.to_nanos() > 0);
+        assert!(dur.as_nanos() > 0);
 
         self.config.measurement_time = dur;
         self
@@ -969,7 +969,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             });
 
             let dur = std::time::Duration::from_secs_f64(num_seconds);
-            assert!(dur.to_nanos() > 0);
+            assert!(dur.as_nanos() > 0);
 
             self.config.warm_up_time = dur;
         }
@@ -981,7 +981,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                 });
 
             let dur = std::time::Duration::from_secs_f64(num_seconds);
-            assert!(dur.to_nanos() > 0);
+            assert!(dur.as_nanos() > 0);
 
             self.config.measurement_time = dur;
         }
@@ -1164,18 +1164,6 @@ where
     }
 }
 
-trait DurationExt {
-    fn to_nanos(&self) -> u64;
-}
-
-const NANOS_PER_SEC: u64 = 1_000_000_000;
-
-impl DurationExt for Duration {
-    fn to_nanos(&self) -> u64 {
-        self.as_secs() * NANOS_PER_SEC + u64::from(self.subsec_nanos())
-    }
-}
-
 /// Enum representing different ways of measuring the throughput of benchmarked code.
 /// If the throughput setting is configured for a benchmark then the estimated throughput will
 /// be reported as well as the time per iteration.
@@ -1305,7 +1293,7 @@ impl ActualSamplingMode {
             ActualSamplingMode::Linear => {
                 let n = sample_count;
                 let met = warmup_mean_execution_time;
-                let m_ns = target_time.to_nanos();
+                let m_ns = target_time.as_nanos();
                 // Solve: [d + 2*d + 3*d + ... + n*d] * met = m_ns
                 let total_runs = n * (n + 1) / 2;
                 let d = ((m_ns as f64 / met / total_runs as f64).ceil() as u64).max(1);
@@ -1333,7 +1321,7 @@ impl ActualSamplingMode {
             ActualSamplingMode::Flat => {
                 let n = sample_count;
                 let met = warmup_mean_execution_time;
-                let m_ns = target_time.to_nanos() as f64;
+                let m_ns = target_time.as_nanos() as f64;
                 let time_per_sample = m_ns / (n as f64);
                 // This is pretty simplistic; we could do something smarter to fit into the allotted time.
                 let iterations_per_sample = ((time_per_sample / met).ceil() as u64).max(1);

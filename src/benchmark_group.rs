@@ -6,7 +6,7 @@ use crate::report::BenchmarkId as InternalBenchmarkId;
 use crate::report::Report;
 use crate::report::ReportContext;
 use crate::routine::{Function, Routine};
-use crate::{Bencher, Criterion, DurationExt, Mode, PlotConfiguration, SamplingMode, Throughput};
+use crate::{Bencher, Criterion, Mode, PlotConfiguration, SamplingMode, Throughput};
 use std::time::Duration;
 
 /// Structure used to group together a set of related benchmarks, along with custom configuration
@@ -107,7 +107,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     ///
     /// Panics if the input duration is zero
     pub fn warm_up_time(&mut self, dur: Duration) -> &mut Self {
-        assert!(dur.to_nanos() > 0);
+        assert!(dur.as_nanos() > 0);
 
         self.partial_config.warm_up_time = Some(dur);
         self
@@ -125,7 +125,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     ///
     /// Panics if the input duration is zero
     pub fn measurement_time(&mut self, dur: Duration) -> &mut Self {
-        assert!(dur.to_nanos() > 0);
+        assert!(dur.as_nanos() > 0);
 
         self.partial_config.measurement_time = Some(dur);
         self

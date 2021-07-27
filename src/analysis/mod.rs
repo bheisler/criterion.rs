@@ -26,7 +26,7 @@ macro_rules! elapsed {
         info!(
             "{} took {}",
             $msg,
-            crate::format::time(crate::DurationExt::to_nanos(elapsed) as f64)
+            crate::format::time(elapsed.as_nanos() as f64)
         );
 
         out
