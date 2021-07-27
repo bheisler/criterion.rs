@@ -10,11 +10,11 @@ use crate::measurement::ValueFormatter;
 use crate::stats::univariate::Sample;
 use crate::stats::Distribution;
 use crate::{PlotConfiguration, Throughput};
-use std::cell::Cell;
+use anes::{Attribute, ClearLine, Color, ResetAttributes, SetAttribute, SetForegroundColor};
 use std::cmp;
 use std::collections::HashSet;
 use std::fmt;
-use std::io::stdout;
+use std::io::stderr;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
@@ -369,8 +369,6 @@ pub(crate) struct CliReport {
     pub enable_text_overwrite: bool,
     pub enable_text_coloring: bool,
     pub verbose: bool,
-
-    last_line_len: Cell<usize>,
 }
 impl CliReport {
     pub fn new(
@@ -382,18 +380,12 @@ impl CliReport {
             enable_text_overwrite,
             enable_text_coloring,
             verbose,
-
-            last_line_len: Cell::new(0),
         }
     }
 
     fn text_overwrite(&self) {
         if self.enable_text_overwrite {
-            print!("\r");
-            for _ in 0..self.last_line_len.get() {
-                print!(" ");
-            }
-            print!("\r");
+            eprint!("\r{}", ClearLine::All)
         }
     }
 
@@ -401,41 +393,36 @@ impl CliReport {
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::needless_pass_by_value))]
     fn print_overwritable(&self, s: String) {
         if self.enable_text_overwrite {
-            self.last_line_len.set(s.len());
-            print!("{}", s);
-            stdout().flush().unwrap();
+            eprint!("{}", s);
+            stderr().flush().unwrap();
         } else {
-            println!("{}", s);
+            eprintln!("{}", s);
         }
     }
 
-    fn green(&self, s: String) -> String {
+    fn with_color(&self, color: Color, s: &str) -> String {
         if self.enable_text_coloring {
-            format!("\x1B[32m{}\x1B[39m", s)
+            format!("{}{}{}", SetForegroundColor(color), s, ResetAttributes)
         } else {
-            s
+            String::from(s)
         }
     }
 
-    fn yellow(&self, s: String) -> String {
-        if self.enable_text_coloring {
-            format!("\x1B[33m{}\x1B[39m", s)
-        } else {
-            s
-        }
+    fn green(&self, s: &str) -> String {
+        self.with_color(Color::DarkGreen, s)
     }
 
-    fn red(&self, s: String) -> String {
-        if self.enable_text_coloring {
-            format!("\x1B[31m{}\x1B[39m", s)
-        } else {
-            s
-        }
+    fn yellow(&self, s: &str) -> String {
+        self.with_color(Color::DarkYellow, s)
+    }
+
+    fn red(&self, s: &str) -> String {
+        self.with_color(Color::DarkRed, s)
     }
 
     fn bold(&self, s: String) -> String {
         if self.enable_text_coloring {
-            format!("\x1B[1m{}\x1B[22m", s)
+            format!("{}{}{}", SetAttribute(Attribute::Bold), s, ResetAttributes)
         } else {
             s
         }
@@ -443,7 +430,7 @@ impl CliReport {
 
     fn faint(&self, s: String) -> String {
         if self.enable_text_coloring {
-            format!("\x1B[2m{}\x1B[22m", s)
+            format!("{}{}{}", SetAttribute(Attribute::Faint), s, ResetAttributes)
         } else {
             s
         }
@@ -462,7 +449,7 @@ impl CliReport {
 
         println!(
             "{}",
-            self.yellow(format!(
+            self.yellow(&format!(
                 "Found {} outliers among {} measurements ({:.2}%)",
                 noutliers,
                 sample_size,
@@ -561,14 +548,14 @@ impl Report for CliReport {
             let mut id = id.as_title().to_owned();
 
             if id.len() > 23 {
-                println!("{}", self.green(id.clone()));
+                println!("{}", self.green(&id));
                 id.clear();
             }
             let id_len = id.len();
 
             println!(
                 "{}{}time:   [{} {} {}]",
-                self.green(id),
+                self.green(&id),
                 " ".repeat(24 - id_len),
                 self.faint(
                     formatter.format_value(typical_estimate.confidence_interval.lower_bound)
@@ -614,16 +601,14 @@ impl Report for CliReport {
                 let comparison = compare_to_threshold(mean_est, comp.noise_threshold);
                 match comparison {
                     ComparisonResult::Improved => {
-                        point_estimate_str = self.green(self.bold(point_estimate_str));
-                        thrpt_point_estimate_str = self.green(self.bold(thrpt_point_estimate_str));
-                        explanation_str =
-                            format!("Performance has {}.", self.green("improved".to_owned()));
+                        point_estimate_str = self.green(&self.bold(point_estimate_str));
+                        thrpt_point_estimate_str = self.green(&self.bold(thrpt_point_estimate_str));
+                        explanation_str = format!("Performance has {}.", self.green("improved"));
                     }
                     ComparisonResult::Regressed => {
-                        point_estimate_str = self.red(self.bold(point_estimate_str));
-                        thrpt_point_estimate_str = self.red(self.bold(thrpt_point_estimate_str));
-                        explanation_str =
-                            format!("Performance has {}.", self.red("regressed".to_owned()));
+                        point_estimate_str = self.red(&self.bold(point_estimate_str));
+                        thrpt_point_estimate_str = self.red(&self.bold(thrpt_point_estimate_str));
+                        explanation_str = format!("Performance has {}.", self.red("regressed"));
                     }
                     ComparisonResult::NonSignificant => {
                         explanation_str = "Change within noise threshold.".to_owned();
