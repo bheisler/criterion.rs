@@ -66,12 +66,14 @@ jobs:
           args: --no-default-features
 
       - uses: actions-rs/cargo@v1
+        name: Check for non-standard formatting
         if: ${{ matrix.rust == 'stable' }}
         with:
           command: fmt
           args: --all -- --check
 
       - uses: actions-rs/cargo@v1
+        name: Check for clippy hints
         with:
           command: clippy
           args: -- -D warnings
