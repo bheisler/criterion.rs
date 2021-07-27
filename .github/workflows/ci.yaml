@@ -76,7 +76,8 @@ jobs:
           command: clippy
           args: -- -D warnings
 
-      - run: |
+      - name: Test run targeting WASI
+        run: |
           curl https://wasmtime.dev/install.sh -sSf | bash
           source ~/.bashrc
           export PATH=$WASMTIME_HOME/bin/:$PATH
