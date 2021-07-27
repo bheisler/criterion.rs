@@ -82,6 +82,6 @@ jobs:
         run: |
           curl https://wasmtime.dev/install.sh -sSf | bash
           source ~/.bashrc
-          export PATH=$WASMTIME_HOME/bin/:$PATH
+          export PATH=$HOME/.wasmtime/bin/:$PATH
           cargo install cargo-wasi
           cargo wasi bench --no-default-features -- --test
