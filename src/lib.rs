@@ -393,12 +393,12 @@ impl Default for Criterion {
         let mut criterion = Criterion {
             config: BenchmarkConfig {
                 confidence_level: 0.95,
-                measurement_time: Duration::new(5, 0),
+                measurement_time: Duration::from_secs(5),
                 noise_threshold: 0.01,
                 nresamples: 100_000,
                 sample_size: 100,
                 significance_level: 0.05,
-                warm_up_time: Duration::new(3, 0),
+                warm_up_time: Duration::from_secs(3),
                 sampling_mode: SamplingMode::Auto,
             },
             filter: None,
@@ -866,17 +866,17 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         } else if matches.is_present("list") {
             Mode::List
         } else if matches.is_present("profile-time") {
-            let num_seconds = value_t!(matches.value_of("profile-time"), u64).unwrap_or_else(|e| {
+            let num_seconds = value_t!(matches.value_of("profile-time"), f64).unwrap_or_else(|e| {
                 println!("{}", e);
                 std::process::exit(1)
             });
 
-            if num_seconds < 1 {
+            if num_seconds < 1.0 {
                 println!("Profile time must be at least one second.");
                 std::process::exit(1);
             }
 
-            Mode::Profile(Duration::from_secs(num_seconds))
+            Mode::Profile(Duration::from_secs_f64(num_seconds))
         } else {
             Mode::Benchmark
         };
@@ -963,24 +963,24 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.config.sample_size = num_size;
         }
         if matches.is_present("warm-up-time") {
-            let num_seconds = value_t!(matches.value_of("warm-up-time"), u64).unwrap_or_else(|e| {
+            let num_seconds = value_t!(matches.value_of("warm-up-time"), f64).unwrap_or_else(|e| {
                 println!("{}", e);
                 std::process::exit(1)
             });
 
-            let dur = std::time::Duration::new(num_seconds, 0);
+            let dur = std::time::Duration::from_secs_f64(num_seconds);
             assert!(dur.to_nanos() > 0);
 
             self.config.warm_up_time = dur;
         }
         if matches.is_present("measurement-time") {
             let num_seconds =
-                value_t!(matches.value_of("measurement-time"), u64).unwrap_or_else(|e| {
+                value_t!(matches.value_of("measurement-time"), f64).unwrap_or_else(|e| {
                     println!("{}", e);
                     std::process::exit(1)
                 });
 
-            let dur = std::time::Duration::new(num_seconds, 0);
+            let dur = std::time::Duration::from_secs_f64(num_seconds);
             assert!(dur.to_nanos() > 0);
 
             self.config.measurement_time = dur;
