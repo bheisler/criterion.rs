@@ -37,6 +37,8 @@ jobs:
           source ~/.bashrc
           echo ~/.bashrc
           cat ~/.bashrc
+          ls ~/.wasmtime/
+          export PATH=$HOME/.wasmtime/:$PATH
           cargo install cargo-wasi
           cargo wasi bench --no-default-features -- --test
 
