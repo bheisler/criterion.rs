@@ -13,6 +13,7 @@ use rayon::prelude::*;
 ///
 /// - The sample contains at least 2 data points
 /// - The sample contains no `NaN`s
+#[repr(transparent)]
 pub struct Sample<A>([A]);
 
 // TODO(rust-lang/rfcs#735) move this `impl` into a private percentiles module
