@@ -94,7 +94,7 @@ use crate::measurement::{Measurement, WallTime};
 use crate::plot::PlottersBackend;
 use crate::plot::{Gnuplot, Plotter};
 use crate::profiler::{ExternalProfiler, Profiler};
-use crate::report::{BencherReport, CliReport, Report, ReportContext, Reports};
+use crate::report::{BencherReport, CliReport, CliVerbosity, Report, ReportContext, Reports};
 
 #[cfg(feature = "async")]
 pub use crate::bencher::AsyncBencher;
@@ -383,7 +383,7 @@ impl Default for Criterion {
     fn default() -> Criterion {
         let reports = Reports {
             cli_enabled: true,
-            cli: CliReport::new(false, false, false),
+            cli: CliReport::new(false, false, CliVerbosity::Normal),
             bencher_enabled: false,
             bencher: BencherReport,
             html: DEFAULT_PLOTTING_BACKEND.create_plotter().map(Html::new),
@@ -534,7 +534,7 @@ impl<M: Measurement> Criterion<M> {
     pub fn nresamples(mut self, n: usize) -> Criterion<M> {
         assert!(n > 0);
         if n <= 1000 {
-            println!("\nWarning: It is not recommended to reduce nresamples below 1000.");
+            eprintln!("\nWarning: It is not recommended to reduce nresamples below 1000.");
         }
 
         self.config.nresamples = n;
@@ -571,7 +571,7 @@ impl<M: Measurement> Criterion<M> {
     pub fn confidence_level(mut self, cl: f64) -> Criterion<M> {
         assert!(cl > 0.0 && cl < 1.0);
         if cl < 0.5 {
-            println!("\nWarning: It is not recommended to reduce confidence level below 0.5.");
+            eprintln!("\nWarning: It is not recommended to reduce confidence level below 0.5.");
         }
 
         self.config.confidence_level = cl;
@@ -716,6 +716,10 @@ impl<M: Measurement> Criterion<M> {
                 .short("v")
                 .long("verbose")
                 .help("Print additional statistical information."))
+            .arg(Arg::with_name("quiet")
+                .long("quiet")
+                .conflicts_with("verbose")
+                .help("Print only the benchmark results."))
             .arg(Arg::with_name("noplot")
                 .short("n")
                 .long("noplot")
@@ -823,21 +827,21 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         if self.connection.is_some() {
             if let Some(color) = matches.value_of("color") {
                 if color != "auto" {
-                    println!("Warning: --color will be ignored when running with cargo-criterion. Use `cargo criterion --color {} -- <args>` instead.", color);
+                    eprintln!("Warning: --color will be ignored when running with cargo-criterion. Use `cargo criterion --color {} -- <args>` instead.", color);
                 }
             }
             if matches.is_present("verbose") {
-                println!("Warning: --verbose will be ignored when running with cargo-criterion. Use `cargo criterion --output-format verbose -- <args>` instead.");
+                eprintln!("Warning: --verbose will be ignored when running with cargo-criterion. Use `cargo criterion --output-format verbose -- <args>` instead.");
             }
             if matches.is_present("noplot") {
-                println!("Warning: --noplot will be ignored when running with cargo-criterion. Use `cargo criterion --plotting-backend disabled -- <args>` instead.");
+                eprintln!("Warning: --noplot will be ignored when running with cargo-criterion. Use `cargo criterion --plotting-backend disabled -- <args>` instead.");
             }
             if let Some(backend) = matches.value_of("plotting-backend") {
-                println!("Warning: --plotting-backend will be ignored when running with cargo-criterion. Use `cargo criterion --plotting-backend {} -- <args>` instead.", backend);
+                eprintln!("Warning: --plotting-backend will be ignored when running with cargo-criterion. Use `cargo criterion --plotting-backend {} -- <args>` instead.", backend);
             }
             if let Some(format) = matches.value_of("output-format") {
                 if format != "criterion" {
-                    println!("Warning: --output-format will be ignored when running with cargo-criterion. Use `cargo criterion --output-format {} -- <args>` instead.", format);
+                    eprintln!("Warning: --output-format will be ignored when running with cargo-criterion. Use `cargo criterion --output-format {} -- <args>` instead.", format);
                 }
             }
 
@@ -848,7 +852,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                     .unwrap_or(false)
                 || matches.is_present("load-baseline")
             {
-                println!("Error: baselines are not supported when running with cargo-criterion.");
+                eprintln!("Error: baselines are not supported when running with cargo-criterion.");
                 std::process::exit(1);
             }
         }
@@ -872,7 +876,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             });
 
             if num_seconds < 1.0 {
-                println!("Profile time must be at least one second.");
+                eprintln!("Profile time must be at least one second.");
                 std::process::exit(1);
             }
 
@@ -928,6 +932,13 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                 }
                 _ => {
                     let verbose = matches.is_present("verbose");
+                    let verbosity = if verbose {
+                        CliVerbosity::Verbose
+                    } else if matches.is_present("quiet") {
+                        CliVerbosity::Quiet
+                    } else {
+                        CliVerbosity::Normal
+                    };
                     let stdout_isatty = atty::is(atty::Stream::Stdout);
                     let mut enable_text_overwrite = stdout_isatty && !verbose && !debug_enabled();
                     let enable_text_coloring;
@@ -944,7 +955,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                     self.report.bencher_enabled = false;
                     self.report.cli_enabled = true;
                     self.report.cli =
-                        CliReport::new(enable_text_overwrite, enable_text_coloring, verbose);
+                        CliReport::new(enable_text_overwrite, enable_text_coloring, verbosity);
                 }
             };
         }
@@ -1303,16 +1314,16 @@ impl ActualSamplingMode {
                     let recommended_sample_size =
                         ActualSamplingMode::recommend_linear_sample_size(m_ns as f64, met);
                     let actual_time = Duration::from_nanos(expected_ns as u64);
-                    print!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?}",
+                    eprint!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?}",
                             n, target_time, actual_time);
 
                     if recommended_sample_size != n {
-                        println!(
+                        eprintln!(
                             ", enable flat sampling, or reduce sample count to {}.",
                             recommended_sample_size
                         );
                     } else {
-                        println!(" or enable flat sampling.");
+                        eprintln!(" or enable flat sampling.");
                     }
                 }
 
@@ -1332,13 +1343,13 @@ impl ActualSamplingMode {
                     let recommended_sample_size =
                         ActualSamplingMode::recommend_flat_sample_size(m_ns, met);
                     let actual_time = Duration::from_nanos(expected_ns as u64);
-                    print!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?}",
+                    eprint!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?}",
                             n, target_time, actual_time);
 
                     if recommended_sample_size != n {
-                        println!(", or reduce sample count to {}.", recommended_sample_size);
+                        eprintln!(", or reduce sample count to {}.", recommended_sample_size);
                     } else {
-                        println!(".");
+                        eprintln!(".");
                     }
                 }
 

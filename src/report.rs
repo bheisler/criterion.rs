@@ -365,21 +365,28 @@ impl Report for Reports {
     reports_impl!(fn group_separator(&self, ));
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub(crate) enum CliVerbosity {
+    Quiet,
+    Normal,
+    Verbose,
+}
+
 pub(crate) struct CliReport {
     pub enable_text_overwrite: bool,
     pub enable_text_coloring: bool,
-    pub verbose: bool,
+    pub verbosity: CliVerbosity,
 }
 impl CliReport {
     pub fn new(
         enable_text_overwrite: bool,
         enable_text_coloring: bool,
-        verbose: bool,
+        verbosity: CliVerbosity,
     ) -> CliReport {
         CliReport {
             enable_text_overwrite,
             enable_text_coloring,
-            verbose,
+            verbosity,
         }
     }
 
@@ -518,7 +525,7 @@ impl Report for CliReport {
         iter_count: u64,
     ) {
         self.text_overwrite();
-        let iter_string = if self.verbose {
+        let iter_string = if matches!(self.verbosity, CliVerbosity::Verbose) {
             format!("{} iterations", iter_count)
         } else {
             format::iter_count(iter_count)
@@ -583,96 +590,103 @@ impl Report for CliReport {
             )
         }
 
-        if let Some(ref comp) = meas.comparison {
-            let different_mean = comp.p_value < comp.significance_threshold;
-            let mean_est = &comp.relative_estimates.mean;
-            let point_estimate = mean_est.point_estimate;
-            let mut point_estimate_str = format::change(point_estimate, true);
-            // The change in throughput is related to the change in timing. Reducing the timing by
-            // 50% increases the throughput by 100%.
-            let to_thrpt_estimate = |ratio: f64| 1.0 / (1.0 + ratio) - 1.0;
-            let mut thrpt_point_estimate_str =
-                format::change(to_thrpt_estimate(point_estimate), true);
-            let explanation_str: String;
+        if !matches!(self.verbosity, CliVerbosity::Quiet) {
+            if let Some(ref comp) = meas.comparison {
+                let different_mean = comp.p_value < comp.significance_threshold;
+                let mean_est = &comp.relative_estimates.mean;
+                let point_estimate = mean_est.point_estimate;
+                let mut point_estimate_str = format::change(point_estimate, true);
+                // The change in throughput is related to the change in timing. Reducing the timing by
+                // 50% increases the throughput by 100%.
+                let to_thrpt_estimate = |ratio: f64| 1.0 / (1.0 + ratio) - 1.0;
+                let mut thrpt_point_estimate_str =
+                    format::change(to_thrpt_estimate(point_estimate), true);
+                let explanation_str: String;
 
-            if !different_mean {
-                explanation_str = "No change in performance detected.".to_owned();
-            } else {
-                let comparison = compare_to_threshold(mean_est, comp.noise_threshold);
-                match comparison {
-                    ComparisonResult::Improved => {
-                        point_estimate_str = self.green(&self.bold(point_estimate_str));
-                        thrpt_point_estimate_str = self.green(&self.bold(thrpt_point_estimate_str));
-                        explanation_str = format!("Performance has {}.", self.green("improved"));
-                    }
-                    ComparisonResult::Regressed => {
-                        point_estimate_str = self.red(&self.bold(point_estimate_str));
-                        thrpt_point_estimate_str = self.red(&self.bold(thrpt_point_estimate_str));
-                        explanation_str = format!("Performance has {}.", self.red("regressed"));
-                    }
-                    ComparisonResult::NonSignificant => {
-                        explanation_str = "Change within noise threshold.".to_owned();
+                if !different_mean {
+                    explanation_str = "No change in performance detected.".to_owned();
+                } else {
+                    let comparison = compare_to_threshold(mean_est, comp.noise_threshold);
+                    match comparison {
+                        ComparisonResult::Improved => {
+                            point_estimate_str = self.green(&self.bold(point_estimate_str));
+                            thrpt_point_estimate_str =
+                                self.green(&self.bold(thrpt_point_estimate_str));
+                            explanation_str =
+                                format!("Performance has {}.", self.green("improved"));
+                        }
+                        ComparisonResult::Regressed => {
+                            point_estimate_str = self.red(&self.bold(point_estimate_str));
+                            thrpt_point_estimate_str =
+                                self.red(&self.bold(thrpt_point_estimate_str));
+                            explanation_str = format!("Performance has {}.", self.red("regressed"));
+                        }
+                        ComparisonResult::NonSignificant => {
+                            explanation_str = "Change within noise threshold.".to_owned();
+                        }
                     }
                 }
+
+                if meas.throughput.is_some() {
+                    println!("{}change:", " ".repeat(17));
+
+                    println!(
+                        "{}time:   [{} {} {}] (p = {:.2} {} {:.2})",
+                        " ".repeat(24),
+                        self.faint(format::change(
+                            mean_est.confidence_interval.lower_bound,
+                            true
+                        )),
+                        point_estimate_str,
+                        self.faint(format::change(
+                            mean_est.confidence_interval.upper_bound,
+                            true
+                        )),
+                        comp.p_value,
+                        if different_mean { "<" } else { ">" },
+                        comp.significance_threshold
+                    );
+                    println!(
+                        "{}thrpt:  [{} {} {}]",
+                        " ".repeat(24),
+                        self.faint(format::change(
+                            to_thrpt_estimate(mean_est.confidence_interval.upper_bound),
+                            true
+                        )),
+                        thrpt_point_estimate_str,
+                        self.faint(format::change(
+                            to_thrpt_estimate(mean_est.confidence_interval.lower_bound),
+                            true
+                        )),
+                    );
+                } else {
+                    println!(
+                        "{}change: [{} {} {}] (p = {:.2} {} {:.2})",
+                        " ".repeat(24),
+                        self.faint(format::change(
+                            mean_est.confidence_interval.lower_bound,
+                            true
+                        )),
+                        point_estimate_str,
+                        self.faint(format::change(
+                            mean_est.confidence_interval.upper_bound,
+                            true
+                        )),
+                        comp.p_value,
+                        if different_mean { "<" } else { ">" },
+                        comp.significance_threshold
+                    );
+                }
+
+                println!("{}{}", " ".repeat(24), explanation_str);
             }
-
-            if meas.throughput.is_some() {
-                println!("{}change:", " ".repeat(17));
-
-                println!(
-                    "{}time:   [{} {} {}] (p = {:.2} {} {:.2})",
-                    " ".repeat(24),
-                    self.faint(format::change(
-                        mean_est.confidence_interval.lower_bound,
-                        true
-                    )),
-                    point_estimate_str,
-                    self.faint(format::change(
-                        mean_est.confidence_interval.upper_bound,
-                        true
-                    )),
-                    comp.p_value,
-                    if different_mean { "<" } else { ">" },
-                    comp.significance_threshold
-                );
-                println!(
-                    "{}thrpt:  [{} {} {}]",
-                    " ".repeat(24),
-                    self.faint(format::change(
-                        to_thrpt_estimate(mean_est.confidence_interval.upper_bound),
-                        true
-                    )),
-                    thrpt_point_estimate_str,
-                    self.faint(format::change(
-                        to_thrpt_estimate(mean_est.confidence_interval.lower_bound),
-                        true
-                    )),
-                );
-            } else {
-                println!(
-                    "{}change: [{} {} {}] (p = {:.2} {} {:.2})",
-                    " ".repeat(24),
-                    self.faint(format::change(
-                        mean_est.confidence_interval.lower_bound,
-                        true
-                    )),
-                    point_estimate_str,
-                    self.faint(format::change(
-                        mean_est.confidence_interval.upper_bound,
-                        true
-                    )),
-                    comp.p_value,
-                    if different_mean { "<" } else { ">" },
-                    comp.significance_threshold
-                );
-            }
-
-            println!("{}{}", " ".repeat(24), explanation_str);
         }
 
-        self.outliers(&meas.avg_times);
+        if !matches!(self.verbosity, CliVerbosity::Quiet) {
+            self.outliers(&meas.avg_times);
+        }
 
-        if self.verbose {
+        if matches!(self.verbosity, CliVerbosity::Verbose) {
             let format_short_estimate = |estimate: &Estimate| -> String {
                 format!(
                     "[{} {}]",
