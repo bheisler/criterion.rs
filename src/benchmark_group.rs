@@ -145,7 +145,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     pub fn nresamples(&mut self, n: usize) -> &mut Self {
         assert!(n > 0);
         if n <= 1000 {
-            println!("\nWarning: It is not recommended to reduce nresamples below 1000.");
+            eprintln!("\nWarning: It is not recommended to reduce nresamples below 1000.");
         }
 
         self.partial_config.nresamples = Some(n);
@@ -182,7 +182,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     pub fn confidence_level(&mut self, cl: f64) -> &mut Self {
         assert!(cl > 0.0 && cl < 1.0);
         if cl < 0.5 {
-            println!("\nWarning: It is not recommended to reduce confidence level below 0.5.");
+            eprintln!("\nWarning: It is not recommended to reduce confidence level below 0.5.");
         }
 
         self.partial_config.confidence_level = Some(cl);
