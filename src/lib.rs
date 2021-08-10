@@ -94,7 +94,7 @@ use crate::measurement::{Measurement, WallTime};
 use crate::plot::PlottersBackend;
 use crate::plot::{Gnuplot, Plotter};
 use crate::profiler::{ExternalProfiler, Profiler};
-use crate::report::{BencherReport, CliReport, Report, ReportContext, Reports};
+use crate::report::{BencherReport, CliReport, CliVerbosity, Report, ReportContext, Reports};
 
 #[cfg(feature = "async")]
 pub use crate::bencher::AsyncBencher;
@@ -383,7 +383,7 @@ impl Default for Criterion {
     fn default() -> Criterion {
         let reports = Reports {
             cli_enabled: true,
-            cli: CliReport::new(false, false, false),
+            cli: CliReport::new(false, false, CliVerbosity::Normal),
             bencher_enabled: false,
             bencher: BencherReport,
             html: DEFAULT_PLOTTING_BACKEND.create_plotter().map(Html::new),
@@ -716,6 +716,10 @@ impl<M: Measurement> Criterion<M> {
                 .short("v")
                 .long("verbose")
                 .help("Print additional statistical information."))
+            .arg(Arg::with_name("quiet")
+                .long("quiet")
+                .conflicts_with("verbose")
+                .help("Print only the benchmark results."))
             .arg(Arg::with_name("noplot")
                 .short("n")
                 .long("noplot")
@@ -928,6 +932,13 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                 }
                 _ => {
                     let verbose = matches.is_present("verbose");
+                    let verbosity = if verbose {
+                        CliVerbosity::Verbose
+                    } else if matches.is_present("quiet") {
+                        CliVerbosity::Quiet
+                    } else {
+                        CliVerbosity::Normal
+                    };
                     let stdout_isatty = atty::is(atty::Stream::Stdout);
                     let mut enable_text_overwrite = stdout_isatty && !verbose && !debug_enabled();
                     let enable_text_coloring;
@@ -944,7 +955,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                     self.report.bencher_enabled = false;
                     self.report.cli_enabled = true;
                     self.report.cli =
-                        CliReport::new(enable_text_overwrite, enable_text_coloring, verbose);
+                        CliReport::new(enable_text_overwrite, enable_text_coloring, verbosity);
                 }
             };
         }
