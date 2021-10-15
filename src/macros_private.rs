@@ -16,7 +16,7 @@ macro_rules! log_if_err {
 /// be passed as second parameter.
 macro_rules! try_else_return {
     ($x:expr) => {
-        try_else_return!($x, || {});
+        try_else_return!($x, || {})
     };
     ($x:expr, $el:expr) => {
         match $x {
@@ -33,7 +33,7 @@ macro_rules! try_else_return {
 /// Print an error message to stdout. Format is the same as println! or format!
 macro_rules! error {
     ($($arg:tt)*) => (
-        println!("Criterion.rs ERROR: {}", &format!($($arg)*));
+        println!("Criterion.rs ERROR: {}", &format!($($arg)*))
     )
 }
 
