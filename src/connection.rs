@@ -64,7 +64,7 @@ struct InnerConnection {
     socket: TcpStream,
     receive_buffer: Vec<u8>,
     send_buffer: Vec<u8>,
-    runner_version: [u8; 3],
+    // runner_version: [u8; 3],
 }
 impl InnerConnection {
     pub fn new(mut socket: TcpStream) -> Result<Self, std::io::Error> {
@@ -100,7 +100,7 @@ impl InnerConnection {
             socket,
             receive_buffer: vec![],
             send_buffer: vec![],
-            runner_version,
+            // runner_version,
         })
     }
 
