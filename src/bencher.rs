@@ -380,9 +380,10 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     // Benchmarks must actually call one of the iter methods. This causes benchmarks to fail loudly
     // if they don't.
     pub(crate) fn assert_iterated(&mut self) {
-        if !self.iterated {
-            panic!("Benchmark function must call Bencher::iter or related method.");
-        }
+        assert!(
+            self.iterated,
+            "Benchmark function must call Bencher::iter or related method."
+        );
         self.iterated = false;
     }
 

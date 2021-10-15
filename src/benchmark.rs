@@ -26,7 +26,7 @@ pub struct BenchmarkConfig {
 }
 
 /// Struct representing a partially-complete per-benchmark configuration.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub(crate) struct PartialBenchmarkConfig {
     pub(crate) confidence_level: Option<f64>,
     pub(crate) measurement_time: Option<Duration>,
@@ -37,22 +37,6 @@ pub(crate) struct PartialBenchmarkConfig {
     pub(crate) warm_up_time: Option<Duration>,
     pub(crate) sampling_mode: Option<SamplingMode>,
     pub(crate) plot_config: PlotConfiguration,
-}
-
-impl Default for PartialBenchmarkConfig {
-    fn default() -> Self {
-        PartialBenchmarkConfig {
-            confidence_level: None,
-            measurement_time: None,
-            noise_threshold: None,
-            nresamples: None,
-            sample_size: None,
-            significance_level: None,
-            warm_up_time: None,
-            plot_config: PlotConfiguration::default(),
-            sampling_mode: None,
-        }
-    }
 }
 
 impl PartialBenchmarkConfig {
