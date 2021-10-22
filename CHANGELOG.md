@@ -417,3 +417,4 @@ more details
 [0.3.2]: https://github.com/bheisler/criterion.rs/compare/0.3.1...0.3.2
 [0.3.3]: https://github.com/bheisler/criterion.rs/compare/0.3.2...0.3.3
 [0.3.4]: https://github.com/bheisler/criterion.rs/compare/0.3.3...0.3.4
+[0.3.5]: https://github.com/bheisler/criterion.rs/compare/0.3.4...0.3.5
