@@ -26,7 +26,7 @@ macro_rules! elapsed {
         info!(
             "{} took {}",
             $msg,
-            crate::format::time(crate::DurationExt::to_nanos(elapsed) as f64)
+            crate::format::time(elapsed.as_nanos() as f64)
         );
 
         out
@@ -128,7 +128,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         .collect::<Vec<f64>>();
     let avg_times = Sample::new(&avg_times);
 
-    if criterion.connection.is_none() && criterion.load_baseline.is_none() {
+    if criterion.should_save_baseline() {
         log_if_err!({
             let mut new_dir = criterion.output_directory.clone();
             new_dir.push(id.as_directory_name());
@@ -139,7 +139,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
 
     let data = Data::new(&iters, &times);
     let labeled_sample = tukey::classify(avg_times);
-    if criterion.connection.is_none() {
+    if criterion.should_save_baseline() {
         log_if_err!({
             let mut tukey_file = criterion.output_directory.to_owned();
             tukey_file.push(id.as_directory_name());
@@ -156,7 +156,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         distributions.slope = Some(distribution);
     }
 
-    if criterion.connection.is_none() && criterion.load_baseline.is_none() {
+    if criterion.should_save_baseline() {
         log_if_err!({
             let mut sample_file = criterion.output_directory.clone();
             sample_file.push(id.as_directory_name());
@@ -237,7 +237,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         criterion.measurement.formatter(),
     );
 
-    if criterion.connection.is_none() && criterion.load_baseline.is_none() {
+    if criterion.should_save_baseline() {
         log_if_err!({
             let mut benchmark_file = criterion.output_directory.clone();
             benchmark_file.push(id.as_directory_name());
@@ -365,5 +365,6 @@ fn copy_new_dir_to_base(id: &str, baseline: &str, output_directory: &Path) {
         &new_dir.join("benchmark.json"),
         &base_dir.join("benchmark.json")
     ));
+    #[cfg(feature = "csv_output")]
     try_else_return!(fs::cp(&new_dir.join("raw.csv"), &base_dir.join("raw.csv")));
 }

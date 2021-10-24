@@ -14,7 +14,6 @@ fn create_command() -> Command {
     command
 }
 
-#[allow(deprecated)]
 fn python_fibonacci(c: &mut Criterion) {
     let has_python3 = Command::new("python3")
         .arg("--version")

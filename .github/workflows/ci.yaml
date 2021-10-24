@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - master
+      - version-0.4
 
 name: tests
 
@@ -23,6 +24,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - uses: actions-rs/toolchain@v1
+        name: Setup rust toolchain
         with:
           profile: minimal
           toolchain: ${{ matrix.rust }}
@@ -30,25 +32,56 @@ jobs:
           components: rustfmt, clippy
 
       - uses: Swatinem/rust-cache@v1
+        name: Load dependencies from cache
 
       - uses: actions-rs/cargo@v1
+        name: Build with stable features
         with:
           command: build
           args: --features stable
 
       - uses: actions-rs/cargo@v1
+        if: ${{ matrix.rust == 'nightly' }}
+        name: Build with unstable features
+        with:
+          command: build
+          args: --all-features
+
+      - uses: actions-rs/cargo@v1
+        name: Build with minimal features
+        with:
+          command: build
+          args: --no-default-features
+
+      - uses: actions-rs/cargo@v1
+        name: Test with stable features
         with:
           command: test
           args: --features stable
 
       - uses: actions-rs/cargo@v1
+        name: Test with minimal features
+        with:
+          command: test
+          args: --no-default-features
+
+      - uses: actions-rs/cargo@v1
+        name: Check for non-standard formatting
         if: ${{ matrix.rust == 'stable' }}
         with:
           command: fmt
           args: --all -- --check
 
       - uses: actions-rs/cargo@v1
-        if: ${{ matrix.rust != '1.40.0' }} # 1.40 has horrible lints.
+        name: Check for clippy hints
         with:
           command: clippy
           args: -- -D warnings
+
+      - name: Test run targeting WASI
+        run: |
+          curl https://wasmtime.dev/install.sh -sSf | bash
+          source ~/.bashrc
+          export PATH=$HOME/.wasmtime/bin/:$PATH
+          cargo install cargo-wasi
+          cargo wasi bench --no-default-features -- --test

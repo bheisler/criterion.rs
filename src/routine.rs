@@ -2,7 +2,7 @@ use crate::benchmark::BenchmarkConfig;
 use crate::connection::OutgoingMessage;
 use crate::measurement::Measurement;
 use crate::report::{BenchmarkId, Report, ReportContext};
-use crate::{ActualSamplingMode, Bencher, Criterion, DurationExt};
+use crate::{ActualSamplingMode, Bencher, Criterion};
 use std::marker::PhantomData;
 use std::time::Duration;
 
@@ -34,7 +34,7 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
     ) {
         criterion
             .report
-            .profile(id, report_context, time.to_nanos() as f64);
+            .profile(id, report_context, time.as_nanos() as f64);
 
         let mut profile_path = report_context.output_directory.clone();
         if (*crate::CARGO_CRITERION_CONNECTION).is_some() {
@@ -51,7 +51,7 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
             .borrow_mut()
             .start_profiling(id.id(), &profile_path);
 
-        let time = time.to_nanos();
+        let time = time.as_nanos() as u64;
 
         // TODO: Some profilers will show the two batches of iterations as
         // being different code-paths even though they aren't really.
@@ -89,16 +89,16 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
         parameter: &T,
     ) -> (ActualSamplingMode, Box<[f64]>, Box<[f64]>) {
         let wu = config.warm_up_time;
-        let m_ns = config.measurement_time.to_nanos();
+        let m_ns = config.measurement_time.as_nanos();
 
         criterion
             .report
-            .warmup(id, report_context, wu.to_nanos() as f64);
+            .warmup(id, report_context, wu.as_nanos() as f64);
 
         if let Some(conn) = &criterion.connection {
             conn.send(&OutgoingMessage::Warmup {
                 id: id.into(),
-                nanos: wu.to_nanos() as f64,
+                nanos: wu.as_nanos() as f64,
             })
             .unwrap();
         }
@@ -233,7 +233,7 @@ where
             total_iters += b.iters;
             elapsed_time += b.elapsed_time;
             if elapsed_time > how_long {
-                return (elapsed_time.to_nanos(), total_iters);
+                return (elapsed_time.as_nanos() as u64, total_iters);
             }
 
             b.iters = b.iters.wrapping_mul(2);

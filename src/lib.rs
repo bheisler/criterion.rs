@@ -57,6 +57,7 @@ mod benchmark_group;
 pub mod async_executor;
 mod bencher;
 mod connection;
+#[cfg(feature = "csv_output")]
 mod csv_report;
 mod error;
 mod estimate;
@@ -76,9 +77,6 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::default::Default;
 use std::env;
-use std::fmt;
-use std::iter::IntoIterator;
-use std::marker::PhantomData;
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -88,40 +86,41 @@ use std::time::Duration;
 use criterion_plot::{Version, VersionError};
 
 use crate::benchmark::BenchmarkConfig;
-use crate::benchmark::NamedRoutine;
 use crate::connection::Connection;
 use crate::connection::OutgoingMessage;
-use crate::csv_report::FileCsvReport;
 use crate::html::Html;
 use crate::measurement::{Measurement, WallTime};
-use crate::plot::{Gnuplot, Plotter, PlottersBackend};
+#[cfg(feature = "plotters")]
+use crate::plot::PlottersBackend;
+use crate::plot::{Gnuplot, Plotter};
 use crate::profiler::{ExternalProfiler, Profiler};
-use crate::report::{BencherReport, CliReport, Report, ReportContext, Reports};
-use crate::routine::Function;
+use crate::report::{BencherReport, CliReport, CliVerbosity, Report, ReportContext, Reports};
 
 #[cfg(feature = "async")]
 pub use crate::bencher::AsyncBencher;
 pub use crate::bencher::Bencher;
-#[allow(deprecated)]
-pub use crate::benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
 pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};
 
 lazy_static! {
     static ref DEBUG_ENABLED: bool = std::env::var_os("CRITERION_DEBUG").is_some();
     static ref GNUPLOT_VERSION: Result<Version, VersionError> = criterion_plot::version();
     static ref DEFAULT_PLOTTING_BACKEND: PlottingBackend = {
-        match &*GNUPLOT_VERSION {
-            Ok(_) => PlottingBackend::Gnuplot,
-            Err(e) => {
-                match e {
-                    VersionError::Exec(_) => println!("Gnuplot not found, using plotters backend"),
-                    e => println!(
-                        "Gnuplot not found or not usable, using plotters backend\n{}",
-                        e
-                    ),
-                };
-                PlottingBackend::Plotters
+        if cfg!(feature = "html_reports") {
+            match &*GNUPLOT_VERSION {
+                Ok(_) => PlottingBackend::Gnuplot,
+                Err(e) => {
+                    match e {
+                        VersionError::Exec(_) => eprintln!("Gnuplot not found, using plotters backend"),
+                        e => eprintln!(
+                            "Gnuplot not found or not usable, using plotters backend\n{}",
+                            e
+                        ),
+                    };
+                    PlottingBackend::Plotters
+                }
             }
+        } else {
+            PlottingBackend::None
         }
     };
     static ref CARGO_CRITERION_CONNECTION: Option<Mutex<Connection>> = {
@@ -174,36 +173,6 @@ pub fn black_box<T>(dummy: T) -> T {
         let ret = std::ptr::read_volatile(&dummy);
         std::mem::forget(dummy);
         ret
-    }
-}
-
-/// Representing a function to benchmark together with a name of that function.
-/// Used together with `bench_functions` to represent one out of multiple functions
-/// under benchmark.
-#[doc(hidden)]
-pub struct Fun<I: fmt::Debug, M: Measurement + 'static = WallTime> {
-    f: NamedRoutine<I, M>,
-    _phantom: PhantomData<M>,
-}
-
-impl<I, M: Measurement> Fun<I, M>
-where
-    I: fmt::Debug + 'static,
-{
-    /// Create a new `Fun` given a name and a closure
-    pub fn new<F>(name: &str, f: F) -> Fun<I, M>
-    where
-        F: FnMut(&mut Bencher<'_, M>, &I) + 'static,
-    {
-        let routine = NamedRoutine {
-            id: name.to_owned(),
-            f: Box::new(RefCell::new(Function::new(f))),
-        };
-
-        Fun {
-            f: routine,
-            _phantom: PhantomData,
-        }
     }
 }
 
@@ -302,6 +271,8 @@ pub enum Baseline {
     /// Save writes the benchmark results to the baseline directory,
     /// overwriting any results that were previously there.
     Save,
+    /// Discard benchmark results.
+    Discard,
 }
 
 /// Enum used to select the plotting backend.
@@ -313,12 +284,18 @@ pub enum PlottingBackend {
     /// Plotting backend which uses the rust 'Plotters' library. This is the default if `gnuplot`
     /// is not installed.
     Plotters,
+    /// Null plotting backend which outputs nothing,
+    None,
 }
 impl PlottingBackend {
-    fn create_plotter(&self) -> Box<dyn Plotter> {
+    fn create_plotter(&self) -> Option<Box<dyn Plotter>> {
         match self {
-            PlottingBackend::Gnuplot => Box::new(Gnuplot::default()),
-            PlottingBackend::Plotters => Box::new(PlottersBackend::default()),
+            PlottingBackend::Gnuplot => Some(Box::new(Gnuplot::default())),
+            #[cfg(feature = "plotters")]
+            PlottingBackend::Plotters => Some(Box::new(PlottersBackend::default())),
+            #[cfg(not(feature = "plotters"))]
+            PlottingBackend::Plotters => panic!("Criterion was built without plotters support."),
+            PlottingBackend::None => None,
         }
     }
 }
@@ -406,24 +383,22 @@ impl Default for Criterion {
     fn default() -> Criterion {
         let reports = Reports {
             cli_enabled: true,
-            cli: CliReport::new(false, false, false),
+            cli: CliReport::new(false, false, CliVerbosity::Normal),
             bencher_enabled: false,
             bencher: BencherReport,
-            html_enabled: true,
-            html: Html::new(DEFAULT_PLOTTING_BACKEND.create_plotter()),
-            csv_enabled: true,
-            csv: FileCsvReport,
+            html: DEFAULT_PLOTTING_BACKEND.create_plotter().map(Html::new),
+            csv_enabled: cfg!(feature = "csv_output"),
         };
 
         let mut criterion = Criterion {
             config: BenchmarkConfig {
                 confidence_level: 0.95,
-                measurement_time: Duration::new(5, 0),
+                measurement_time: Duration::from_secs(5),
                 noise_threshold: 0.01,
                 nresamples: 100_000,
                 sample_size: 100,
                 significance_level: 0.05,
-                warm_up_time: Duration::new(3, 0),
+                warm_up_time: Duration::from_secs(3),
                 sampling_mode: SamplingMode::Auto,
             },
             filter: None,
@@ -447,7 +422,7 @@ impl Default for Criterion {
             criterion.report.cli_enabled = false;
             criterion.report.bencher_enabled = false;
             criterion.report.csv_enabled = false;
-            criterion.report.html_enabled = false;
+            criterion.report.html = None;
         }
         criterion
     }
@@ -498,7 +473,7 @@ impl<M: Measurement> Criterion<M> {
             );
         }
 
-        self.report.html = Html::new(backend.create_plotter());
+        self.report.html = backend.create_plotter().map(Html::new);
         self
     }
 
@@ -525,7 +500,7 @@ impl<M: Measurement> Criterion<M> {
     ///
     /// Panics if the input duration is zero
     pub fn warm_up_time(mut self, dur: Duration) -> Criterion<M> {
-        assert!(dur.to_nanos() > 0);
+        assert!(dur.as_nanos() > 0);
 
         self.config.warm_up_time = dur;
         self
@@ -542,7 +517,7 @@ impl<M: Measurement> Criterion<M> {
     ///
     /// Panics if the input duration in zero
     pub fn measurement_time(mut self, dur: Duration) -> Criterion<M> {
-        assert!(dur.to_nanos() > 0);
+        assert!(dur.as_nanos() > 0);
 
         self.config.measurement_time = dur;
         self
@@ -562,7 +537,7 @@ impl<M: Measurement> Criterion<M> {
     pub fn nresamples(mut self, n: usize) -> Criterion<M> {
         assert!(n > 0);
         if n <= 1000 {
-            println!("\nWarning: It is not recommended to reduce nresamples below 1000.");
+            eprintln!("\nWarning: It is not recommended to reduce nresamples below 1000.");
         }
 
         self.config.nresamples = n;
@@ -599,7 +574,7 @@ impl<M: Measurement> Criterion<M> {
     pub fn confidence_level(mut self, cl: f64) -> Criterion<M> {
         assert!(cl > 0.0 && cl < 1.0);
         if cl < 0.5 {
-            println!("\nWarning: It is not recommended to reduce confidence level below 0.5.");
+            eprintln!("\nWarning: It is not recommended to reduce confidence level below 0.5.");
         }
 
         self.config.confidence_level = cl;
@@ -636,27 +611,21 @@ impl<M: Measurement> Criterion<M> {
     /// Enables plotting
     pub fn with_plots(mut self) -> Criterion<M> {
         // If running under cargo-criterion then don't re-enable the reports; let it do the reporting.
-        if self.connection.is_none() {
-            self.report.html_enabled = true;
+        if self.connection.is_none() && self.report.html.is_none() {
+            let default_backend = DEFAULT_PLOTTING_BACKEND.create_plotter();
+            if let Some(backend) = default_backend {
+                self.report.html = Some(Html::new(backend));
+            } else {
+                panic!("Cannot find a default plotting backend!");
+            }
         }
         self
     }
 
     /// Disables plotting
     pub fn without_plots(mut self) -> Criterion<M> {
-        self.report.html_enabled = false;
+        self.report.html = None;
         self
-    }
-
-    /// Return true if generation of the plots is possible.
-    #[deprecated(
-        since = "0.3.4",
-        note = "No longer useful; since the plotters backend is available Criterion.rs can always generate plots"
-    )]
-    pub fn can_plot(&self) -> bool {
-        // Trivially true now that we have plotters.
-        // TODO: Deprecate and remove this.
-        true
     }
 
     /// Names an explicit baseline and enables overwriting the previous results.
@@ -750,6 +719,10 @@ impl<M: Measurement> Criterion<M> {
                 .short("v")
                 .long("verbose")
                 .help("Print additional statistical information."))
+            .arg(Arg::with_name("quiet")
+                .long("quiet")
+                .conflicts_with("verbose")
+                .help("Print only the benchmark results."))
             .arg(Arg::with_name("noplot")
                 .short("n")
                 .long("noplot")
@@ -759,6 +732,10 @@ impl<M: Measurement> Criterion<M> {
                 .long("save-baseline")
                 .default_value("base")
                 .help("Save results under a named baseline."))
+            .arg(Arg::with_name("discard-baseline")
+                .long("discard-baseline")
+                .conflicts_with_all(&["save-baseline", "baseline"])
+                .help("Discard benchmark results."))
             .arg(Arg::with_name("baseline")
                 .short("b")
                 .long("baseline")
@@ -853,21 +830,21 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         if self.connection.is_some() {
             if let Some(color) = matches.value_of("color") {
                 if color != "auto" {
-                    println!("Warning: --color will be ignored when running with cargo-criterion. Use `cargo criterion --color {} -- <args>` instead.", color);
+                    eprintln!("Warning: --color will be ignored when running with cargo-criterion. Use `cargo criterion --color {} -- <args>` instead.", color);
                 }
             }
             if matches.is_present("verbose") {
-                println!("Warning: --verbose will be ignored when running with cargo-criterion. Use `cargo criterion --output-format verbose -- <args>` instead.");
+                eprintln!("Warning: --verbose will be ignored when running with cargo-criterion. Use `cargo criterion --output-format verbose -- <args>` instead.");
             }
             if matches.is_present("noplot") {
-                println!("Warning: --noplot will be ignored when running with cargo-criterion. Use `cargo criterion --plotting-backend disabled -- <args>` instead.");
+                eprintln!("Warning: --noplot will be ignored when running with cargo-criterion. Use `cargo criterion --plotting-backend disabled -- <args>` instead.");
             }
             if let Some(backend) = matches.value_of("plotting-backend") {
-                println!("Warning: --plotting-backend will be ignored when running with cargo-criterion. Use `cargo criterion --plotting-backend {} -- <args>` instead.", backend);
+                eprintln!("Warning: --plotting-backend will be ignored when running with cargo-criterion. Use `cargo criterion --plotting-backend {} -- <args>` instead.", backend);
             }
             if let Some(format) = matches.value_of("output-format") {
                 if format != "criterion" {
-                    println!("Warning: --output-format will be ignored when running with cargo-criterion. Use `cargo criterion --output-format {} -- <args>` instead.", format);
+                    eprintln!("Warning: --output-format will be ignored when running with cargo-criterion. Use `cargo criterion --output-format {} -- <args>` instead.", format);
                 }
             }
 
@@ -878,7 +855,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                     .unwrap_or(false)
                 || matches.is_present("load-baseline")
             {
-                println!("Error: baselines are not supported when running with cargo-criterion.");
+                eprintln!("Error: baselines are not supported when running with cargo-criterion.");
                 std::process::exit(1);
             }
         }
@@ -896,17 +873,17 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         } else if matches.is_present("list") {
             Mode::List
         } else if matches.is_present("profile-time") {
-            let num_seconds = value_t!(matches.value_of("profile-time"), u64).unwrap_or_else(|e| {
+            let num_seconds = value_t!(matches.value_of("profile-time"), f64).unwrap_or_else(|e| {
                 println!("{}", e);
                 std::process::exit(1)
             });
 
-            if num_seconds < 1 {
-                println!("Profile time must be at least one second.");
+            if num_seconds < 1.0 {
+                eprintln!("Profile time must be at least one second.");
                 std::process::exit(1);
             }
 
-            Mode::Profile(Duration::from_secs(num_seconds))
+            Mode::Profile(Duration::from_secs_f64(num_seconds))
         } else {
             Mode::Benchmark
         };
@@ -930,13 +907,14 @@ https://bheisler.github.io/criterion.rs/book/faq.html
 
         if matches.is_present("noplot") {
             self = self.without_plots();
-        } else {
-            self = self.with_plots();
         }
 
         if let Some(dir) = matches.value_of("save-baseline") {
             self.baseline = Baseline::Save;
             self.baseline_directory = dir.to_owned()
+        }
+        if matches.is_present("discard-baseline") {
+            self.baseline = Baseline::Discard;
         }
         if let Some(dir) = matches.value_of("baseline") {
             self.baseline = Baseline::Compare;
@@ -948,7 +926,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.report.cli_enabled = false;
             self.report.bencher_enabled = false;
             self.report.csv_enabled = false;
-            self.report.html_enabled = false;
+            self.report.html = None;
         } else {
             match matches.value_of("output-format") {
                 Some("bencher") => {
@@ -957,6 +935,13 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                 }
                 _ => {
                     let verbose = matches.is_present("verbose");
+                    let verbosity = if verbose {
+                        CliVerbosity::Verbose
+                    } else if matches.is_present("quiet") {
+                        CliVerbosity::Quiet
+                    } else {
+                        CliVerbosity::Normal
+                    };
                     let stdout_isatty = atty::is(atty::Stream::Stdout);
                     let mut enable_text_overwrite = stdout_isatty && !verbose && !debug_enabled();
                     let enable_text_coloring;
@@ -973,7 +958,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                     self.report.bencher_enabled = false;
                     self.report.cli_enabled = true;
                     self.report.cli =
-                        CliReport::new(enable_text_overwrite, enable_text_coloring, verbose);
+                        CliReport::new(enable_text_overwrite, enable_text_coloring, verbosity);
                 }
             };
         }
@@ -992,25 +977,25 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.config.sample_size = num_size;
         }
         if matches.is_present("warm-up-time") {
-            let num_seconds = value_t!(matches.value_of("warm-up-time"), u64).unwrap_or_else(|e| {
+            let num_seconds = value_t!(matches.value_of("warm-up-time"), f64).unwrap_or_else(|e| {
                 println!("{}", e);
                 std::process::exit(1)
             });
 
-            let dur = std::time::Duration::new(num_seconds, 0);
-            assert!(dur.to_nanos() > 0);
+            let dur = std::time::Duration::from_secs_f64(num_seconds);
+            assert!(dur.as_nanos() > 0);
 
             self.config.warm_up_time = dur;
         }
         if matches.is_present("measurement-time") {
             let num_seconds =
-                value_t!(matches.value_of("measurement-time"), u64).unwrap_or_else(|e| {
+                value_t!(matches.value_of("measurement-time"), f64).unwrap_or_else(|e| {
                     println!("{}", e);
                     std::process::exit(1)
                 });
 
-            let dur = std::time::Duration::new(num_seconds, 0);
-            assert!(dur.to_nanos() > 0);
+            let dur = std::time::Duration::from_secs_f64(num_seconds);
+            assert!(dur.as_nanos() > 0);
 
             self.config.measurement_time = dur;
         }
@@ -1067,6 +1052,14 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             Some(ref regex) => regex.is_match(id),
             None => true,
         }
+    }
+
+    /// Returns true iff we should save the benchmark results in
+    /// json files on the local disk.
+    fn should_save_baseline(&self) -> bool {
+        self.connection.is_none()
+            && self.load_baseline.is_none()
+            && !matches!(self.baseline, Baseline::Discard)
     }
 
     /// Return a benchmark group. All benchmarks performed using a benchmark group will be
@@ -1181,150 +1174,6 @@ where
         );
         self
     }
-
-    /// Benchmarks a function under various inputs
-    ///
-    /// This is a convenience method to execute several related benchmarks. Each benchmark will
-    /// receive the id: `${id}/${input}`.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # #[macro_use] extern crate criterion;
-    /// # use self::criterion::*;
-    ///
-    /// fn bench(c: &mut Criterion) {
-    ///     c.bench_function_over_inputs("from_elem",
-    ///         |b: &mut Bencher, size: &usize| {
-    ///             b.iter(|| vec![0u8; *size]);
-    ///         },
-    ///         vec![1024, 2048, 4096]
-    ///     );
-    /// }
-    ///
-    /// criterion_group!(benches, bench);
-    /// criterion_main!(benches);
-    /// ```
-    #[doc(hidden)]
-    #[deprecated(since = "0.3.4", note = "Please use BenchmarkGroups instead.")]
-    #[allow(deprecated)]
-    pub fn bench_function_over_inputs<I, F>(
-        &mut self,
-        id: &str,
-        f: F,
-        inputs: I,
-    ) -> &mut Criterion<M>
-    where
-        I: IntoIterator,
-        I::Item: fmt::Debug + 'static,
-        F: FnMut(&mut Bencher<'_, M>, &I::Item) + 'static,
-    {
-        self.bench(id, ParameterizedBenchmark::new(id, f, inputs))
-    }
-
-    /// Benchmarks multiple functions
-    ///
-    /// All functions get the same input and are compared with the other implementations.
-    /// Works similar to `bench_function`, but with multiple functions.
-    ///
-    /// # Example
-    ///
-    /// ``` rust
-    /// # #[macro_use] extern crate criterion;
-    /// # use self::criterion::*;
-    /// # fn seq_fib(i: &u32) {}
-    /// # fn par_fib(i: &u32) {}
-    ///
-    /// fn bench_seq_fib(b: &mut Bencher, i: &u32) {
-    ///     b.iter(|| {
-    ///         seq_fib(i);
-    ///     });
-    /// }
-    ///
-    /// fn bench_par_fib(b: &mut Bencher, i: &u32) {
-    ///     b.iter(|| {
-    ///         par_fib(i);
-    ///     });
-    /// }
-    ///
-    /// fn bench(c: &mut Criterion) {
-    ///     let sequential_fib = Fun::new("Sequential", bench_seq_fib);
-    ///     let parallel_fib = Fun::new("Parallel", bench_par_fib);
-    ///     let funs = vec![sequential_fib, parallel_fib];
-    ///
-    ///     c.bench_functions("Fibonacci", funs, 14);
-    /// }
-    ///
-    /// criterion_group!(benches, bench);
-    /// criterion_main!(benches);
-    /// ```
-    #[doc(hidden)]
-    #[deprecated(since = "0.3.4", note = "Please use BenchmarkGroups instead.")]
-    #[allow(deprecated)]
-    pub fn bench_functions<I>(
-        &mut self,
-        id: &str,
-        funs: Vec<Fun<I, M>>,
-        input: I,
-    ) -> &mut Criterion<M>
-    where
-        I: fmt::Debug + 'static,
-    {
-        let benchmark = ParameterizedBenchmark::with_functions(
-            funs.into_iter().map(|fun| fun.f).collect(),
-            vec![input],
-        );
-
-        self.bench(id, benchmark)
-    }
-
-    /// Executes the given benchmark. Use this variant to execute benchmarks
-    /// with complex configuration. This can be used to compare multiple
-    /// functions, execute benchmarks with custom configuration settings and
-    /// more. See the Benchmark and ParameterizedBenchmark structs for more
-    /// information.
-    ///
-    /// ```rust
-    /// # #[macro_use] extern crate criterion;
-    /// # use criterion::*;
-    /// # fn routine_1() {}
-    /// # fn routine_2() {}
-    ///
-    /// fn bench(c: &mut Criterion) {
-    ///     // Setup (construct data, allocate memory, etc)
-    ///     c.bench(
-    ///         "routines",
-    ///         Benchmark::new("routine_1", |b| b.iter(|| routine_1()))
-    ///             .with_function("routine_2", |b| b.iter(|| routine_2()))
-    ///             .sample_size(50)
-    ///     );
-    /// }
-    ///
-    /// criterion_group!(benches, bench);
-    /// criterion_main!(benches);
-    /// ```
-    #[doc(hidden)]
-    #[deprecated(since = "0.3.4", note = "Please use BenchmarkGroups instead.")]
-    pub fn bench<B: BenchmarkDefinition<M>>(
-        &mut self,
-        group_id: &str,
-        benchmark: B,
-    ) -> &mut Criterion<M> {
-        benchmark.run(group_id, self);
-        self
-    }
-}
-
-trait DurationExt {
-    fn to_nanos(&self) -> u64;
-}
-
-const NANOS_PER_SEC: u64 = 1_000_000_000;
-
-impl DurationExt for Duration {
-    fn to_nanos(&self) -> u64 {
-        self.as_secs() * NANOS_PER_SEC + u64::from(self.subsec_nanos())
-    }
 }
 
 /// Enum representing different ways of measuring the throughput of benchmarked code.
@@ -1359,7 +1208,7 @@ pub enum AxisScale {
 /// or benchmark group.
 ///
 /// ```rust
-/// use self::criterion::{Bencher, Criterion, Benchmark, PlotConfiguration, AxisScale};
+/// use self::criterion::{Bencher, Criterion, PlotConfiguration, AxisScale};
 ///
 /// let plot_config = PlotConfiguration::default()
 ///     .summary_scale(AxisScale::Logarithmic);
@@ -1456,7 +1305,7 @@ impl ActualSamplingMode {
             ActualSamplingMode::Linear => {
                 let n = sample_count;
                 let met = warmup_mean_execution_time;
-                let m_ns = target_time.to_nanos();
+                let m_ns = target_time.as_nanos();
                 // Solve: [d + 2*d + 3*d + ... + n*d] * met = m_ns
                 let total_runs = n * (n + 1) / 2;
                 let d = ((m_ns as f64 / met / total_runs as f64).ceil() as u64).max(1);
@@ -1466,16 +1315,16 @@ impl ActualSamplingMode {
                     let recommended_sample_size =
                         ActualSamplingMode::recommend_linear_sample_size(m_ns as f64, met);
                     let actual_time = Duration::from_nanos(expected_ns as u64);
-                    print!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?}",
+                    eprint!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?}",
                             n, target_time, actual_time);
 
                     if recommended_sample_size != n {
-                        println!(
+                        eprintln!(
                             ", enable flat sampling, or reduce sample count to {}.",
                             recommended_sample_size
                         );
                     } else {
-                        println!(" or enable flat sampling.");
+                        eprintln!(" or enable flat sampling.");
                     }
                 }
 
@@ -1484,7 +1333,7 @@ impl ActualSamplingMode {
             ActualSamplingMode::Flat => {
                 let n = sample_count;
                 let met = warmup_mean_execution_time;
-                let m_ns = target_time.to_nanos() as f64;
+                let m_ns = target_time.as_nanos() as f64;
                 let time_per_sample = m_ns / (n as f64);
                 // This is pretty simplistic; we could do something smarter to fit into the allotted time.
                 let iterations_per_sample = ((time_per_sample / met).ceil() as u64).max(1);
@@ -1495,13 +1344,13 @@ impl ActualSamplingMode {
                     let recommended_sample_size =
                         ActualSamplingMode::recommend_flat_sample_size(m_ns, met);
                     let actual_time = Duration::from_nanos(expected_ns as u64);
-                    print!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?}",
+                    eprint!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?}",
                             n, target_time, actual_time);
 
                     if recommended_sample_size != n {
-                        println!(", or reduce sample count to {}.", recommended_sample_size);
+                        eprintln!(", or reduce sample count to {}.", recommended_sample_size);
                     } else {
-                        println!(".");
+                        eprintln!(".");
                     }
                 }
 
@@ -1566,54 +1415,4 @@ pub fn runner(benches: &[&dyn Fn()]) {
         bench();
     }
     Criterion::default().configure_from_args().final_summary();
-}
-
-/// Print a warning informing users about upcoming changes to features
-#[cfg(not(feature = "html_reports"))]
-#[doc(hidden)]
-pub fn __warn_about_html_reports_feature() {
-    if CARGO_CRITERION_CONNECTION.is_none() {
-        println!(
-            "WARNING: HTML report generation will become a non-default optional feature in Criterion.rs 0.4.0."
-        );
-        println!(
-            "This feature is being moved to cargo-criterion \
-            (https://github.com/bheisler/cargo-criterion) and will be optional in a future \
-            version of Criterion.rs. To silence this warning, either switch to cargo-criterion or \
-            enable the 'html_reports' feature in your Cargo.toml."
-        );
-        println!();
-    }
-}
-
-/// Print a warning informing users about upcoming changes to features
-#[cfg(feature = "html_reports")]
-#[doc(hidden)]
-pub fn __warn_about_html_reports_feature() {
-    // They have the feature enabled, so they're ready for the update.
-}
-
-/// Print a warning informing users about upcoming changes to features
-#[cfg(not(feature = "cargo_bench_support"))]
-#[doc(hidden)]
-pub fn __warn_about_cargo_bench_support_feature() {
-    if CARGO_CRITERION_CONNECTION.is_none() {
-        println!(
-            "WARNING: In Criterion.rs 0.4.0, running criterion benchmarks outside of cargo-criterion will become a default optional feature."
-        );
-        println!(
-            "The statistical analysis and reporting is being moved to cargo-criterion \
-            (https://github.com/bheisler/cargo-criterion) and will be optional in a future \
-            version of Criterion.rs. To silence this warning, either switch to cargo-criterion or \
-            enable the 'cargo_bench_support' feature in your Cargo.toml."
-        );
-        println!();
-    }
-}
-
-/// Print a warning informing users about upcoming changes to features
-#[cfg(feature = "cargo_bench_support")]
-#[doc(hidden)]
-pub fn __warn_about_cargo_bench_support_feature() {
-    // They have the feature enabled, so they're ready for the update.
 }
