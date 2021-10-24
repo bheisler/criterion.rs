@@ -465,9 +465,12 @@ impl<M: Measurement> Criterion<M> {
     /// Panics if `backend` is `PlottingBackend::Gnuplot` and gnuplot is not available.
     pub fn plotting_backend(mut self, backend: PlottingBackend) -> Criterion<M> {
         if let PlottingBackend::Gnuplot = backend {
-            if GNUPLOT_VERSION.is_err() {
-                panic!("Gnuplot plotting backend was requested, but gnuplot is not available. To continue, either install Gnuplot or allow Criterion.rs to fall back to using plotters.");
-            }
+            assert!(
+                !GNUPLOT_VERSION.is_err(),
+                "Gnuplot plotting backend was requested, but gnuplot is not available. \
+                To continue, either install Gnuplot or allow Criterion.rs to fall back \
+                to using plotters."
+            );
         }
 
         self.report.html = backend.create_plotter().map(Html::new);
@@ -1084,9 +1087,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
     /// Panics if the group name is empty
     pub fn benchmark_group<S: Into<String>>(&mut self, group_name: S) -> BenchmarkGroup<'_, M> {
         let group_name = group_name.into();
-        if group_name.is_empty() {
-            panic!("Group name must not be empty.");
-        }
+        assert!(!group_name.is_empty(), "Group name must not be empty.");
 
         if let Some(conn) = &self.connection {
             conn.send(&OutgoingMessage::BeginningBenchmarkGroup { group: &group_name })

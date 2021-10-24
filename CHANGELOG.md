@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Standalone support (ie without cargo-criterion) feature flag: 'cargo_bench_support'
 
 ## [Unreleased]
+
+## [0.3.5] - 2021-07-26
 ### Fixed
 - Corrected `Criterion.toml` in the book.
 - Corrected configuration typo in the book.
