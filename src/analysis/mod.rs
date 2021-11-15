@@ -47,7 +47,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
 ) {
     criterion.report.benchmark_start(id, report_context);
 
-    if let Baseline::Compare = criterion.baseline {
+    if let Baseline::CompareStrict = criterion.baseline {
         if !base_dir_exists(
             id,
             &criterion.baseline_directory,
