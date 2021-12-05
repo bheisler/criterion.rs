@@ -20,6 +20,7 @@ regular expression matching the benchmark ID. For example, running
 * To change the CLI output format, use `cargo bench -- --output-format <name>`. Supported output formats are:
  * `criterion` - Use Criterion's normal output format
  * `bencher` - An output format similar to the output produced by the `bencher` crate or nightly `libtest` benchmarks. Though this provides less information than the `criterion` format, it may be useful to support external tools that can parse this output.
+* To run benchmarks quicker but with lower statistical guarantees, use `cargo bench -- --quick`
 
 ## Baselines
 
