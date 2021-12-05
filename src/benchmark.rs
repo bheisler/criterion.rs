@@ -13,6 +13,7 @@ pub struct BenchmarkConfig {
     pub significance_level: f64,
     pub warm_up_time: Duration,
     pub sampling_mode: SamplingMode,
+    pub quick_mode: bool,
 }
 
 /// Struct representing a partially-complete per-benchmark configuration.
@@ -26,6 +27,7 @@ pub(crate) struct PartialBenchmarkConfig {
     pub(crate) significance_level: Option<f64>,
     pub(crate) warm_up_time: Option<Duration>,
     pub(crate) sampling_mode: Option<SamplingMode>,
+    pub(crate) quick_mode: Option<bool>,
     pub(crate) plot_config: PlotConfiguration,
 }
 
@@ -42,6 +44,7 @@ impl PartialBenchmarkConfig {
                 .unwrap_or(defaults.significance_level),
             warm_up_time: self.warm_up_time.unwrap_or(defaults.warm_up_time),
             sampling_mode: self.sampling_mode.unwrap_or(defaults.sampling_mode),
+            quick_mode: self.quick_mode.unwrap_or(defaults.quick_mode),
         }
     }
 }
