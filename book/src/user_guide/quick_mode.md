@@ -9,7 +9,7 @@ Quick mode in criterion works exactly like `tasty-bench` which has a wealth of d
 1. Set n ← 1.
 1. Measure execution time tₙ of n iterations and execution time t₂ₙ of 2n iterations.
 1. Find t which minimizes deviation of (nt, 2nt) from (tₙ, t₂ₙ), namely t ← (tₙ + 2t₂ₙ) / 5n.
-1. If deviation is small enough (see --stdev below) or time is running out soon (see --timeout below), return t as a mean execution time.
+1. If deviation is small enough (see `--significance-level`) or time has run out (see `--measurement-time`), return t as a mean execution time.
 1. Otherwise set n ← 2n and jump back to Step 2.
 
 ### Disclaimer
