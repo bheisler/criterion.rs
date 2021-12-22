@@ -72,6 +72,7 @@ pub mod profiler;
 mod report;
 mod routine;
 mod stats;
+mod critcmp;
 
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -751,6 +752,19 @@ impl<M: Measurement> Criterion<M> {
                 .takes_value(true)
                 .help("Iterate each benchmark for approximately the given number of seconds, doing no analysis and without storing the results. Useful for running the benchmarks in a profiler.")
                 .conflicts_with_all(&["test", "list"]))
+            .arg(Arg::with_name("compare")
+                .long("compare")
+                .takes_value(true)
+                .value_name("baselines")
+                .help("")
+                .conflicts_with_all(&["list", "test", "profile-time"]))
+            .arg(Arg::with_name("compare-threshold")
+                .long("compare-threshold")
+                .takes_value(true)
+                .help(""))
+            .arg(Arg::with_name("compare-list")
+                .long("compare-list")
+                .help(""))
             .arg(Arg::with_name("load-baseline")
                  .long("load-baseline")
                  .takes_value(true)
@@ -1042,6 +1056,16 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             assert!(num_significance_level > 0.0 && num_significance_level < 1.0);
 
             self.config.significance_level = num_significance_level;
+        }
+
+        // XXX: Comparison functionality should ideally live in 'cargo-criterion'.
+        if matches.is_present("compare") {
+            if self.connection.is_some() {
+                // XXX: Print error message. Exit with 1.
+            }
+            // Other arguments: compare-threshold, compare-list.
+            critcmp::main::main();
+            std::process::exit(0);
         }
 
         self
