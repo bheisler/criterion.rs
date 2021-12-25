@@ -21,15 +21,14 @@ macro_rules! fail {
 
 pub type Result<T> = result::Result<T, Box<dyn Error>>;
 
-pub fn main() {
-    if let Err(err) = try_main() {
+pub fn main(args: Args) {
+    if let Err(err) = try_main(args) {
         eprintln!("{}", err);
         process::exit(1);
     }
 }
 
-fn try_main() -> Result<()> {
-    let args = Args::parse();
+fn try_main(args: Args) -> Result<()> {
     let benchmarks = args.benchmarks()?;
 
     if args.baselines() {

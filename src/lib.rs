@@ -17,6 +17,7 @@
 
 #![warn(missing_docs)]
 #![warn(bare_trait_objects)]
+#![allow(semicolon_in_expressions_from_macros)] // FIXME: Remove this
 #![cfg_attr(feature = "real_blackbox", feature(test))]
 #![cfg_attr(
     feature = "cargo-clippy",
@@ -57,6 +58,7 @@ mod benchmark_group;
 pub mod async_executor;
 mod bencher;
 mod connection;
+mod critcmp;
 #[cfg(feature = "csv_output")]
 mod csv_report;
 mod error;
@@ -72,7 +74,6 @@ pub mod profiler;
 mod report;
 mod routine;
 mod stats;
-mod critcmp;
 
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -1064,7 +1065,13 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                 // XXX: Print error message. Exit with 1.
             }
             // Other arguments: compare-threshold, compare-list.
-            critcmp::main::main();
+            let args = critcmp::app::Args {
+                baselines: vec![],
+                output_list: false,
+                threshold: None,
+                color: false,
+            };
+            critcmp::main::main(args);
             std::process::exit(0);
         }
 
