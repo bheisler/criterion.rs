@@ -4,7 +4,7 @@ use std::io;
 use std::path::Path;
 
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+// use serde::{Deserialize, Serialize};
 use serde_json as json;
 use walkdir::WalkDir;
 
@@ -174,6 +174,7 @@ impl Benchmark {
         let scale = NANOS_PER_SECOND / self.nanoseconds();
 
         self.info.throughput.as_ref().and_then(|t| {
+            #[allow(clippy::manual_map)]
             if let Some(num) = t.bytes {
                 Some(Throughput::Bytes(num as f64 * scale))
             } else if let Some(num) = t.elements {

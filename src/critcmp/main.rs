@@ -45,7 +45,7 @@ fn try_main(args: Args) -> Result<()> {
             None => fail!("failed to find baseline '{}'", baseline),
         };
         serde_json::to_writer_pretty(&mut stdout, basedata)?;
-        writeln!(stdout, "")?;
+        writeln!(stdout)?;
         return Ok(());
     }
 
@@ -82,7 +82,7 @@ fn group_by_baseline(benchmarks: &Benchmarks, filter: Option<&Regex>) -> Vec<out
                 output::Benchmark::from_data(benchmark).name(benchmark.baseline());
             byname
                 .entry(name.to_string())
-                .or_insert(vec![])
+                .or_insert_with(Vec::new)
                 .push(output_benchmark);
         }
     }
@@ -103,12 +103,12 @@ fn group_by_regex(
             if filter.map_or(false, |re| !re.is_match(name)) {
                 continue;
             }
-            let (bench, cmp) = match benchmark_names(&benchmark, group_by) {
+            let (bench, cmp) = match benchmark_names(benchmark, group_by) {
                 None => continue,
                 Some((bench, cmp)) => (bench, cmp),
             };
             let output_benchmark = output::Benchmark::from_data(benchmark).name(&bench);
-            byname.entry(cmp).or_insert(vec![]).push(output_benchmark);
+            byname.entry(cmp).or_insert_with(Vec::new).push(output_benchmark);
         }
     }
     byname
