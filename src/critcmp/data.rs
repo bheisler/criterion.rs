@@ -174,14 +174,11 @@ impl Benchmark {
         let scale = NANOS_PER_SECOND / self.nanoseconds();
 
         self.info.throughput.as_ref().and_then(|t| {
-            #[allow(clippy::manual_map)]
-            if let Some(num) = t.bytes {
-                Some(Throughput::Bytes(num as f64 * scale))
-            } else if let Some(num) = t.elements {
-                Some(Throughput::Elements(num as f64 * scale))
-            } else {
-                None
-            }
+            let scaled_bytes = t.bytes.map(|num| Throughput::Bytes(num as f64 * scale));
+            let scaled_elements = t
+                .elements
+                .map(|num| Throughput::Elements(num as f64 * scale));
+            scaled_bytes.or(scaled_elements)
         })
     }
 }
