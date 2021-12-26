@@ -123,15 +123,13 @@ impl Benchmark {
         // `benchmark.json` which contains most of the info we need about
         // a benchmark, including its name. From the path, we only extract the
         // baseline name.
-        let parent = path.parent().ok_or_else(|| {
-            err!("{}: could not find parent dir", path.display())
-        })?;
+        let parent = path
+            .parent()
+            .ok_or_else(|| err!("{}: could not find parent dir", path.display()))?;
         let baseline = parent
             .file_name()
             .map(|p| p.to_string_lossy().into_owned())
-            .ok_or_else(|| {
-                err!("{}: could not find baseline name", path.display())
-            })?;
+            .ok_or_else(|| err!("{}: could not find baseline name", path.display()))?;
         if baseline == "change" {
             // This isn't really a baseline, but special state emitted by
             // Criterion to reflect its own comparison between baselines. We
@@ -142,7 +140,12 @@ impl Benchmark {
         let info = CBenchmark::from_path(parent.join("benchmark.json"))?;
         let estimates = CEstimates::from_path(path)?;
         let fullname = format!("{}/{}", baseline, info.full_id);
-        Ok(Some(Benchmark { baseline, fullname, info, estimates }))
+        Ok(Some(Benchmark {
+            baseline,
+            fullname,
+            info,
+            estimates,
+        }))
     }
 
     pub fn nanoseconds(&self) -> f64 {

@@ -9,7 +9,7 @@ use regex::Regex;
 use crate::critcmp::app::Args;
 use crate::critcmp::data::{Benchmark, Benchmarks};
 
-use crate::critcmp::output as output;
+use crate::critcmp::output;
 
 macro_rules! err {
     ($($tt:tt)*) => { Box::<dyn (::std::error::Error)>::from(format!($($tt)*)); }
@@ -71,18 +71,15 @@ fn try_main(args: Args) -> Result<()> {
     Ok(())
 }
 
-fn group_by_baseline(
-    benchmarks: &Benchmarks,
-    filter: Option<&Regex>,
-) -> Vec<output::Comparison> {
+fn group_by_baseline(benchmarks: &Benchmarks, filter: Option<&Regex>) -> Vec<output::Comparison> {
     let mut byname: BTreeMap<String, Vec<output::Benchmark>> = BTreeMap::new();
     for base_benchmarks in benchmarks.by_baseline.values() {
         for (name, benchmark) in base_benchmarks.benchmarks.iter() {
             if filter.map_or(false, |re| !re.is_match(name)) {
                 continue;
             }
-            let output_benchmark = output::Benchmark::from_data(benchmark)
-                .name(benchmark.baseline());
+            let output_benchmark =
+                output::Benchmark::from_data(benchmark).name(benchmark.baseline());
             byname
                 .entry(name.to_string())
                 .or_insert(vec![])
@@ -110,8 +107,7 @@ fn group_by_regex(
                 None => continue,
                 Some((bench, cmp)) => (bench, cmp),
             };
-            let output_benchmark =
-                output::Benchmark::from_data(benchmark).name(&bench);
+            let output_benchmark = output::Benchmark::from_data(benchmark).name(&bench);
             byname.entry(cmp).or_insert(vec![]).push(output_benchmark);
         }
     }
@@ -121,10 +117,7 @@ fn group_by_regex(
         .collect()
 }
 
-fn benchmark_names(
-    benchmark: &Benchmark,
-    group_by: &Regex,
-) -> Option<(String, String)> {
+fn benchmark_names(benchmark: &Benchmark, group_by: &Regex) -> Option<(String, String)> {
     assert!(group_by.captures_len() > 1);
 
     let caps = match group_by.captures(benchmark.benchmark_name()) {

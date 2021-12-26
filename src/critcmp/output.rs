@@ -39,9 +39,8 @@ impl Comparison {
             return comp;
         }
 
-        comp.benchmarks.sort_by(|a, b| {
-            a.nanoseconds.partial_cmp(&b.nanoseconds).unwrap()
-        });
+        comp.benchmarks
+            .sort_by(|a, b| a.nanoseconds.partial_cmp(&b.nanoseconds).unwrap());
         comp.benchmarks[0].best = true;
 
         let top = comp.benchmarks[0].nanoseconds;
@@ -66,7 +65,9 @@ impl Comparison {
     }
 
     fn get(&self, name: &str) -> Option<&Benchmark> {
-        self.name_to_index.get(name).and_then(|&i| self.benchmarks.get(i))
+        self.name_to_index
+            .get(name)
+            .and_then(|&i| self.benchmarks.get(i))
     }
 }
 
@@ -83,14 +84,14 @@ impl Benchmark {
     }
 
     pub fn name(self, name: &str) -> Benchmark {
-        Benchmark { name: name.to_string(), ..self }
+        Benchmark {
+            name: name.to_string(),
+            ..self
+        }
     }
 }
 
-pub fn columns<W: WriteColor>(
-    mut wtr: W,
-    groups: &[Comparison],
-) -> Result<()> {
+pub fn columns<W: WriteColor>(mut wtr: W, groups: &[Comparison]) -> Result<()> {
     let mut columns = BTreeSet::new();
     for group in groups {
         for b in &group.benchmarks {
@@ -180,11 +181,7 @@ fn rows_one<W: WriteColor>(mut wtr: W, group: &Comparison) -> Result<()> {
     Ok(())
 }
 
-fn write_divider<W: WriteColor>(
-    mut wtr: W,
-    divider: char,
-    width: usize,
-) -> Result<()> {
+fn write_divider<W: WriteColor>(mut wtr: W, divider: char, width: usize) -> Result<()> {
     let div: String = iter::repeat(divider).take(width).collect();
     write!(wtr, "{}", div)?;
     Ok(())
