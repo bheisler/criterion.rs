@@ -12,11 +12,11 @@ use crate::critcmp::data::{Benchmark, Benchmarks};
 use crate::critcmp::output;
 
 macro_rules! err {
-    ($($tt:tt)*) => { Box::<dyn (::std::error::Error)>::from(format!($($tt)*)); }
+    ($($tt:tt)*) => { Box::<dyn (::std::error::Error)>::from(format!($($tt)*)) }
 }
 
 macro_rules! fail {
-    ($($tt:tt)*) => { return Err(err!($($tt)*)); }
+    ($($tt:tt)*) => { return Err(err!($($tt)*)) }
 }
 
 pub type Result<T> = result::Result<T, Box<dyn Error>>;

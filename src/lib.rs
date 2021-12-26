@@ -17,7 +17,6 @@
 
 #![warn(missing_docs)]
 #![warn(bare_trait_objects)]
-#![allow(semicolon_in_expressions_from_macros)] // FIXME: Remove this
 #![cfg_attr(feature = "real_blackbox", feature(test))]
 #![cfg_attr(
     feature = "cargo-clippy",
