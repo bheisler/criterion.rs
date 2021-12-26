@@ -108,7 +108,10 @@ fn group_by_regex(
                 Some((bench, cmp)) => (bench, cmp),
             };
             let output_benchmark = output::Benchmark::from_data(benchmark).name(&bench);
-            byname.entry(cmp).or_insert_with(Vec::new).push(output_benchmark);
+            byname
+                .entry(cmp)
+                .or_insert_with(Vec::new)
+                .push(output_benchmark);
         }
     }
     byname
