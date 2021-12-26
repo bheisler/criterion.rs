@@ -443,7 +443,7 @@ impl Figure {
 
         s.push_str(&format!(
             "set output '{}'\n",
-            self.output.display().to_string().replace("'", "''")
+            self.output.display().to_string().replace('\'', "''")
         ));
 
         if let Some(width) = self.box_width {
