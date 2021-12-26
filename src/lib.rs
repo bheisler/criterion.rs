@@ -24,6 +24,7 @@
         clippy::just_underscores_and_digits, // Used in the stats code
         clippy::transmute_ptr_to_ptr, // Used in the stats code
         clippy::manual_non_exhaustive, // Remove when MSRV bumped above 1.40
+        unknown_lints,                 // Some nightly lints are not in 1.46
     )
 )]
 
