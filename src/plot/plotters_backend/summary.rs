@@ -31,9 +31,9 @@ pub fn line_comparison(
     let (unit, series_data) = line_comparison_series_data(formatter, all_curves);
 
     let x_range =
-        plotters::data::fitting_range(series_data.iter().map(|(_, xs, _)| xs.iter()).flatten());
+        plotters::data::fitting_range(series_data.iter().flat_map(|(_, xs, _)| xs.iter()));
     let y_range =
-        plotters::data::fitting_range(series_data.iter().map(|(_, _, ys)| ys.iter()).flatten());
+        plotters::data::fitting_range(series_data.iter().flat_map(|(_, _, ys)| ys.iter()));
     let root_area = SVGBackend::new(&path, SIZE)
         .into_drawing_area()
         .titled(&format!("{}: Comparison", title), (DEFAULT_FONT, 20))
@@ -197,7 +197,7 @@ pub fn violin(
     });
 
     let mut x_range =
-        plotters::data::fitting_range(kdes.iter().map(|(_, xs, _)| xs.iter()).flatten());
+        plotters::data::fitting_range(kdes.iter().flat_map(|(_, xs, _)| xs.iter()));
     x_range.start = 0.0;
     let y_range = -0.5..all_curves.len() as f64 - 0.5;
 

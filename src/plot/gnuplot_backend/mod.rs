@@ -26,7 +26,7 @@ use super::{PlotContext, PlotData, Plotter};
 use crate::format;
 
 fn gnuplot_escape(string: &str) -> String {
-    string.replace("_", "\\_").replace("'", "''")
+    string.replace('_', "\\_").replace('\'', "''")
 }
 
 static DEFAULT_FONT: &str = "Helvetica";
