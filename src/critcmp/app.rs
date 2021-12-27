@@ -194,7 +194,8 @@ impl Args {
     }
 
     pub fn baselines(&self) -> bool {
-        !self.baselines.is_empty()
+        false
+        // !self.baselines.is_empty()
     }
 
     pub fn list(&self) -> bool {

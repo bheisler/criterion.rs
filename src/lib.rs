@@ -772,10 +772,16 @@ impl<M: Measurement> Criterion<M> {
                 .conflicts_with_all(&["test", "list"]))
             .arg(Arg::with_name("compare")
                 .long("compare")
+                .help("Tabulate benchmark results")
+                .conflicts_with_all(&["list", "test", "profile-time"]))
+            .arg(Arg::with_name("baselines")
+                .long("baselines")
                 .multiple(true)
                 .value_name("baselines")
-                .help("")
-                .conflicts_with_all(&["list", "test", "profile-time"]))
+                .requires("compare")
+                .require_delimiter(true)
+                .help("Limit the baselines used in tabulated results.")
+                .help(""))
             .arg(Arg::with_name("compare-threshold")
                 .long("compare-threshold")
                 .takes_value(true)
@@ -1079,7 +1085,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         // XXX: Comparison functionality should ideally live in 'cargo-criterion'.
         if matches.is_present("compare") {
             if self.connection.is_some() {
-                eprintln!("Error: table comparisons are not supported when running with cargo-criterion.");
+                eprintln!("Error: tabulating results is not supported when running with cargo-criterion.");
                 std::process::exit(1);
             }
             // Other arguments: compare-threshold, compare-list.
@@ -1097,7 +1103,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             };
 
             let args = critcmp::app::Args {
-                baselines: vec![], // matches.values_of("compare"),
+                baselines: matches.values_of_lossy("baselines").unwrap_or_else(Default::default),
                 output_list: false,
                 threshold: None,
                 color: enable_text_coloring,
