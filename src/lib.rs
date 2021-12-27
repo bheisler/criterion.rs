@@ -1104,8 +1104,8 @@ https://bheisler.github.io/criterion.rs/book/faq.html
 
             let args = critcmp::app::Args {
                 baselines: matches.values_of_lossy("baselines").unwrap_or_else(Default::default),
-                output_list: false,
-                threshold: None,
+                output_list: matches.is_present("compare-list"),
+                threshold: value_t!(matches.value_of("compare-threshold"), f64).ok(),  // FIXME: Print error message if parsing fails.
                 color: enable_text_coloring,
             };
             critcmp::main::main(args);
