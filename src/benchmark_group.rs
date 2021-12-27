@@ -1,5 +1,6 @@
 use crate::analysis;
 use crate::benchmark::PartialBenchmarkConfig;
+#[cfg(feature = "cargo_criterion_support")]
 use crate::connection::OutgoingMessage;
 use crate::measurement::Measurement;
 use crate::report::BenchmarkId as InternalBenchmarkId;
@@ -306,6 +307,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
 
         match self.criterion.mode {
             Mode::Benchmark => {
+                #[cfg(feature = "cargo_criterion_support")]
                 if let Some(conn) = &self.criterion.connection {
                     if do_run {
                         conn.send(&OutgoingMessage::BeginningBenchmark { id: (&id).into() })
@@ -369,6 +371,7 @@ impl<'a, M: Measurement> Drop for BenchmarkGroup<'a, M> {
     fn drop(&mut self) {
         // I don't really like having a bunch of non-trivial code in drop, but this is the only way
         // to really write linear types like this in Rust...
+        #[cfg(feature = "cargo_criterion_support")]
         if let Some(conn) = &mut self.criterion.connection {
             conn.send(&OutgoingMessage::FinishedBenchmarkGroup {
                 group: &self.group_name,

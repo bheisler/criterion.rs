@@ -1,4 +1,5 @@
 use crate::benchmark::BenchmarkConfig;
+#[cfg(feature = "cargo_criterion_support")]
 use crate::connection::OutgoingMessage;
 use crate::measurement::Measurement;
 use crate::report::{BenchmarkId, Report, ReportContext};
@@ -37,7 +38,7 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
             .profile(id, report_context, time.as_nanos() as f64);
 
         let mut profile_path = report_context.output_directory.clone();
-        if (*crate::CARGO_CRITERION_CONNECTION).is_some() {
+        if criterion.has_connection() {
             // If connected to cargo-criterion, generate a cargo-criterion-style path.
             // This is kind of a hack.
             profile_path.push("profile");
@@ -95,6 +96,7 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
             .report
             .warmup(id, report_context, wu.as_nanos() as f64);
 
+        #[cfg(feature = "cargo_criterion_support")]
         if let Some(conn) = &criterion.connection {
             conn.send(&OutgoingMessage::Warmup {
                 id: id.into(),
@@ -140,6 +142,7 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
             .report
             .measurement_start(id, report_context, n, expected_ns, total_iters);
 
+        #[cfg(feature = "cargo_criterion_support")]
         if let Some(conn) = &criterion.connection {
             conn.send(&OutgoingMessage::MeasurementStart {
                 id: id.into(),
