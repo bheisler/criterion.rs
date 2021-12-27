@@ -1079,14 +1079,28 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         // XXX: Comparison functionality should ideally live in 'cargo-criterion'.
         if matches.is_present("compare") {
             if self.connection.is_some() {
-                // XXX: Print error message. Exit with 1.
+                eprintln!("Error: table comparisons are not supported when running with cargo-criterion.");
+                std::process::exit(1);
             }
             // Other arguments: compare-threshold, compare-list.
+
+            let stdout_isatty = atty::is(atty::Stream::Stdout);
+            let enable_text_coloring;
+            match matches.value_of("color") {
+                Some("always") => {
+                    enable_text_coloring = true;
+                }
+                Some("never") => {
+                    enable_text_coloring = false;
+                }
+                _ => enable_text_coloring = stdout_isatty,
+            };
+
             let args = critcmp::app::Args {
                 baselines: vec![], // matches.values_of("compare"),
                 output_list: false,
                 threshold: None,
-                color: false,
+                color: enable_text_coloring,
             };
             critcmp::main::main(args);
             std::process::exit(0);
