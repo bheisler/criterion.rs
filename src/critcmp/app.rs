@@ -214,8 +214,7 @@ impl Args {
             fail!(
                 "\
                  no criterion data exists at {}\n\
-                 set a different target directory with --target-dir or \
-                 set CARGO_TARGET_DIR\
+                 try running your benchmarks before tabulating results\
                  ",
                 crit_dir.display()
             );
