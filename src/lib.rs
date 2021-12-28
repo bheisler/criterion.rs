@@ -1093,21 +1093,14 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             // Other arguments: compare-threshold, compare-list.
 
             let stdout_isatty = atty::is(atty::Stream::Stdout);
-            let enable_text_coloring;
-            match matches.value_of("color") {
-                Some("always") => {
-                    enable_text_coloring = true;
-                }
-                Some("never") => {
-                    enable_text_coloring = false;
-                }
-                _ => enable_text_coloring = stdout_isatty,
+            let enable_text_coloring = match matches.value_of("color") {
+                Some("always") => true,
+                Some("never") => false,
+                _ => stdout_isatty,
             };
 
             let args = critcmp::app::Args {
-                baselines: matches
-                    .values_of_lossy("baselines")
-                    .unwrap_or_else(Default::default),
+                baselines: matches.values_of_lossy("baselines").unwrap_or_default(),
                 output_list: matches.is_present("compare-list"),
                 threshold: value_t!(matches.value_of("compare-threshold"), f64).ok(), // FIXME: Print error message if parsing fails.
                 color: enable_text_coloring,
