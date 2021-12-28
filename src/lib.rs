@@ -1085,7 +1085,9 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         // XXX: Comparison functionality should ideally live in 'cargo-criterion'.
         if matches.is_present("compare") {
             if self.connection.is_some() {
-                eprintln!("Error: tabulating results is not supported when running with cargo-criterion.");
+                eprintln!(
+                    "Error: tabulating results is not supported when running with cargo-criterion."
+                );
                 std::process::exit(1);
             }
             // Other arguments: compare-threshold, compare-list.
@@ -1103,9 +1105,11 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             };
 
             let args = critcmp::app::Args {
-                baselines: matches.values_of_lossy("baselines").unwrap_or_else(Default::default),
+                baselines: matches
+                    .values_of_lossy("baselines")
+                    .unwrap_or_else(Default::default),
                 output_list: matches.is_present("compare-list"),
-                threshold: value_t!(matches.value_of("compare-threshold"), f64).ok(),  // FIXME: Print error message if parsing fails.
+                threshold: value_t!(matches.value_of("compare-threshold"), f64).ok(), // FIXME: Print error message if parsing fails.
                 color: enable_text_coloring,
             };
             critcmp::main::main(args);
