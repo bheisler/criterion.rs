@@ -49,10 +49,9 @@ fn try_main(args: Args) -> Result<()> {
         return Ok(());
     }
 
-    let filter = args.filter()?;
     let mut comps = match args.group()? {
-        None => group_by_baseline(&benchmarks, filter.as_ref()),
-        Some(re) => group_by_regex(&benchmarks, &re, filter.as_ref()),
+        None => group_by_baseline(&benchmarks, args.filter()),
+        Some(re) => group_by_regex(&benchmarks, &re, args.filter()),
     };
     if let Some(threshold) = args.threshold()? {
         comps.retain(|comp| comp.biggest_difference() > threshold);

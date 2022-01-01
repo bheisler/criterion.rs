@@ -154,8 +154,8 @@ impl Args {
         Ok(data)
     }
 
-    pub fn filter(&self) -> Result<Option<Regex>> {
-        Ok(self.filter.clone())
+    pub fn filter(&self) -> Option<&'_ Regex> {
+        self.filter.as_ref()
     }
 
     pub fn group(&self) -> Result<Option<Regex>> {
