@@ -105,5 +105,57 @@ The first column in the above results has the names of each individual benchmark
 contain the actual benchmark results. Each baseline column starts with a performance index relative to the fastest run (eg. `faster_hex_decode` for `dev` has a performance index of 239.50 because it is 239.50 times slower than the `release` build). Next is the mean execution time plus the standard deviation (eg. 847.6±16.54µs).
 Lastly there's an optional throughput. If no throughput data is available, it will be printed as `? ?/sec`.
 
+## Compact, list view.
+
+If horizontal space is limited or if you're comparing more than two baselines, it can be convenient to arrange the results in a vertical list rather than in a table.
+This can be enabled with the `--compare-list` flag:
+
+```
+faster_hex_decode
+-----------------
+release     1.00       3.5±0.01µs       ? ?/sec
+dev       239.50    847.6±16.54µs       ? ?/sec
+
+faster_hex_decode_fallback
+--------------------------
+release     1.00      10.8±0.04µs       ? ?/sec
+dev        52.58     567.7±8.36µs       ? ?/sec
+
+faster_hex_decode_unchecked
+---------------------------
+release     1.00    1256.2±1.57ns       ? ?/sec
+dev       400.98     503.7±3.48µs       ? ?/sec
+
+faster_hex_encode
+-----------------
+release     1.00     940.5±4.64ns       ? ?/sec
+dev       259.95     244.5±2.04µs       ? ?/sec
+
+faster_hex_encode_fallback
+--------------------------
+release     1.00      11.2±0.02µs       ? ?/sec
+dev        50.60     565.1±3.41µs       ? ?/sec
+
+hex_decode
+----------
+release     1.00     119.3±0.17µs       ? ?/sec
+dev        25.27       3.0±0.01ms       ? ?/sec
+
+hex_encode
+----------
+release     1.00      60.9±0.08µs       ? ?/sec
+dev        23.99   1460.8±18.11µs       ? ?/sec
+
+rustc_hex_decode
+----------------
+release     1.00     107.4±0.40µs       ? ?/sec
+dev        28.79       3.1±0.02ms       ? ?/sec
+
+rustc_hex_encode
+----------------
+release     1.00     53.7±15.63µs       ? ?/sec
+dev        25.80    1385.4±4.37µs       ? ?/sec
+```
+
 ## Comparing branches
 
