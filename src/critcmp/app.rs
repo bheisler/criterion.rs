@@ -97,6 +97,7 @@ pub struct Args {
     pub output_list: bool,
     pub threshold: Option<f64>,
     pub color: bool,
+    pub filter: Option<Regex>,
 }
 
 impl Args {
@@ -154,14 +155,7 @@ impl Args {
     }
 
     pub fn filter(&self) -> Result<Option<Regex>> {
-        // TODO
-        Ok(None)
-        // let pattern_os = match self.0.value_of_os("filter") {
-        //     None => return Ok(None),
-        //     Some(pattern) => pattern,
-        // };
-        // let pattern = cli::pattern_from_os(pattern_os)?;
-        // Ok(Some(Regex::new(pattern)?))
+        Ok(self.filter.clone())
     }
 
     pub fn group(&self) -> Result<Option<Regex>> {

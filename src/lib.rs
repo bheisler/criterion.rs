@@ -1104,6 +1104,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                 output_list: matches.is_present("compare-list"),
                 threshold: value_t!(matches.value_of("compare-threshold"), f64).ok(), // FIXME: Print error message if parsing fails.
                 color: enable_text_coloring,
+                filter: self.filter,
             };
             critcmp::main::main(args);
             std::process::exit(0);
