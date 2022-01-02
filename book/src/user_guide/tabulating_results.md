@@ -201,8 +201,13 @@ Create a new branch:
 For testing, let's modify the `hex_decode` benchmark to run twice:
 
 ```diff
+--- a/benches/hex.rs
++++ b/benches/hex.rs
+     c.bench_function("hex_decode", |b| {
+         let hex = hex::encode(DATA);
 -        b.iter(|| hex::decode(&hex).unwrap())
 +        b.iter(|| (hex::decode(&hex).unwrap(),hex::decode(&hex).unwrap()))
+     });
 ```
 
 Now we can benchmark just the `hex_decode` function:
@@ -214,7 +219,7 @@ Now we can benchmark just the `hex_decode` function:
               ^hex_decode                 `# Select the 'hex_decode' benchmark`
 ```
 
-And compare it to the `main` branch, verifying that we've introduced a 2x performance regression::
+And compare it to the `main` branch, verifying that we've introduced a 2x performance regression:
 
 ```bash
 > cargo bench --bench=hex -- --compare --baselines=main,new-feature ^hex_decode
@@ -224,3 +229,28 @@ And compare it to the `main` branch, verifying that we've introduced a 2x perfor
 -----                   ----                                      -----------
 hex_decode<b class="BOLD"></b><b class=HIG>    1.00    119.1±1.30µs        ? ?/sec</b>    2.06    245.5±2.21µs        ? ?/sec
 </pre>
+
+## Thresholds
+
+If we don't know which benchmarks are of interest, we can filter the results based on how much they've changed.
+
+In the previous section, we only generated results for the `hex_decode` benchmark. For this run, we need a complete set of results:
+
+```bash
+> cargo bench --bench=hex                 `# Select the 'hex' binary` \
+              --                          `# Switch args from cargo to criterion` \
+              --save-baseline new-feature `# Save the baseline under 'new-feature'` \
+```
+
+Now we can compare the results that differ by more than 10%:
+
+```bash
+> cargo bench --bench=hex -- --compare --baselines=main,new-feature --compare-threshold=10
+```
+
+<pre class="hljs term-output">group                   main                                      new-feature
+-----                   ----                                      -----------
+hex_decode<b class="BOLD"></b><b class=HIG>    1.00    119.1±1.30µs        ? ?/sec</b>    2.02    240.0±1.05µs        ? ?/sec
+</pre>
+
+The above console output shows that only a single benchmark changed by more than 10%.
