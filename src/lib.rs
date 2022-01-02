@@ -403,6 +403,7 @@ impl Default for Criterion {
                 significance_level: 0.05,
                 warm_up_time: Duration::from_secs(3),
                 sampling_mode: SamplingMode::Auto,
+                quick_mode: false,
             },
             filter: None,
             report: reports,
@@ -797,6 +798,10 @@ impl<M: Measurement> Criterion<M> {
                 .long("significance-level")
                 .takes_value(true)
                 .help(&format!("Changes the default significance level for this run. [default: {}]", self.config.significance_level)))
+            .arg(Arg::with_name("quick")
+                .long("quick")
+                .conflicts_with("sample-size")
+                .help(&format!("Benchmark only until the significance level has been reached [default: {}]", self.config.quick_mode)))
             .arg(Arg::with_name("test")
                 .hidden(true)
                 .long("test")
@@ -1058,6 +1063,10 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             assert!(num_significance_level > 0.0 && num_significance_level < 1.0);
 
             self.config.significance_level = num_significance_level;
+        }
+
+        if matches.is_present("quick") {
+            self.config.quick_mode = true;
         }
 
         self
