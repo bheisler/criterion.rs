@@ -16,7 +16,6 @@ jobs:
         rust:
           - stable
           - beta
-          - nightly
           - 1.46.0  # MSRV
 
     steps:
