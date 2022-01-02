@@ -53,11 +53,19 @@ b.BWHI {background-color: #aaaaaa}
 Criterion can save the results of different benchmark runs and
 tabulate the results, making it easier to spot performance changes.
 
-The set of results from a benchmark run is called a `baseline` and each `baseline` has a name. By default, the most recent run is named `"base"` but this can be changed with the `--save-baseline {name}` flag. There's also a special baseline called `"new"` which refers to the most recent set of results.
+The set of results from a benchmark run is called a `baseline` and each
+`baseline` has a name. By default, the most recent run is named `base` but this
+can be changed with the `--save-baseline {name}` flag. There's also a special
+baseline called `new` which refers to the most recent set of results.
 
 ## Comparing profiles
 
-Cargo supports custom [profiles](https://doc.rust-lang.org/cargo/reference/profiles.html) for controlling the level of optimizations, debug assertions, overflow checks, and link-time-optmizations. We can use criterion to benchmark different profiles and tabulate the results to visualize the changes. Let's use the `base64` crate as an example:
+Cargo supports custom
+[profiles](https://doc.rust-lang.org/cargo/reference/profiles.html) for
+controlling the level of optimizations, debug assertions, overflow checks, and
+link-time-optmizations. We can use criterion to benchmark different profiles and
+tabulate the results to visualize the changes. Let's use the `base64` crate as
+an example:
 
 ```bash
 > git clone https://github.com/KokaKiwi/rust-hex.git
@@ -101,14 +109,20 @@ rustc_hex_decode               28.79     3.1±0.02ms        ? ?/sec<b class="BOL
 rustc_hex_encode               25.80  1385.4±4.37µs        ? ?/sec<b class="BOLD"></b><b class=HIG>     1.00    53.7±15.63µs        ? ?/sec</b>
 </pre>
 
-The first column in the above results has the names of each individual benchmark. The two other columns (`dev` and `release`)
-contain the actual benchmark results. Each baseline column starts with a performance index relative to the fastest run (eg. `faster_hex_decode` for `dev` has a performance index of 239.50 because it is 239.50 times slower than the `release` build). Next is the mean execution time plus the standard deviation (eg. 847.6±16.54µs).
-Lastly there's an optional throughput. If no throughput data is available, it will be printed as `? ?/sec`.
+The first column in the above results has the names of each individual
+benchmark. The two other columns (`dev` and `release`) contain the actual
+benchmark results. Each baseline column starts with a performance index relative
+to the fastest run (eg. `faster_hex_decode` for `dev` has a performance index of
+239.50 because it is 239.50 times slower than the `release` build). Next is the
+mean execution time plus the standard deviation (eg. 847.6±16.54µs). Lastly
+there's an optional throughput. If no throughput data is available, it will be
+printed as `? ?/sec`.
 
 ## Compact, list view.
 
-If horizontal space is limited or if you're comparing more than two baselines, it can be convenient to arrange the results in a vertical list rather than in a table.
-This can be enabled with the `--compare-list` flag:
+If horizontal space is limited or if you're comparing more than two baselines,
+it can be convenient to arrange the results in a vertical list rather than in a
+table. This can be enabled with the `--compare-list` flag:
 
 ```
 faster_hex_decode
@@ -157,5 +171,56 @@ release     1.00     53.7±15.63µs       ? ?/sec
 dev        25.80    1385.4±4.37µs       ? ?/sec
 ```
 
-## Comparing branches
+## Filtering results
 
+Some projects have dozens or even hundreds of benchmarks which can be
+overwhelming if you're only interested in the performance of a single
+feature/function.
+
+Let's clone the `hex` crate and change just a single function:
+
+```bash
+> git clone https://github.com/KokaKiwi/rust-hex.git
+> cd rust-hex/
+```
+
+Save a baseline for the `main` branch:
+
+```bash
+> cargo bench --bench=hex          `# Select the 'hex' binary` \
+              --                   `# Switch args from cargo to criterion` \
+              --save-baseline main `# Save the baseline under 'main'`
+```
+
+Create a new branch:
+
+```bash
+> git checkout -b new-feature
+```
+
+For testing, let's modify the `hex_decode` benchmark to run twice:
+
+```diff
+-        b.iter(|| hex::decode(&hex).unwrap())
++        b.iter(|| (hex::decode(&hex).unwrap(),hex::decode(&hex).unwrap()))
+```
+
+Now we can benchmark just the `hex_decode` function:
+
+```bash
+> cargo bench --bench=hex                 `# Select the 'hex' binary` \
+              --                          `# Switch args from cargo to criterion` \
+              --save-baseline new-feature `# Save the baseline under 'new-feature'` \
+              ^hex_decode                 `# Select the 'hex_decode' benchmark`
+```
+
+And compare it to the `main` branch, verifying that we've introduced a 2x performance regression::
+
+```bash
+> cargo bench --bench=hex -- --compare --baselines=main,new-feature ^hex_decode
+```
+
+<pre class="hljs term-output">group                   main                                      new-feature
+-----                   ----                                      -----------
+hex_decode<b class="BOLD"></b><b class=HIG>    1.00    119.1±1.30µs        ? ?/sec</b>    2.06    245.5±2.21µs        ? ?/sec
+</pre>
