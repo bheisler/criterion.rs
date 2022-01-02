@@ -165,7 +165,7 @@ fn test_retain_baseline() {
     let pre_modified = latest_modified(&dir.path().join("test_retain_baseline/some-baseline"));
 
     short_benchmark(&dir)
-        .retain_baseline("some-baseline".to_owned())
+        .retain_baseline("some-baseline".to_owned(), true)
         .bench_function("test_retain_baseline", |b| b.iter(|| 10));
 
     let post_modified = latest_modified(&dir.path().join("test_retain_baseline/some-baseline"));
@@ -175,11 +175,18 @@ fn test_retain_baseline() {
 
 #[test]
 #[should_panic(expected = "Baseline 'some-baseline' must exist before comparison is allowed")]
-fn test_compare_baseline() {
-    // Initial benchmark to populate
+fn test_compare_baseline_strict_panics_when_missing_baseline() {
     let dir = temp_dir();
     short_benchmark(&dir)
-        .retain_baseline("some-baseline".to_owned())
+        .retain_baseline("some-baseline".to_owned(), true)
+        .bench_function("test_compare_baseline", |b| b.iter(|| 10));
+}
+
+#[test]
+fn test_compare_baseline_lenient_when_missing_baseline() {
+    let dir = temp_dir();
+    short_benchmark(&dir)
+        .retain_baseline("some-baseline".to_owned(), false)
         .bench_function("test_compare_baseline", |b| b.iter(|| 10));
 }
 

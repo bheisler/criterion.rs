@@ -266,9 +266,12 @@ impl BatchSize {
 /// Baseline describes how the baseline_directory is handled.
 #[derive(Debug, Clone, Copy)]
 pub enum Baseline {
-    /// Compare ensures a previous saved version of the baseline
-    /// exists and runs comparison against that.
-    Compare,
+    /// CompareLenient compares against a previous saved version of the baseline.
+    /// If a previous baseline does not exist, the benchmark is run as normal but no comparison occurs.
+    CompareLenient,
+    /// CompareStrict compares against a previous saved version of the baseline.
+    /// If a previous baseline does not exist, a panic occurs.
+    CompareStrict,
     /// Save writes the benchmark results to the baseline directory,
     /// overwriting any results that were previously there.
     Save,
@@ -401,6 +404,7 @@ impl Default for Criterion {
                 significance_level: 0.05,
                 warm_up_time: Duration::from_secs(3),
                 sampling_mode: SamplingMode::Auto,
+                quick_mode: false,
             },
             filter: None,
             report: reports,
@@ -650,9 +654,13 @@ impl<M: Measurement> Criterion<M> {
 
     #[must_use]
     /// Names an explicit baseline and disables overwriting the previous results.
-    pub fn retain_baseline(mut self, baseline: String) -> Criterion<M> {
+    pub fn retain_baseline(mut self, baseline: String, strict: bool) -> Criterion<M> {
         self.baseline_directory = baseline;
-        self.baseline = Baseline::Compare;
+        self.baseline = if strict {
+            Baseline::CompareStrict
+        } else {
+            Baseline::CompareLenient
+        };
         self
     }
 
@@ -753,14 +761,19 @@ impl<M: Measurement> Criterion<M> {
                 .help("Save results under a named baseline."))
             .arg(Arg::with_name("discard-baseline")
                 .long("discard-baseline")
-                .conflicts_with_all(&["save-baseline", "baseline"])
+                .conflicts_with_all(&["save-baseline", "baseline", "baseline-lenient"])
                 .help("Discard benchmark results."))
             .arg(Arg::with_name("baseline")
                 .short("b")
                 .long("baseline")
                 .takes_value(true)
-                .conflicts_with("save-baseline")
-                .help("Compare to a named baseline."))
+                .conflicts_with_all(&["save-baseline", "baseline-lenient"])
+                .help("Compare to a named baseline. If any benchmarks do not have the specified baseline this command fails."))
+            .arg(Arg::with_name("baseline-lenient")
+                .long("baseline-lenient")
+                .takes_value(true)
+                .conflicts_with_all(&["save-baseline", "baseline"])
+                .help("Compare to a named baseline. If any benchmarks do not have the specified baseline then just those benchmarks are not compared against the baseline while every other benchmark is compared against the baseline."))
             .arg(Arg::with_name("list")
                 .long("list")
                 .help("List all benchmarks")
@@ -823,6 +836,10 @@ impl<M: Measurement> Criterion<M> {
                 .long("significance-level")
                 .takes_value(true)
                 .help(&format!("Changes the default significance level for this run. [default: {}]", self.config.significance_level)))
+            .arg(Arg::with_name("quick")
+                .long("quick")
+                .conflicts_with("sample-size")
+                .help(&format!("Benchmark only until the significance level has been reached [default: {}]", self.config.quick_mode)))
             .arg(Arg::with_name("test")
                 .hidden(true)
                 .long("test")
@@ -955,7 +972,11 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.baseline = Baseline::Discard;
         }
         if let Some(dir) = matches.value_of("baseline") {
-            self.baseline = Baseline::Compare;
+            self.baseline = Baseline::CompareStrict;
+            self.baseline_directory = dir.to_owned();
+        }
+        if let Some(dir) = matches.value_of("baseline-lenient") {
+            self.baseline = Baseline::CompareLenient;
             self.baseline_directory = dir.to_owned();
         }
 
@@ -1108,6 +1129,10 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             };
             critcmp::main::main(args);
             std::process::exit(0);
+        }
+
+        if matches.is_present("quick") {
+            self.config.quick_mode = true;
         }
 
         self
