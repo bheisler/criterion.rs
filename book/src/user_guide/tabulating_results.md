@@ -219,7 +219,8 @@ Now we can benchmark just the `hex_decode` function:
               ^hex_decode                 `# Select the 'hex_decode' benchmark`
 ```
 
-And compare it to the `main` branch, verifying that we've introduced a 2x performance regression:
+And compare it to the `main` branch, verifying that we've introduced a 2x
+performance regression:
 
 ```bash
 > cargo bench --bench=hex -- --compare --baselines=main,new-feature ^hex_decode
@@ -232,9 +233,11 @@ hex_decode<b class="BOLD"></b><b class=HIG>    1.00    119.1±1.30µs        ? ?
 
 ## Thresholds
 
-If we don't know which benchmarks are of interest, we can filter the results based on how much they've changed.
+If we don't know which benchmarks are of interest, we can filter the results
+based on how much they've changed.
 
-In the previous section, we only generated results for the `hex_decode` benchmark. For this run, we need a complete set of results:
+In the previous section, we only generated results for the `hex_decode`
+benchmark. For this run, we need a complete set of results:
 
 ```bash
 > cargo bench --bench=hex                 `# Select the 'hex' binary` \
@@ -253,4 +256,5 @@ Now we can compare the results that differ by more than 10%:
 hex_decode<b class="BOLD"></b><b class=HIG>    1.00    119.1±1.30µs        ? ?/sec</b>    2.02    240.0±1.05µs        ? ?/sec
 </pre>
 
-The above console output shows that only a single benchmark changed by more than 10%.
+The above console output shows that only a single benchmark changed by more than
+10%.
