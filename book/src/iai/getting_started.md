@@ -30,7 +30,7 @@ fn iai_benchmark_short() -> u64 {
 }
 
 fn iai_benchmark_long() -> u64 {
-    fibonacci(black_box(30));
+    fibonacci(black_box(30))
 }
 
 
