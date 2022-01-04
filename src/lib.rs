@@ -27,6 +27,11 @@
     )
 )]
 
+#[cfg(not(any(feature = "cargo_bench_support", feature = "cargo_criterion_support")))]
+compile_error!(
+    "At least one of [`cargo_bench_support`, `cargo_criterion_support`] must be enabled"
+);
+
 #[cfg(test)]
 extern crate approx;
 
@@ -56,6 +61,7 @@ mod benchmark;
 mod benchmark_group;
 pub mod async_executor;
 mod bencher;
+#[cfg(feature = "cargo_criterion_support")]
 mod connection;
 #[cfg(feature = "csv_output")]
 mod csv_report;
@@ -77,17 +83,19 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::default::Default;
 use std::env;
+#[cfg(feature = "cargo_criterion_support")]
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+#[cfg(feature = "cargo_criterion_support")]
 use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
 use criterion_plot::{Version, VersionError};
 
 use crate::benchmark::BenchmarkConfig;
-use crate::connection::Connection;
-use crate::connection::OutgoingMessage;
+#[cfg(feature = "cargo_criterion_support")]
+use crate::connection::{Connection, OutgoingMessage};
 use crate::html::Html;
 use crate::measurement::{Measurement, WallTime};
 #[cfg(feature = "plotters")]
@@ -123,6 +131,9 @@ lazy_static! {
             PlottingBackend::None
         }
     };
+}
+#[cfg(feature = "cargo_criterion_support")]
+lazy_static! {
     static ref CARGO_CRITERION_CONNECTION: Option<Mutex<Connection>> = {
         match std::env::var("CARGO_CRITERION_PORT") {
             Ok(port_str) => {
@@ -133,6 +144,8 @@ lazy_static! {
             Err(_) => None,
         }
     };
+}
+lazy_static! {
     static ref DEFAULT_OUTPUT_DIRECTORY: PathBuf = {
         // Set criterion home to (in descending order of preference):
         // - $CRITERION_HOME (cargo-criterion sets this, but other users could as well)
@@ -347,6 +360,7 @@ pub struct Criterion<M: Measurement = WallTime> {
     all_titles: HashSet<String>,
     measurement: M,
     profiler: Box<RefCell<dyn Profiler>>,
+    #[cfg(feature = "cargo_criterion_support")]
     connection: Option<MutexGuard<'static, Connection>>,
     mode: Mode,
 }
@@ -415,13 +429,14 @@ impl Default for Criterion {
             all_titles: HashSet::new(),
             measurement: WallTime,
             profiler: Box::new(RefCell::new(ExternalProfiler)),
+            #[cfg(feature = "cargo_criterion_support")]
             connection: CARGO_CRITERION_CONNECTION
                 .as_ref()
                 .map(|mtx| mtx.lock().unwrap()),
             mode: Mode::Benchmark,
         };
 
-        if criterion.connection.is_some() {
+        if criterion.has_connection() {
             // disable all reports when connected to cargo-criterion; it will do the reporting.
             criterion.report.cli_enabled = false;
             criterion.report.bencher_enabled = false;
@@ -433,6 +448,21 @@ impl Default for Criterion {
 }
 
 impl<M: Measurement> Criterion<M> {
+    /// Private helper that returns true if we are running under `cargo-criterion`.
+    ///
+    /// Use this function if you have logic that is conditional on `cargo-criterion` being
+    /// used (or not), but that should always be compiled in. For code that should only be
+    /// conditionally compiled, use `#[cfg(feature = "cargo_criterion_support")]`.
+    fn has_connection(&self) -> bool {
+        #[cfg(not(feature = "cargo_criterion_support"))]
+        {
+            false
+        }
+
+        #[cfg(feature = "cargo_criterion_support")]
+        self.connection.is_some()
+    }
+
     /// Changes the measurement for the benchmarks run with this runner. See the
     /// Measurement trait for more details
     pub fn with_measurement<M2: Measurement>(self, m: M2) -> Criterion<M2> {
@@ -449,6 +479,7 @@ impl<M: Measurement> Criterion<M> {
             all_titles: self.all_titles,
             measurement: m,
             profiler: self.profiler,
+            #[cfg(feature = "cargo_criterion_support")]
             connection: self.connection,
             mode: self.mode,
         }
@@ -615,7 +646,7 @@ impl<M: Measurement> Criterion<M> {
     /// Enables plotting
     pub fn with_plots(mut self) -> Criterion<M> {
         // If running under cargo-criterion then don't re-enable the reports; let it do the reporting.
-        if self.connection.is_none() && self.report.html.is_none() {
+        if !self.has_connection() && self.report.html.is_none() {
             let default_backend = DEFAULT_PLOTTING_BACKEND.create_plotter();
             if let Some(backend) = default_backend {
                 self.report.html = Some(Html::new(backend));
@@ -844,7 +875,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
 ")
             .get_matches();
 
-        if self.connection.is_some() {
+        if self.has_connection() {
             if let Some(color) = matches.value_of("color") {
                 if color != "auto" {
                     eprintln!("Warning: --color will be ignored when running with cargo-criterion. Use `cargo criterion --color {} -- <args>` instead.", color);
@@ -906,6 +937,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         };
 
         // This is kind of a hack, but disable the connection to the runner if we're not benchmarking.
+        #[cfg(feature = "cargo_criterion_support")]
         if !self.mode.is_benchmark() {
             self.connection = None;
         }
@@ -942,7 +974,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.baseline_directory = dir.to_owned();
         }
 
-        if self.connection.is_some() {
+        if self.has_connection() {
             // disable all reports when connected to cargo-criterion; it will do the reporting.
             self.report.cli_enabled = false;
             self.report.bencher_enabled = false;
@@ -1082,7 +1114,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
     /// Returns true iff we should save the benchmark results in
     /// json files on the local disk.
     fn should_save_baseline(&self) -> bool {
-        self.connection.is_none()
+        !self.has_connection()
             && self.load_baseline.is_none()
             && !matches!(self.baseline, Baseline::Discard)
     }
@@ -1114,6 +1146,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         let group_name = group_name.into();
         assert!(!group_name.is_empty(), "Group name must not be empty.");
 
+        #[cfg(feature = "cargo_criterion_support")]
         if let Some(conn) = &self.connection {
             conn.send(&OutgoingMessage::BeginningBenchmarkGroup { group: &group_name })
                 .unwrap();

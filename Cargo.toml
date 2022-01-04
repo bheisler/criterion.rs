@@ -24,7 +24,6 @@ itertools      = "0.10"
 serde          = "1.0"
 serde_json     = "1.0"
 serde_derive   = "1.0"
-serde_cbor     = "0.11"
 atty           = "0.2"
 clap           = { version = "2.33", default-features = false }
 walkdir        = "2.3"
@@ -33,6 +32,9 @@ cast           = "0.2"
 num-traits     = { version = "0.2", default-features = false, features = ["std"] }
 oorandom       = "11.1"
 regex          = { version = "1.3", default-features = false, features = ["std"] }
+
+# cargo-criterion support
+serde_cbor = { version = "0.11", optional = true }
 
 # Optional dependencies
 rayon     = { version = "1.3", optional = true }
@@ -67,7 +69,7 @@ stable  = [
   "async_tokio",
   "async_std",
 ]
-default = ["rayon", "plotters", "cargo_bench_support"]
+default = ["rayon", "plotters", "cargo_bench_support", "cargo_criterion_support"]
 
 # Enable use of the nightly-only test::black_box function to discourage compiler optimizations.
 real_blackbox = []
@@ -89,6 +91,9 @@ html_reports = []
 # This feature _currently_ does nothing except disable a warning message, but in 0.4.0 it will be
 # required in order to have Criterion.rs be usable outside of cargo-criterion.
 cargo_bench_support = []
+
+# This feature enables Criterion.rs to be usable with cargo-criterion.
+cargo_criterion_support = ["serde_cbor"]
 
 # This feature _currently_ does nothing, but in 0.4.0 it will be
 # required in order to have Criterion.rs generate CSV files. This feature is deprecated in favor of

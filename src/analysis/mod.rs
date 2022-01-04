@@ -7,6 +7,7 @@ use crate::stats::univariate::Sample;
 use crate::stats::{Distribution, Tails};
 
 use crate::benchmark::BenchmarkConfig;
+#[cfg(feature = "cargo_criterion_support")]
 use crate::connection::OutgoingMessage;
 use crate::estimate::{
     build_estimates, ConfidenceInterval, Distributions, Estimate, Estimates, PointEstimates,
@@ -92,6 +93,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         iters = sample.1;
         times = sample.2;
 
+        #[cfg(feature = "cargo_criterion_support")]
         if let Some(conn) = &criterion.connection {
             conn.send(&OutgoingMessage::MeasurementComplete {
                 id: id.into(),
@@ -247,7 +249,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         });
     }
 
-    if criterion.connection.is_none() {
+    if !criterion.has_connection() {
         if let Baseline::Save = criterion.baseline {
             copy_new_dir_to_base(
                 id.as_directory_name(),
