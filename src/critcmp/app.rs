@@ -90,7 +90,7 @@ use crate::critcmp::main::Result;
 // Project home page: https://github.com/BurntSushi/critcmp
 // Criterion home page: https://github.com/japaric/criterion.rs";
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 // pub struct Args(ArgMatches<'static>);
 pub struct Args {
     pub baselines: Vec<String>,

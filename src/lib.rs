@@ -78,6 +78,7 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::default::Default;
 use std::env;
+use std::io::Write;
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -783,10 +784,15 @@ impl<M: Measurement> Criterion<M> {
                 .takes_value(true)
                 .help("Iterate each benchmark for approximately the given number of seconds, doing no analysis and without storing the results. Useful for running the benchmarks in a profiler.")
                 .conflicts_with_all(&["test", "list"]))
+            .arg(Arg::with_name("export")
+                .long("export")
+                .takes_value(true)
+                .help("Export baseline as json, printed to stdout")
+                .conflicts_with_all(&["list", "test", "profile-time", "compare"]))
             .arg(Arg::with_name("compare")
                 .long("compare")
                 .help("Tabulate benchmark results")
-                .conflicts_with_all(&["list", "test", "profile-time"]))
+                .conflicts_with_all(&["list", "test", "profile-time", "export"]))
             .arg(Arg::with_name("baselines")
                 .long("baselines")
                 .multiple(true)
@@ -1128,6 +1134,26 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                 filter: self.filter,
             };
             critcmp::main::main(args);
+            std::process::exit(0);
+        }
+
+        if let Some(baseline) = matches.value_of("export") {
+            let benchmarks = critcmp::app::Args {
+                baselines: matches.values_of_lossy("baselines").unwrap_or_default(),
+                ..Default::default()
+            }
+            .benchmarks()
+            .expect("failed to find baselines");
+            let mut stdout = std::io::stdout();
+            let basedata = match benchmarks.by_baseline.get(baseline) {
+                Some(basedata) => basedata,
+                None => {
+                    eprintln!("failed to find baseline '{}'", baseline);
+                    std::process::exit(1);
+                }
+            };
+            serde_json::to_writer_pretty(&mut stdout, basedata).unwrap();
+            writeln!(stdout).unwrap();
             std::process::exit(0);
         }
 
