@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 use std::error::Error;
-use std::io::{self, Write};
+use std::io::Write;
 use std::process;
 use std::result;
 
@@ -30,24 +30,6 @@ pub fn main(args: Args) {
 
 fn try_main(args: Args) -> Result<()> {
     let benchmarks = args.benchmarks()?;
-
-    if args.baselines() {
-        let mut stdout = io::stdout();
-        for baseline in benchmarks.by_baseline.keys() {
-            writeln!(stdout, "{}", baseline)?;
-        }
-        return Ok(());
-    }
-    if let Some(baseline) = args.export() {
-        let mut stdout = io::stdout();
-        let basedata = match benchmarks.by_baseline.get(&baseline) {
-            Some(basedata) => basedata,
-            None => fail!("failed to find baseline '{}'", baseline),
-        };
-        serde_json::to_writer_pretty(&mut stdout, basedata)?;
-        writeln!(stdout)?;
-        return Ok(());
-    }
 
     let mut comps = match args.group()? {
         None => group_by_baseline(&benchmarks, args.filter()),
