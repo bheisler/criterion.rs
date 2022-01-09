@@ -258,3 +258,35 @@ hex_decode<b class="BOLD"></b><b class=HIG>    1.00    119.1±1.30µs        ? ?
 
 The above console output shows that only a single benchmark changed by more than
 10%.
+
+## Importing/Exporting JSON
+
+Baselines can be saved in JSON files for later use with the `--export` flag. Continuing with the `hex` crate example, here's how to
+save the `release` and `dev` baselines as JSON:
+
+```bash
+> cargo bench --bench=hex -- --export release > release.json
+```
+
+```bash
+> cargo bench --bench=hex -- --export dev > dev.json
+```
+
+Baselines stored as JSON can be referenced directly when comparing results:
+
+```bash
+> cargo bench --bench=hex -- --compare --baselines dev.json,release.json
+```
+
+<pre class="hljs term-output">group                          dev                                               release
+-----                          ---                                               -------
+faster_hex_decode              239.50  847.6±16.54µs        ? ?/sec<b class="BOLD"></b><b class=HIG>    1.00      3.5±0.01µs        ? ?/sec</b>
+faster_hex_decode_fallback     52.58   567.7±8.36µs        ? ?/sec<b class="BOLD"></b><b class=HIG>     1.00     10.8±0.04µs        ? ?/sec</b>
+faster_hex_decode_unchecked    400.98   503.7±3.48µs        ? ?/sec<b class="BOLD"></b><b class=HIG>    1.00   1256.2±1.57ns        ? ?/sec</b>
+faster_hex_encode              259.95   244.5±2.04µs        ? ?/sec<b class="BOLD"></b><b class=HIG>    1.00    940.5±4.64ns        ? ?/sec</b>
+faster_hex_encode_fallback     50.60   565.1±3.41µs        ? ?/sec<b class="BOLD"></b><b class=HIG>     1.00     11.2±0.02µs        ? ?/sec</b>
+hex_decode                     25.27     3.0±0.01ms        ? ?/sec<b class="BOLD"></b><b class=HIG>     1.00    119.3±0.17µs        ? ?/sec</b>
+hex_encode                     23.99 1460.8±18.11µs        ? ?/sec<b class="BOLD"></b><b class=HIG>     1.00     60.9±0.08µs        ? ?/sec</b>
+rustc_hex_decode               28.79     3.1±0.02ms        ? ?/sec<b class="BOLD"></b><b class=HIG>     1.00    107.4±0.40µs        ? ?/sec</b>
+rustc_hex_encode               25.80  1385.4±4.37µs        ? ?/sec<b class="BOLD"></b><b class=HIG>     1.00    53.7±15.63µs        ? ?/sec</b>
+</pre>
