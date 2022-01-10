@@ -20,7 +20,6 @@ pub struct Args {
 }
 
 impl Args {
-
     pub fn benchmarks(&self) -> Result<Benchmarks> {
         // First, load benchmark data from command line parameters. If a
         // baseline name is given and is not a file path, then it is added to
