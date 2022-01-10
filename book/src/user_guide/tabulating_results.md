@@ -290,3 +290,5 @@ hex_encode                     23.99 1460.8±18.11µs        ? ?/sec<b class="BO
 rustc_hex_decode               28.79     3.1±0.02ms        ? ?/sec<b class="BOLD"></b><b class=HIG>     1.00    107.4±0.40µs        ? ?/sec</b>
 rustc_hex_encode               25.80  1385.4±4.37µs        ? ?/sec<b class="BOLD"></b><b class=HIG>     1.00    53.7±15.63µs        ? ?/sec</b>
 </pre>
+
+Note that the JSON format is not stable across criterion versions.
