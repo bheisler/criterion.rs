@@ -126,7 +126,7 @@ impl Args {
 
     fn target_dir(&self) -> Result<PathBuf> {
         // FIXME: Use the same code as criterion
-        let mut cwd = fs::canonicalize(".")?;
+        let mut cwd = fs::canonicalize(".").ok().unwrap_or_else(|| PathBuf::from("."));
         loop {
             let candidate = cwd.join("target");
             if candidate.exists() {
