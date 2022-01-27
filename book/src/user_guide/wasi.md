@@ -34,10 +34,16 @@ TBD
 ### Running in a browser with webassembly.sh
 
 TBD
+```
+hex --bench
+```
 
 ### Exporting results
 
 TBD
+```
+hex --bench --export=base | download
+```
 
 ### Comparing results
 
