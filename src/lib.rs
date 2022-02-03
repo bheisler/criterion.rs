@@ -896,17 +896,20 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         } else if matches.is_present("list") {
             Mode::List
         } else if matches.is_present("profile-time") {
-            let num_seconds = value_t!(matches.value_of("profile-time"), u64).unwrap_or_else(|e| {
+            let num_secs = value_t!(matches.value_of("profile-time"), f64).unwrap_or_else(|e| {
                 println!("{}", e);
                 std::process::exit(1)
             });
 
-            if num_seconds < 1 {
-                println!("Profile time must be at least one second.");
+            if num_secs < 0.001 {
+                println!("Profile time must be at least one millisecond.");
                 std::process::exit(1);
             }
+            let millis = (num_secs * 1000.0).floor() as u64;
+            let dur = std::time::Duration::from_millis(millis);
+            assert!(dur.to_nanos() > 0);
 
-            Mode::Profile(Duration::from_secs(num_seconds))
+            Mode::Profile(dur)
         } else {
             Mode::Benchmark
         };
@@ -992,24 +995,34 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.config.sample_size = num_size;
         }
         if matches.is_present("warm-up-time") {
-            let num_seconds = value_t!(matches.value_of("warm-up-time"), u64).unwrap_or_else(|e| {
+            let num_secs = value_t!(matches.value_of("warm-up-time"), f64).unwrap_or_else(|e| {
                 println!("{}", e);
                 std::process::exit(1)
             });
 
-            let dur = std::time::Duration::new(num_seconds, 0);
+            if num_secs < 0.001 {
+                println!("warm-up time must be at least one millisecond.");
+                std::process::exit(1);
+            }
+            let millis = (num_secs * 1000.0).floor() as u64;
+            let dur = std::time::Duration::from_millis(millis);
             assert!(dur.to_nanos() > 0);
 
             self.config.warm_up_time = dur;
         }
         if matches.is_present("measurement-time") {
-            let num_seconds =
-                value_t!(matches.value_of("measurement-time"), u64).unwrap_or_else(|e| {
+            let num_secs =
+                value_t!(matches.value_of("measurement-time"), f64).unwrap_or_else(|e| {
                     println!("{}", e);
                     std::process::exit(1)
                 });
 
-            let dur = std::time::Duration::new(num_seconds, 0);
+            if num_secs < 0.001 {
+                println!("measurement time must be at least one millisecond.");
+                std::process::exit(1);
+            }
+            let millis = (num_secs * 1000.0).floor() as u64;
+            let dur = std::time::Duration::from_millis(millis);
             assert!(dur.to_nanos() > 0);
 
             self.config.measurement_time = dur;
