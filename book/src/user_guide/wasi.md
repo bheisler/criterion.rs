@@ -92,7 +92,7 @@ hex --bench --export=base | download
 
 ## Comparing results
 
-Let's run the same benchmark with native, wasmer, wasmtime, nodejs, firefox, and chrome, and see how they compare.
+Let's run the same benchmark with native, wasmer, wasmtime, nodejs, firefox, and chromium, and see how they compare. Step 1 is the generate the json files:
 
 ```properties
 wasmer run --dir=. hex.wasm -- --bench --save-baseline wasmer
@@ -109,5 +109,122 @@ wasmer-js run --dir=. hex.wasm -- --bench --save-baseline nodejs
 wasmer-js run --dir=. hex.wasm -- --bench --export nodejs > nodejs.json
 ```
 
+```properties
+hex --bench --save-baseline firefox
+hex --bench --export firefox | download
+```
+
+```properties
+hex --bench --save-baseline chromium
+hex --bench --export chromium | download
+```
+
+Step 2 is to tabulate the json files:
+
+```properties
+cargo bench --bench=hex -- --compare --baselines=native.json,wasmer.json,wasmtime.json,nodejs.json,firefox.json,chromium.json --compare-list
+```
+
+Console output:
+
+```bash
+faster_hex_decode
+-----------------
+native       1.00       3.6±0.02µs       ? ?/sec
+wasmer      14.72      52.6±0.49µs       ? ?/sec
+wasmtime    16.83      60.1±0.53µs       ? ?/sec
+chromium    17.66      63.1±0.70µs       ? ?/sec
+nodejs      20.76      74.2±0.34µs       ? ?/sec
+firefox     23.42      83.7±2.51µs       ? ?/sec
+
+faster_hex_decode_fallback
+--------------------------
+native       1.00      10.9±0.12µs       ? ?/sec
+wasmer       1.49      16.2±0.04µs       ? ?/sec
+wasmtime     1.65      18.1±0.73µs       ? ?/sec
+chromium     1.87      20.4±0.16µs       ? ?/sec
+nodejs       2.30      25.1±0.56µs       ? ?/sec
+firefox      2.36      25.7±1.03µs       ? ?/sec
+
+faster_hex_decode_unchecked
+---------------------------
+native       1.00   1239.7±16.97ns       ? ?/sec
+wasmer      14.27      17.7±0.35µs       ? ?/sec
+wasmtime    14.36      17.8±0.23µs       ? ?/sec
+firefox     14.73      18.3±0.75µs       ? ?/sec
+chromium    16.53      20.5±0.28µs       ? ?/sec
+nodejs      20.36      25.2±0.15µs       ? ?/sec
+
+faster_hex_encode
+-----------------
+native       1.00     948.3±5.47ns       ? ?/sec
+wasmer      19.17      18.2±0.36µs       ? ?/sec
+chromium    21.25      20.2±0.17µs       ? ?/sec
+nodejs      22.85      21.7±0.09µs       ? ?/sec
+wasmtime    24.01      22.8±0.53µs       ? ?/sec
+firefox     32.68      31.0±3.43µs       ? ?/sec
+
+faster_hex_encode_fallback
+--------------------------
+native       1.00      11.1±0.20µs       ? ?/sec
+chromium     2.04      22.7±0.20µs       ? ?/sec
+wasmtime     2.05      22.8±0.13µs       ? ?/sec
+wasmer       2.06      22.8±0.15µs       ? ?/sec
+firefox      2.11      23.4±1.79µs       ? ?/sec
+nodejs       2.38      26.4±0.09µs       ? ?/sec
+
+hex_decode
+----------
+native       1.00     244.6±2.36µs       ? ?/sec
+wasmer       1.72     421.4±9.65µs       ? ?/sec
+wasmtime     1.73     423.0±3.00µs       ? ?/sec
+firefox      1.74    426.4±18.61µs       ? ?/sec
+nodejs       2.00     490.3±3.49µs       ? ?/sec
+chromium     2.81    688.5±12.23µs       ? ?/sec
+
+hex_encode
+----------
+native       1.00      69.2±0.40µs       ? ?/sec
+wasmtime     1.18      81.7±0.38µs       ? ?/sec
+wasmer       1.46     100.9±1.22µs       ? ?/sec
+nodejs       2.20     152.5±1.93µs       ? ?/sec
+chromium     4.08     282.7±4.19µs       ? ?/sec
+
+rustc_hex_decode
+----------------
+native       1.00     103.1±2.78µs       ? ?/sec
+wasmer       1.33     136.8±4.06µs       ? ?/sec
+wasmtime     1.38     142.3±3.31µs       ? ?/sec
+firefox      1.55     160.3±6.43µs       ? ?/sec
+nodejs       1.78     183.3±2.02µs       ? ?/sec
+chromium     2.04     210.0±3.37µs       ? ?/sec
+
+rustc_hex_encode
+----------------
+native       1.00      30.9±0.42µs       ? ?/sec
+wasmtime     2.24      69.1±0.36µs       ? ?/sec
+wasmer       2.25      69.6±0.74µs       ? ?/sec
+nodejs       2.40      74.2±1.94µs       ? ?/sec
+chromium     2.67      82.6±2.61µs       ? ?/sec
+firefox      3.45    106.7±10.13µs       ? ?/sec
+```
+
 # Caveats and pitfalls
 
+## Warm-up and JIT
+
+Most WebAssembly environments don't reach peak performance until the code has been running for a little while. This means the warm-up step is essential and skipping it (by setting it to 0 seconds or using the `--quick` flag) will lead to inaccurate results.
+
+## Re-running benchmarks in [webassembly.sh](https://webassembly.sh/)
+
+The WebAssembly.sh website shims the WebAssembly System Interface (WASI) required by Criterion. But this shim is not perfect and causes criterion to fail spectacularly when run more then once. Should this happen to you, reloading your browser window should work around the problem.
+
+## Wasm and default-features.
+
+Criterion's default features have to be disabled when compiling to wasm. Failing to do so will trigger a compilation error. If see an error saying a feature is incompatible with wasm, open your `Cargo.toml` file and make this change:
+
+```diff
+[dev-dependencies]
+-criterion = "0.4"
++criterion = { version = "0.4", default-features = false }
+```
