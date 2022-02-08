@@ -9,12 +9,12 @@ use std::time::Duration;
 /// PRIVATE
 pub(crate) trait Routine<M: Measurement, T: ?Sized> {
     /// PRIVATE
-    fn bench(&mut self, m: &M, iters: &[u64], parameter: &T) -> Vec<f64>;
+    fn bench(&mut self, m: &M, iters: &[u64], parameter: &mut T) -> Vec<f64>;
     /// PRIVATE
-    fn warm_up(&mut self, m: &M, how_long: Duration, parameter: &T) -> (u64, u64);
+    fn warm_up(&mut self, m: &M, how_long: Duration, parameter: &mut T) -> (u64, u64);
 
     /// PRIVATE
-    fn test(&mut self, m: &M, parameter: &T) {
+    fn test(&mut self, m: &M, parameter: &mut T) {
         self.bench(m, &[1u64], parameter);
     }
 
@@ -30,7 +30,7 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
         criterion: &Criterion<M>,
         report_context: &ReportContext,
         time: Duration,
-        parameter: &T,
+        parameter: &mut T,
     ) {
         criterion
             .report
@@ -86,7 +86,7 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
         config: &BenchmarkConfig,
         criterion: &Criterion<M>,
         report_context: &ReportContext,
-        parameter: &T,
+        parameter: &mut T,
     ) -> (ActualSamplingMode, Box<[f64]>, Box<[f64]>) {
         if config.quick_mode {
             let minimum_bench_duration = Duration::from_millis(100);
@@ -205,7 +205,7 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
 
 pub struct Function<M: Measurement, F, T>
 where
-    F: FnMut(&mut Bencher<'_, M>, &T),
+    F: FnMut(&mut Bencher<'_, M>, &mut T),
     T: ?Sized,
 {
     f: F,
@@ -215,7 +215,7 @@ where
 }
 impl<M: Measurement, F, T> Function<M, F, T>
 where
-    F: FnMut(&mut Bencher<'_, M>, &T),
+    F: FnMut(&mut Bencher<'_, M>, &mut T),
     T: ?Sized,
 {
     pub fn new(f: F) -> Function<M, F, T> {
@@ -229,10 +229,10 @@ where
 
 impl<M: Measurement, F, T> Routine<M, T> for Function<M, F, T>
 where
-    F: FnMut(&mut Bencher<'_, M>, &T),
+    F: FnMut(&mut Bencher<'_, M>, &mut T),
     T: ?Sized,
 {
-    fn bench(&mut self, m: &M, iters: &[u64], parameter: &T) -> Vec<f64> {
+    fn bench(&mut self, m: &M, iters: &[u64], parameter: &mut T) -> Vec<f64> {
         let f = &mut self.f;
 
         let mut b = Bencher {
@@ -254,7 +254,7 @@ where
             .collect()
     }
 
-    fn warm_up(&mut self, m: &M, how_long: Duration, parameter: &T) -> (u64, u64) {
+    fn warm_up(&mut self, m: &M, how_long: Duration, parameter: &mut T) -> (u64, u64) {
         let f = &mut self.f;
         let mut b = Bencher {
             iterated: false,

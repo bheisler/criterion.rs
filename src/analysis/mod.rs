@@ -42,7 +42,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
     config: &BenchmarkConfig,
     criterion: &Criterion<M>,
     report_context: &ReportContext,
-    parameter: &T,
+    parameter: &mut T,
     throughput: Option<Throughput>,
 ) {
     criterion.report.benchmark_start(id, report_context);

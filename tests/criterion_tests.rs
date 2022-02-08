@@ -443,8 +443,8 @@ fn test_benchmark_group_with_input() {
     let mut c = short_benchmark(&dir);
     let mut group = c.benchmark_group("Test Group");
     for x in 0..2 {
-        group.bench_with_input(BenchmarkId::new("Test 1", x), || x, |b, i| b.iter(|| i));
-        group.bench_with_input(BenchmarkId::new("Test 2", x), || x, |b, i| b.iter(|| i));
+        group.bench_with_input(BenchmarkId::new("Test 1", x), || x, |b, i| b.iter(|| *i));
+        group.bench_with_input(BenchmarkId::new("Test 2", x), || x, |b, i| b.iter(|| *i));
     }
     group.finish();
 }

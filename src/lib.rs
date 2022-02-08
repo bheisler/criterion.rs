@@ -1186,7 +1186,7 @@ where
         f: F,
     ) -> &mut Criterion<M>
     where
-        F: FnMut(&mut Bencher<'_, M>, &I),
+        F: FnMut(&mut Bencher<'_, M>, &mut I),
         InputFn: FnOnce() -> I,
     {
         // It's possible to use BenchmarkId::from_parameter to create a benchmark ID with no function

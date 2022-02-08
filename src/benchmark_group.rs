@@ -263,7 +263,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
         f: F,
     ) -> &mut Self
     where
-        F: FnMut(&mut Bencher<'_, M>, &I),
+        F: FnMut(&mut Bencher<'_, M>, &mut I),
         InputFn: FnOnce() -> I,
     {
         self.run_bench(id.into_benchmark_id(), input, f);
@@ -272,7 +272,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
 
     fn run_bench<F, InputFn, I>(&mut self, id: BenchmarkId, input: InputFn, f: F)
     where
-        F: FnMut(&mut Bencher<'_, M>, &I),
+        F: FnMut(&mut Bencher<'_, M>, &mut I),
         InputFn: FnOnce() -> I,
     {
         let config = self.partial_config.to_complete(&self.criterion.config);
@@ -322,7 +322,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
                         &config,
                         self.criterion,
                         &report_context,
-                        &input(),
+                        &mut input(),
                         self.throughput.clone(),
                     );
                 }
@@ -336,7 +336,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
                 if do_run {
                     // In test mode, run the benchmark exactly once, then exit.
                     self.criterion.report.test_start(&id, &report_context);
-                    func.test(&self.criterion.measurement, &input());
+                    func.test(&self.criterion.measurement, &mut input());
                     self.criterion.report.test_pass(&id, &report_context);
                 }
             }
@@ -348,7 +348,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
                         self.criterion,
                         &report_context,
                         duration,
-                        &input(),
+                        &mut input(),
                     );
                 }
             }
