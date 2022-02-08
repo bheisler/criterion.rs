@@ -251,29 +251,29 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     where
         F: FnMut(&mut Bencher<'_, M>),
     {
-        self.run_bench(id.into_benchmark_id(), &(), |b, _| f(b));
+        self.run_bench(id.into_benchmark_id(), move || (), |b, _| f(b));
         self
     }
 
     /// Benchmark the given parameterized function inside this benchmark group.
-    pub fn bench_with_input<ID: IntoBenchmarkId, F, I>(
+    pub fn bench_with_input<ID: IntoBenchmarkId, F, I, InputFn>(
         &mut self,
         id: ID,
-        input: &I,
+        input: InputFn,
         f: F,
     ) -> &mut Self
     where
         F: FnMut(&mut Bencher<'_, M>, &I),
-        I: ?Sized,
+        InputFn: FnOnce() -> I,
     {
         self.run_bench(id.into_benchmark_id(), input, f);
         self
     }
 
-    fn run_bench<F, I>(&mut self, id: BenchmarkId, input: &I, f: F)
+    fn run_bench<F, InputFn, I>(&mut self, id: BenchmarkId, input: InputFn, f: F)
     where
         F: FnMut(&mut Bencher<'_, M>, &I),
-        I: ?Sized,
+        InputFn: FnOnce() -> I,
     {
         let config = self.partial_config.to_complete(&self.criterion.config);
         let report_context = ReportContext {
@@ -322,7 +322,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
                         &config,
                         self.criterion,
                         &report_context,
-                        input,
+                        &input(),
                         self.throughput.clone(),
                     );
                 }
@@ -336,7 +336,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
                 if do_run {
                     // In test mode, run the benchmark exactly once, then exit.
                     self.criterion.report.test_start(&id, &report_context);
-                    func.test(&self.criterion.measurement, input);
+                    func.test(&self.criterion.measurement, &input());
                     self.criterion.report.test_pass(&id, &report_context);
                 }
             }
@@ -348,7 +348,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
                         self.criterion,
                         &report_context,
                         duration,
-                        input,
+                        &input(),
                     );
                 }
             }
