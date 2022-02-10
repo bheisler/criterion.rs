@@ -1169,7 +1169,8 @@ where
     ///     // Setup (construct data, allocate memory, etc)
     ///     let input = 5u64;
     ///     c.bench_with_input(
-    ///         BenchmarkId::new("function_name", input), &input,
+    ///         BenchmarkId::new("function_name", input),
+    ///         || input,
     ///         |b, i| b.iter(|| {
     ///             // Code to benchmark using input `i` goes here
     ///         }),

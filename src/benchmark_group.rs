@@ -40,10 +40,10 @@ use std::time::Duration;
 ///     // We can also use loops to define multiple benchmarks, even over multiple dimensions.
 ///     for x in 0..3 {
 ///         for y in 0..3 {
-///             let point = (x, y);
+///             let point = || { (x, y) };
 ///             let parameter_string = format!("{} * {}", x, y);
-///             group.bench_with_input(BenchmarkId::new("Multiply", parameter_string), &point,
-///                 |b, (p_x, p_y)| b.iter(|| p_x * p_y));
+///             group.bench_with_input(BenchmarkId::new("Multiply", parameter_string), point,
+///                 |b, (p_x, p_y)| b.iter(|| *p_x * *p_y));
 ///         }
 ///     }
 ///    
@@ -55,7 +55,7 @@ use std::time::Duration;
 ///     
 ///     for size in [1024, 2048, 4096].iter() {
 ///         // Generate input of an appropriate size...
-///         let input = vec![1u64, *size];
+///         let input = || vec![1u64, *size];
 ///
 ///         // We can use the throughput function to tell Criterion.rs how large the input is
 ///         // so it can calculate the overall throughput of the function. If we wanted, we could
@@ -63,9 +63,9 @@ use std::time::Duration;
 ///         // number of samples for extremely large and slow inputs) or even different functions.
 ///         group.throughput(Throughput::Elements(*size as u64));
 ///
-///         group.bench_with_input(BenchmarkId::new("sum", *size), &input,
+///         group.bench_with_input(BenchmarkId::new("sum", *size), input,
 ///             |b, i| b.iter(|| i.iter().sum::<u64>()));
-///         group.bench_with_input(BenchmarkId::new("fold", *size), &input,
+///         group.bench_with_input(BenchmarkId::new("fold", *size), input,
 ///             |b, i| b.iter(|| i.iter().fold(0u64, |a, b| a + b)));
 ///     }
 ///
@@ -427,12 +427,18 @@ impl BenchmarkId {
     /// let mut criterion = Criterion::default();
     /// let mut group = criterion.benchmark_group("My Group");
     /// // Generate a very large input
-    /// let input : String = ::std::iter::repeat("X").take(1024 * 1024).collect();
+    /// let input = || -> String {
+    ///     ::std::iter::repeat("X").take(1024 * 1024).collect()
+    /// };
     ///
     /// // Note that we don't have to use the input as the parameter in the ID
-    /// group.bench_with_input(BenchmarkId::new("Test long string", "1MB X's"), &input, |b, i| {
-    ///     b.iter(|| i.len())
-    /// });
+    /// group.bench_with_input(
+    ///     BenchmarkId::new("Test long string", "1MB X's"),
+    ///     input,
+    ///     |b, i| {
+    ///         b.iter(|| i.len())
+    ///     }
+    /// );
     /// ```
     pub fn new<S: Into<String>, P: ::std::fmt::Display>(
         function_name: S,
