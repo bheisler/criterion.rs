@@ -134,24 +134,24 @@ native       1.00       3.6±0.02µs       ? ?/sec
 wasmer      14.72      52.6±0.49µs       ? ?/sec
 wasmtime    16.83      60.1±0.53µs       ? ?/sec
 chromium    17.66      63.1±0.70µs       ? ?/sec
+firefox     19.82      70.8±6.53µs       ? ?/sec
 nodejs      20.76      74.2±0.34µs       ? ?/sec
-firefox     23.42      83.7±2.51µs       ? ?/sec
 
 faster_hex_decode_fallback
 --------------------------
 native       1.00      10.9±0.12µs       ? ?/sec
 wasmer       1.49      16.2±0.04µs       ? ?/sec
+firefox      1.61      17.6±0.51µs       ? ?/sec
 wasmtime     1.65      18.1±0.73µs       ? ?/sec
 chromium     1.87      20.4±0.16µs       ? ?/sec
 nodejs       2.30      25.1±0.56µs       ? ?/sec
-firefox      2.36      25.7±1.03µs       ? ?/sec
 
 faster_hex_decode_unchecked
 ---------------------------
 native       1.00   1239.7±16.97ns       ? ?/sec
 wasmer      14.27      17.7±0.35µs       ? ?/sec
 wasmtime    14.36      17.8±0.23µs       ? ?/sec
-firefox     14.73      18.3±0.75µs       ? ?/sec
+firefox     14.38      17.8±1.83µs       ? ?/sec
 chromium    16.53      20.5±0.28µs       ? ?/sec
 nodejs      20.36      25.2±0.15µs       ? ?/sec
 
@@ -162,23 +162,23 @@ wasmer      19.17      18.2±0.36µs       ? ?/sec
 chromium    21.25      20.2±0.17µs       ? ?/sec
 nodejs      22.85      21.7±0.09µs       ? ?/sec
 wasmtime    24.01      22.8±0.53µs       ? ?/sec
-firefox     32.68      31.0±3.43µs       ? ?/sec
+firefox     30.68      29.1±0.89µs       ? ?/sec
 
 faster_hex_encode_fallback
 --------------------------
 native       1.00      11.1±0.20µs       ? ?/sec
+firefox      1.98      21.9±0.57µs       ? ?/sec
 chromium     2.04      22.7±0.20µs       ? ?/sec
 wasmtime     2.05      22.8±0.13µs       ? ?/sec
 wasmer       2.06      22.8±0.15µs       ? ?/sec
-firefox      2.11      23.4±1.79µs       ? ?/sec
 nodejs       2.38      26.4±0.09µs       ? ?/sec
 
 hex_decode
 ----------
 native       1.00     244.6±2.36µs       ? ?/sec
+firefox      1.66    405.7±14.22µs       ? ?/sec
 wasmer       1.72     421.4±9.65µs       ? ?/sec
 wasmtime     1.73     423.0±3.00µs       ? ?/sec
-firefox      1.74    426.4±18.61µs       ? ?/sec
 nodejs       2.00     490.3±3.49µs       ? ?/sec
 chromium     2.81    688.5±12.23µs       ? ?/sec
 
@@ -188,6 +188,7 @@ native       1.00      69.2±0.40µs       ? ?/sec
 wasmtime     1.18      81.7±0.38µs       ? ?/sec
 wasmer       1.46     100.9±1.22µs       ? ?/sec
 nodejs       2.20     152.5±1.93µs       ? ?/sec
+firefox      3.25     224.8±7.53µs       ? ?/sec
 chromium     4.08     282.7±4.19µs       ? ?/sec
 
 rustc_hex_decode
@@ -195,7 +196,7 @@ rustc_hex_decode
 native       1.00     103.1±2.78µs       ? ?/sec
 wasmer       1.33     136.8±4.06µs       ? ?/sec
 wasmtime     1.38     142.3±3.31µs       ? ?/sec
-firefox      1.55     160.3±6.43µs       ? ?/sec
+firefox      1.50     154.7±4.80µs       ? ?/sec
 nodejs       1.78     183.3±2.02µs       ? ?/sec
 chromium     2.04     210.0±3.37µs       ? ?/sec
 
@@ -206,7 +207,7 @@ wasmtime     2.24      69.1±0.36µs       ? ?/sec
 wasmer       2.25      69.6±0.74µs       ? ?/sec
 nodejs       2.40      74.2±1.94µs       ? ?/sec
 chromium     2.67      82.6±2.61µs       ? ?/sec
-firefox      3.45    106.7±10.13µs       ? ?/sec
+firefox      3.31     102.2±2.66µs       ? ?/sec
 ```
 
 # Caveats and pitfalls
