@@ -7,9 +7,9 @@ Currently, `cargo-criterion` provides most of the same features as running Crite
 * `cargo-criterion` is more configurable than Criterion.rs
 * `cargo-criterion` supports machine-readable output using `--message-format=json`
 
-`cargo-criterion` is still under active development, but if you would like to try it out, you can install it with the following command:
+`cargo-criterion` is stable, and you can install it with the following command:
 
-`cargo install --version=1.0.0-alpha3 cargo-criterion`
+`cargo install cargo-criterion`
 
 Once installed, you can run your benchmarks with:
 
