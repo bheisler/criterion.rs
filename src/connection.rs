@@ -8,28 +8,39 @@ use std::net::TcpStream;
 
 #[derive(Debug)]
 pub enum MessageError {
-    SerializationError(serde_cbor::Error),
-    IoError(std::io::Error),
+    Deserialization(ciborium::de::Error<std::io::Error>),
+    Serialization(ciborium::ser::Error<std::io::Error>),
+    Io(std::io::Error),
 }
-impl From<serde_cbor::Error> for MessageError {
-    fn from(other: serde_cbor::Error) -> Self {
-        MessageError::SerializationError(other)
+impl From<ciborium::de::Error<std::io::Error>> for MessageError {
+    fn from(other: ciborium::de::Error<std::io::Error>) -> Self {
+        MessageError::Deserialization(other)
+    }
+}
+impl From<ciborium::ser::Error<std::io::Error>> for MessageError {
+    fn from(other: ciborium::ser::Error<std::io::Error>) -> Self {
+        MessageError::Serialization(other)
     }
 }
 impl From<std::io::Error> for MessageError {
     fn from(other: std::io::Error) -> Self {
-        MessageError::IoError(other)
+        MessageError::Io(other)
     }
 }
 impl std::fmt::Display for MessageError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MessageError::SerializationError(error) => write!(
+            MessageError::Deserialization(error) => write!(
                 f,
-                "Failed to serialize or deserialize message to Criterion.rs benchmark:\n{}",
+                "Failed to deserialize message to Criterion.rs benchmark:\n{}",
                 error
             ),
-            MessageError::IoError(error) => write!(
+            MessageError::Serialization(error) => write!(
+                f,
+                "Failed to serialize message to Criterion.rs benchmark:\n{}",
+                error
+            ),
+            MessageError::Io(error) => write!(
                 f,
                 "Failed to read or write message to Criterion.rs benchmark:\n{}",
                 error
@@ -40,8 +51,9 @@ impl std::fmt::Display for MessageError {
 impl std::error::Error for MessageError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            MessageError::SerializationError(err) => Some(err),
-            MessageError::IoError(err) => Some(err),
+            MessageError::Deserialization(err) => Some(err),
+            MessageError::Serialization(err) => Some(err),
+            MessageError::Io(err) => Some(err),
         }
     }
 }
@@ -112,13 +124,13 @@ impl InnerConnection {
         let length = u32::from_be_bytes(length_buf);
         self.receive_buffer.resize(length as usize, 0u8);
         self.socket.read_exact(&mut self.receive_buffer)?;
-        let value = serde_cbor::from_slice(&self.receive_buffer)?;
+        let value = ciborium::de::from_reader(&self.receive_buffer[..])?;
         Ok(value)
     }
 
     pub fn send(&mut self, message: &OutgoingMessage) -> Result<(), MessageError> {
         self.send_buffer.truncate(0);
-        serde_cbor::to_writer(&mut self.send_buffer, message)?;
+        ciborium::ser::into_writer(message, &mut self.send_buffer)?;
         let size = u32::try_from(self.send_buffer.len()).unwrap();
         let length_buf = size.to_be_bytes();
         self.socket.write_all(&length_buf)?;
