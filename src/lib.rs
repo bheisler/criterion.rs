@@ -27,6 +27,9 @@
     )
 )]
 
+#[cfg(all(feature = "rayon", target_arch = "wasm32"))]
+compile_error!("Rayon cannot be used when targeting wasi32. Try disabling default features.");
+
 #[cfg(test)]
 extern crate approx;
 
@@ -57,6 +60,7 @@ mod benchmark_group;
 pub mod async_executor;
 mod bencher;
 mod connection;
+mod critcmp;
 #[cfg(feature = "csv_output")]
 mod csv_report;
 mod error;
@@ -77,6 +81,7 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::default::Default;
 use std::env;
+use std::io::Write;
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -454,6 +459,7 @@ impl<M: Measurement> Criterion<M> {
         }
     }
 
+    #[must_use]
     /// Changes the internal profiler for benchmarks run with this runner. See
     /// the Profiler trait for more details.
     pub fn with_profiler<P: Profiler + 'static>(self, p: P) -> Criterion<M> {
@@ -463,6 +469,7 @@ impl<M: Measurement> Criterion<M> {
         }
     }
 
+    #[must_use]
     /// Set the plotting backend. By default, Criterion will use gnuplot if available, or plotters
     /// if not.
     ///
@@ -481,6 +488,7 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    #[must_use]
     /// Changes the default size of the sample for benchmarks run with this runner.
     ///
     /// A bigger sample should yield more accurate results if paired with a sufficiently large
@@ -498,6 +506,7 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    #[must_use]
     /// Changes the default warm up time for benchmarks run with this runner.
     ///
     /// # Panics
@@ -510,6 +519,7 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    #[must_use]
     /// Changes the default measurement time for benchmarks run with this runner.
     ///
     /// With a longer time, the measurement will become more resilient to transitory peak loads
@@ -527,6 +537,7 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    #[must_use]
     /// Changes the default number of resamples for benchmarks run with this runner.
     ///
     /// Number of resamples to use for the
@@ -548,6 +559,7 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    #[must_use]
     /// Changes the default noise threshold for benchmarks run with this runner. The noise threshold
     /// is used to filter out small changes in performance, even if they are statistically
     /// significant. Sometimes benchmarking the same code twice will result in small but
@@ -567,6 +579,7 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    #[must_use]
     /// Changes the default confidence level for benchmarks run with this runner. The confidence
     /// level is the desired probability that the true runtime lies within the estimated
     /// [confidence interval](https://en.wikipedia.org/wiki/Confidence_interval). The default is
@@ -585,6 +598,7 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    #[must_use]
     /// Changes the default [significance level](https://en.wikipedia.org/wiki/Statistical_significance)
     /// for benchmarks run with this runner. This is used to perform a
     /// [hypothesis test](https://en.wikipedia.org/wiki/Statistical_hypothesis_testing) to see if
@@ -612,6 +626,7 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    #[must_use]
     /// Enables plotting
     pub fn with_plots(mut self) -> Criterion<M> {
         // If running under cargo-criterion then don't re-enable the reports; let it do the reporting.
@@ -626,12 +641,14 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    #[must_use]
     /// Disables plotting
     pub fn without_plots(mut self) -> Criterion<M> {
         self.report.html = None;
         self
     }
 
+    #[must_use]
     /// Names an explicit baseline and enables overwriting the previous results.
     pub fn save_baseline(mut self, baseline: String) -> Criterion<M> {
         self.baseline_directory = baseline;
@@ -639,6 +656,7 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    #[must_use]
     /// Names an explicit baseline and disables overwriting the previous results.
     pub fn retain_baseline(mut self, baseline: String, strict: bool) -> Criterion<M> {
         self.baseline_directory = baseline;
@@ -650,6 +668,7 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    #[must_use]
     /// Filters the benchmarks. Only benchmarks with names that contain the
     /// given string will be executed.
     pub fn with_filter<S: Into<String>>(mut self, filter: S) -> Criterion<M> {
@@ -665,6 +684,7 @@ impl<M: Measurement> Criterion<M> {
         self
     }
 
+    #[must_use]
     /// Override whether the CLI output will be colored or not. Usually you would use the `--color`
     /// CLI argument, but this is available for programmmatic use as well.
     pub fn with_output_color(mut self, enabled: bool) -> Criterion<M> {
@@ -673,6 +693,7 @@ impl<M: Measurement> Criterion<M> {
     }
 
     /// Set the output directory (currently for testing only)
+    #[must_use]
     #[doc(hidden)]
     pub fn output_directory(mut self, path: &Path) -> Criterion<M> {
         self.output_directory = path.to_owned();
@@ -681,6 +702,7 @@ impl<M: Measurement> Criterion<M> {
     }
 
     /// Set the profile time (currently for testing only)
+    #[must_use]
     #[doc(hidden)]
     pub fn profile_time(mut self, profile_time: Option<Duration>) -> Criterion<M> {
         match profile_time {
@@ -708,6 +730,7 @@ impl<M: Measurement> Criterion<M> {
 
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
+    #[must_use]
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::cognitive_complexity))]
     pub fn configure_from_args(mut self) -> Criterion<M> {
         use clap::{App, Arg};
@@ -764,6 +787,30 @@ impl<M: Measurement> Criterion<M> {
                 .takes_value(true)
                 .help("Iterate each benchmark for approximately the given number of seconds, doing no analysis and without storing the results. Useful for running the benchmarks in a profiler.")
                 .conflicts_with_all(&["test", "list"]))
+            .arg(Arg::with_name("export")
+                .long("export")
+                .takes_value(true)
+                .help("Export baseline as json, printed to stdout")
+                .conflicts_with_all(&["list", "test", "profile-time", "compare"]))
+            .arg(Arg::with_name("compare")
+                .long("compare")
+                .help("Tabulate benchmark results")
+                .conflicts_with_all(&["list", "test", "profile-time", "export"]))
+            .arg(Arg::with_name("baselines")
+                .long("baselines")
+                .multiple(true)
+                .value_name("baselines")
+                .requires("compare")
+                .require_delimiter(true)
+                .help("Limit the baselines used in tabulated results.")
+                .help(""))
+            .arg(Arg::with_name("compare-threshold")
+                .long("compare-threshold")
+                .takes_value(true)
+                .help("Hide results that differ by less than the threshold percentage. By default, all results are shown."))
+            .arg(Arg::with_name("compare-list")
+                .long("compare-list")
+                .help("Show benchmark results in a list rather than in a table. Useful when horizontal space is limited."))
             .arg(Arg::with_name("load-baseline")
                  .long("load-baseline")
                  .takes_value(true)
@@ -1065,6 +1112,54 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.config.significance_level = num_significance_level;
         }
 
+        // XXX: Comparison functionality should ideally live in 'cargo-criterion'.
+        if matches.is_present("compare") {
+            if self.connection.is_some() {
+                eprintln!(
+                    "Error: tabulating results is not supported when running with cargo-criterion."
+                );
+                std::process::exit(1);
+            }
+            // Other arguments: compare-threshold, compare-list.
+
+            let stdout_isatty = atty::is(atty::Stream::Stdout);
+            let enable_text_coloring = match matches.value_of("color") {
+                Some("always") => true,
+                Some("never") => false,
+                _ => stdout_isatty,
+            };
+
+            let args = critcmp::app::Args {
+                baselines: matches.values_of_lossy("baselines").unwrap_or_default(),
+                output_list: matches.is_present("compare-list"),
+                threshold: value_t!(matches.value_of("compare-threshold"), f64).ok(), // FIXME: Print error message if parsing fails.
+                color: enable_text_coloring,
+                filter: self.filter,
+            };
+            critcmp::main::main(args);
+            std::process::exit(0);
+        }
+
+        if let Some(baseline) = matches.value_of("export") {
+            let benchmarks = critcmp::app::Args {
+                baselines: matches.values_of_lossy("baselines").unwrap_or_default(),
+                ..Default::default()
+            }
+            .benchmarks()
+            .expect("failed to find baselines");
+            let mut stdout = std::io::stdout();
+            let basedata = match benchmarks.by_baseline.get(baseline) {
+                Some(basedata) => basedata,
+                None => {
+                    eprintln!("failed to find baseline '{}'", baseline);
+                    std::process::exit(1);
+                }
+            };
+            serde_json::to_writer_pretty(&mut stdout, basedata).unwrap();
+            writeln!(stdout).unwrap();
+            std::process::exit(0);
+        }
+
         if matches.is_present("quick") {
             self.config.quick_mode = true;
         }
@@ -1265,6 +1360,7 @@ impl Default for PlotConfiguration {
 }
 
 impl PlotConfiguration {
+    #[must_use]
     /// Set the axis scale (linear or logarithmic) for the summary plots. Typically, you would
     /// set this to logarithmic if benchmarking over a range of inputs which scale exponentially.
     /// Defaults to linear.

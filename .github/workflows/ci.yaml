@@ -17,7 +17,7 @@ jobs:
         rust:
           - stable
           - beta
-          - 1.46.0  # MSRV
+          - 1.49.0  # MSRV
 
     steps:
       - uses: actions/checkout@v2
