@@ -119,7 +119,7 @@ For more details, see the [CONTRIBUTING.md file](https://github.com/bheisler/cri
 Criterion.<span></span>rs supports the last three stable minor releases of Rust. At time of
 writing, this means Rust 1.50 or later. Older versions may work, but are not guaranteed.
 
-Currently, the oldest version of Rust believed to work is 1.46. Future versions of Criterion.<span></span>rs may
+Currently, the oldest version of Rust believed to work is 1.49. Future versions of Criterion.<span></span>rs may
 break support for such old versions, and this will not be considered a breaking change. If you
 require Criterion.<span></span>rs to work on old versions of Rust, you will need to stick to a
 specific patch version of Criterion.<span></span>rs.

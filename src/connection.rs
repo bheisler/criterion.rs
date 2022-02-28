@@ -71,8 +71,9 @@ impl InnerConnection {
         // read the runner-hello
         let mut hello_buf = [0u8; RUNNER_HELLO_SIZE];
         socket.read_exact(&mut hello_buf)?;
-        assert!(
-            (&hello_buf[0..RUNNER_MAGIC_NUMBER.len()] == RUNNER_MAGIC_NUMBER.as_bytes()),
+        assert_eq!(
+            &hello_buf[0..RUNNER_MAGIC_NUMBER.len()],
+            RUNNER_MAGIC_NUMBER.as_bytes(),
             "Not connected to cargo-criterion."
         );
 
