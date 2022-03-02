@@ -1,20 +1,17 @@
-use crate::stats::univariate::outliers::tukey::LabeledSample;
-use crate::{csv_report::FileCsvReport, stats::bivariate::regression::Slope};
-use crate::{html::Html, stats::bivariate::Data};
-
 use crate::estimate::{ChangeDistributions, ChangeEstimates, Distributions, Estimate, Estimates};
 use crate::format;
 use crate::measurement::ValueFormatter;
+use crate::stats::univariate::outliers::tukey::LabeledSample;
 use crate::stats::univariate::Sample;
 use crate::stats::Distribution;
+use crate::{csv_report::FileCsvReport, stats::bivariate::regression::Slope};
+use crate::{html::Html, stats::bivariate::Data};
 use crate::{PlotConfiguration, Throughput};
 use std::cell::Cell;
-use std::cmp;
 use std::collections::HashSet;
-use std::fmt;
-use std::io::stdout;
-use std::io::Write;
+use std::io::{stdout, Write};
 use std::path::{Path, PathBuf};
+use std::{cmp, fmt};
 
 const MAX_DIRECTORY_NAME_LEN: usize = 64;
 const MAX_TITLE_LEN: usize = 100;
@@ -386,7 +383,7 @@ impl CliReport {
     }
 
     fn text_overwrite(&self) {
-        if self.enable_text_overwrite {
+        if self.enable_text_overwrite && self.last_line_len.get() > 0 {
             print!("\r");
             for _ in 0..self.last_line_len.get() {
                 print!(" ");
@@ -399,12 +396,23 @@ impl CliReport {
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::needless_pass_by_value))]
     fn print_overwritable(&self, s: String) {
         if self.enable_text_overwrite {
+            self.text_overwrite();
             self.last_line_len.set(s.len());
             print!("{}", s);
             stdout().flush().unwrap();
         } else {
             println!("{}", s);
         }
+    }
+
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::needless_pass_by_value))]
+    fn print_newline(&self, s: String) {
+        if self.last_line_len.get() > 0 {
+            self.text_overwrite();
+            self.last_line_len.set(0);
+            println!();
+        }
+        println!("{}", s);
     }
 
     fn green(&self, s: String) -> String {
@@ -493,7 +501,6 @@ impl Report for CliReport {
     }
 
     fn profile(&self, id: &BenchmarkId, _: &ReportContext, warmup_ns: f64) {
-        self.text_overwrite();
         self.print_overwritable(format!(
             "Benchmarking {}: Profiling for {}",
             id,
@@ -502,7 +509,6 @@ impl Report for CliReport {
     }
 
     fn warmup(&self, id: &BenchmarkId, _: &ReportContext, warmup_ns: f64) {
-        self.text_overwrite();
         self.print_overwritable(format!(
             "Benchmarking {}: Warming up for {}",
             id,
@@ -511,12 +517,10 @@ impl Report for CliReport {
     }
 
     fn terminated(&self, id: &BenchmarkId, _: &ReportContext) {
-        self.text_overwrite();
-        println!("Benchmarking {}: Complete (Analysis Disabled)", id);
+        self.print_newline(format!("Benchmarking {}: Complete (Analysis Disabled)", id));
     }
 
     fn analysis(&self, id: &BenchmarkId, _: &ReportContext) {
-        self.text_overwrite();
         self.print_overwritable(format!("Benchmarking {}: Analyzing", id));
     }
 
@@ -528,7 +532,6 @@ impl Report for CliReport {
         estimate_ns: f64,
         iter_count: u64,
     ) {
-        self.text_overwrite();
         let iter_string = if self.verbose {
             format!("{} iterations", iter_count)
         } else {
@@ -551,10 +554,7 @@ impl Report for CliReport {
         meas: &MeasurementData<'_>,
         formatter: &dyn ValueFormatter,
     ) {
-        self.text_overwrite();
-
         let typical_estimate = &meas.absolute_estimates.typical();
-
         {
             let mut id = id.as_title().to_owned();
 
@@ -564,7 +564,7 @@ impl Report for CliReport {
             }
             let id_len = id.len();
 
-            println!(
+            self.print_newline(format!(
                 "{}{}time:   [{} {} {}]",
                 self.green(id),
                 " ".repeat(24 - id_len),
@@ -575,7 +575,7 @@ impl Report for CliReport {
                 self.faint(
                     formatter.format_value(typical_estimate.confidence_interval.upper_bound)
                 )
-            );
+            ));
         }
 
         if let Some(ref throughput) = meas.throughput {
