@@ -34,7 +34,7 @@ fn iai_benchmark_long() -> u64 {
 }
 
 
-iai::main!(iai_benchmark_short, iai_benchmark_long);
+main!(iai_benchmark_short, iai_benchmark_long);
 ```
 
 Finally, run this benchmark with `cargo bench`. You should see output similar to the following:
