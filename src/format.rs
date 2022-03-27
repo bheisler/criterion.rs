@@ -12,7 +12,7 @@ pub fn time(ns: f64) -> String {
     } else if ns < 10f64.powi(3) {
         format!("{:>6} ns", short(ns))
     } else if ns < 10f64.powi(6) {
-        format!("{:>6} us", short(ns / 1e3))
+        format!("{:>6} µs", short(ns / 1e3))
     } else if ns < 10f64.powi(9) {
         format!("{:>6} ms", short(ns / 1e6))
     } else {

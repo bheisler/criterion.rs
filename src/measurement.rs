@@ -164,7 +164,7 @@ impl ValueFormatter for DurationFormatter {
         } else if ns < 10f64.powi(3) {
             (10f64.powi(0), "ns")
         } else if ns < 10f64.powi(6) {
-            (10f64.powi(-3), "us")
+            (10f64.powi(-3), "µs")
         } else if ns < 10f64.powi(9) {
             (10f64.powi(-6), "ms")
         } else {
