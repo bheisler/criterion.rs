@@ -388,6 +388,28 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     }
 
     /// Convert this bencher into an AsyncBencher, which enables async/await support.
+    /// 
+    /// # Example
+    ///
+    /// ```rust
+    /// // Compile Criterion.rs with features = ["async_tokio"]
+    /// #[macro_use] extern crate criterion;
+    ///
+    /// use criterion::*;
+    ///
+    /// fn bench(c: &mut Criterion) {
+    ///     let rt = tokio::runtime::Runtime::new().unwrap();
+    ///     c.bench_function("tokio_thread_sleep", move |b| {
+    ///         b.to_async(&rt).iter(|| async move {
+    ///             tokio::time::sleep(Duration::from_millis(10)).await;
+    ///         })
+    ///     });
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
+    /// ```
+    /// 
     #[cfg(feature = "async")]
     pub fn to_async<'b, A: AsyncExecutor>(&'b mut self, runner: A) -> AsyncBencher<'a, 'b, A, M> {
         AsyncBencher { b: self, runner }
