@@ -24,7 +24,7 @@ serde          = "1.0"
 serde_json     = "1.0"
 serde_derive   = "1.0"
 serde_cbor     = "0.11"
-atty           = "0.2"
+atty           = "~0.2.6"
 clap           = { version = "2.33", default-features = false }
 csv            = "1.1"
 walkdir        = "2.3"
@@ -64,7 +64,7 @@ real_blackbox = []
 # Enable async/await support
 async = ["futures"]
 
-# These features enable built-in support for running async benchmarks on each different async 
+# These features enable built-in support for running async benchmarks on each different async
 # runtime.
 async_futures = ["futures/executor", "async"]
 async_smol    = ["smol", "async"]
