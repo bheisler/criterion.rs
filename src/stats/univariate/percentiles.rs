@@ -54,12 +54,12 @@ where
 
     /// Returns the interquartile range
     pub fn iqr(&self) -> A {
-        unsafe {
-            let q1 = self.at_unchecked(A::cast(25));
-            let q3 = self.at_unchecked(A::cast(75));
+       
+            let q1 = unsafe {self.at_unchecked(A::cast(25))};
+            let q3 = unsafe {self.at_unchecked(A::cast(75))};
 
             q3 - q1
-        }
+        
     }
 
     /// Returns the 50th percentile

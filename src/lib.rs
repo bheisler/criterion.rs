@@ -170,11 +170,11 @@ pub fn black_box<T>(dummy: T) -> T {
 /// or fail to prevent code from being eliminated.
 #[cfg(not(feature = "real_blackbox"))]
 pub fn black_box<T>(dummy: T) -> T {
-    unsafe {
-        let ret = std::ptr::read_volatile(&dummy);
+    
+        let ret = unsafe {std::ptr::read_volatile(&dummy)};
         std::mem::forget(dummy);
         ret
-    }
+    
 }
 
 /// Representing a function to benchmark together with a name of that function.
