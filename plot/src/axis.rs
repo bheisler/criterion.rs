@@ -155,6 +155,9 @@ where
 }
 
 impl<'a> Script for (Axis, &'a Properties) {
+    // Allow clippy::format_push_string even with older versions of rust (<1.62) which
+    // don't have it defined.
+    #[allow(clippy::all)]
     fn script(&self) -> String {
         let &(axis, properties) = self;
         let axis_ = axis.display();
