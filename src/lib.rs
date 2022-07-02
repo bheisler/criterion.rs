@@ -1138,8 +1138,8 @@ https://bheisler.github.io/criterion.rs/book/faq.html
     }
 
     fn filter_matches(&self, id: &str) -> bool {
-        match self.filter {
-            Some(ref regex) => regex.is_match(id),
+        match &self.filter {
+            Some(regex) => regex.is_match(id),
             None => true,
         }
     }
@@ -1270,7 +1270,7 @@ where
 /// If the throughput setting is configured for a benchmark then the estimated throughput will
 /// be reported as well as the time per iteration.
 // TODO: Remove serialize/deserialize from the public API.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Throughput {
     /// Measure throughput in terms of bytes/second. The value should be the number of bytes
     /// processed by one iteration of the benchmarked code. Typically, this would be the length of

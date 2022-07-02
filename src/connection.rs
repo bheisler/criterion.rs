@@ -370,7 +370,7 @@ impl From<&crate::benchmark::BenchmarkConfig> for BenchmarkConfig {
 }
 
 /// Currently not used; defined for forwards compatibility with cargo-criterion.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum SamplingMethod {
     Linear,
     Flat,
