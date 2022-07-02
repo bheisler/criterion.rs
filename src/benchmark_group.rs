@@ -304,7 +304,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
         self.any_matched |= do_run;
         let mut func = Function::new(f);
 
-        match self.criterion.mode {
+        match &self.criterion.mode {
             Mode::Benchmark => {
                 if let Some(conn) = &self.criterion.connection {
                     if do_run {
@@ -340,7 +340,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
                     self.criterion.report.test_pass(&id, &report_context);
                 }
             }
-            Mode::Profile(duration) => {
+            &Mode::Profile(duration) => {
                 if do_run {
                     func.profile(
                         &self.criterion.measurement,

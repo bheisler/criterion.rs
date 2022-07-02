@@ -27,6 +27,9 @@ impl Default for Properties {
 }
 
 impl Script for Properties {
+    // Allow clippy::format_push_string even with older versions of rust (<1.62) which
+    // don't have it defined.
+    #[allow(clippy::all)]
     fn script(&self) -> String {
         let mut script = if let Some(axes) = self.axes {
             format!("axes {} ", axes.display())
