@@ -801,6 +801,7 @@ impl<M: Measurement> Criterion<M> {
                 .value_name("baselines")
                 .requires("compare")
                 .require_value_delimiter(true)
+                .use_value_delimiter(true)
                 .help("Limit the baselines used in tabulated results.")
                 .help(""))
             .arg(Arg::new("compare-threshold")
