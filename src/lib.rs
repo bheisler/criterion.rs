@@ -36,7 +36,6 @@ extern crate approx;
 #[cfg(test)]
 extern crate quickcheck;
 
-use clap::value_t;
 use regex::Regex;
 
 #[macro_use]
@@ -733,148 +732,148 @@ impl<M: Measurement> Criterion<M> {
     #[must_use]
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::cognitive_complexity))]
     pub fn configure_from_args(mut self) -> Criterion<M> {
-        use clap::{App, Arg};
-        let matches = App::new("Criterion Benchmark")
-            .arg(Arg::with_name("FILTER")
+        use clap::{Arg, Command};
+        let matches = Command::new("Criterion Benchmark")
+            .arg(Arg::new("FILTER")
                 .help("Skip benchmarks whose names do not contain FILTER.")
                 .index(1))
-            .arg(Arg::with_name("color")
-                .short("c")
+            .arg(Arg::new("color")
+                .short('c')
                 .long("color")
                 .alias("colour")
                 .takes_value(true)
                 .possible_values(&["auto", "always", "never"])
                 .default_value("auto")
                 .help("Configure coloring of output. always = always colorize output, never = never colorize output, auto = colorize output if output is a tty and compiled for unix."))
-            .arg(Arg::with_name("verbose")
-                .short("v")
+            .arg(Arg::new("verbose")
+                .short('v')
                 .long("verbose")
                 .help("Print additional statistical information."))
-            .arg(Arg::with_name("quiet")
+            .arg(Arg::new("quiet")
                 .long("quiet")
                 .conflicts_with("verbose")
                 .help("Print only the benchmark results."))
-            .arg(Arg::with_name("noplot")
-                .short("n")
+            .arg(Arg::new("noplot")
+                .short('n')
                 .long("noplot")
                 .help("Disable plot and HTML generation."))
-            .arg(Arg::with_name("save-baseline")
-                .short("s")
+            .arg(Arg::new("save-baseline")
+                .short('s')
                 .long("save-baseline")
                 .default_value("base")
                 .help("Save results under a named baseline."))
-            .arg(Arg::with_name("discard-baseline")
+            .arg(Arg::new("discard-baseline")
                 .long("discard-baseline")
                 .conflicts_with_all(&["save-baseline", "baseline", "baseline-lenient"])
                 .help("Discard benchmark results."))
-            .arg(Arg::with_name("baseline")
-                .short("b")
+            .arg(Arg::new("baseline")
+                .short('b')
                 .long("baseline")
                 .takes_value(true)
                 .conflicts_with_all(&["save-baseline", "baseline-lenient"])
                 .help("Compare to a named baseline. If any benchmarks do not have the specified baseline this command fails."))
-            .arg(Arg::with_name("baseline-lenient")
+            .arg(Arg::new("baseline-lenient")
                 .long("baseline-lenient")
                 .takes_value(true)
                 .conflicts_with_all(&["save-baseline", "baseline"])
                 .help("Compare to a named baseline. If any benchmarks do not have the specified baseline then just those benchmarks are not compared against the baseline while every other benchmark is compared against the baseline."))
-            .arg(Arg::with_name("list")
+            .arg(Arg::new("list")
                 .long("list")
                 .help("List all benchmarks")
                 .conflicts_with_all(&["test", "profile-time"]))
-            .arg(Arg::with_name("profile-time")
+            .arg(Arg::new("profile-time")
                 .long("profile-time")
                 .takes_value(true)
                 .help("Iterate each benchmark for approximately the given number of seconds, doing no analysis and without storing the results. Useful for running the benchmarks in a profiler.")
                 .conflicts_with_all(&["test", "list"]))
-            .arg(Arg::with_name("export")
+            .arg(Arg::new("export")
                 .long("export")
                 .takes_value(true)
                 .help("Export baseline as json, printed to stdout")
                 .conflicts_with_all(&["list", "test", "profile-time", "compare"]))
-            .arg(Arg::with_name("compare")
+            .arg(Arg::new("compare")
                 .long("compare")
                 .help("Tabulate benchmark results")
                 .conflicts_with_all(&["list", "test", "profile-time", "export"]))
-            .arg(Arg::with_name("baselines")
+            .arg(Arg::new("baselines")
                 .long("baselines")
-                .multiple(true)
+                .multiple_occurrences(true)
                 .value_name("baselines")
                 .requires("compare")
-                .require_delimiter(true)
+                .require_value_delimiter(true)
                 .help("Limit the baselines used in tabulated results.")
                 .help(""))
-            .arg(Arg::with_name("compare-threshold")
+            .arg(Arg::new("compare-threshold")
                 .long("compare-threshold")
                 .takes_value(true)
                 .help("Hide results that differ by less than the threshold percentage. By default, all results are shown."))
-            .arg(Arg::with_name("compare-list")
+            .arg(Arg::new("compare-list")
                 .long("compare-list")
                 .help("Show benchmark results in a list rather than in a table. Useful when horizontal space is limited."))
-            .arg(Arg::with_name("load-baseline")
+            .arg(Arg::new("load-baseline")
                  .long("load-baseline")
                  .takes_value(true)
                  .conflicts_with("profile-time")
                  .requires("baseline")
                  .help("Load a previous baseline instead of sampling new data."))
-            .arg(Arg::with_name("sample-size")
+            .arg(Arg::new("sample-size")
                 .long("sample-size")
                 .takes_value(true)
-                .help(&format!("Changes the default size of the sample for this run. [default: {}]", self.config.sample_size)))
-            .arg(Arg::with_name("warm-up-time")
+                .help(&*format!("Changes the default size of the sample for this run. [default: {}]", self.config.sample_size)))
+            .arg(Arg::new("warm-up-time")
                 .long("warm-up-time")
                 .takes_value(true)
-                .help(&format!("Changes the default warm up time for this run. [default: {}]", self.config.warm_up_time.as_secs())))
-            .arg(Arg::with_name("measurement-time")
+                .help(&*format!("Changes the default warm up time for this run. [default: {}]", self.config.warm_up_time.as_secs())))
+            .arg(Arg::new("measurement-time")
                 .long("measurement-time")
                 .takes_value(true)
-                .help(&format!("Changes the default measurement time for this run. [default: {}]", self.config.measurement_time.as_secs())))
-            .arg(Arg::with_name("nresamples")
+                .help(&*format!("Changes the default measurement time for this run. [default: {}]", self.config.measurement_time.as_secs())))
+            .arg(Arg::new("nresamples")
                 .long("nresamples")
                 .takes_value(true)
-                .help(&format!("Changes the default number of resamples for this run. [default: {}]", self.config.nresamples)))
-            .arg(Arg::with_name("noise-threshold")
+                .help(&*format!("Changes the default number of resamples for this run. [default: {}]", self.config.nresamples)))
+            .arg(Arg::new("noise-threshold")
                 .long("noise-threshold")
                 .takes_value(true)
-                .help(&format!("Changes the default noise threshold for this run. [default: {}]", self.config.noise_threshold)))
-            .arg(Arg::with_name("confidence-level")
+                .help(&*format!("Changes the default noise threshold for this run. [default: {}]", self.config.noise_threshold)))
+            .arg(Arg::new("confidence-level")
                 .long("confidence-level")
                 .takes_value(true)
-                .help(&format!("Changes the default confidence level for this run. [default: {}]", self.config.confidence_level)))
-            .arg(Arg::with_name("significance-level")
+                .help(&*format!("Changes the default confidence level for this run. [default: {}]", self.config.confidence_level)))
+            .arg(Arg::new("significance-level")
                 .long("significance-level")
                 .takes_value(true)
-                .help(&format!("Changes the default significance level for this run. [default: {}]", self.config.significance_level)))
-            .arg(Arg::with_name("quick")
+                .help(&*format!("Changes the default significance level for this run. [default: {}]", self.config.significance_level)))
+            .arg(Arg::new("quick")
                 .long("quick")
                 .conflicts_with("sample-size")
-                .help(&format!("Benchmark only until the significance level has been reached [default: {}]", self.config.quick_mode)))
-            .arg(Arg::with_name("test")
-                .hidden(true)
+                .help(&*format!("Benchmark only until the significance level has been reached [default: {}]", self.config.quick_mode)))
+            .arg(Arg::new("test")
+                .hide(true)
                 .long("test")
                 .help("Run the benchmarks once, to verify that they execute successfully, but do not measure or report the results.")
                 .conflicts_with_all(&["list", "profile-time"]))
-            .arg(Arg::with_name("bench")
-                .hidden(true)
+            .arg(Arg::new("bench")
+                .hide(true)
                 .long("bench"))
-            .arg(Arg::with_name("plotting-backend")
+            .arg(Arg::new("plotting-backend")
                  .long("plotting-backend")
                  .takes_value(true)
                  .possible_values(&["gnuplot", "plotters"])
                  .help("Set the plotting backend. By default, Criterion.rs will use the gnuplot backend if gnuplot is available, or the plotters backend if it isn't."))
-            .arg(Arg::with_name("output-format")
+            .arg(Arg::new("output-format")
                 .long("output-format")
                 .takes_value(true)
                 .possible_values(&["criterion", "bencher"])
                 .default_value("criterion")
                 .help("Change the CLI output format. By default, Criterion.rs will use its own format. If output format is set to 'bencher', Criterion.rs will print output in a format that resembles the 'bencher' crate."))
-            .arg(Arg::with_name("nocapture")
+            .arg(Arg::new("nocapture")
                 .long("nocapture")
-                .hidden(true)
+                .hide(true)
                 .help("Ignored, but added for compatibility with libtest."))
-            .arg(Arg::with_name("version")
-                .hidden(true)
-                .short("V")
+            .arg(Arg::new("version")
+                .hide(true)
+                .short('V')
                 .long("version"))
             .after_help("
 This executable is a Criterion.rs benchmark.
@@ -937,10 +936,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         } else if matches.is_present("list") {
             Mode::List
         } else if matches.is_present("profile-time") {
-            let num_seconds = value_t!(matches.value_of("profile-time"), f64).unwrap_or_else(|e| {
-                println!("{}", e);
-                std::process::exit(1)
-            });
+            let num_seconds = matches.value_of_t_or_exit("profile-time");
 
             if num_seconds < 1.0 {
                 eprintln!("Profile time must be at least one second.");
@@ -1036,19 +1032,13 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         }
 
         if matches.is_present("sample-size") {
-            let num_size = value_t!(matches.value_of("sample-size"), usize).unwrap_or_else(|e| {
-                println!("{}", e);
-                std::process::exit(1)
-            });
+            let num_size = matches.value_of_t_or_exit("sample-size");
 
             assert!(num_size >= 10);
             self.config.sample_size = num_size;
         }
         if matches.is_present("warm-up-time") {
-            let num_seconds = value_t!(matches.value_of("warm-up-time"), f64).unwrap_or_else(|e| {
-                println!("{}", e);
-                std::process::exit(1)
-            });
+            let num_seconds = matches.value_of_t_or_exit("warm-up-time");
 
             let dur = std::time::Duration::from_secs_f64(num_seconds);
             assert!(dur.as_nanos() > 0);
@@ -1056,11 +1046,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.config.warm_up_time = dur;
         }
         if matches.is_present("measurement-time") {
-            let num_seconds =
-                value_t!(matches.value_of("measurement-time"), f64).unwrap_or_else(|e| {
-                    println!("{}", e);
-                    std::process::exit(1)
-                });
+            let num_seconds = matches.value_of_t_or_exit("measurement-time");
 
             let dur = std::time::Duration::from_secs_f64(num_seconds);
             assert!(dur.as_nanos() > 0);
@@ -1068,44 +1054,28 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.config.measurement_time = dur;
         }
         if matches.is_present("nresamples") {
-            let num_resamples =
-                value_t!(matches.value_of("nresamples"), usize).unwrap_or_else(|e| {
-                    println!("{}", e);
-                    std::process::exit(1)
-                });
+            let num_resamples = matches.value_of_t_or_exit("nresamples");
 
             assert!(num_resamples > 0);
 
             self.config.nresamples = num_resamples;
         }
         if matches.is_present("noise-threshold") {
-            let num_noise_threshold = value_t!(matches.value_of("noise-threshold"), f64)
-                .unwrap_or_else(|e| {
-                    println!("{}", e);
-                    std::process::exit(1)
-                });
+            let num_noise_threshold = matches.value_of_t_or_exit("noise-threshold");
 
             assert!(num_noise_threshold > 0.0);
 
             self.config.noise_threshold = num_noise_threshold;
         }
         if matches.is_present("confidence-level") {
-            let num_confidence_level = value_t!(matches.value_of("confidence-level"), f64)
-                .unwrap_or_else(|e| {
-                    println!("{}", e);
-                    std::process::exit(1)
-                });
+            let num_confidence_level = matches.value_of_t_or_exit("confidence-level");
 
             assert!(num_confidence_level > 0.0 && num_confidence_level < 1.0);
 
             self.config.confidence_level = num_confidence_level;
         }
         if matches.is_present("significance-level") {
-            let num_significance_level = value_t!(matches.value_of("significance-level"), f64)
-                .unwrap_or_else(|e| {
-                    println!("{}", e);
-                    std::process::exit(1)
-                });
+            let num_significance_level = matches.value_of_t_or_exit("significance-level");
 
             assert!(num_significance_level > 0.0 && num_significance_level < 1.0);
 
@@ -1132,7 +1102,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             let args = critcmp::app::Args {
                 baselines: matches.values_of_lossy("baselines").unwrap_or_default(),
                 output_list: matches.is_present("compare-list"),
-                threshold: value_t!(matches.value_of("compare-threshold"), f64).ok(), // FIXME: Print error message if parsing fails.
+                threshold: matches.value_of_t("compare-threshold").ok(), // FIXME: Print error message if parsing fails.
                 color: enable_text_coloring,
                 filter: self.filter,
             };
