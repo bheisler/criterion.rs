@@ -20,7 +20,7 @@ fn bench(c: &mut Criterion) {
     // Configure Criterion.rs to detect smaller differences and increase sample size to improve
     // precision and counteract the resulting noise.
     group.significance_level(0.1).sample_size(500);
-    group.bench_function("my-function", |b| b.iter(|| my_function());
+    group.bench_function("my-function", |b| b.iter(|| my_function()));
     group.finish();
 }
 
@@ -40,7 +40,7 @@ fn my_function() {
 
 fn bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("sample-size-example");
-    group.bench_function("my-function", |b| b.iter(|| my_function());
+    group.bench_function("my-function", |b| b.iter(|| my_function()));
     group.finish();
 }
 
@@ -182,7 +182,7 @@ fn my_function() {
 fn bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("flat-sampling-example");
     group.sampling_mode(SamplingMode::Flat);
-    group.bench_function("my-function", |b| b.iter(|| my_function());
+    group.bench_function("my-function", |b| b.iter(|| my_function()));
     group.finish();
 }
 
