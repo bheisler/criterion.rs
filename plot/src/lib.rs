@@ -438,12 +438,15 @@ impl Figure {
         }
     }
 
+    // Allow clippy::format_push_string even with older versions of rust (<1.62) which
+    // don't have it defined.
+    #[allow(clippy::all)]
     fn script(&self) -> Vec<u8> {
         let mut s = String::new();
 
         s.push_str(&format!(
             "set output '{}'\n",
-            self.output.display().to_string().replace("'", "''")
+            self.output.display().to_string().replace('\'', "''")
         ));
 
         if let Some(width) = self.box_width {

@@ -15,8 +15,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - HTML report hidden behind non-default feature flag: 'html_reports'
 - Standalone support (ie without cargo-criterion) feature flag: 'cargo_bench_support'
+- MSRV bumped to 1.56.1
 
 ## [Unreleased]
+### Changed
+- MSRV bumped to 1.49
 
 ## [0.3.5] - 2021-07-26
 ### Fixed
@@ -429,3 +432,4 @@ more details
 [0.3.2]: https://github.com/bheisler/criterion.rs/compare/0.3.1...0.3.2
 [0.3.3]: https://github.com/bheisler/criterion.rs/compare/0.3.2...0.3.3
 [0.3.4]: https://github.com/bheisler/criterion.rs/compare/0.3.3...0.3.4
+[0.3.5]: https://github.com/bheisler/criterion.rs/compare/0.3.4...0.3.5

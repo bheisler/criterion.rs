@@ -9,7 +9,7 @@ fn large_setup(c: &mut Criterion) {
     group.bench_function("large_setup", |b| {
         b.iter_batched(
             || (0..SIZE).map(|i| i as u8).collect::<Vec<_>>(),
-            |v| v.clone(),
+            |v| v,
             BatchSize::NumBatches(1),
         )
     });

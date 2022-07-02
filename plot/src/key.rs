@@ -48,6 +48,9 @@ impl Properties {
 }
 
 impl Script for Properties {
+    // Allow clippy::format_push_string even with older versions of rust (<1.62) which
+    // don't have it defined.
+    #[allow(clippy::all)]
     fn script(&self) -> String {
         let mut script = if self.hidden {
             return String::from("set key off\n");

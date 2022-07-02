@@ -88,6 +88,47 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
         report_context: &ReportContext,
         parameter: &T,
     ) -> (ActualSamplingMode, Box<[f64]>, Box<[f64]>) {
+        if config.quick_mode {
+            let minimum_bench_duration = Duration::from_millis(100);
+            let maximum_bench_duration = config.measurement_time; // default: 5 seconds
+            let target_rel_stdev = config.significance_level; // default: 5%, 0.05
+
+            use std::time::Instant;
+            let time_start = Instant::now();
+
+            let sq = |val| val * val;
+            let mut n = 1;
+            let mut t_prev = *self.bench(measurement, &[n], parameter).first().unwrap();
+
+            // Early exit for extremely long running benchmarks:
+            if time_start.elapsed() > maximum_bench_duration {
+                let t_prev = 1_000_000f64;
+                let iters = vec![n as f64, n as f64].into_boxed_slice();
+                let elapsed = vec![t_prev, t_prev].into_boxed_slice();
+                return (ActualSamplingMode::Flat, iters, elapsed);
+            }
+
+            // Main data collection loop.
+            loop {
+                let t_now = *self
+                    .bench(measurement, &[n * 2], parameter)
+                    .first()
+                    .unwrap();
+                let t = (t_prev + 2. * t_now) / 5.;
+                let stdev = (sq(t_prev - t) + sq(t_now - 2. * t)).sqrt();
+                // println!("Sample: {} {:.2}", n, stdev / t);
+                let elapsed = time_start.elapsed();
+                if (stdev < target_rel_stdev * t && elapsed > minimum_bench_duration)
+                    || elapsed > maximum_bench_duration
+                {
+                    let iters = vec![n as f64, (n * 2) as f64].into_boxed_slice();
+                    let elapsed = vec![t_prev, t_now].into_boxed_slice();
+                    return (ActualSamplingMode::Linear, iters, elapsed);
+                }
+                n *= 2;
+                t_prev = t_now;
+            }
+        }
         let wu = config.warm_up_time;
         let m_ns = config.measurement_time.as_nanos();
 
