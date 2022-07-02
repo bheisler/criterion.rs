@@ -871,8 +871,12 @@ impl<M: Measurement> Criterion<M> {
                 .long("nocapture")
                 .hide(true)
                 .help("Ignored, but added for compatibility with libtest."))
+            .arg(Arg::new("show-output")
+                .long("show-output")
+                .hidden(true)
+                .help("Ignored, but added for compatibility with libtest."))
             .arg(Arg::new("version")
-                .hide(true)
+                .hidden(true)
                 .short('V')
                 .long("version"))
             .after_help("
