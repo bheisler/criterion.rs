@@ -17,7 +17,7 @@ license     = "Apache-2.0/MIT"
 exclude     = ["book/*"]
 
 [dependencies]
-anes           = "0.1"
+anes           = "0.1.4"
 lazy_static    = "1.4"
 criterion-plot = { path = "plot", version = "0.4.4" }
 itertools      = "0.10"
