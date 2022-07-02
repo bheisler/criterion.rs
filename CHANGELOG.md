@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - HTML report hidden behind non-default feature flag: 'html_reports'
 - Standalone support (ie without cargo-criterion) feature flag: 'cargo_bench_support'
-- MSRV bumped to 1.56
+- MSRV bumped to 1.56.1
 
 ## [Unreleased]
 ### Changed
