@@ -12,13 +12,13 @@ categories = ["visualization"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-cast = "0.2"
+cast = "0.3"
 itertools = "0.10"
 
 [dev-dependencies]
 itertools-num = "0.1"
-num-complex = { version = "0.2", default-features = false, features = ["std"] }
-rand = "0.4"
+num-complex = { version = "0.4", default-features = false, features = ["std"] }
+rand = "0.8"
 
 [badges]
 travis-ci = { repository = "bheisler/criterion.rs" }
