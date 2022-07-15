@@ -2,7 +2,7 @@ use crate::benchmark::BenchmarkConfig;
 use crate::connection::OutgoingMessage;
 use crate::measurement::Measurement;
 use crate::report::{BenchmarkId, Report, ReportContext};
-use crate::{ActualSamplingMode, Bencher, Criterion};
+use crate::{black_box, ActualSamplingMode, Bencher, Criterion};
 use std::marker::PhantomData;
 use std::time::Duration;
 
@@ -247,7 +247,7 @@ where
             .iter()
             .map(|iters| {
                 b.iters = *iters;
-                (*f)(&mut b, parameter);
+                (*f)(&mut b, black_box(parameter));
                 b.assert_iterated();
                 m.to_f64(&b.value)
             })
@@ -267,7 +267,7 @@ where
         let mut total_iters = 0;
         let mut elapsed_time = Duration::from_millis(0);
         loop {
-            (*f)(&mut b, parameter);
+            (*f)(&mut b, black_box(parameter));
 
             b.assert_iterated();
 

@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Formal support for benchmarking code compiled to web-assembly.
 - A `--quiet` flag for printing just a single line per benchmark.
 
+### Fixed
+- When using `bench_with_input`, the input parameter will now be passed through `black_box` before 
+  passing it to the benchmark.
+
 ## [0.3.5] - 2021-07-26
 
 ### Fixed
