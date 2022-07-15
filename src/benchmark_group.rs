@@ -290,7 +290,8 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
 
         assert!(
             !self.all_ids.contains(&id),
-            "Benchmark IDs must be unique within a group."
+            "Benchmark IDs must be unique within a group. Encountered duplicated benchmark ID {}",
+            &id
         );
 
         id.ensure_directory_name_unique(&self.criterion.all_directories);
