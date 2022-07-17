@@ -781,7 +781,7 @@ impl<M: Measurement> Criterion<M> {
         } = cli::parse_args(&self.config);
 
         if self.connection.is_some() {
-            if color == cli::Color::Auto {
+            if color != cli::Color::default() {
                 warn_ignored_flag_with_val("--color", &color);
             }
             if verbose {
@@ -793,7 +793,7 @@ impl<M: Measurement> Criterion<M> {
             if let Some(backend) = plotting_backend {
                 warn_ignored_flag_with_val("--plotting-backend", &backend);
             }
-            if output_format == cli::OutputFormat::Criterion {
+            if output_format != cli::OutputFormat::default() {
                 warn_ignored_flag_with_val("--output-format", &output_format);
             }
 
