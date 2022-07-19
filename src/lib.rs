@@ -301,7 +301,7 @@ pub(crate) enum Mode {
     /// Run benchmarks normally.
     Benchmark,
     /// List all benchmarks but do not run them.
-    List,
+    List(ListFormat),
     /// Run benchmarks once to verify that they work, but otherwise do not measure them.
     Test,
     /// Iterate benchmarks for a given length of time but do not analyze or report on them.
@@ -310,6 +310,26 @@ pub(crate) enum Mode {
 impl Mode {
     pub fn is_benchmark(&self) -> bool {
         matches!(self, Mode::Benchmark)
+    }
+
+    pub fn is_terse(&self) -> bool {
+        matches!(self, Mode::List(ListFormat::Terse))
+    }
+}
+
+#[derive(Debug, Clone)]
+/// Enum representing the list format.
+pub(crate) enum ListFormat {
+    /// The regular, default format.
+    Pretty,
+    /// The terse format, where nothing other than the name of the test and ": benchmark" at the end
+    /// is printed out.
+    Terse,
+}
+
+impl Default for ListFormat {
+    fn default() -> Self {
+        Self::Pretty
     }
 }
 
@@ -769,6 +789,13 @@ impl<M: Measurement> Criterion<M> {
                 .long("list")
                 .help("List all benchmarks")
                 .conflicts_with_all(&["test", "profile-time"]))
+            .arg(Arg::new("format")
+                .long("format")
+                .possible_values(&["pretty", "terse"])
+                .default_value("pretty")
+                // Note that libtest's --format also works during test execution, but criterion
+                // doesn't support that at the moment.
+                .help("Output formatting"))
             .arg(Arg::new("profile-time")
                 .long("profile-time")
                 .takes_value(true)
@@ -900,7 +927,18 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         };
 
         self.mode = if matches.is_present("list") {
-            Mode::List
+            let list_format = match matches
+                .value_of("format")
+                .expect("a default value was provided for this")
+            {
+                "pretty" => ListFormat::Pretty,
+                "terse" => ListFormat::Terse,
+                other => unreachable!(
+                    "unrecognized value for --format that isn't part of possible-values: {}",
+                    other
+                ),
+            };
+            Mode::List(list_format)
         } else if test_mode {
             Mode::Test
         } else if matches.is_present("profile-time") {

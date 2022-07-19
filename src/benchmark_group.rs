@@ -328,7 +328,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
                     );
                 }
             }
-            Mode::List => {
+            Mode::List(_) => {
                 if do_run {
                     println!("{}: benchmark", id);
                 }
@@ -392,7 +392,7 @@ impl<'a, M: Measurement> Drop for BenchmarkGroup<'a, M> {
                 self.criterion.measurement.formatter(),
             );
         }
-        if self.any_matched {
+        if self.any_matched && !self.criterion.mode.is_terse() {
             self.criterion.report.group_separator();
         }
     }
