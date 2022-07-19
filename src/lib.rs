@@ -899,10 +899,10 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             (false, _) => true,     // cargo test --benches should run tests
         };
 
-        self.mode = if test_mode {
-            Mode::Test
-        } else if matches.is_present("list") {
+        self.mode = if matches.is_present("list") {
             Mode::List
+        } else if test_mode {
+            Mode::Test
         } else if matches.is_present("profile-time") {
             let num_seconds = matches.value_of_t_or_exit("profile-time");
 
