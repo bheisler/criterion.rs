@@ -340,6 +340,8 @@ pub enum BenchmarkFilter {
     AcceptAll,
     /// Run benchmarks matching this regex.
     Regex(Regex),
+    /// Run the benchmark matching this string exactly.
+    Exact(String),
     /// Do not run any benchmarks.
     RejectAll,
 }
@@ -821,6 +823,9 @@ impl<M: Measurement> Criterion<M> {
             .arg(Arg::new("ignored")
                 .long("ignored")
                 .help("List or run ignored benchmarks (currently means skip all benchmarks)"))
+            .arg(Arg::new("exact")
+                .long("exact")
+                .help("Run benchmarks that exactly match the provided filter"))
             .arg(Arg::new("profile-time")
                 .long("profile-time")
                 .takes_value(true)
@@ -988,13 +993,17 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             // --ignored overwrites any name-based filters passed in.
             BenchmarkFilter::RejectAll
         } else if let Some(filter) = matches.value_of("FILTER") {
-            let regex = Regex::new(filter).unwrap_or_else(|err| {
-                panic!(
-                    "Unable to parse '{}' as a regular expression: {}",
-                    filter, err
-                )
-            });
-            BenchmarkFilter::Regex(regex)
+            if matches.is_present("exact") {
+                BenchmarkFilter::Exact(filter.to_owned())
+            } else {
+                let regex = Regex::new(filter).unwrap_or_else(|err| {
+                    panic!(
+                        "Unable to parse '{}' as a regular expression: {}",
+                        filter, err
+                    )
+                });
+                BenchmarkFilter::Regex(regex)
+            }
         } else {
             BenchmarkFilter::AcceptAll
         };
@@ -1136,6 +1145,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         match &self.filter {
             BenchmarkFilter::AcceptAll => true,
             BenchmarkFilter::Regex(regex) => regex.is_match(id),
+            BenchmarkFilter::Exact(exact) => id == exact,
             BenchmarkFilter::RejectAll => false,
         }
     }
