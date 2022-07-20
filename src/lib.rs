@@ -333,6 +333,17 @@ impl Default for ListFormat {
     }
 }
 
+/// Benchmark filtering support.
+#[derive(Clone, Debug)]
+pub enum BenchmarkFilter {
+    /// Run all benchmarks.
+    AcceptAll,
+    /// Run benchmarks matching this regex.
+    Regex(Regex),
+    /// Do not run any benchmarks.
+    RejectAll,
+}
+
 /// The benchmark manager
 ///
 /// `Criterion` lets you configure and execute benchmarks
@@ -349,7 +360,7 @@ impl Default for ListFormat {
 /// benchmark.
 pub struct Criterion<M: Measurement = WallTime> {
     config: BenchmarkConfig,
-    filter: Option<Regex>,
+    filter: BenchmarkFilter,
     report: Reports,
     output_directory: PathBuf,
     baseline_directory: String,
@@ -417,7 +428,7 @@ impl Default for Criterion {
                 sampling_mode: SamplingMode::Auto,
                 quick_mode: false,
             },
-            filter: None,
+            filter: BenchmarkFilter::AcceptAll,
             report: reports,
             baseline_directory: "base".to_owned(),
             baseline: Baseline::Save,
@@ -678,6 +689,8 @@ impl<M: Measurement> Criterion<M> {
     #[must_use]
     /// Filters the benchmarks. Only benchmarks with names that contain the
     /// given string will be executed.
+    ///
+    /// This overwrites [`Self::with_benchmark_filter`].
     pub fn with_filter<S: Into<String>>(mut self, filter: S) -> Criterion<M> {
         let filter_text = filter.into();
         let filter = Regex::new(&filter_text).unwrap_or_else(|err| {
@@ -686,7 +699,16 @@ impl<M: Measurement> Criterion<M> {
                 filter_text, err
             )
         });
-        self.filter = Some(filter);
+        self.filter = BenchmarkFilter::Regex(filter);
+
+        self
+    }
+
+    /// Only run benchmarks specified by the given filter.
+    ///
+    /// This overwrites [`Self::with_filter`].
+    pub fn with_benchmark_filter(mut self, filter: BenchmarkFilter) -> Criterion<M> {
+        self.filter = filter;
 
         self
     }
@@ -796,6 +818,9 @@ impl<M: Measurement> Criterion<M> {
                 // Note that libtest's --format also works during test execution, but criterion
                 // doesn't support that at the moment.
                 .help("Output formatting"))
+            .arg(Arg::new("ignored")
+                .long("ignored")
+                .help("List or run ignored benchmarks (currently means skip all benchmarks)"))
             .arg(Arg::new("profile-time")
                 .long("profile-time")
                 .takes_value(true)
@@ -959,9 +984,21 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.connection = None;
         }
 
-        if let Some(filter) = matches.value_of("FILTER") {
-            self = self.with_filter(filter);
-        }
+        let filter = if matches.is_present("ignored") {
+            // --ignored overwrites any name-based filters passed in.
+            BenchmarkFilter::RejectAll
+        } else if let Some(filter) = matches.value_of("FILTER") {
+            let regex = Regex::new(filter).unwrap_or_else(|err| {
+                panic!(
+                    "Unable to parse '{}' as a regular expression: {}",
+                    filter, err
+                )
+            });
+            BenchmarkFilter::Regex(regex)
+        } else {
+            BenchmarkFilter::AcceptAll
+        };
+        self = self.with_benchmark_filter(filter);
 
         match matches.value_of("plotting-backend") {
             // Use plotting_backend() here to re-use the panic behavior if Gnuplot is not available.
@@ -1097,8 +1134,9 @@ https://bheisler.github.io/criterion.rs/book/faq.html
 
     fn filter_matches(&self, id: &str) -> bool {
         match &self.filter {
-            Some(regex) => regex.is_match(id),
-            None => true,
+            BenchmarkFilter::AcceptAll => true,
+            BenchmarkFilter::Regex(regex) => regex.is_match(id),
+            BenchmarkFilter::RejectAll => false,
         }
     }
 
