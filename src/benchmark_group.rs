@@ -330,7 +330,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
             }
             Mode::List => {
                 if do_run {
-                    println!("{}: bench", id);
+                    println!("{}: benchmark", id);
                 }
             }
             Mode::Test => {
