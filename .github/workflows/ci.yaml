@@ -8,6 +8,8 @@ on:
       - version-0.4
 
 name: tests
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   ci:
