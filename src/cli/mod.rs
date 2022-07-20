@@ -6,7 +6,7 @@ mod types;
 use error::Error;
 pub use types::{Color, OutputFormat, PlottingBackend, SaveBaseline};
 
-use std::{env, ffi::OsString};
+use std::{env, ffi::OsString, str::FromStr};
 
 use crate::benchmark::BenchmarkConfig;
 
@@ -57,98 +57,125 @@ pub fn parse_args(config: &BenchmarkConfig) -> Args {
         }
         Err(e) => {
             eprintln!("Error parsing CLI args: {}", e);
-            eprintln!("{}", gen_help(config));
+            eprintln!("Use '--help' for more details on usage");
             std::process::exit(1);
         }
     }
 }
 
-fn try_parse_args(mut args: Vec<OsString>) -> Result<Args, Error> {
-    // Remove the executable
-    args.remove(0);
-
-    let mut args = pico_args::Arguments::from_vec(args);
-
-    // '--help' and '--version' have higher precedence, so handle them first
-    if args.contains(["-h", "--help"]) {
-        return Err(Error::DisplayHelp);
-    } else if args.contains(["-V", "--version"]) {
-        return Err(Error::DisplayVersion);
+fn parse_value<T: FromStr>(flag: &'static str, parser: &mut lexopt::Parser) -> error::Result<T> {
+    match parser.value() {
+        Ok(arg) => match arg.clone().into_string() {
+            Ok(s) => s.parse().map_err(|_| Error::InvalidFlagValue(flag, arg)),
+            Err(_) => Err(Error::InvalidFlagValue(flag, arg)),
+        },
+        Err(_) => Err(Error::FlagMissingValue(flag)),
     }
+}
 
-    // Flags with values first
-    let color: Color = args
-        .opt_value_from_str("--colour")
-        .transpose()
-        .or_else(|| args.opt_value_from_str(["-c", "--color"]).transpose())
-        .transpose()?
-        .unwrap_or_default();
-    let save_baseline: SaveBaseline = args
-        .opt_value_from_str(["-s", "--save-baseline"])?
-        .unwrap_or_default();
-    let baseline = args.opt_value_from_str(["-b", "--baseline"])?;
-    let baseline_lenient = args.opt_value_from_str("--baseline-lenient")?;
-    let profile_time = args.opt_value_from_str("--profile-time")?;
-    let export = args.opt_value_from_str("--export")?;
-    let baselines: Option<String> = args.opt_value_from_str("--baselines")?;
-    let compare_threshold = args.opt_value_from_str("--compare-threshold")?;
-    let load_baseline = args.opt_value_from_str("--load-baseline")?;
-    let sample_size = args.opt_value_from_str("--sample-size")?;
-    let warm_up_time = args.opt_value_from_str("--warm-up-time")?;
-    let measurement_time = args.opt_value_from_str("--measurement-time")?;
-    let num_resamples = args.opt_value_from_str("--nresamples")?;
-    let noise_threshold = args.opt_value_from_str("--noise-threshold")?;
-    let confidence_level = args.opt_value_from_str("--confidence-level")?;
-    let significance_level = args.opt_value_from_str("--significance-level")?;
-    let plotting_backend = args.opt_value_from_str("--plotting-backend")?;
-    let output_format: OutputFormat = args
-        .opt_value_from_str("--output-format")?
-        .unwrap_or_default();
+fn try_parse_args(raw_args: Vec<OsString>) -> Result<Args, Error> {
+    use lexopt::prelude::*;
 
-    // Now flags without values
-    let verbose = args.contains(["-v", "--verbose"]);
-    let quiet = args.contains("--quiet");
-    let no_plot = args.contains(["-n", "--noplot"]);
-    let discard_baseline = args.contains("--discard-baseline");
-    let list = args.contains("--list");
-    let compare = args.contains("--compare");
-    let compare_list = args.contains("--compare-list");
-    let quick = args.contains("--quick");
-    let test = args.contains("--test");
-    let bench = args.contains("--bench");
-    // Ignored values that are parsed for compatibility
-    let _ = args.contains("--nocapture");
-    let _ = args.contains("--show-output");
-
-    // This needs to be last so that it doesn't get a flag
-    let filter = args.opt_free_from_str()?;
-
-    // Finally we fail if there are any remaining args that we didn't handle
-    let trailing = args.finish();
-    if !trailing.is_empty() {
-        return Err(Error::TrailingArgs(trailing));
+    let mut args = Args::default();
+    let mut parser = lexopt::Parser::from_iter(raw_args.into_iter());
+    while let Some(arg) = parser.next()? {
+        match arg {
+            // '--help' and '--version' bail parsing immediately
+            Short('h') | Long("help") => return Err(Error::DisplayHelp),
+            Short('V') | Long("version") => return Err(Error::DisplayVersion),
+            // All the flags with values
+            Short('c') | Long("color") | Long("colour") => {
+                args.color = parse_value("--color", &mut parser)?;
+            }
+            Short('s') | Long("save-baseline") => {
+                args.save_baseline = parse_value("--save-baseline", &mut parser)?;
+            }
+            Short('b') | Long("baseline") => {
+                args.baseline = Some(parse_value("--baseline", &mut parser)?);
+            }
+            Long("baseline-lenient") => {
+                args.baseline_lenient = Some(parse_value("--baseline-lenient", &mut parser)?);
+            }
+            Long("profile-time") => {
+                args.profile_time = Some(parse_value("--profile-time", &mut parser)?);
+            }
+            Long("export") => {
+                args.export = Some(parse_value("--export", &mut parser)?);
+            }
+            Long("baselines") => {
+                let baselines: String = parse_value("--baselines", &mut parser)?;
+                args.baselines = baselines.split(',').map(String::from).collect();
+            }
+            Long("compare-threshold") => {
+                args.compare_threshold = Some(parse_value("--compare-threshold", &mut parser)?);
+            }
+            Long("load-baseline") => {
+                args.load_baseline = Some(parse_value("--load-baseline", &mut parser)?);
+            }
+            Long("sample-size") => {
+                args.sample_size = Some(parse_value("--sample-size", &mut parser)?);
+            }
+            Long("warm-up-time") => {
+                args.warm_up_time = Some(parse_value("--warm-up-time", &mut parser)?);
+            }
+            Long("measurement-time") => {
+                args.measurement_time = Some(parse_value("--measurement-time", &mut parser)?);
+            }
+            Long("nresamples") => {
+                args.num_resamples = Some(parse_value("--nresamples", &mut parser)?);
+            }
+            Long("noise-threshold") => {
+                args.noise_threshold = Some(parse_value("--noise-threshold", &mut parser)?);
+            }
+            Long("confidence-level") => {
+                args.confidence_level = Some(parse_value("--confidence-level", &mut parser)?);
+            }
+            Long("significance-level") => {
+                args.significance_level = Some(parse_value("--significance-level", &mut parser)?);
+            }
+            Long("plotting-backend") => {
+                args.plotting_backend = Some(parse_value("--plotting-backend", &mut parser)?);
+            }
+            Long("output-format") => {
+                args.output_format = parse_value("--output-format", &mut parser)?;
+            }
+            // All the flags without values
+            Short('v') | Long("verbose") => args.verbose = true,
+            Long("quiet") => args.quiet = true,
+            Short('n') | Long("noplot") => args.no_plot = true,
+            Long("discard-baseline") => args.discard_baseline = true,
+            Long("list") => args.list = true,
+            Long("compare") => args.compare = true,
+            Long("compare-list") => args.compare_list = true,
+            Long("quick") => args.quick = true,
+            Long("test") => args.test = true,
+            Long("bench") => args.bench = true,
+            // '--nocapture' and '--show-output' are kept for libtest compatibility
+            Long("nocapture") => {}
+            Long("show-output") => {}
+            // Values
+            Value(val) if args.filter.is_none() => {
+                args.filter = Some(val.parse()?);
+            }
+            _ => return Err(Error::UnexpectedArg(format!("{:?}", arg))),
+        }
     }
-
-    // '--baselines' takes a comma separated list as its value
-    let baselines: Vec<_> = baselines
-        .map(|vals| vals.split(',').map(String::from).collect())
-        .unwrap_or_default();
 
     // Error if flags are missing their requires
-    if !baselines.is_empty() && !compare {
+    if !args.baselines.is_empty() && !args.compare {
         return Err(Error::MissingRequires("--baselines", "--compare"));
-    } else if load_baseline.is_some() && baseline.is_none() {
+    } else if args.load_baseline.is_some() && args.baseline.is_none() {
         return Err(Error::MissingRequires("--load-baseline", "--baseline"));
     }
 
     // Error if there are conflicting args
-    if verbose && quiet {
+    if args.verbose && args.quiet {
         return Err(Error::ConflictingFlags(&["--verbose", "--quiet"]));
     } else if [
-        discard_baseline,
-        !save_baseline.is_default(),
-        baseline.is_some(),
-        baseline_lenient.is_some(),
+        args.discard_baseline,
+        !args.save_baseline.is_default(),
+        args.baseline.is_some(),
+        args.baseline_lenient.is_some(),
     ]
     .iter()
     .filter(|b| **b)
@@ -162,12 +189,12 @@ fn try_parse_args(mut args: Vec<OsString>) -> Result<Args, Error> {
             "--baseline-lenient",
         ]));
     } else if [
-        list,
-        test,
-        profile_time.is_some(),
-        export.is_some(),
-        compare,
-        load_baseline.is_some(),
+        args.list,
+        args.test,
+        args.profile_time.is_some(),
+        args.export.is_some(),
+        args.compare,
+        args.load_baseline.is_some(),
     ]
     .iter()
     .filter(|b| **b)
@@ -182,41 +209,11 @@ fn try_parse_args(mut args: Vec<OsString>) -> Result<Args, Error> {
             "--compare",
             "--load-baseline",
         ]));
-    } else if quick && sample_size.is_some() {
+    } else if args.quick && args.sample_size.is_some() {
         return Err(Error::ConflictingFlags(&["--quick", "--sample-size"]));
     }
 
-    Ok(Args {
-        baseline,
-        baseline_lenient,
-        baselines,
-        bench,
-        color,
-        compare,
-        compare_list,
-        compare_threshold,
-        confidence_level,
-        discard_baseline,
-        export,
-        filter,
-        list,
-        load_baseline,
-        measurement_time,
-        no_plot,
-        noise_threshold,
-        num_resamples,
-        output_format,
-        plotting_backend,
-        profile_time,
-        quick,
-        quiet,
-        sample_size,
-        save_baseline,
-        significance_level,
-        test,
-        verbose,
-        warm_up_time,
-    })
+    Ok(args)
 }
 
 #[must_use]

@@ -1,6 +1,15 @@
 use std::{convert::Infallible, fmt, str::FromStr};
 
-use super::error::Error;
+#[derive(Debug)]
+pub struct TypeParseError(String);
+
+impl fmt::Display for TypeParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Unexpected value: {}", self.0)
+    }
+}
+
+impl std::error::Error for TypeParseError {}
 
 const DEFAULT_SAVE_BASELINE: &str = "base";
 
@@ -41,14 +50,14 @@ impl Default for Color {
 }
 
 impl FromStr for Color {
-    type Err = Error;
+    type Err = TypeParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "auto" => Ok(Self::Auto),
             "always" => Ok(Self::Always),
             "never" => Ok(Self::Never),
-            invalid => Err(Error::InvalidColor(invalid.to_owned())),
+            invalid => Err(TypeParseError(invalid.to_owned())),
         }
     }
 }
@@ -79,13 +88,13 @@ impl From<PlottingBackend> for crate::PlottingBackend {
 }
 
 impl FromStr for PlottingBackend {
-    type Err = Error;
+    type Err = TypeParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "gnuplot" => Ok(Self::GnuPlot),
             "plotters" => Ok(Self::Plotters),
-            invalid => Err(Error::InvalidPlottingBackend(invalid.to_owned())),
+            invalid => Err(TypeParseError(invalid.to_owned())),
         }
     }
 }
@@ -112,13 +121,13 @@ impl Default for OutputFormat {
 }
 
 impl FromStr for OutputFormat {
-    type Err = Error;
+    type Err = TypeParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "criterion" => Ok(Self::Criterion),
             "bencher" => Ok(Self::Bencher),
-            invalid => Err(Error::InvalidOutputFormat(invalid.to_owned())),
+            invalid => Err(TypeParseError(invalid.to_owned())),
         }
     }
 }
