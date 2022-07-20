@@ -25,7 +25,7 @@ impl fmt::Display for Error {
         match self {
             Self::DisplayHelp => f.write_str("Signals to display help"),
             Self::DisplayVersion => f.write_str("Signals to display version"),
-            Self::LexOpt(_) => todo!(),
+            Self::LexOpt(e) => write!(f, "Error parsing args: {}", e),
             Self::UnexpectedArg(args) => write!(f, "Extra args that weren't processed: {:?}", args),
             Self::ConflictingFlags(flags) => {
                 write!(f, "Multiple of conflicting flags: {:?}", flags)

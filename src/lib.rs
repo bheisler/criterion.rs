@@ -849,11 +849,11 @@ impl<M: Measurement> Criterion<M> {
         }
         if let Some(dir) = baseline {
             self.baseline = Baseline::CompareStrict;
-            self.baseline_directory = dir.to_owned();
+            self.baseline_directory = dir;
         }
         if let Some(dir) = baseline_lenient {
             self.baseline = Baseline::CompareLenient;
-            self.baseline_directory = dir.to_owned();
+            self.baseline_directory = dir;
         }
 
         if self.connection.is_some() {
@@ -896,7 +896,7 @@ impl<M: Measurement> Criterion<M> {
         }
 
         if let Some(dir) = load_baseline {
-            self.load_baseline = Some(dir.to_owned());
+            self.load_baseline = Some(dir);
         }
 
         if let Some(num_size) = sample_size {
