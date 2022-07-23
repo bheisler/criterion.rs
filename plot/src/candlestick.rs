@@ -144,7 +144,17 @@ where
         } = candlesticks;
 
         let data = Matrix::new(
-            izip!(x, box_min, whisker_min, whisker_high, box_high),
+            x.into_iter()
+                .zip(
+                    box_min.into_iter().zip(
+                        whisker_min
+                            .into_iter()
+                            .zip(whisker_high.into_iter().zip(box_high.into_iter())),
+                    ),
+                )
+                .map(|(x, (box_min, (whisker_min, (whisker_high, box_high))))| {
+                    (x, box_min, whisker_min, whisker_high, box_high)
+                }),
             (x_factor, y_factor, y_factor, y_factor, y_factor),
         );
         self.plots

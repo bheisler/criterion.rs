@@ -136,7 +136,12 @@ where
         let (x_factor, y_factor) =
             crate::scale_factor(&self.axes, props.axes.unwrap_or(crate::Axes::BottomXLeftY));
 
-        let data = Matrix::new(izip!(x, y1, y2), (x_factor, y_factor, y_factor));
+        let data = Matrix::new(
+            x.into_iter()
+                .zip(y1.into_iter().zip(y2.into_iter()))
+                .map(|(x, (y1, y2))| (x, y1, y2)),
+            (x_factor, y_factor, y_factor),
+        );
         self.plots.push(Plot::new(data, &props));
         self
     }

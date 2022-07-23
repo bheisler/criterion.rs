@@ -371,10 +371,6 @@
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::doc_markdown))]
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::many_single_char_names))]
 
-extern crate cast;
-#[macro_use]
-extern crate itertools;
-
 use std::borrow::Cow;
 use std::fmt;
 use std::fs::File;
