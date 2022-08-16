@@ -999,8 +999,14 @@ pub fn version() -> Result<Version, VersionError> {
     }
 
     let output = String::from_utf8(command_output.stdout).map_err(|_| VersionError::OutputError)?;
+    let stderr_out =
+        String::from_utf8(command_output.stderr).map_err(|_| VersionError::OutputError)?;
 
-    parse_version(&output).map_err(|_| VersionError::ParseError(output.clone()))
+    parse_version(&output)
+        .or_else(|_| parse_version(&stderr_out))
+        .map_err(|_| {
+            VersionError::ParseError(format!("stdout: '{}', stderr: '{}'", output, stderr_out))
+        })
 }
 
 fn parse_version(version_str: &str) -> Result<Version, Option<ParseIntError>> {
