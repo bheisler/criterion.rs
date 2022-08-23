@@ -59,7 +59,6 @@ mod benchmark_group;
 pub mod async_executor;
 mod bencher;
 mod connection;
-mod critcmp;
 #[cfg(feature = "csv_output")]
 mod csv_report;
 mod error;
@@ -80,7 +79,6 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::default::Default;
 use std::env;
-use std::io::Write;
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -786,31 +784,6 @@ impl<M: Measurement> Criterion<M> {
                 .takes_value(true)
                 .help("Iterate each benchmark for approximately the given number of seconds, doing no analysis and without storing the results. Useful for running the benchmarks in a profiler.")
                 .conflicts_with_all(&["test", "list"]))
-            .arg(Arg::new("export")
-                .long("export")
-                .takes_value(true)
-                .help("Export baseline as json, printed to stdout")
-                .conflicts_with_all(&["list", "test", "profile-time", "compare"]))
-            .arg(Arg::new("compare")
-                .long("compare")
-                .help("Tabulate benchmark results")
-                .conflicts_with_all(&["list", "test", "profile-time", "export"]))
-            .arg(Arg::new("baselines")
-                .long("baselines")
-                .multiple_occurrences(true)
-                .value_name("baselines")
-                .requires("compare")
-                .require_value_delimiter(true)
-                .use_value_delimiter(true)
-                .help("Limit the baselines used in tabulated results.")
-                .help(""))
-            .arg(Arg::new("compare-threshold")
-                .long("compare-threshold")
-                .takes_value(true)
-                .help("Hide results that differ by less than the threshold percentage. By default, all results are shown."))
-            .arg(Arg::new("compare-list")
-                .long("compare-list")
-                .help("Show benchmark results in a list rather than in a table. Useful when horizontal space is limited."))
             .arg(Arg::new("load-baseline")
                  .long("load-baseline")
                  .takes_value(true)
@@ -1085,54 +1058,6 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             assert!(num_significance_level > 0.0 && num_significance_level < 1.0);
 
             self.config.significance_level = num_significance_level;
-        }
-
-        // XXX: Comparison functionality should ideally live in 'cargo-criterion'.
-        if matches.is_present("compare") {
-            if self.connection.is_some() {
-                eprintln!(
-                    "Error: tabulating results is not supported when running with cargo-criterion."
-                );
-                std::process::exit(1);
-            }
-            // Other arguments: compare-threshold, compare-list.
-
-            let stdout_isatty = atty::is(atty::Stream::Stdout);
-            let enable_text_coloring = match matches.value_of("color") {
-                Some("always") => true,
-                Some("never") => false,
-                _ => stdout_isatty,
-            };
-
-            let args = critcmp::app::Args {
-                baselines: matches.values_of_lossy("baselines").unwrap_or_default(),
-                output_list: matches.is_present("compare-list"),
-                threshold: matches.value_of_t("compare-threshold").ok(), // FIXME: Print error message if parsing fails.
-                color: enable_text_coloring,
-                filter: self.filter,
-            };
-            critcmp::main::main(args);
-            std::process::exit(0);
-        }
-
-        if let Some(baseline) = matches.value_of("export") {
-            let benchmarks = critcmp::app::Args {
-                baselines: matches.values_of_lossy("baselines").unwrap_or_default(),
-                ..Default::default()
-            }
-            .benchmarks()
-            .expect("failed to find baselines");
-            let mut stdout = std::io::stdout();
-            let basedata = match benchmarks.by_baseline.get(baseline) {
-                Some(basedata) => basedata,
-                None => {
-                    eprintln!("failed to find baseline '{}'", baseline);
-                    std::process::exit(1);
-                }
-            };
-            serde_json::to_writer_pretty(&mut stdout, basedata).unwrap();
-            writeln!(stdout).unwrap();
-            std::process::exit(0);
         }
 
         if matches.is_present("quick") {
