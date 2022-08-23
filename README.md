@@ -117,7 +117,7 @@ For more details, see the [CONTRIBUTING.md file](https://github.com/bheisler/cri
 ### Compatibility Policy
 
 Criterion.<span></span>rs supports the last three stable minor releases of Rust. At time of
-writing, this means Rust 1.50 or later. Older versions may work, but are not guaranteed.
+writing, this means Rust 1.59 or later. Older versions may work, but are not guaranteed.
 
 Currently, the oldest version of Rust believed to work is 1.56.1. Future versions of Criterion.<span></span>rs may
 break support for such old versions, and this will not be considered a breaking change. If you

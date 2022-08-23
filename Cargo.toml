@@ -3,8 +3,8 @@ authors = [
   "Jorge Aparicio <japaricious@gmail.com>",
   "Brook Heisler <brookheisler@gmail.com>",
 ]
-name    = "criterion"
-version = "0.3.5"
+name = "criterion"
+version = "0.3.6"
 edition = "2018"
 
 description = "Statistics-driven micro-benchmarking library"
@@ -19,7 +19,7 @@ exclude     = ["book/*"]
 [dependencies]
 anes           = "0.1.4"
 lazy_static    = "1.4"
-criterion-plot = { path = "plot", version = "0.4.4" }
+criterion-plot = { path = "plot", version = "0.4.5" }
 itertools      = "0.10"
 serde          = "1.0"
 serde_json     = "1.0"
@@ -29,7 +29,7 @@ atty           = "0.2.6"
 clap           = { version = "3.1", default-features = false, features = ["std"] }
 walkdir        = "2.3"
 tinytemplate   = "1.1"
-cast           = "0.2"
+cast           = "0.3"
 num-traits     = { version = "0.2", default-features = false, features = ["std"] }
 oorandom       = "11.1"
 regex          = { version = "1.5", default-features = false, features = ["std"] }
@@ -38,11 +38,13 @@ termcolor      = "1.1.2"
 unicode-width  = "0.1.9"
 
 # Optional dependencies
-rayon     = { version = "1.3", optional = true }
-csv       = { version = "1.1", optional = true }
-futures   = { version = "0.3", default_features = false, optional = true }
-smol      = { version = "1.2", default-features = false, optional = true }
-tokio     = { version = "1.0", default-features = false, features = ["rt"], optional = true }
+rayon = { version = "1.3", optional = true }
+csv = { version = "1.1", optional = true }
+futures = { version = "0.3", default_features = false, optional = true }
+smol = { version = "1.2", default-features = false, optional = true }
+tokio = { version = "1.0", default-features = false, features = [
+  "rt",
+], optional = true }
 async-std = { version = "1.9", optional = true }
 
 [dependencies.plotters]
@@ -62,7 +64,7 @@ futures    = { version = "0.3", default_features = false, features = ["executor"
 maintenance = { status = "passively-maintained" }
 
 [features]
-stable  = [
+stable = [
   "csv_output",
   "html_reports",
   "async_futures",

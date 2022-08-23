@@ -60,7 +60,7 @@ Some things that will increase the chance that your pull request is accepted:
 *   PRs with breaking changes are made against the unreleased branch. e.g. branch version-0.4
 *   PRs without breaking changes are made against the master branch.
 
-If your not sure which branch to use just start with master, as this can be changed during review.
+If you're not sure which branch to use just start with master, as this can be changed during review.
 
 When it is time to release the unreleased branch, a PR is made from the unreleased branch to master. e.g. https://github.com/bheisler/criterion.rs/pull/496
 
