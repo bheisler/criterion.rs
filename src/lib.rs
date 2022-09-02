@@ -36,9 +36,6 @@ extern crate quickcheck;
 use clap::value_t;
 use regex::Regex;
 
-#[macro_use]
-extern crate lazy_static;
-
 #[cfg(feature = "real_blackbox")]
 extern crate test;
 
@@ -86,6 +83,7 @@ use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
 use criterion_plot::{Version, VersionError};
+use once_cell::sync::Lazy;
 
 use crate::benchmark::BenchmarkConfig;
 use crate::benchmark::NamedRoutine;
@@ -106,49 +104,44 @@ pub use crate::bencher::Bencher;
 pub use crate::benchmark::{Benchmark, BenchmarkDefinition, ParameterizedBenchmark};
 pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};
 
-lazy_static! {
-    static ref DEBUG_ENABLED: bool = std::env::var_os("CRITERION_DEBUG").is_some();
-    static ref GNUPLOT_VERSION: Result<Version, VersionError> = criterion_plot::version();
-    static ref DEFAULT_PLOTTING_BACKEND: PlottingBackend = {
-        match &*GNUPLOT_VERSION {
-            Ok(_) => PlottingBackend::Gnuplot,
-            Err(e) => {
-                match e {
-                    VersionError::Exec(_) => println!("Gnuplot not found, using plotters backend"),
-                    e => println!(
-                        "Gnuplot not found or not usable, using plotters backend\n{}",
-                        e
-                    ),
-                };
-                PlottingBackend::Plotters
-            }
+static DEBUG_ENABLED: Lazy<bool> = Lazy::new(|| std::env::var_os("CRITERION_DEBUG").is_some());
+static GNUPLOT_VERSION: Lazy<Result<Version, VersionError>> = Lazy::new(criterion_plot::version);
+static DEFAULT_PLOTTING_BACKEND: Lazy<PlottingBackend> = Lazy::new(|| match &*GNUPLOT_VERSION {
+    Ok(_) => PlottingBackend::Gnuplot,
+    Err(e) => {
+        match e {
+            VersionError::Exec(_) => println!("Gnuplot not found, using plotters backend"),
+            e => println!(
+                "Gnuplot not found or not usable, using plotters backend\n{}",
+                e
+            ),
+        };
+        PlottingBackend::Plotters
+    }
+});
+static CARGO_CRITERION_CONNECTION: Lazy<Option<Mutex<Connection>>> =
+    Lazy::new(|| match std::env::var("CARGO_CRITERION_PORT") {
+        Ok(port_str) => {
+            let port: u16 = port_str.parse().ok()?;
+            let stream = TcpStream::connect(("localhost", port)).ok()?;
+            Some(Mutex::new(Connection::new(stream).ok()?))
         }
-    };
-    static ref CARGO_CRITERION_CONNECTION: Option<Mutex<Connection>> = {
-        match std::env::var("CARGO_CRITERION_PORT") {
-            Ok(port_str) => {
-                let port: u16 = port_str.parse().ok()?;
-                let stream = TcpStream::connect(("localhost", port)).ok()?;
-                Some(Mutex::new(Connection::new(stream).ok()?))
-            }
-            Err(_) => None,
-        }
-    };
-    static ref DEFAULT_OUTPUT_DIRECTORY: PathBuf = {
-        // Set criterion home to (in descending order of preference):
-        // - $CRITERION_HOME (cargo-criterion sets this, but other users could as well)
-        // - $CARGO_TARGET_DIR/criterion
-        // - the cargo target dir from `cargo metadata`
-        // - ./target/criterion
-        if let Some(value) = env::var_os("CRITERION_HOME") {
-            PathBuf::from(value)
-        } else if let Some(path) = cargo_target_directory() {
-            path.join("criterion")
-        } else {
-            PathBuf::from("target/criterion")
-        }
-    };
-}
+        Err(_) => None,
+    });
+static DEFAULT_OUTPUT_DIRECTORY: Lazy<PathBuf> = Lazy::new(|| {
+    // Set criterion home to (in descending order of preference):
+    // - $CRITERION_HOME (cargo-criterion sets this, but other users could as well)
+    // - $CARGO_TARGET_DIR/criterion
+    // - the cargo target dir from `cargo metadata`
+    // - ./target/criterion
+    if let Some(value) = env::var_os("CRITERION_HOME") {
+        PathBuf::from(value)
+    } else if let Some(path) = cargo_target_directory() {
+        path.join("criterion")
+    } else {
+        PathBuf::from("target/criterion")
+    }
+});
 
 fn debug_enabled() -> bool {
     *DEBUG_ENABLED
