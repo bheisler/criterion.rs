@@ -32,9 +32,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - A `--discard-baseline` flag for discarding rather than saving benchmark results.
 - Formal support for benchmarking code compiled to web-assembly.
 - A `--quiet` flag for printing just a single line per benchmark.
+- A `Throughput::BytesDecimal` option for measuring throughput in bytes but printing them using
+  decimal units like kilobytes instead of binary units like kibibytes.
 
 ### Fixed
-- When using `bench_with_input`, the input parameter will now be passed through `black_box` before 
+- When using `bench_with_input`, the input parameter will now be passed through `black_box` before
   passing it to the benchmark.
 
 ## [0.3.6] - 2022-07-06
@@ -502,12 +504,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Initial release on Crates.io.
 
-<<<<<<< HEAD
-[unreleased]: https://github.com/bheisler/criterion.rs/compare/0.3.4...HEAD
-=======
-
 [Unreleased]: https://github.com/bheisler/criterion.rs/compare/0.3.6...HEAD
->>>>>>> master
 [0.1.1]: https://github.com/bheisler/criterion.rs/compare/0.1.0...0.1.1
 [0.1.2]: https://github.com/bheisler/criterion.rs/compare/0.1.1...0.1.2
 [0.2.0]: https://github.com/bheisler/criterion.rs/compare/0.1.2...0.2.0

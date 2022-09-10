@@ -1207,6 +1207,11 @@ pub enum Throughput {
     /// an input string or `&[u8]`.
     Bytes(u64),
 
+    /// Equivalent to Bytes, but the value will be reported in terms of
+    /// kilobytes (1000 bytes) per second instead of kibibytes (1024 bytes) per
+    /// second, megabytes instead of mibibytes, and gigabytes instead of gibibytes.
+    BytesDecimal(u64),
+
     /// Measure throughput in terms of elements/second. The value should be the number of elements
     /// processed by one iteration of the benchmarked code. Typically, this would be the size of a
     /// collection, but could also be the number of lines of input text or the number of values to

@@ -173,7 +173,9 @@ impl BenchmarkId {
 
     pub fn as_number(&self) -> Option<f64> {
         match self.throughput {
-            Some(Throughput::Bytes(n)) | Some(Throughput::Elements(n)) => Some(n as f64),
+            Some(Throughput::Bytes(n))
+            | Some(Throughput::Elements(n))
+            | Some(Throughput::BytesDecimal(n)) => Some(n as f64),
             None => self
                 .value_str
                 .as_ref()
@@ -184,6 +186,7 @@ impl BenchmarkId {
     pub fn value_type(&self) -> Option<ValueType> {
         match self.throughput {
             Some(Throughput::Bytes(_)) => Some(ValueType::Bytes),
+            Some(Throughput::BytesDecimal(_)) => Some(ValueType::Bytes),
             Some(Throughput::Elements(_)) => Some(ValueType::Elements),
             None => self
                 .value_str
