@@ -13,6 +13,15 @@ fn from_elem(c: &mut Criterion) {
         });
     }
     group.finish();
+
+    let mut group = c.benchmark_group("from_elem_decimal");
+    for size in [KB, 2 * KB].iter() {
+        group.throughput(Throughput::BytesDecimal(*size as u64));
+        group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, &size| {
+            b.iter(|| iter::repeat(0u8).take(size).collect::<Vec<_>>());
+        });
+    }
+    group.finish();
 }
 
 criterion_group!(benches, from_elem);

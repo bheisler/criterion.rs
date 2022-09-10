@@ -1,5 +1,7 @@
+#[cfg(feature = "csv_output")]
+use crate::csv_report::FileCsvReport;
+use crate::stats::bivariate::regression::Slope;
 use crate::stats::univariate::outliers::tukey::LabeledSample;
-use crate::{csv_report::FileCsvReport, stats::bivariate::regression::Slope};
 use crate::{html::Html, stats::bivariate::Data};
 
 use crate::estimate::{ChangeDistributions, ChangeEstimates, Distributions, Estimate, Estimates};
@@ -8,11 +10,11 @@ use crate::measurement::ValueFormatter;
 use crate::stats::univariate::Sample;
 use crate::stats::Distribution;
 use crate::{PlotConfiguration, Throughput};
-use std::cell::Cell;
+use anes::{Attribute, ClearLine, Color, ResetAttributes, SetAttribute, SetForegroundColor};
 use std::cmp;
 use std::collections::HashSet;
 use std::fmt;
-use std::io::stdout;
+use std::io::stderr;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
@@ -46,6 +48,7 @@ impl<'a> MeasurementData<'a> {
         self.data.x()
     }
 
+    #[cfg(feature = "csv_output")]
     pub fn sample_times(&self) -> &Sample<f64> {
         self.data.y()
     }
@@ -170,7 +173,9 @@ impl BenchmarkId {
 
     pub fn as_number(&self) -> Option<f64> {
         match self.throughput {
-            Some(Throughput::Bytes(n)) | Some(Throughput::Elements(n)) => Some(n as f64),
+            Some(Throughput::Bytes(n))
+            | Some(Throughput::Elements(n))
+            | Some(Throughput::BytesDecimal(n)) => Some(n as f64),
             None => self
                 .value_str
                 .as_ref()
@@ -181,6 +186,7 @@ impl BenchmarkId {
     pub fn value_type(&self) -> Option<ValueType> {
         match self.throughput {
             Some(Throughput::Bytes(_)) => Some(ValueType::Bytes),
+            Some(Throughput::BytesDecimal(_)) => Some(ValueType::Bytes),
             Some(Throughput::Elements(_)) => Some(ValueType::Elements),
             None => self
                 .value_str
@@ -304,9 +310,7 @@ pub(crate) struct Reports {
     pub(crate) bencher_enabled: bool,
     pub(crate) bencher: BencherReport,
     pub(crate) csv_enabled: bool,
-    pub(crate) csv: FileCsvReport,
-    pub(crate) html_enabled: bool,
-    pub(crate) html: Html,
+    pub(crate) html: Option<Html>,
 }
 macro_rules! reports_impl {
     (fn $name:ident(&self, $($argn:ident: $argt:ty),*)) => {
@@ -317,11 +321,12 @@ macro_rules! reports_impl {
             if self.bencher_enabled {
                 self.bencher.$name($($argn),*);
             }
+            #[cfg(feature = "csv_output")]
             if self.csv_enabled {
-                self.csv.$name($($argn),*);
+                FileCsvReport.$name($($argn),*);
             }
-            if self.html_enabled {
-                self.html.$name($($argn),*);
+            if let Some(reporter) = &self.html {
+                reporter.$name($($argn),*);
             }
         }
     };
@@ -363,35 +368,34 @@ impl Report for Reports {
     reports_impl!(fn group_separator(&self, ));
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub(crate) enum CliVerbosity {
+    Quiet,
+    Normal,
+    Verbose,
+}
+
 pub(crate) struct CliReport {
     pub enable_text_overwrite: bool,
     pub enable_text_coloring: bool,
-    pub verbose: bool,
-
-    last_line_len: Cell<usize>,
+    pub verbosity: CliVerbosity,
 }
 impl CliReport {
     pub fn new(
         enable_text_overwrite: bool,
         enable_text_coloring: bool,
-        verbose: bool,
+        verbosity: CliVerbosity,
     ) -> CliReport {
         CliReport {
             enable_text_overwrite,
             enable_text_coloring,
-            verbose,
-
-            last_line_len: Cell::new(0),
+            verbosity,
         }
     }
 
     fn text_overwrite(&self) {
         if self.enable_text_overwrite {
-            print!("\r");
-            for _ in 0..self.last_line_len.get() {
-                print!(" ");
-            }
-            print!("\r");
+            eprint!("\r{}", ClearLine::All)
         }
     }
 
@@ -399,41 +403,36 @@ impl CliReport {
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::needless_pass_by_value))]
     fn print_overwritable(&self, s: String) {
         if self.enable_text_overwrite {
-            self.last_line_len.set(s.len());
-            print!("{}", s);
-            stdout().flush().unwrap();
+            eprint!("{}", s);
+            stderr().flush().unwrap();
         } else {
-            println!("{}", s);
+            eprintln!("{}", s);
         }
     }
 
-    fn green(&self, s: String) -> String {
+    fn with_color(&self, color: Color, s: &str) -> String {
         if self.enable_text_coloring {
-            format!("\x1B[32m{}\x1B[39m", s)
+            format!("{}{}{}", SetForegroundColor(color), s, ResetAttributes)
         } else {
-            s
+            String::from(s)
         }
     }
 
-    fn yellow(&self, s: String) -> String {
-        if self.enable_text_coloring {
-            format!("\x1B[33m{}\x1B[39m", s)
-        } else {
-            s
-        }
+    fn green(&self, s: &str) -> String {
+        self.with_color(Color::DarkGreen, s)
     }
 
-    fn red(&self, s: String) -> String {
-        if self.enable_text_coloring {
-            format!("\x1B[31m{}\x1B[39m", s)
-        } else {
-            s
-        }
+    fn yellow(&self, s: &str) -> String {
+        self.with_color(Color::DarkYellow, s)
+    }
+
+    fn red(&self, s: &str) -> String {
+        self.with_color(Color::DarkRed, s)
     }
 
     fn bold(&self, s: String) -> String {
         if self.enable_text_coloring {
-            format!("\x1B[1m{}\x1B[22m", s)
+            format!("{}{}{}", SetAttribute(Attribute::Bold), s, ResetAttributes)
         } else {
             s
         }
@@ -441,7 +440,7 @@ impl CliReport {
 
     fn faint(&self, s: String) -> String {
         if self.enable_text_coloring {
-            format!("\x1B[2m{}\x1B[22m", s)
+            format!("{}{}{}", SetAttribute(Attribute::Faint), s, ResetAttributes)
         } else {
             s
         }
@@ -460,7 +459,7 @@ impl CliReport {
 
         println!(
             "{}",
-            self.yellow(format!(
+            self.yellow(&format!(
                 "Found {} outliers among {} measurements ({:.2}%)",
                 noutliers,
                 sample_size,
@@ -529,7 +528,7 @@ impl Report for CliReport {
         iter_count: u64,
     ) {
         self.text_overwrite();
-        let iter_string = if self.verbose {
+        let iter_string = if matches!(self.verbosity, CliVerbosity::Verbose) {
             format!("{} iterations", iter_count)
         } else {
             format::iter_count(iter_count)
@@ -559,14 +558,14 @@ impl Report for CliReport {
             let mut id = id.as_title().to_owned();
 
             if id.len() > 23 {
-                println!("{}", self.green(id.clone()));
+                println!("{}", self.green(&id));
                 id.clear();
             }
             let id_len = id.len();
 
             println!(
                 "{}{}time:   [{} {} {}]",
-                self.green(id),
+                self.green(&id),
                 " ".repeat(24 - id_len),
                 self.faint(
                     formatter.format_value(typical_estimate.confidence_interval.lower_bound)
@@ -594,98 +593,103 @@ impl Report for CliReport {
             )
         }
 
-        if let Some(ref comp) = meas.comparison {
-            let different_mean = comp.p_value < comp.significance_threshold;
-            let mean_est = &comp.relative_estimates.mean;
-            let point_estimate = mean_est.point_estimate;
-            let mut point_estimate_str = format::change(point_estimate, true);
-            // The change in throughput is related to the change in timing. Reducing the timing by
-            // 50% increases the throughput by 100%.
-            let to_thrpt_estimate = |ratio: f64| 1.0 / (1.0 + ratio) - 1.0;
-            let mut thrpt_point_estimate_str =
-                format::change(to_thrpt_estimate(point_estimate), true);
-            let explanation_str: String;
+        if !matches!(self.verbosity, CliVerbosity::Quiet) {
+            if let Some(ref comp) = meas.comparison {
+                let different_mean = comp.p_value < comp.significance_threshold;
+                let mean_est = &comp.relative_estimates.mean;
+                let point_estimate = mean_est.point_estimate;
+                let mut point_estimate_str = format::change(point_estimate, true);
+                // The change in throughput is related to the change in timing. Reducing the timing by
+                // 50% increases the throughput by 100%.
+                let to_thrpt_estimate = |ratio: f64| 1.0 / (1.0 + ratio) - 1.0;
+                let mut thrpt_point_estimate_str =
+                    format::change(to_thrpt_estimate(point_estimate), true);
+                let explanation_str: String;
 
-            if !different_mean {
-                explanation_str = "No change in performance detected.".to_owned();
-            } else {
-                let comparison = compare_to_threshold(mean_est, comp.noise_threshold);
-                match comparison {
-                    ComparisonResult::Improved => {
-                        point_estimate_str = self.green(self.bold(point_estimate_str));
-                        thrpt_point_estimate_str = self.green(self.bold(thrpt_point_estimate_str));
-                        explanation_str =
-                            format!("Performance has {}.", self.green("improved".to_owned()));
-                    }
-                    ComparisonResult::Regressed => {
-                        point_estimate_str = self.red(self.bold(point_estimate_str));
-                        thrpt_point_estimate_str = self.red(self.bold(thrpt_point_estimate_str));
-                        explanation_str =
-                            format!("Performance has {}.", self.red("regressed".to_owned()));
-                    }
-                    ComparisonResult::NonSignificant => {
-                        explanation_str = "Change within noise threshold.".to_owned();
+                if !different_mean {
+                    explanation_str = "No change in performance detected.".to_owned();
+                } else {
+                    let comparison = compare_to_threshold(mean_est, comp.noise_threshold);
+                    match comparison {
+                        ComparisonResult::Improved => {
+                            point_estimate_str = self.green(&self.bold(point_estimate_str));
+                            thrpt_point_estimate_str =
+                                self.green(&self.bold(thrpt_point_estimate_str));
+                            explanation_str =
+                                format!("Performance has {}.", self.green("improved"));
+                        }
+                        ComparisonResult::Regressed => {
+                            point_estimate_str = self.red(&self.bold(point_estimate_str));
+                            thrpt_point_estimate_str =
+                                self.red(&self.bold(thrpt_point_estimate_str));
+                            explanation_str = format!("Performance has {}.", self.red("regressed"));
+                        }
+                        ComparisonResult::NonSignificant => {
+                            explanation_str = "Change within noise threshold.".to_owned();
+                        }
                     }
                 }
+
+                if meas.throughput.is_some() {
+                    println!("{}change:", " ".repeat(17));
+
+                    println!(
+                        "{}time:   [{} {} {}] (p = {:.2} {} {:.2})",
+                        " ".repeat(24),
+                        self.faint(format::change(
+                            mean_est.confidence_interval.lower_bound,
+                            true
+                        )),
+                        point_estimate_str,
+                        self.faint(format::change(
+                            mean_est.confidence_interval.upper_bound,
+                            true
+                        )),
+                        comp.p_value,
+                        if different_mean { "<" } else { ">" },
+                        comp.significance_threshold
+                    );
+                    println!(
+                        "{}thrpt:  [{} {} {}]",
+                        " ".repeat(24),
+                        self.faint(format::change(
+                            to_thrpt_estimate(mean_est.confidence_interval.upper_bound),
+                            true
+                        )),
+                        thrpt_point_estimate_str,
+                        self.faint(format::change(
+                            to_thrpt_estimate(mean_est.confidence_interval.lower_bound),
+                            true
+                        )),
+                    );
+                } else {
+                    println!(
+                        "{}change: [{} {} {}] (p = {:.2} {} {:.2})",
+                        " ".repeat(24),
+                        self.faint(format::change(
+                            mean_est.confidence_interval.lower_bound,
+                            true
+                        )),
+                        point_estimate_str,
+                        self.faint(format::change(
+                            mean_est.confidence_interval.upper_bound,
+                            true
+                        )),
+                        comp.p_value,
+                        if different_mean { "<" } else { ">" },
+                        comp.significance_threshold
+                    );
+                }
+
+                println!("{}{}", " ".repeat(24), explanation_str);
             }
-
-            if meas.throughput.is_some() {
-                println!("{}change:", " ".repeat(17));
-
-                println!(
-                    "{}time:   [{} {} {}] (p = {:.2} {} {:.2})",
-                    " ".repeat(24),
-                    self.faint(format::change(
-                        mean_est.confidence_interval.lower_bound,
-                        true
-                    )),
-                    point_estimate_str,
-                    self.faint(format::change(
-                        mean_est.confidence_interval.upper_bound,
-                        true
-                    )),
-                    comp.p_value,
-                    if different_mean { "<" } else { ">" },
-                    comp.significance_threshold
-                );
-                println!(
-                    "{}thrpt:  [{} {} {}]",
-                    " ".repeat(24),
-                    self.faint(format::change(
-                        to_thrpt_estimate(mean_est.confidence_interval.upper_bound),
-                        true
-                    )),
-                    thrpt_point_estimate_str,
-                    self.faint(format::change(
-                        to_thrpt_estimate(mean_est.confidence_interval.lower_bound),
-                        true
-                    )),
-                );
-            } else {
-                println!(
-                    "{}change: [{} {} {}] (p = {:.2} {} {:.2})",
-                    " ".repeat(24),
-                    self.faint(format::change(
-                        mean_est.confidence_interval.lower_bound,
-                        true
-                    )),
-                    point_estimate_str,
-                    self.faint(format::change(
-                        mean_est.confidence_interval.upper_bound,
-                        true
-                    )),
-                    comp.p_value,
-                    if different_mean { "<" } else { ">" },
-                    comp.significance_threshold
-                );
-            }
-
-            println!("{}{}", " ".repeat(24), explanation_str);
         }
 
-        self.outliers(&meas.avg_times);
+        if !matches!(self.verbosity, CliVerbosity::Quiet) {
+            self.outliers(&meas.avg_times);
+        }
 
-        if self.verbose {
+        if matches!(self.verbosity, CliVerbosity::Verbose) {
             let format_short_estimate = |estimate: &Estimate| -> String {
                 format!(
                     "[{} {}]",

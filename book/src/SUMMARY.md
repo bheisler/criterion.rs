@@ -19,6 +19,8 @@
     - [Profiling](./user_guide/profiling.md)
     - [Custom Test Framework](./user_guide/custom_test_framework.md)
     - [Benchmarking async functions](./user_guide/benchmarking_async.md)
+    - [Quick Mode](./user_guide/quick_mode.md)
+    - [WebAssembly/WASI](./user_guide/wasi.md)
 - [cargo-criterion](./cargo_criterion/cargo_criterion.md)
   - [Configuring cargo-criterion](./cargo_criterion/configuring_cargo_criterion.md)
   - [External Tools](./cargo_criterion/external_tools.md)

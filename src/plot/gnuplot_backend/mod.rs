@@ -248,7 +248,7 @@ impl Plotter for Gnuplot {
         info!(
             "Waiting for {} gnuplot processes took {}",
             child_count,
-            format::time(crate::DurationExt::to_nanos(elapsed) as f64)
+            format::time(elapsed.as_nanos() as f64)
         );
     }
 }

@@ -8,6 +8,7 @@ use crate::stats::bivariate::resamples::Resamples;
 use crate::stats::float::Float;
 use crate::stats::tuple::{Tuple, TupledDistributionsBuilder};
 use crate::stats::univariate::Sample;
+#[cfg(feature = "rayon")]
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 /// Bivariate `(X, Y)` data
@@ -72,27 +73,41 @@ where
         T::Distributions: Send,
         T::Builder: Send,
     {
-        (0..nresamples)
-            .into_par_iter()
-            .map_init(
-                || Resamples::new(*self),
-                |resamples, _| statistic(resamples.next()),
-            )
-            .fold(
-                || T::Builder::new(0),
-                |mut sub_distributions, sample| {
+        #[cfg(feature = "rayon")]
+        {
+            (0..nresamples)
+                .into_par_iter()
+                .map_init(
+                    || Resamples::new(*self),
+                    |resamples, _| statistic(resamples.next()),
+                )
+                .fold(
+                    || T::Builder::new(0),
+                    |mut sub_distributions, sample| {
+                        sub_distributions.push(sample);
+                        sub_distributions
+                    },
+                )
+                .reduce(
+                    || T::Builder::new(0),
+                    |mut a, mut b| {
+                        a.extend(&mut b);
+                        a
+                    },
+                )
+                .complete()
+        }
+        #[cfg(not(feature = "rayon"))]
+        {
+            let mut resamples = Resamples::new(*self);
+            (0..nresamples)
+                .map(|_| statistic(resamples.next()))
+                .fold(T::Builder::new(0), |mut sub_distributions, sample| {
                     sub_distributions.push(sample);
                     sub_distributions
-                },
-            )
-            .reduce(
-                || T::Builder::new(0),
-                |mut a, mut b| {
-                    a.extend(&mut b);
-                    a
-                },
-            )
-            .complete()
+                })
+                .complete()
+        }
     }
 
     /// Returns a view into the `X` data

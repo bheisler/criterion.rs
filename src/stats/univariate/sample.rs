@@ -4,6 +4,7 @@ use crate::stats::float::Float;
 use crate::stats::tuple::{Tuple, TupledDistributionsBuilder};
 use crate::stats::univariate::Percentiles;
 use crate::stats::univariate::Resamples;
+#[cfg(feature = "rayon")]
 use rayon::prelude::*;
 
 /// A collection of data points drawn from a population
@@ -12,6 +13,7 @@ use rayon::prelude::*;
 ///
 /// - The sample contains at least 2 data points
 /// - The sample contains no `NaN`s
+#[repr(transparent)]
 pub struct Sample<A>([A]);
 
 // TODO(rust-lang/rfcs#735) move this `impl` into a private percentiles module
@@ -127,7 +129,10 @@ where
         }
 
         let mut v = self.to_vec().into_boxed_slice();
+        #[cfg(feature = "rayon")]
         v.par_sort_unstable_by(cmp);
+        #[cfg(not(feature = "rayon"))]
+        v.sort_unstable_by(cmp);
 
         // NB :-1: to intra-crate privacy rules
         unsafe { mem::transmute(v) }
@@ -206,27 +211,41 @@ where
         T::Distributions: Send,
         T::Builder: Send,
     {
-        (0..nresamples)
-            .into_par_iter()
-            .map_init(
-                || Resamples::new(self),
-                |resamples, _| statistic(resamples.next()),
-            )
-            .fold(
-                || T::Builder::new(0),
-                |mut sub_distributions, sample| {
+        #[cfg(feature = "rayon")]
+        {
+            (0..nresamples)
+                .into_par_iter()
+                .map_init(
+                    || Resamples::new(self),
+                    |resamples, _| statistic(resamples.next()),
+                )
+                .fold(
+                    || T::Builder::new(0),
+                    |mut sub_distributions, sample| {
+                        sub_distributions.push(sample);
+                        sub_distributions
+                    },
+                )
+                .reduce(
+                    || T::Builder::new(0),
+                    |mut a, mut b| {
+                        a.extend(&mut b);
+                        a
+                    },
+                )
+                .complete()
+        }
+        #[cfg(not(feature = "rayon"))]
+        {
+            let mut resamples = Resamples::new(self);
+            (0..nresamples)
+                .map(|_| statistic(resamples.next()))
+                .fold(T::Builder::new(0), |mut sub_distributions, sample| {
                     sub_distributions.push(sample);
                     sub_distributions
-                },
-            )
-            .reduce(
-                || T::Builder::new(0),
-                |mut a, mut b| {
-                    a.extend(&mut b);
-                    a
-                },
-            )
-            .complete()
+                })
+                .complete()
+        }
     }
 
     #[cfg(test)]

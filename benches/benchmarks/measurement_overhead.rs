@@ -5,7 +5,7 @@ fn some_benchmark(c: &mut Criterion) {
     group.bench_function("iter", |b| b.iter(|| 1));
     group.bench_function("iter_with_setup", |b| b.iter_with_setup(|| (), |_| 1));
     group.bench_function("iter_with_large_setup", |b| {
-        b.iter_with_large_setup(|| (), |_| 1)
+        b.iter_batched(|| (), |_| 1, BatchSize::NumBatches(1))
     });
     group.bench_function("iter_with_large_drop", |b| b.iter_with_large_drop(|| 1));
     group.bench_function("iter_batched_small_input", |b| {

@@ -1,5 +1,3 @@
-#![allow(deprecated)]
-
 use std::mem;
 
 use cast::From as _0;

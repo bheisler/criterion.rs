@@ -2,7 +2,7 @@ use crate::benchmark::BenchmarkConfig;
 use crate::connection::OutgoingMessage;
 use crate::measurement::Measurement;
 use crate::report::{BenchmarkId, Report, ReportContext};
-use crate::{ActualSamplingMode, Bencher, Criterion, DurationExt};
+use crate::{black_box, ActualSamplingMode, Bencher, Criterion};
 use std::marker::PhantomData;
 use std::time::Duration;
 
@@ -34,7 +34,7 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
     ) {
         criterion
             .report
-            .profile(id, report_context, time.to_nanos() as f64);
+            .profile(id, report_context, time.as_nanos() as f64);
 
         let mut profile_path = report_context.output_directory.clone();
         if (*crate::CARGO_CRITERION_CONNECTION).is_some() {
@@ -51,7 +51,7 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
             .borrow_mut()
             .start_profiling(id.id(), &profile_path);
 
-        let time = time.to_nanos();
+        let time = time.as_nanos() as u64;
 
         // TODO: Some profilers will show the two batches of iterations as
         // being different code-paths even though they aren't really.
@@ -88,17 +88,58 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
         report_context: &ReportContext,
         parameter: &T,
     ) -> (ActualSamplingMode, Box<[f64]>, Box<[f64]>) {
+        if config.quick_mode {
+            let minimum_bench_duration = Duration::from_millis(100);
+            let maximum_bench_duration = config.measurement_time; // default: 5 seconds
+            let target_rel_stdev = config.significance_level; // default: 5%, 0.05
+
+            use std::time::Instant;
+            let time_start = Instant::now();
+
+            let sq = |val| val * val;
+            let mut n = 1;
+            let mut t_prev = *self.bench(measurement, &[n], parameter).first().unwrap();
+
+            // Early exit for extremely long running benchmarks:
+            if time_start.elapsed() > maximum_bench_duration {
+                let t_prev = 1_000_000f64;
+                let iters = vec![n as f64, n as f64].into_boxed_slice();
+                let elapsed = vec![t_prev, t_prev].into_boxed_slice();
+                return (ActualSamplingMode::Flat, iters, elapsed);
+            }
+
+            // Main data collection loop.
+            loop {
+                let t_now = *self
+                    .bench(measurement, &[n * 2], parameter)
+                    .first()
+                    .unwrap();
+                let t = (t_prev + 2. * t_now) / 5.;
+                let stdev = (sq(t_prev - t) + sq(t_now - 2. * t)).sqrt();
+                // println!("Sample: {} {:.2}", n, stdev / t);
+                let elapsed = time_start.elapsed();
+                if (stdev < target_rel_stdev * t && elapsed > minimum_bench_duration)
+                    || elapsed > maximum_bench_duration
+                {
+                    let iters = vec![n as f64, (n * 2) as f64].into_boxed_slice();
+                    let elapsed = vec![t_prev, t_now].into_boxed_slice();
+                    return (ActualSamplingMode::Linear, iters, elapsed);
+                }
+                n *= 2;
+                t_prev = t_now;
+            }
+        }
         let wu = config.warm_up_time;
-        let m_ns = config.measurement_time.to_nanos();
+        let m_ns = config.measurement_time.as_nanos();
 
         criterion
             .report
-            .warmup(id, report_context, wu.to_nanos() as f64);
+            .warmup(id, report_context, wu.as_nanos() as f64);
 
         if let Some(conn) = &criterion.connection {
             conn.send(&OutgoingMessage::Warmup {
                 id: id.into(),
-                nanos: wu.to_nanos() as f64,
+                nanos: wu.as_nanos() as f64,
             })
             .unwrap();
         }
@@ -206,7 +247,7 @@ where
             .iter()
             .map(|iters| {
                 b.iters = *iters;
-                (*f)(&mut b, parameter);
+                (*f)(&mut b, black_box(parameter));
                 b.assert_iterated();
                 m.to_f64(&b.value)
             })
@@ -226,14 +267,14 @@ where
         let mut total_iters = 0;
         let mut elapsed_time = Duration::from_millis(0);
         loop {
-            (*f)(&mut b, parameter);
+            (*f)(&mut b, black_box(parameter));
 
             b.assert_iterated();
 
             total_iters += b.iters;
             elapsed_time += b.elapsed_time;
             if elapsed_time > how_long {
-                return (elapsed_time.to_nanos(), total_iters);
+                return (elapsed_time.as_nanos() as u64, total_iters);
             }
 
             b.iters = b.iters.wrapping_mul(2);

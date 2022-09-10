@@ -41,7 +41,7 @@ macro_rules! error {
 macro_rules! info {
     ($($arg:tt)*) => (
         if $crate::debug_enabled() {
-            println!("Criterion.rs DEBUG: {}", &format!($($arg)*));
+            println!("Criterion.rs DEBUG: {}", &format!($($arg)*))
         }
     )
 }

@@ -4,7 +4,6 @@
 //! measurement.
 
 use crate::format::short;
-use crate::DurationExt;
 use crate::Throughput;
 use std::time::{Duration, Instant};
 
@@ -125,6 +124,31 @@ impl DurationFormatter {
         unit
     }
 
+    fn bytes_per_second_decimal(
+        &self,
+        bytes: f64,
+        typical: f64,
+        values: &mut [f64],
+    ) -> &'static str {
+        let bytes_per_second = bytes * (1e9 / typical);
+        let (denominator, unit) = if bytes_per_second < 1000.0 {
+            (1.0, "  B/s")
+        } else if bytes_per_second < 1000.0 * 1000.0 {
+            (1000.0, "KB/s")
+        } else if bytes_per_second < 1000.0 * 1000.0 * 1000.0 {
+            (1000.0 * 1000.0, "MB/s")
+        } else {
+            (1000.0 * 1000.0 * 1000.0, "GB/s")
+        };
+
+        for val in values {
+            let bytes_per_second = bytes * (1e9 / *val);
+            *val = bytes_per_second / denominator;
+        }
+
+        unit
+    }
+
     fn elements_per_second(&self, elems: f64, typical: f64, values: &mut [f64]) -> &'static str {
         let elems_per_second = elems * (1e9 / typical);
         let (denominator, unit) = if elems_per_second < 1000.0 {
@@ -154,6 +178,9 @@ impl ValueFormatter for DurationFormatter {
     ) -> &'static str {
         match *throughput {
             Throughput::Bytes(bytes) => self.bytes_per_second(bytes as f64, typical, values),
+            Throughput::BytesDecimal(bytes) => {
+                self.bytes_per_second_decimal(bytes as f64, typical, values)
+            }
             Throughput::Elements(elems) => self.elements_per_second(elems as f64, typical, values),
         }
     }
@@ -204,7 +231,7 @@ impl Measurement for WallTime {
         Duration::from_secs(0)
     }
     fn to_f64(&self, val: &Self::Value) -> f64 {
-        val.to_nanos() as f64
+        val.as_nanos() as f64
     }
     fn formatter(&self) -> &dyn ValueFormatter {
         &DurationFormatter

@@ -18,15 +18,17 @@ regular expression matching the benchmark ID. For example, running
 * To test that the benchmarks run successfully without performing the measurement or analysis (eg. in a CI setting), use `cargo test --benches`.
 * To override the default plotting backend, use `cargo bench -- --plotting-backend gnuplot` or `cargo bench --plotting-backend plotters`. `gnuplot` is used by default if it is installed.
 * To change the CLI output format, use `cargo bench -- --output-format <name>`. Supported output formats are:
- * `criterion` - Use Criterion's normal output format
- * `bencher` - An output format similar to the output produced by the `bencher` crate or nightly `libtest` benchmarks. Though this provides less information than the `criterion` format, it may be useful to support external tools that can parse this output.
+  * `criterion` - Use Criterion's normal output format
+  * `bencher` - An output format similar to the output produced by the `bencher` crate or nightly `libtest` benchmarks. Though this provides less information than the `criterion` format, it may be useful to support external tools that can parse this output.
+* To run benchmarks quicker but with lower statistical guarantees, use `cargo bench -- --quick`
 
 ## Baselines
 
 By default, Criterion.rs will compare the measurements against the previous run (if any). Sometimes it's useful to keep a set of measurements around for several runs. For example, you might want to make multiple changes to the code while comparing against the master branch. For this situation, Criterion.rs supports custom baselines.
 
-* `--save-baseline <name>` will compare against the named baseline, then overwrite it. 
-* `--baseline <name>` will compare against the named baseline without overwriting it.
+* `--save-baseline <name>` will compare against the named baseline, then overwrite it.
+* `--baseline <name>` will compare against the named baseline without overwriting it. Will fail if the specified baseline is missing any benchmark results.
+* `--baseline-lenient <name>` will compare against the named baseline without overwriting it. Will not fail if the specified baseline is missing any benchmark results. This is useful for automatically comparing benchmark results between branches in CI.
 * `--load-baseline <name>` will load the named baseline as the new data set rather than the previous baseline.
 
 Using these options, you can manage multiple baseline measurements. For instance, if you want to compare against a static reference point such as the master branch, you might run:

@@ -54,27 +54,23 @@ where
 
     /// Returns the interquartile range
     pub fn iqr(&self) -> A {
-        unsafe {
-            let q1 = self.at_unchecked(A::cast(25));
-            let q3 = self.at_unchecked(A::cast(75));
+        let q1 = self.at(A::cast(25));
+        let q3 = self.at(A::cast(75));
 
-            q3 - q1
-        }
+        q3 - q1
     }
 
     /// Returns the 50th percentile
     pub fn median(&self) -> A {
-        unsafe { self.at_unchecked(A::cast(50)) }
+        self.at(A::cast(50))
     }
 
     /// Returns the 25th, 50th and 75th percentiles
     pub fn quartiles(&self) -> (A, A, A) {
-        unsafe {
-            (
-                self.at_unchecked(A::cast(25)),
-                self.at_unchecked(A::cast(50)),
-                self.at_unchecked(A::cast(75)),
-            )
-        }
+        (
+            self.at(A::cast(25)),
+            self.at(A::cast(50)),
+            self.at(A::cast(75)),
+        )
     }
 }
