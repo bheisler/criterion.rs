@@ -4,7 +4,7 @@ authors = [
   "Brook Heisler <brookheisler@gmail.com>",
 ]
 name = "criterion"
-version = "0.3.6"
+version = "0.4.0"
 edition = "2018"
 
 description = "Statistics-driven micro-benchmarking library"
@@ -19,7 +19,7 @@ exclude     = ["book/*"]
 [dependencies]
 anes           = "0.1.4"
 lazy_static    = "1.4"
-criterion-plot = { path = "plot", version = "0.4.5" }
+criterion-plot = { path = "plot", version = "0.5.0" }
 itertools      = "0.10"
 serde          = "1.0"
 serde_json     = "1.0"

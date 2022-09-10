@@ -1,6 +1,6 @@
 [package]
 name = "criterion_bencher_compat"
-version = "0.3.4"
+version = "0.4.0"
 authors = ["Brook Heisler <redattack34@gmail.com>"]
 edition = "2018"
 
@@ -13,7 +13,7 @@ categories = ["development-tools::profiling"]
 license = "Apache-2.0/MIT"
 
 [dependencies]
-criterion = { version = "0.3.4", path = "..", default-features = false }
+criterion = { version = "0.4.0", path = "..", default-features = false }
 
 [features]
 real_blackbox = ["criterion/real_blackbox"]
