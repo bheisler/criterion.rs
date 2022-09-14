@@ -32,7 +32,7 @@ impl AsyncExecutor for FuturesExecutor {
     }
 }
 
-/// Runs futures on the 'soml' crate's global executor
+/// Runs futures on the 'smol' crate's global executor
 #[cfg(feature = "async_smol")]
 pub struct SmolExecutor;
 #[cfg(feature = "async_smol")]
