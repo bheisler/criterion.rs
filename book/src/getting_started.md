@@ -6,7 +6,7 @@ I'll assume that we have a crate, `mycrate`, whose `lib.rs` contains the followi
 
 ```rust
 #[inline]
-fn fibonacci(n: u64) -> u64 {
+pub fn fibonacci(n: u64) -> u64 {
     match n {
         0 => 1,
         1 => 1,
