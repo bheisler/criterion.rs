@@ -56,7 +56,7 @@ To start with Criterion.<span></span>rs, add the following to your `Cargo.toml` 
 
 ```toml
 [dev-dependencies]
-criterion = "0.3"
+criterion = "0.4"
 
 [[bench]]
 name = "my_benchmark"
