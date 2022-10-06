@@ -1,5 +1,7 @@
 # HTML Report
 
+### You should use feature "html_reports" for this.
+
 Criterion.rs can generate an HTML report displaying the results of the benchmark under
 `target/criterion/reports/index.html`. By default, the plots are generated using
 [gnuplot](http://www.gnuplot.info/) if it is available, or the
