@@ -15,8 +15,8 @@ Once that's installed, add the dependencies to your Cargo.toml:
 
 ```toml
 [dev-dependencies]
-criterion = "0.3"
-criterion-macro = "0.3"
+criterion = "0.4"
+criterion-macro = "0.4"
 ```
 
 Note that for `#[criterion]` benchmarks, we don't need to disable the normal testing harness
