@@ -38,9 +38,6 @@ extern crate quickcheck;
 
 use regex::Regex;
 
-#[macro_use]
-extern crate lazy_static;
-
 #[cfg(feature = "real_blackbox")]
 extern crate test;
 
@@ -59,7 +56,6 @@ mod benchmark_group;
 pub mod async_executor;
 mod bencher;
 mod connection;
-mod critcmp;
 #[cfg(feature = "csv_output")]
 mod csv_report;
 mod error;
@@ -80,7 +76,6 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::default::Default;
 use std::env;
-use std::io::Write;
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -88,6 +83,7 @@ use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
 use criterion_plot::{Version, VersionError};
+use once_cell::sync::Lazy;
 
 use crate::benchmark::BenchmarkConfig;
 use crate::connection::Connection;
@@ -105,53 +101,45 @@ pub use crate::bencher::AsyncBencher;
 pub use crate::bencher::Bencher;
 pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};
 
-lazy_static! {
-    static ref DEBUG_ENABLED: bool = std::env::var_os("CRITERION_DEBUG").is_some();
-    static ref GNUPLOT_VERSION: Result<Version, VersionError> = criterion_plot::version();
-    static ref DEFAULT_PLOTTING_BACKEND: PlottingBackend = {
-        if cfg!(feature = "html_reports") {
-            match &*GNUPLOT_VERSION {
-                Ok(_) => PlottingBackend::Gnuplot,
-                Err(e) => {
-                    match e {
-                        VersionError::Exec(_) => eprintln!("Gnuplot not found, using plotters backend"),
-                        e => eprintln!(
-                            "Gnuplot not found or not usable, using plotters backend\n{}",
-                            e
-                        ),
-                    };
-                    PlottingBackend::Plotters
-                }
-            }
-        } else {
-            PlottingBackend::None
+static DEBUG_ENABLED: Lazy<bool> = Lazy::new(|| std::env::var_os("CRITERION_DEBUG").is_some());
+static GNUPLOT_VERSION: Lazy<Result<Version, VersionError>> =
+    Lazy::new(|| criterion_plot::version());
+static DEFAULT_PLOTTING_BACKEND: Lazy<PlottingBackend> = Lazy::new(|| match &*GNUPLOT_VERSION {
+    Ok(_) => PlottingBackend::Gnuplot,
+    Err(e) => {
+        match e {
+            VersionError::Exec(_) => println!("Gnuplot not found, using plotters backend"),
+            e => println!(
+                "Gnuplot not found or not usable, using plotters backend\n{}",
+                e
+            ),
+        };
+        PlottingBackend::Plotters
+    }
+});
+static CARGO_CRITERION_CONNECTION: Lazy<Option<Mutex<Connection>>> =
+    Lazy::new(|| match std::env::var("CARGO_CRITERION_PORT") {
+        Ok(port_str) => {
+            let port: u16 = port_str.parse().ok()?;
+            let stream = TcpStream::connect(("localhost", port)).ok()?;
+            Some(Mutex::new(Connection::new(stream).ok()?))
         }
-    };
-    static ref CARGO_CRITERION_CONNECTION: Option<Mutex<Connection>> = {
-        match std::env::var("CARGO_CRITERION_PORT") {
-            Ok(port_str) => {
-                let port: u16 = port_str.parse().ok()?;
-                let stream = TcpStream::connect(("localhost", port)).ok()?;
-                Some(Mutex::new(Connection::new(stream).ok()?))
-            }
-            Err(_) => None,
-        }
-    };
-    static ref DEFAULT_OUTPUT_DIRECTORY: PathBuf = {
-        // Set criterion home to (in descending order of preference):
-        // - $CRITERION_HOME (cargo-criterion sets this, but other users could as well)
-        // - $CARGO_TARGET_DIR/criterion
-        // - the cargo target dir from `cargo metadata`
-        // - ./target/criterion
-        if let Some(value) = env::var_os("CRITERION_HOME") {
-            PathBuf::from(value)
-        } else if let Some(path) = cargo_target_directory() {
-            path.join("criterion")
-        } else {
-            PathBuf::from("target/criterion")
-        }
-    };
-}
+        Err(_) => None,
+    });
+static DEFAULT_OUTPUT_DIRECTORY: Lazy<PathBuf> = Lazy::new(|| {
+    // Set criterion home to (in descending order of preference):
+    // - $CRITERION_HOME (cargo-criterion sets this, but other users could as well)
+    // - $CARGO_TARGET_DIR/criterion
+    // - the cargo target dir from `cargo metadata`
+    // - ./target/criterion
+    if let Some(value) = env::var_os("CRITERION_HOME") {
+        PathBuf::from(value)
+    } else if let Some(path) = cargo_target_directory() {
+        path.join("criterion")
+    } else {
+        PathBuf::from("target/criterion")
+    }
+});
 
 fn debug_enabled() -> bool {
     *DEBUG_ENABLED
@@ -786,31 +774,6 @@ impl<M: Measurement> Criterion<M> {
                 .takes_value(true)
                 .help("Iterate each benchmark for approximately the given number of seconds, doing no analysis and without storing the results. Useful for running the benchmarks in a profiler.")
                 .conflicts_with_all(&["test", "list"]))
-            .arg(Arg::new("export")
-                .long("export")
-                .takes_value(true)
-                .help("Export baseline as json, printed to stdout")
-                .conflicts_with_all(&["list", "test", "profile-time", "compare"]))
-            .arg(Arg::new("compare")
-                .long("compare")
-                .help("Tabulate benchmark results")
-                .conflicts_with_all(&["list", "test", "profile-time", "export"]))
-            .arg(Arg::new("baselines")
-                .long("baselines")
-                .multiple_occurrences(true)
-                .value_name("baselines")
-                .requires("compare")
-                .require_value_delimiter(true)
-                .use_value_delimiter(true)
-                .help("Limit the baselines used in tabulated results.")
-                .help(""))
-            .arg(Arg::new("compare-threshold")
-                .long("compare-threshold")
-                .takes_value(true)
-                .help("Hide results that differ by less than the threshold percentage. By default, all results are shown."))
-            .arg(Arg::new("compare-list")
-                .long("compare-list")
-                .help("Show benchmark results in a list rather than in a table. Useful when horizontal space is limited."))
             .arg(Arg::new("load-baseline")
                  .long("load-baseline")
                  .takes_value(true)
@@ -1087,54 +1050,6 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.config.significance_level = num_significance_level;
         }
 
-        // XXX: Comparison functionality should ideally live in 'cargo-criterion'.
-        if matches.is_present("compare") {
-            if self.connection.is_some() {
-                eprintln!(
-                    "Error: tabulating results is not supported when running with cargo-criterion."
-                );
-                std::process::exit(1);
-            }
-            // Other arguments: compare-threshold, compare-list.
-
-            let stdout_isatty = atty::is(atty::Stream::Stdout);
-            let enable_text_coloring = match matches.value_of("color") {
-                Some("always") => true,
-                Some("never") => false,
-                _ => stdout_isatty,
-            };
-
-            let args = critcmp::app::Args {
-                baselines: matches.values_of_lossy("baselines").unwrap_or_default(),
-                output_list: matches.is_present("compare-list"),
-                threshold: matches.value_of_t("compare-threshold").ok(), // FIXME: Print error message if parsing fails.
-                color: enable_text_coloring,
-                filter: self.filter,
-            };
-            critcmp::main::main(args);
-            std::process::exit(0);
-        }
-
-        if let Some(baseline) = matches.value_of("export") {
-            let benchmarks = critcmp::app::Args {
-                baselines: matches.values_of_lossy("baselines").unwrap_or_default(),
-                ..Default::default()
-            }
-            .benchmarks()
-            .expect("failed to find baselines");
-            let mut stdout = std::io::stdout();
-            let basedata = match benchmarks.by_baseline.get(baseline) {
-                Some(basedata) => basedata,
-                None => {
-                    eprintln!("failed to find baseline '{}'", baseline);
-                    std::process::exit(1);
-                }
-            };
-            serde_json::to_writer_pretty(&mut stdout, basedata).unwrap();
-            writeln!(stdout).unwrap();
-            std::process::exit(0);
-        }
-
         if matches.is_present("quick") {
             self.config.quick_mode = true;
         }
@@ -1281,6 +1196,11 @@ pub enum Throughput {
     /// processed by one iteration of the benchmarked code. Typically, this would be the length of
     /// an input string or `&[u8]`.
     Bytes(u64),
+
+    /// Equivalent to Bytes, but the value will be reported in terms of
+    /// kilobytes (1000 bytes) per second instead of kibibytes (1024 bytes) per
+    /// second, megabytes instead of mibibytes, and gigabytes instead of gibibytes.
+    BytesDecimal(u64),
 
     /// Measure throughput in terms of elements/second. The value should be the number of elements
     /// processed by one iteration of the benchmarked code. Typically, this would be the size of a

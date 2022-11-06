@@ -14,7 +14,7 @@ impl ValueFormatter for HalfSecFormatter {
 
     fn format_throughput(&self, throughput: &Throughput, value: f64) -> String {
         match *throughput {
-            Throughput::Bytes(bytes) => {
+            Throughput::Bytes(bytes) | Throughput::BytesDecimal(bytes) => {
                 format!("{} b/s/2", (bytes as f64) / (value * 2f64 * 10f64.powi(-9)))
             }
             Throughput::Elements(elems) => format!(
@@ -39,7 +39,7 @@ impl ValueFormatter for HalfSecFormatter {
         values: &mut [f64],
     ) -> &'static str {
         match *throughput {
-            Throughput::Bytes(bytes) => {
+            Throughput::Bytes(bytes) | Throughput::BytesDecimal(bytes) => {
                 for val in values {
                     *val = (bytes as f64) / (*val * 2f64 * 10f64.powi(-9))
                 }
