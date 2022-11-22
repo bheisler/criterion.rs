@@ -36,6 +36,7 @@ extern crate approx;
 #[cfg(test)]
 extern crate quickcheck;
 
+use is_terminal::IsTerminal;
 use regex::Regex;
 
 #[cfg(feature = "real_blackbox")]
@@ -76,6 +77,7 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::default::Default;
 use std::env;
+use std::io::stdout;
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -1060,7 +1062,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                     } else {
                         CliVerbosity::Normal
                     };
-                    let stdout_isatty = atty::is(atty::Stream::Stdout);
+                    let stdout_isatty = stdout().is_terminal();
                     let mut enable_text_overwrite = stdout_isatty && !verbose && !debug_enabled();
                     let enable_text_coloring;
                     match matches.value_of("color") {
