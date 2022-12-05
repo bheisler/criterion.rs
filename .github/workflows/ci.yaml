@@ -17,6 +17,7 @@ jobs:
         rust:
           - stable
           - 1.59 # MSRV
+          - nightly
 
     steps:
       - uses: actions/checkout@v3
@@ -72,6 +73,7 @@ jobs:
 
       - uses: actions-rs/cargo@v1
         name: Check for clippy hints
+        if: ${{ matrix.rust == 'stable' }}
         with:
           command: clippy
           args: -- -D warnings
