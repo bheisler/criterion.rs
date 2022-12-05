@@ -222,7 +222,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
     };
 
     let measurement_data = crate::report::MeasurementData {
-        data: Data::new(&*iters, &*times),
+        data: Data::new(&iters, &times),
         avg_times: labeled_sample,
         absolute_estimates: estimates,
         distributions,

@@ -85,11 +85,11 @@ fn abs_distribution(
     chart
         .draw_series(LineSeries::new(
             kde_xs.iter().zip(ys.iter()).map(|(&x, &y)| (x, y)),
-            &DARK_BLUE,
+            DARK_BLUE,
         ))
         .unwrap()
         .label("Bootstrap distribution")
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &DARK_BLUE));
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], DARK_BLUE));
 
     chart
         .draw_series(AreaSeries::new(
@@ -115,7 +115,7 @@ fn abs_distribution(
         )))
         .unwrap()
         .label("Point estimate")
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &DARK_BLUE));
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], DARK_BLUE));
 
     chart
         .configure_series_labels()
@@ -240,11 +240,11 @@ fn rel_distribution(
     chart
         .draw_series(LineSeries::new(
             xs.iter().zip(ys.iter()).map(|(x, y)| (*x, *y)),
-            &DARK_BLUE,
+            DARK_BLUE,
         ))
         .unwrap()
         .label("Bootstrap distribution")
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &DARK_BLUE));
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], DARK_BLUE));
 
     chart
         .draw_series(AreaSeries::new(
@@ -269,7 +269,7 @@ fn rel_distribution(
         )))
         .unwrap()
         .label("Point estimate")
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &DARK_BLUE));
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], DARK_BLUE));
 
     chart
         .draw_series(std::iter::once(Rectangle::new(
