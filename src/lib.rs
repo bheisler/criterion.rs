@@ -106,6 +106,7 @@ static GNUPLOT_VERSION: Lazy<Result<Version, VersionError>> =
     Lazy::new(|| criterion_plot::version());
 static DEFAULT_PLOTTING_BACKEND: Lazy<PlottingBackend> = Lazy::new(|| match &*GNUPLOT_VERSION {
     Ok(_) => PlottingBackend::Gnuplot,
+    #[cfg(feature = "plotters")]
     Err(e) => {
         match e {
             VersionError::Exec(_) => println!("Gnuplot not found, using plotters backend"),
@@ -116,6 +117,8 @@ static DEFAULT_PLOTTING_BACKEND: Lazy<PlottingBackend> = Lazy::new(|| match &*GN
         };
         PlottingBackend::Plotters
     }
+    #[cfg(not(feature = "plotters"))]
+    Err(_) => PlottingBackend::None,
 });
 static CARGO_CRITERION_CONNECTION: Lazy<Option<Mutex<Connection>>> =
     Lazy::new(|| match std::env::var("CARGO_CRITERION_PORT") {
