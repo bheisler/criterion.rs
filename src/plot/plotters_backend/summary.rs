@@ -159,7 +159,7 @@ pub fn violin(
     axis_scale: AxisScale,
 ) {
     let all_curves_vec = all_curves.iter().rev().cloned().collect::<Vec<_>>();
-    let all_curves: &[&(&BenchmarkId, Vec<f64>)] = &*all_curves_vec;
+    let all_curves: &[&(&BenchmarkId, Vec<f64>)] = &all_curves_vec;
 
     let mut kdes = all_curves
         .iter()
@@ -250,7 +250,7 @@ fn draw_violin_figure<XR: AsRangedCoord<Value = f64>, YR: AsRangedCoord<Value = 
             .draw_series(AreaSeries::new(
                 x.iter().zip(y.iter()).map(|(x, y)| (*x, base + *y / 2.0)),
                 base,
-                &DARK_BLUE,
+                DARK_BLUE,
             ))
             .unwrap();
 
@@ -258,7 +258,7 @@ fn draw_violin_figure<XR: AsRangedCoord<Value = f64>, YR: AsRangedCoord<Value = 
             .draw_series(AreaSeries::new(
                 x.iter().zip(y.iter()).map(|(x, y)| (*x, base - *y / 2.0)),
                 base,
-                &DARK_BLUE,
+                DARK_BLUE,
             ))
             .unwrap();
     }

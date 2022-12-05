@@ -38,7 +38,7 @@ pub(crate) fn t_test(
         .draw_series(AreaSeries::new(
             xs.iter().zip(ys.iter()).map(|(x, y)| (*x, *y)),
             0.0,
-            &DARK_BLUE.mix(0.25),
+            DARK_BLUE.mix(0.25),
         ))
         .unwrap()
         .label("t distribution")
@@ -53,7 +53,7 @@ pub(crate) fn t_test(
         )))
         .unwrap()
         .label("t statistic")
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &DARK_BLUE));
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], DARK_BLUE));
 
     chart.configure_series_labels().draw().unwrap();
 }

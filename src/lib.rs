@@ -102,8 +102,7 @@ pub use crate::bencher::Bencher;
 pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};
 
 static DEBUG_ENABLED: Lazy<bool> = Lazy::new(|| std::env::var_os("CRITERION_DEBUG").is_some());
-static GNUPLOT_VERSION: Lazy<Result<Version, VersionError>> =
-    Lazy::new(|| criterion_plot::version());
+static GNUPLOT_VERSION: Lazy<Result<Version, VersionError>> = Lazy::new(criterion_plot::version);
 static DEFAULT_PLOTTING_BACKEND: Lazy<PlottingBackend> = Lazy::new(|| match &*GNUPLOT_VERSION {
     Ok(_) => PlottingBackend::Gnuplot,
     #[cfg(feature = "plotters")]
@@ -358,7 +357,7 @@ fn cargo_target_directory() -> Option<PathBuf> {
         .map(PathBuf::from)
         .or_else(|| {
             let output = Command::new(env::var_os("CARGO")?)
-                .args(&["metadata", "--format-version", "1"])
+                .args(["metadata", "--format-version", "1"])
                 .output()
                 .ok()?;
             let metadata: Metadata = serde_json::from_slice(&output.stdout).ok()?;
@@ -733,7 +732,7 @@ impl<M: Measurement> Criterion<M> {
                 .long("color")
                 .alias("colour")
                 .takes_value(true)
-                .possible_values(&["auto", "always", "never"])
+                .possible_values(["auto", "always", "never"])
                 .default_value("auto")
                 .help("Configure coloring of output. always = always colorize output, never = never colorize output, auto = colorize output if output is a tty and compiled for unix."))
             .arg(Arg::new("verbose")
@@ -826,12 +825,12 @@ impl<M: Measurement> Criterion<M> {
             .arg(Arg::new("plotting-backend")
                  .long("plotting-backend")
                  .takes_value(true)
-                 .possible_values(&["gnuplot", "plotters"])
+                 .possible_values(["gnuplot", "plotters"])
                  .help("Set the plotting backend. By default, Criterion.rs will use the gnuplot backend if gnuplot is available, or the plotters backend if it isn't."))
             .arg(Arg::new("output-format")
                 .long("output-format")
                 .takes_value(true)
-                .possible_values(&["criterion", "bencher"])
+                .possible_values(["criterion", "bencher"])
                 .default_value("criterion")
                 .help("Change the CLI output format. By default, Criterion.rs will use its own format. If output format is set to 'bencher', Criterion.rs will print output in a format that resembles the 'bencher' crate."))
             .arg(Arg::new("nocapture")
