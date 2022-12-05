@@ -35,6 +35,7 @@ impl<W: Write> CsvReportWriter<W> {
         let value = id.value_str.as_deref();
         let (throughput_num, throughput_type) = match id.throughput {
             Some(Throughput::Bytes(bytes)) => (Some(format!("{}", bytes)), Some("bytes")),
+            Some(Throughput::BytesDecimal(bytes)) => (Some(format!("{}", bytes)), Some("bytes")),
             Some(Throughput::Elements(elems)) => (Some(format!("{}", elems)), Some("elements")),
             None => (None, None),
         };
