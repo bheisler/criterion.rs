@@ -817,7 +817,7 @@ impl<M: Measurement> Criterion<M> {
                 .conflicts_with_all(&["test", "profile-time"]))
             .arg(Arg::new("format")
                 .long("format")
-                .possible_values(&["pretty", "terse"])
+                .possible_values(["pretty", "terse"])
                 .default_value("pretty")
                 // Note that libtest's --format also works during test execution, but criterion
                 // doesn't support that at the moment.
