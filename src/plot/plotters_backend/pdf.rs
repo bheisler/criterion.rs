@@ -93,7 +93,7 @@ pub(crate) fn pdf_comparison_figure(
         )))
         .unwrap()
         .label("Base Mean")
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &DARK_RED));
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], DARK_RED));
 
     chart
         .draw_series(std::iter::once(PathElement::new(
@@ -102,7 +102,7 @@ pub(crate) fn pdf_comparison_figure(
         )))
         .unwrap()
         .label("New Mean")
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &DARK_BLUE));
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], DARK_BLUE));
 
     if title.is_some() {
         chart.configure_series_labels().draw().unwrap();
@@ -255,18 +255,18 @@ pub(crate) fn pdf(
     chart
         .draw_series(std::iter::once(PathElement::new(
             vec![(mean, 0.0), (mean, max_iters)],
-            &DARK_BLUE,
+            DARK_BLUE,
         )))
         .unwrap()
         .label("Mean")
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &DARK_BLUE));
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], DARK_BLUE));
 
     chart
         .draw_series(vec![
-            PathElement::new(vec![(lomt, 0.0), (lomt, max_iters)], &DARK_ORANGE),
-            PathElement::new(vec![(himt, 0.0), (himt, max_iters)], &DARK_ORANGE),
-            PathElement::new(vec![(lost, 0.0), (lost, max_iters)], &DARK_RED),
-            PathElement::new(vec![(hist, 0.0), (hist, max_iters)], &DARK_RED),
+            PathElement::new(vec![(lomt, 0.0), (lomt, max_iters)], DARK_ORANGE),
+            PathElement::new(vec![(himt, 0.0), (himt, max_iters)], DARK_ORANGE),
+            PathElement::new(vec![(lost, 0.0), (lost, max_iters)], DARK_RED),
+            PathElement::new(vec![(hist, 0.0), (hist, max_iters)], DARK_RED),
         ])
         .unwrap();
     use crate::stats::univariate::outliers::tukey::Label;

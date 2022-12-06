@@ -130,7 +130,7 @@ pub fn violin(
 ) -> Child {
     let path = PathBuf::from(&path);
     let all_curves_vec = all_curves.iter().rev().cloned().collect::<Vec<_>>();
-    let all_curves: &[&(&BenchmarkId, Vec<f64>)] = &*all_curves_vec;
+    let all_curves: &[&(&BenchmarkId, Vec<f64>)] = &all_curves_vec;
 
     let kdes = all_curves
         .iter()
