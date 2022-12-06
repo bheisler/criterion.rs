@@ -16,11 +16,11 @@ jobs:
       matrix:
         rust:
           - stable
-          - beta
-          - 1.57  # MSRV
+          - 1.59 # MSRV
+          - nightly
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: actions-rs/toolchain@v1
         name: Setup rust toolchain
@@ -30,7 +30,7 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - uses: Swatinem/rust-cache@v1
+      - uses: Swatinem/rust-cache@v2
         name: Load dependencies from cache
 
       - uses: actions-rs/cargo@v1
@@ -73,6 +73,7 @@ jobs:
 
       - uses: actions-rs/cargo@v1
         name: Check for clippy hints
+        if: ${{ matrix.rust == 'stable' }}
         with:
           command: clippy
           args: -- -D warnings
