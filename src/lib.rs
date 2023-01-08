@@ -38,9 +38,6 @@ extern crate quickcheck;
 
 use regex::Regex;
 
-#[macro_use]
-extern crate lazy_static;
-
 #[cfg(feature = "real_blackbox")]
 extern crate test;
 
@@ -60,7 +57,6 @@ pub mod async_executor;
 mod bencher;
 mod cli;
 mod connection;
-mod critcmp;
 #[cfg(feature = "csv_output")]
 mod csv_report;
 mod error;
@@ -81,7 +77,6 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::default::Default;
 use std::env;
-use std::io::Write;
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -89,6 +84,7 @@ use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
 use criterion_plot::{Version, VersionError};
+use once_cell::sync::Lazy;
 
 use crate::benchmark::BenchmarkConfig;
 use crate::connection::Connection;
@@ -106,53 +102,47 @@ pub use crate::bencher::AsyncBencher;
 pub use crate::bencher::Bencher;
 pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};
 
-lazy_static! {
-    static ref DEBUG_ENABLED: bool = std::env::var_os("CRITERION_DEBUG").is_some();
-    static ref GNUPLOT_VERSION: Result<Version, VersionError> = criterion_plot::version();
-    static ref DEFAULT_PLOTTING_BACKEND: PlottingBackend = {
-        if cfg!(feature = "html_reports") {
-            match &*GNUPLOT_VERSION {
-                Ok(_) => PlottingBackend::Gnuplot,
-                Err(e) => {
-                    match e {
-                        VersionError::Exec(_) => eprintln!("Gnuplot not found, using plotters backend"),
-                        e => eprintln!(
-                            "Gnuplot not found or not usable, using plotters backend\n{}",
-                            e
-                        ),
-                    };
-                    PlottingBackend::Plotters
-                }
-            }
-        } else {
-            PlottingBackend::None
+static DEBUG_ENABLED: Lazy<bool> = Lazy::new(|| std::env::var_os("CRITERION_DEBUG").is_some());
+static GNUPLOT_VERSION: Lazy<Result<Version, VersionError>> = Lazy::new(criterion_plot::version);
+static DEFAULT_PLOTTING_BACKEND: Lazy<PlottingBackend> = Lazy::new(|| match &*GNUPLOT_VERSION {
+    Ok(_) => PlottingBackend::Gnuplot,
+    #[cfg(feature = "plotters")]
+    Err(e) => {
+        match e {
+            VersionError::Exec(_) => eprintln!("Gnuplot not found, using plotters backend"),
+            e => eprintln!(
+                "Gnuplot not found or not usable, using plotters backend\n{}",
+                e
+            ),
+        };
+        PlottingBackend::Plotters
+    }
+    #[cfg(not(feature = "plotters"))]
+    Err(_) => PlottingBackend::None,
+});
+static CARGO_CRITERION_CONNECTION: Lazy<Option<Mutex<Connection>>> =
+    Lazy::new(|| match std::env::var("CARGO_CRITERION_PORT") {
+        Ok(port_str) => {
+            let port: u16 = port_str.parse().ok()?;
+            let stream = TcpStream::connect(("localhost", port)).ok()?;
+            Some(Mutex::new(Connection::new(stream).ok()?))
         }
-    };
-    static ref CARGO_CRITERION_CONNECTION: Option<Mutex<Connection>> = {
-        match std::env::var("CARGO_CRITERION_PORT") {
-            Ok(port_str) => {
-                let port: u16 = port_str.parse().ok()?;
-                let stream = TcpStream::connect(("localhost", port)).ok()?;
-                Some(Mutex::new(Connection::new(stream).ok()?))
-            }
-            Err(_) => None,
-        }
-    };
-    static ref DEFAULT_OUTPUT_DIRECTORY: PathBuf = {
-        // Set criterion home to (in descending order of preference):
-        // - $CRITERION_HOME (cargo-criterion sets this, but other users could as well)
-        // - $CARGO_TARGET_DIR/criterion
-        // - the cargo target dir from `cargo metadata`
-        // - ./target/criterion
-        if let Some(value) = env::var_os("CRITERION_HOME") {
-            PathBuf::from(value)
-        } else if let Some(path) = cargo_target_directory() {
-            path.join("criterion")
-        } else {
-            PathBuf::from("target/criterion")
-        }
-    };
-}
+        Err(_) => None,
+    });
+static DEFAULT_OUTPUT_DIRECTORY: Lazy<PathBuf> = Lazy::new(|| {
+    // Set criterion home to (in descending order of preference):
+    // - $CRITERION_HOME (cargo-criterion sets this, but other users could as well)
+    // - $CARGO_TARGET_DIR/criterion
+    // - the cargo target dir from `cargo metadata`
+    // - ./target/criterion
+    if let Some(value) = env::var_os("CRITERION_HOME") {
+        PathBuf::from(value)
+    } else if let Some(path) = cargo_target_directory() {
+        path.join("criterion")
+    } else {
+        PathBuf::from("target/criterion")
+    }
+});
 
 fn debug_enabled() -> bool {
     *DEBUG_ENABLED
@@ -314,7 +304,7 @@ pub(crate) enum Mode {
     /// Run benchmarks normally.
     Benchmark,
     /// List all benchmarks but do not run them.
-    List,
+    List(ListFormat),
     /// Run benchmarks once to verify that they work, but otherwise do not measure them.
     Test,
     /// Iterate benchmarks for a given length of time but do not analyze or report on them.
@@ -324,6 +314,39 @@ impl Mode {
     pub fn is_benchmark(&self) -> bool {
         matches!(self, Mode::Benchmark)
     }
+
+    pub fn is_terse(&self) -> bool {
+        matches!(self, Mode::List(ListFormat::Terse))
+    }
+}
+
+#[derive(Debug, Clone)]
+/// Enum representing the list format.
+pub(crate) enum ListFormat {
+    /// The regular, default format.
+    Pretty,
+    /// The terse format, where nothing other than the name of the test and ": benchmark" at the end
+    /// is printed out.
+    Terse,
+}
+
+impl Default for ListFormat {
+    fn default() -> Self {
+        Self::Pretty
+    }
+}
+
+/// Benchmark filtering support.
+#[derive(Clone, Debug)]
+pub enum BenchmarkFilter {
+    /// Run all benchmarks.
+    AcceptAll,
+    /// Run benchmarks matching this regex.
+    Regex(Regex),
+    /// Run the benchmark matching this string exactly.
+    Exact(String),
+    /// Do not run any benchmarks.
+    RejectAll,
 }
 
 /// The benchmark manager
@@ -342,7 +365,7 @@ impl Mode {
 /// benchmark.
 pub struct Criterion<M: Measurement = WallTime> {
     config: BenchmarkConfig,
-    filter: Option<Regex>,
+    filter: BenchmarkFilter,
     report: Reports,
     output_directory: PathBuf,
     baseline_directory: String,
@@ -368,7 +391,7 @@ fn cargo_target_directory() -> Option<PathBuf> {
         .map(PathBuf::from)
         .or_else(|| {
             let output = Command::new(env::var_os("CARGO")?)
-                .args(&["metadata", "--format-version", "1"])
+                .args(["metadata", "--format-version", "1"])
                 .output()
                 .ok()?;
             let metadata: Metadata = serde_json::from_slice(&output.stdout).ok()?;
@@ -410,7 +433,7 @@ impl Default for Criterion {
                 sampling_mode: SamplingMode::Auto,
                 quick_mode: false,
             },
-            filter: None,
+            filter: BenchmarkFilter::AcceptAll,
             report: reports,
             baseline_directory: "base".to_owned(),
             baseline: Baseline::Save,
@@ -671,6 +694,8 @@ impl<M: Measurement> Criterion<M> {
     #[must_use]
     /// Filters the benchmarks. Only benchmarks with names that contain the
     /// given string will be executed.
+    ///
+    /// This overwrites [`Self::with_benchmark_filter`].
     pub fn with_filter<S: Into<String>>(mut self, filter: S) -> Criterion<M> {
         let filter_text = filter.into();
         let filter = Regex::new(&filter_text).unwrap_or_else(|err| {
@@ -679,7 +704,16 @@ impl<M: Measurement> Criterion<M> {
                 filter_text, err
             )
         });
-        self.filter = Some(filter);
+        self.filter = BenchmarkFilter::Regex(filter);
+
+        self
+    }
+
+    /// Only run benchmarks specified by the given filter.
+    ///
+    /// This overwrites [`Self::with_filter`].
+    pub fn with_benchmark_filter(mut self, filter: BenchmarkFilter) -> Criterion<M> {
+        self.filter = filter;
 
         self
     }
@@ -759,12 +793,10 @@ impl<M: Measurement> Criterion<M> {
             baseline,
             baseline_lenient,
             list,
+            format,
+            ignored,
+            exact,
             profile_time,
-            export,
-            compare,
-            baselines,
-            compare_threshold,
-            compare_list,
             load_baseline,
             sample_size,
             warm_up_time,
@@ -812,7 +844,7 @@ impl<M: Measurement> Criterion<M> {
         self.mode = if test_mode {
             Mode::Test
         } else if list {
-            Mode::List
+            Mode::List(ListFormat::from(format))
         } else if let Some(num_seconds) = profile_time {
             if num_seconds < 1.0 {
                 eprintln!("Profile time must be at least one second.");
@@ -829,9 +861,25 @@ impl<M: Measurement> Criterion<M> {
             self.connection = None;
         }
 
-        if let Some(f) = filter {
-            self = self.with_filter(f);
-        }
+        let benchmark_filter = if ignored {
+            // --ignored overwrites any name-based filters passed in.
+            BenchmarkFilter::RejectAll
+        } else if let Some(filter) = filter {
+            if exact {
+                BenchmarkFilter::Exact(filter)
+            } else {
+                let regex = Regex::new(&filter).unwrap_or_else(|err| {
+                    panic!(
+                        "Unable to parse '{}' as a regular expression: {}",
+                        filter, err
+                    )
+                });
+                BenchmarkFilter::Regex(regex)
+            }
+        } else {
+            BenchmarkFilter::AcceptAll
+        };
+        self = self.with_benchmark_filter(benchmark_filter);
 
         if let Some(backend) = plotting_backend {
             self = self.plotting_backend(PlottingBackend::from(backend));
@@ -930,54 +978,6 @@ impl<M: Measurement> Criterion<M> {
             self.config.significance_level = significance_level;
         }
 
-        // XXX: Comparison functionality should ideally live in 'cargo-criterion'.
-        if compare {
-            if self.connection.is_some() {
-                eprintln!(
-                    "Error: tabulating results is not supported when running with cargo-criterion."
-                );
-                std::process::exit(1);
-            }
-            // Other arguments: compare-threshold, compare-list.
-
-            let stdout_isatty = atty::is(atty::Stream::Stdout);
-            let enable_text_coloring = match color {
-                cli::Color::Always => true,
-                cli::Color::Never => false,
-                cli::Color::Auto => stdout_isatty,
-            };
-
-            let args = critcmp::app::Args {
-                baselines,
-                output_list: compare_list,
-                threshold: compare_threshold,
-                color: enable_text_coloring,
-                filter: self.filter,
-            };
-            critcmp::main::main(args);
-            std::process::exit(0);
-        }
-
-        if let Some(baseline) = export {
-            let benchmarks = critcmp::app::Args {
-                baselines,
-                ..Default::default()
-            }
-            .benchmarks()
-            .expect("failed to find baselines");
-            let mut stdout = std::io::stdout();
-            let basedata = match benchmarks.by_baseline.get(&baseline) {
-                Some(basedata) => basedata,
-                None => {
-                    eprintln!("failed to find baseline '{}'", baseline);
-                    std::process::exit(1);
-                }
-            };
-            serde_json::to_writer_pretty(&mut stdout, basedata).unwrap();
-            writeln!(stdout).unwrap();
-            std::process::exit(0);
-        }
-
         if quick {
             self.config.quick_mode = true;
         }
@@ -987,8 +987,10 @@ impl<M: Measurement> Criterion<M> {
 
     fn filter_matches(&self, id: &str) -> bool {
         match &self.filter {
-            Some(regex) => regex.is_match(id),
-            None => true,
+            BenchmarkFilter::AcceptAll => true,
+            BenchmarkFilter::Regex(regex) => regex.is_match(id),
+            BenchmarkFilter::Exact(exact) => id == exact,
+            BenchmarkFilter::RejectAll => false,
         }
     }
 
@@ -1124,6 +1126,11 @@ pub enum Throughput {
     /// processed by one iteration of the benchmarked code. Typically, this would be the length of
     /// an input string or `&[u8]`.
     Bytes(u64),
+
+    /// Equivalent to Bytes, but the value will be reported in terms of
+    /// kilobytes (1000 bytes) per second instead of kibibytes (1024 bytes) per
+    /// second, megabytes instead of mibibytes, and gigabytes instead of gibibytes.
+    BytesDecimal(u64),
 
     /// Measure throughput in terms of elements/second. The value should be the number of elements
     /// processed by one iteration of the benchmarked code. Typically, this would be the size of a

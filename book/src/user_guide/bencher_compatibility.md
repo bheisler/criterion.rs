@@ -44,7 +44,7 @@ To:
 
 ```toml
 [dev-dependencies]
-criterion_bencher_compat = "0.3"
+criterion_bencher_compat = "0.4"
 ```
 
 Then we update the benchmark file itself to change:

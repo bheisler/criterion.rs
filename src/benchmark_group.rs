@@ -290,7 +290,8 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
 
         assert!(
             !self.all_ids.contains(&id),
-            "Benchmark IDs must be unique within a group."
+            "Benchmark IDs must be unique within a group. Encountered duplicated benchmark ID {}",
+            &id
         );
 
         id.ensure_directory_name_unique(&self.criterion.all_directories);
@@ -327,9 +328,9 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
                     );
                 }
             }
-            Mode::List => {
+            Mode::List(_) => {
                 if do_run {
-                    println!("{}: bench", id);
+                    println!("{}: benchmark", id);
                 }
             }
             Mode::Test => {
@@ -391,7 +392,7 @@ impl<'a, M: Measurement> Drop for BenchmarkGroup<'a, M> {
                 self.criterion.measurement.formatter(),
             );
         }
-        if self.any_matched {
+        if self.any_matched && !self.criterion.mode.is_terse() {
             self.criterion.report.group_separator();
         }
     }

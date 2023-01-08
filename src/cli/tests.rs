@@ -64,26 +64,3 @@ fn cargo_bench_filter() {
         }
     );
 }
-
-#[test]
-fn parse_baselines() {
-    let args = try_parse_args(gen_args(&[
-        "--compare",
-        "--baselines",
-        "some,list,of,baselines",
-    ]))
-    .unwrap();
-    assert_eq!(
-        args,
-        Args {
-            compare: true,
-            baselines: vec![
-                "some".into(),
-                "list".into(),
-                "of".into(),
-                "baselines".into()
-            ],
-            ..Args::default()
-        }
-    );
-}

@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.4.0] - IN DEVELOPMENT
+## [Unreleased]
+
+## [0.4.0] - 2022-09-10
 
 ### Removed
 
@@ -18,7 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - HTML report hidden behind non-default feature flag: 'html_reports'
 - Standalone support (ie without cargo-criterion) feature flag: 'cargo_bench_support'
-- MSRV bumped to 1.56.1
+- MSRV bumped to 1.57
 - `rayon` and `plotters` are optional (and default) dependencies.
 - Status messages ('warming up', 'analyzing', etc) are printed to stderr, benchmark results are printed to stdout.
 - Accept subsecond durations for `--warm-up-time`, `--measurement-time` and `--profile-time`.
@@ -30,10 +32,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - A `--discard-baseline` flag for discarding rather than saving benchmark results.
 - Formal support for benchmarking code compiled to web-assembly.
 - A `--quiet` flag for printing just a single line per benchmark.
+- A `Throughput::BytesDecimal` option for measuring throughput in bytes but printing them using
+  decimal units like kilobytes instead of binary units like kibibytes.
 
 ### Fixed
-- When using `bench_with_input`, the input parameter will now be passed through `black_box` before 
+- When using `bench_with_input`, the input parameter will now be passed through `black_box` before
   passing it to the benchmark.
+
+## [0.3.6] - 2022-07-06
+### Changed
+- MSRV bumped to 1.49
+- Symbol for microseconds changed from ASCII 'us' to unicode 'µs'
+- Documentation fixes
+- Clippy fixes
 
 ## [0.3.5] - 2021-07-26
 
@@ -493,7 +504,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Initial release on Crates.io.
 
-[unreleased]: https://github.com/bheisler/criterion.rs/compare/0.3.4...HEAD
+[Unreleased]: https://github.com/bheisler/criterion.rs/compare/0.4.0...HEAD
 [0.1.1]: https://github.com/bheisler/criterion.rs/compare/0.1.0...0.1.1
 [0.1.2]: https://github.com/bheisler/criterion.rs/compare/0.1.1...0.1.2
 [0.2.0]: https://github.com/bheisler/criterion.rs/compare/0.1.2...0.2.0
@@ -514,3 +525,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 [0.3.3]: https://github.com/bheisler/criterion.rs/compare/0.3.2...0.3.3
 [0.3.4]: https://github.com/bheisler/criterion.rs/compare/0.3.3...0.3.4
 [0.3.5]: https://github.com/bheisler/criterion.rs/compare/0.3.4...0.3.5
+[0.3.6]: https://github.com/bheisler/criterion.rs/compare/0.3.5...0.3.6
+[0.4.0]: https://github.com/bheisler/criterion.rs/compare/0.3.6...0.4.0

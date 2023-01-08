@@ -8,6 +8,8 @@ on:
       - version-0.4
 
 name: tests
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   ci:
@@ -16,11 +18,11 @@ jobs:
       matrix:
         rust:
           - stable
-          - beta
-          - 1.56.1  # MSRV
+          - 1.59 # MSRV
+          - nightly
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: actions-rs/toolchain@v1
         name: Setup rust toolchain
@@ -30,7 +32,7 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - uses: Swatinem/rust-cache@v1
+      - uses: Swatinem/rust-cache@v2
         name: Load dependencies from cache
 
       - uses: actions-rs/cargo@v1
@@ -73,6 +75,7 @@ jobs:
 
       - uses: actions-rs/cargo@v1
         name: Check for clippy hints
+        if: ${{ matrix.rust == 'stable' }}
         with:
           command: clippy
           args: -- -D warnings
@@ -84,3 +87,27 @@ jobs:
           export PATH=$HOME/.wasmtime/bin/:$PATH
           cargo install cargo-wasi
           cargo wasi bench --no-default-features -- --test
+
+  nextest-compat:
+    name: Check compatibility with nextest
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v1
+
+      - uses: taiki-e/install-action@nextest
+
+      - run: ci/nextest-compat.sh

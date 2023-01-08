@@ -4,12 +4,15 @@ mod tests;
 mod types;
 
 use error::Error;
-pub use types::{Color, OutputFormat, PlottingBackend, SaveBaseline};
+pub use types::{Color, Format, OutputFormat, PlottingBackend, SaveBaseline};
 
 use std::{env, ffi::OsString, str::FromStr};
 
 use crate::benchmark::BenchmarkConfig;
 
+// TODO: Add `--format` to help
+// TODO: Add `--ignore` to help
+// TODO: Add `--exact` to help
 #[derive(Debug, Default, PartialEq)]
 pub struct Args {
     pub filter: Option<String>,
@@ -22,12 +25,10 @@ pub struct Args {
     pub baseline: Option<String>,
     pub baseline_lenient: Option<String>,
     pub list: bool,
+    pub format: Format,
+    pub ignored: bool,
+    pub exact: bool,
     pub profile_time: Option<f64>,
-    pub export: Option<String>,
-    pub compare: bool,
-    pub baselines: Vec<String>,
-    pub compare_threshold: Option<f64>,
-    pub compare_list: bool,
     pub load_baseline: Option<String>,
     pub sample_size: Option<usize>,
     pub warm_up_time: Option<f64>,
@@ -96,18 +97,9 @@ fn try_parse_args(raw_args: Vec<OsString>) -> Result<Args, Error> {
             Long("baseline-lenient") => {
                 args.baseline_lenient = Some(parse_value("--baseline-lenient", &mut parser)?);
             }
+            Long("format") => args.format = parse_value("--format", &mut parser)?,
             Long("profile-time") => {
                 args.profile_time = Some(parse_value("--profile-time", &mut parser)?);
-            }
-            Long("export") => {
-                args.export = Some(parse_value("--export", &mut parser)?);
-            }
-            Long("baselines") => {
-                let baselines: String = parse_value("--baselines", &mut parser)?;
-                args.baselines = baselines.split(',').map(String::from).collect();
-            }
-            Long("compare-threshold") => {
-                args.compare_threshold = Some(parse_value("--compare-threshold", &mut parser)?);
             }
             Long("load-baseline") => {
                 args.load_baseline = Some(parse_value("--load-baseline", &mut parser)?);
@@ -145,8 +137,8 @@ fn try_parse_args(raw_args: Vec<OsString>) -> Result<Args, Error> {
             Short('n') | Long("noplot") => args.no_plot = true,
             Long("discard-baseline") => args.discard_baseline = true,
             Long("list") => args.list = true,
-            Long("compare") => args.compare = true,
-            Long("compare-list") => args.compare_list = true,
+            Long("ignored") => args.ignored = true,
+            Long("exact") => args.exact = true,
             Long("quick") => args.quick = true,
             Long("test") => args.test = true,
             Long("bench") => args.bench = true,
@@ -162,9 +154,7 @@ fn try_parse_args(raw_args: Vec<OsString>) -> Result<Args, Error> {
     }
 
     // Error if flags are missing their requires
-    if !args.baselines.is_empty() && !args.compare {
-        return Err(Error::MissingRequires("--baselines", "--compare"));
-    } else if args.load_baseline.is_some() && args.baseline.is_none() {
+    if args.load_baseline.is_some() && args.baseline.is_none() {
         return Err(Error::MissingRequires("--load-baseline", "--baseline"));
     }
 
@@ -192,8 +182,6 @@ fn try_parse_args(raw_args: Vec<OsString>) -> Result<Args, Error> {
         args.list,
         args.test,
         args.profile_time.is_some(),
-        args.export.is_some(),
-        args.compare,
         args.load_baseline.is_some(),
     ]
     .iter()
@@ -205,8 +193,6 @@ fn try_parse_args(raw_args: Vec<OsString>) -> Result<Args, Error> {
             "--list",
             "--test",
             "--profile-time",
-            "--export",
-            "--compare",
             "--load-baseline",
         ]));
     } else if args.quick && args.sample_size.is_some() {
@@ -236,28 +222,22 @@ OPTIONS:
             Compare to a named baseline. If any benchmarks do not have the specified baseline then
             just those benchmarks are not compared against the baseline while every other benchmark
             is compared against the baseline.
-        --baselines <baselines>
-            Limit the baselines used in tabulated results.
     -c, --color <color>
             Configure coloring of output. always = always colorize output, never = never colorize
             output, auto = colorize output if output is a tty and compiled for unix. [default: auto]
             [possible values: auto, always, never]
-        --compare
-            Tabulate benchmark results
-        --compare-list
-            Show benchmark results in a list rather than in a table. Useful when horizontal space is
-            limited.
-        --compare-threshold <compare-threshold>
-            Hide results that differ by less than the threshold percentage. By default, all results
-            are shown.
         --confidence-level <confidence-level>
             Changes the default confidence level for this run. [default: {confidence_level}]
         --discard-baseline
             Discard benchmark results.
-        --export <export>
-            Export baseline as json, printed to stdout
+        --exact
+            Run benchmarks that exactly match the provided filter
+        --format <format>
+            Output formatting [default: pretty] [possible values: pretty, terse]
     -h, --help
             Print help information
+        --ignored
+            List or run ignored benchmarks (currently means skip all benchmarks)
         --list
             List all benchmarks
         --load-baseline <load-baseline>

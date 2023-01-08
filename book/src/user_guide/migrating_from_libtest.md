@@ -42,7 +42,7 @@ We also need to add Criterion.rs to the `dev-dependencies` section of `Cargo.tom
 
 ```toml
 [dev-dependencies]
-criterion = "0.3"
+criterion = "0.4"
 ```
 
 The next step is to update the imports:
