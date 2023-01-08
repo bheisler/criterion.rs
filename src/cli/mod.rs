@@ -10,9 +10,6 @@ use std::{env, ffi::OsString, str::FromStr};
 
 use crate::benchmark::BenchmarkConfig;
 
-// TODO: Add `--format` to help
-// TODO: Add `--ignore` to help
-// TODO: Add `--exact` to help
 #[derive(Debug, Default, PartialEq)]
 pub struct Args {
     pub filter: Option<String>,
