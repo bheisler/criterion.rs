@@ -13,7 +13,7 @@ impl std::error::Error for TypeParseError {}
 
 const DEFAULT_SAVE_BASELINE: &str = "base";
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct SaveBaseline(pub String);
 
 impl SaveBaseline {
@@ -36,7 +36,7 @@ impl FromStr for SaveBaseline {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Color {
     Auto,
     Always,
@@ -72,7 +72,7 @@ impl fmt::Display for Color {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PlottingBackend {
     GnuPlot,
     Plotters,
@@ -108,7 +108,7 @@ impl fmt::Display for PlottingBackend {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OutputFormat {
     Criterion,
     Bencher,
@@ -142,7 +142,7 @@ impl fmt::Display for OutputFormat {
 }
 
 /// Represents the possible list formats
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ListFormat {
     /// The regular, default format.
     Pretty,
