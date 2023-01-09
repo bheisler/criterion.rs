@@ -4,7 +4,7 @@ mod tests;
 mod types;
 
 use error::Error;
-pub use types::{Color, Format, OutputFormat, PlottingBackend, SaveBaseline};
+pub use types::{Color, ListFormat, OutputFormat, PlottingBackend, SaveBaseline};
 
 use std::{env, ffi::OsString, str::FromStr};
 
@@ -22,7 +22,7 @@ pub struct Args {
     pub baseline: Option<String>,
     pub baseline_lenient: Option<String>,
     pub list: bool,
-    pub format: Format,
+    pub format: ListFormat,
     pub ignored: bool,
     pub exact: bool,
     pub profile_time: Option<f64>,

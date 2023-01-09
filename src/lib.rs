@@ -87,6 +87,7 @@ use criterion_plot::{Version, VersionError};
 use once_cell::sync::Lazy;
 
 use crate::benchmark::BenchmarkConfig;
+use crate::cli::ListFormat;
 use crate::connection::Connection;
 use crate::connection::OutgoingMessage;
 use crate::html::Html;
@@ -317,22 +318,6 @@ impl Mode {
 
     pub fn is_terse(&self) -> bool {
         matches!(self, Mode::List(ListFormat::Terse))
-    }
-}
-
-#[derive(Debug, Clone)]
-/// Enum representing the list format.
-pub(crate) enum ListFormat {
-    /// The regular, default format.
-    Pretty,
-    /// The terse format, where nothing other than the name of the test and ": benchmark" at the end
-    /// is printed out.
-    Terse,
-}
-
-impl Default for ListFormat {
-    fn default() -> Self {
-        Self::Pretty
     }
 }
 
@@ -844,7 +829,7 @@ impl<M: Measurement> Criterion<M> {
         self.mode = if test_mode {
             Mode::Test
         } else if list {
-            Mode::List(ListFormat::from(format))
+            Mode::List(format)
         } else if let Some(num_seconds) = profile_time {
             if num_seconds < 1.0 {
                 eprintln!("Profile time must be at least one second.");

@@ -1,7 +1,5 @@
 use std::{convert::Infallible, fmt, str::FromStr};
 
-use crate::ListFormat;
-
 #[derive(Debug)]
 pub struct TypeParseError(String);
 
@@ -143,19 +141,23 @@ impl fmt::Display for OutputFormat {
     }
 }
 
+/// Represents the possible list formats
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Format {
+pub enum ListFormat {
+    /// The regular, default format.
     Pretty,
+    /// The terse format, where nothing other than the name of the test and ": benchmark" at the end
+    /// is printed out.
     Terse,
 }
 
-impl Default for Format {
+impl Default for ListFormat {
     fn default() -> Self {
         Self::Pretty
     }
 }
 
-impl FromStr for Format {
+impl FromStr for ListFormat {
     type Err = TypeParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -167,21 +169,11 @@ impl FromStr for Format {
     }
 }
 
-impl fmt::Display for Format {
+impl fmt::Display for ListFormat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             Self::Pretty => "pretty",
             Self::Terse => "terse",
         })
-    }
-}
-
-// TODO: get rid of this conversion
-impl From<Format> for ListFormat {
-    fn from(f: Format) -> Self {
-        match f {
-            Format::Pretty => ListFormat::Pretty,
-            Format::Terse => ListFormat::Terse,
-        }
     }
 }
