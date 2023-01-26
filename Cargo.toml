@@ -13,7 +13,7 @@ repository  = "https://github.com/bheisler/criterion.rs"
 readme      = "README.md"
 keywords    = ["criterion", "benchmark"]
 categories  = ["development-tools::profiling"]
-license     = "Apache-2.0/MIT"
+license     = "Apache-2.0 OR MIT"
 exclude     = ["book/*"]
 
 [dependencies]
