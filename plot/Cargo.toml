@@ -9,7 +9,7 @@ repository = "https://github.com/bheisler/criterion.rs"
 readme = "README.md"
 keywords = ["plotting", "gnuplot", "criterion"]
 categories = ["visualization"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 cast = "0.3"
