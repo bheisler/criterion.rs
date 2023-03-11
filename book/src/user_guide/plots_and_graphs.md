@@ -6,6 +6,14 @@ understanding of the behavior of the benchmark. These charts will be generated w
 it is not available. The examples below were generated using the gnuplot backend, but the plotters
 ones are similar.
 
+Note that in older versions of criterion.rs html reports were enabled by default. Recent versions
+have introduced a cargo feature for plot and html generation. In order to activate the html report
+generation make sure that your `Cargo.toml` activates the feature:
+
+```toml
+criterion = { version = "0.4", features = ["html_reports"] }
+```
+
 ## File Structure
 
 The plots and saved data are stored under `target/criterion/$BENCHMARK_NAME/`. Here's an example of
