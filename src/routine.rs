@@ -102,7 +102,6 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
 
             // Early exit for extremely long running benchmarks:
             if time_start.elapsed() > maximum_bench_duration {
-                let t_prev = 1_000_000f64;
                 let iters = vec![n as f64, n as f64].into_boxed_slice();
                 let elapsed = vec![t_prev, t_prev].into_boxed_slice();
                 return (ActualSamplingMode::Flat, iters, elapsed);
