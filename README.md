@@ -56,7 +56,7 @@ To start with Criterion.<span></span>rs, add the following to your `Cargo.toml` 
 
 ```toml
 [dev-dependencies]
-criterion = "0.4"
+criterion = { version = "0.4", features = ["html_reports"] }
 
 [[bench]]
 name = "my_benchmark"
@@ -107,7 +107,7 @@ First, thank you for contributing.
 One great way to contribute to Criterion.<span></span>rs is to use it for your own benchmarking needs and report your experiences, file and comment on issues, etc.
 
 Code or documentation improvements in the form of pull requests are also welcome. If you're not
-sure what to work on, try checking the 
+sure what to work on, try checking the
 [Beginner label](https://github.com/bheisler/criterion.rs/issues?q=is%3Aissue+is%3Aopen+label%3ABeginner).
 
 If your issues or pull requests have no response after a few days, feel free to ping me (@bheisler).
