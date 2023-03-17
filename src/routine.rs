@@ -246,7 +246,7 @@ where
             .iter()
             .map(|iters| {
                 b.iters = *iters;
-                (*f)(&mut b, black_box(parameter));
+                (*f)(&mut b, unsafe { black_box(parameter) });
                 b.assert_iterated();
                 m.to_f64(&b.value)
             })
