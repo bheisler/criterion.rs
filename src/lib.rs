@@ -162,12 +162,10 @@ pub fn black_box<T>(dummy: T) -> T {
 /// This variant is stable-compatible, but it may cause some performance overhead
 /// or fail to prevent code from being eliminated.
 #[cfg(not(feature = "real_blackbox"))]
-pub fn black_box<T>(dummy: T) -> T {
-    unsafe {
+pub unsafe fn black_box<T>(dummy: T) -> T {
         let ret = std::ptr::read_volatile(&dummy);
         std::mem::forget(dummy);
         ret
-    }
 }
 
 /// Argument to [`Bencher::iter_batched`](struct.Bencher.html#method.iter_batched) and
