@@ -85,7 +85,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         let time_start = Instant::now();
         let start = self.measurement.start();
         for _ in 0..self.iters {
-            black_box(routine());
+            unsafe { black_box(routine()) };
         }
         self.value = self.measurement.end(start);
         self.elapsed_time = time_start.elapsed();
