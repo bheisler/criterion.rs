@@ -246,14 +246,14 @@ impl<'a, M: Measurement> Bencher<'a, M> {
 
         if batch_size == 1 {
             for _ in 0..self.iters {
-                let input = black_box(setup());
+                let input = unsafe { black_box(setup()) };
 
                 let start = self.measurement.start();
                 let output = routine(input);
                 let end = self.measurement.end(start);
                 self.value = self.measurement.add(&self.value, &end);
 
-                drop(black_box(output));
+                drop(unsafe { black_box(output) });
             }
         } else {
             let mut iteration_counter = 0;
@@ -261,7 +261,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
             while iteration_counter < self.iters {
                 let batch_size = ::std::cmp::min(batch_size, self.iters - iteration_counter);
 
-                let inputs = black_box((0..batch_size).map(|_| setup()).collect::<Vec<_>>());
+                let inputs = unsafe { black_box((0..batch_size).map(|_| setup()).collect::<Vec<_>>()) };
                 let mut outputs = Vec::with_capacity(batch_size as usize);
 
                 let start = self.measurement.start();
@@ -269,7 +269,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
                 let end = self.measurement.end(start);
                 self.value = self.measurement.add(&self.value, &end);
 
-                black_box(outputs);
+                unsafe { black_box(outputs) };
 
                 iteration_counter += batch_size;
             }
@@ -336,15 +336,15 @@ impl<'a, M: Measurement> Bencher<'a, M> {
 
         if batch_size == 1 {
             for _ in 0..self.iters {
-                let mut input = black_box(setup());
+                let mut input = unsafe { black_box(setup()) };
 
                 let start = self.measurement.start();
                 let output = routine(&mut input);
                 let end = self.measurement.end(start);
                 self.value = self.measurement.add(&self.value, &end);
 
-                drop(black_box(output));
-                drop(black_box(input));
+                drop(unsafe { black_box(output) });
+                drop(unsafe { black_box(input) });
             }
         } else {
             let mut iteration_counter = 0;
@@ -352,7 +352,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
             while iteration_counter < self.iters {
                 let batch_size = ::std::cmp::min(batch_size, self.iters - iteration_counter);
 
-                let mut inputs = black_box((0..batch_size).map(|_| setup()).collect::<Vec<_>>());
+                let mut inputs = unsafe { black_box((0..batch_size).map(|_| setup()).collect::<Vec<_>>()) };
                 let mut outputs = Vec::with_capacity(batch_size as usize);
 
                 let start = self.measurement.start();
@@ -360,7 +360,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
                 let end = self.measurement.end(start);
                 self.value = self.measurement.add(&self.value, &end);
 
-                black_box(outputs);
+                unsafe { black_box(outputs) };
 
                 iteration_counter += batch_size;
             }

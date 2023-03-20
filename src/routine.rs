@@ -266,7 +266,7 @@ where
         let mut total_iters = 0;
         let mut elapsed_time = Duration::from_millis(0);
         loop {
-            (*f)(&mut b, black_box(parameter));
+            (*f)(&mut b, unsafe { black_box(parameter) });
 
             b.assert_iterated();
 
