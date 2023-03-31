@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - HTML report hidden behind non-default feature flag: 'html_reports'
 - Standalone support (ie without cargo-criterion) feature flag: 'cargo_bench_support'
-- MSRV bumped to 1.57
+- MSRV bumped to 1.60
 - `rayon` and `plotters` are optional (and default) dependencies.
 - Status messages ('warming up', 'analyzing', etc) are printed to stderr, benchmark results are printed to stdout.
 - Accept subsecond durations for `--warm-up-time`, `--measurement-time` and `--profile-time`.
