@@ -116,10 +116,10 @@ impl BenchmarkId {
         throughput: Option<Throughput>,
     ) -> BenchmarkId {
         let full_id = match (&function_id, &value_str) {
-            (&Some(ref func), &Some(ref val)) => format!("{}/{}/{}", group_id, func, val),
-            (&Some(ref func), &None) => format!("{}/{}", group_id, func),
-            (&None, &Some(ref val)) => format!("{}/{}", group_id, val),
-            (&None, &None) => group_id.clone(),
+            (Some(func), Some(val)) => format!("{}/{}/{}", group_id, func, val),
+            (Some(func), None) => format!("{}/{}", group_id, func),
+            (None, Some(val)) => format!("{}/{}", group_id, val),
+            (None, None) => group_id.clone(),
         };
 
         let mut title = full_id.clone();
@@ -129,23 +129,23 @@ impl BenchmarkId {
         }
 
         let directory_name = match (&function_id, &value_str) {
-            (&Some(ref func), &Some(ref val)) => format!(
+            (Some(func), Some(val)) => format!(
                 "{}/{}/{}",
                 make_filename_safe(&group_id),
                 make_filename_safe(func),
                 make_filename_safe(val)
             ),
-            (&Some(ref func), &None) => format!(
+            (Some(func), None) => format!(
                 "{}/{}",
                 make_filename_safe(&group_id),
                 make_filename_safe(func)
             ),
-            (&None, &Some(ref val)) => format!(
+            (None, Some(val)) => format!(
                 "{}/{}",
                 make_filename_safe(&group_id),
                 make_filename_safe(val)
             ),
-            (&None, &None) => make_filename_safe(&group_id),
+            (None, None) => make_filename_safe(&group_id),
         };
 
         BenchmarkId {
