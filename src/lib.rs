@@ -1432,7 +1432,7 @@ impl ActualSamplingMode {
                     }
                 }
 
-                (1..(n + 1) as u64).map(|a| a * d).collect::<Vec<u64>>()
+                (1..(n + 1)).map(|a| a * d).collect::<Vec<u64>>()
             }
             ActualSamplingMode::Flat => {
                 let n = sample_count;
