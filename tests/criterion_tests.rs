@@ -1,6 +1,3 @@
-use criterion;
-use serde_json;
-
 #[cfg(feature = "plotters")]
 use criterion::SamplingMode;
 use criterion::{
@@ -469,7 +466,7 @@ fn test_criterion_doesnt_panic_if_measured_time_is_zero() {
 }
 
 mod macros {
-    use super::{criterion, criterion_group, criterion_main};
+    use super::{criterion_group, criterion_main};
 
     #[test]
     #[should_panic(expected = "group executed")]
@@ -504,7 +501,7 @@ mod macros {
     #[test]
     #[should_panic(expected = "group executed")]
     fn criterion_group() {
-        use self::criterion::Criterion;
+        use criterion::Criterion;
 
         fn group(_crit: &mut Criterion) {}
         fn group2(_crit: &mut Criterion) {
@@ -519,7 +516,7 @@ mod macros {
     #[test]
     #[should_panic(expected = "group executed")]
     fn criterion_group_trailing_comma() {
-        use self::criterion::Criterion;
+        use criterion::Criterion;
 
         fn group(_crit: &mut Criterion) {}
         fn group2(_crit: &mut Criterion) {
