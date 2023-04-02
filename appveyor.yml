@@ -20,13 +20,14 @@ install:
 
 build: false
 
+# Disabled in favor of github actions
 test_script:
-  - cargo build --release
-  - cargo test --all --release
-  - cargo build --benches --all --release
+#  - cargo build --release
+#  - cargo test --all --release
+#  - cargo build --benches --all --release
 # Disable benchmarking until performance can be improved.
 #  - cargo bench
-  - cargo doc --release --all --no-deps
+#  - cargo doc --release --all --no-deps
 
 branches:
   only:
