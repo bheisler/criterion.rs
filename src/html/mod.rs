@@ -537,8 +537,8 @@ impl Report for Html {
         }
 
         let mut groups = id_groups
-            .into_iter()
-            .map(|(_, group)| BenchmarkGroup::new(output_directory, &group))
+            .into_values()
+            .map(|group| BenchmarkGroup::new(output_directory, &group))
             .collect::<Vec<BenchmarkGroup<'_>>>();
         groups.sort_unstable_by_key(|g| g.group_report.name);
 

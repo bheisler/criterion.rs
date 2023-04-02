@@ -120,7 +120,7 @@ fn line_comparison_series_data<'a>(
 ) -> (&'static str, Vec<(Option<&'a String>, Vec<f64>, Vec<f64>)>) {
     let max = all_curves
         .iter()
-        .map(|&&(_, ref data)| Sample::new(data).mean())
+        .map(|&(_, data)| Sample::new(data).mean())
         .fold(::std::f64::NAN, f64::max);
 
     let mut dummy = [1.0];
@@ -176,7 +176,7 @@ pub fn violin(
 
     let mut xs = kdes
         .iter()
-        .flat_map(|&(_, ref x, _)| x.iter())
+        .flat_map(|(_, x, _)| x.iter())
         .filter(|&&x| x > 0.);
     let (mut min, mut max) = {
         let &first = xs.next().unwrap();

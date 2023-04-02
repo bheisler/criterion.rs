@@ -51,7 +51,7 @@ default-features = false
 features         = ["svg_backend", "area_series", "line_series"]
 
 [dev-dependencies]
-tempfile   = "3.2.0"
+tempfile   = "~3.2.0"
 approx     = "0.5.0"
 quickcheck = { version = "1.0", default-features = false }
 rand       = "0.8"

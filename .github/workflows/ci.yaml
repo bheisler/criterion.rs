@@ -18,7 +18,7 @@ jobs:
       matrix:
         rust:
           - stable
-          - 1.59 # MSRV
+          - 1.60.0 # MSRV
           - nightly
 
     steps:

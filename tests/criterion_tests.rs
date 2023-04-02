@@ -1,6 +1,3 @@
-use criterion;
-use serde_json;
-
 #[cfg(feature = "plotters")]
 use criterion::SamplingMode;
 use criterion::{
@@ -84,10 +81,10 @@ fn verify_html(dir: &PathBuf, path: &str) {
 }
 
 fn verify_stats(dir: &PathBuf, baseline: &str) {
-    verify_json(&dir, &format!("{}/estimates.json", baseline));
-    verify_json(&dir, &format!("{}/sample.json", baseline));
-    verify_json(&dir, &format!("{}/tukey.json", baseline));
-    verify_json(&dir, &format!("{}/benchmark.json", baseline));
+    verify_json(dir, &format!("{}/estimates.json", baseline));
+    verify_json(dir, &format!("{}/sample.json", baseline));
+    verify_json(dir, &format!("{}/tukey.json", baseline));
+    verify_json(dir, &format!("{}/benchmark.json", baseline));
     #[cfg(feature = "csv_output")]
     verify_file(&dir, &format!("{}/raw.csv", baseline));
 }
@@ -469,7 +466,7 @@ fn test_criterion_doesnt_panic_if_measured_time_is_zero() {
 }
 
 mod macros {
-    use super::{criterion, criterion_group, criterion_main};
+    use super::{criterion_group, criterion_main, Criterion};
 
     #[test]
     #[should_panic(expected = "group executed")]
@@ -504,8 +501,6 @@ mod macros {
     #[test]
     #[should_panic(expected = "group executed")]
     fn criterion_group() {
-        use self::criterion::Criterion;
-
         fn group(_crit: &mut Criterion) {}
         fn group2(_crit: &mut Criterion) {
             panic!("group executed");
@@ -519,8 +514,6 @@ mod macros {
     #[test]
     #[should_panic(expected = "group executed")]
     fn criterion_group_trailing_comma() {
-        use self::criterion::Criterion;
-
         fn group(_crit: &mut Criterion) {}
         fn group2(_crit: &mut Criterion) {
             panic!("group executed");

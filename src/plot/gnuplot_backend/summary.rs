@@ -67,7 +67,7 @@ pub fn line_comparison(
 
     let max = all_curves
         .iter()
-        .map(|&&(_, ref data)| Sample::new(data).mean())
+        .map(|&(_, data)| Sample::new(data).mean())
         .fold(::std::f64::NAN, f64::max);
 
     let mut dummy = [1.0];
@@ -134,7 +134,7 @@ pub fn violin(
 
     let kdes = all_curves
         .iter()
-        .map(|&&(_, ref sample)| {
+        .map(|&(_, sample)| {
             let (x, mut y) = kde::sweep(Sample::new(sample), KDE_POINTS, None);
             let y_max = Sample::new(&y).max();
             for y in y.iter_mut() {
@@ -144,10 +144,7 @@ pub fn violin(
             (x, y)
         })
         .collect::<Vec<_>>();
-    let mut xs = kdes
-        .iter()
-        .flat_map(|&(ref x, _)| x.iter())
-        .filter(|&&x| x > 0.);
+    let mut xs = kdes.iter().flat_map(|(x, _)| x.iter()).filter(|&&x| x > 0.);
     let (mut min, mut max) = {
         let &first = xs.next().unwrap();
         (first, first)
@@ -174,7 +171,7 @@ pub fn violin(
         .configure(Axis::BottomX, |a| {
             a.configure(Grid::Major, |g| g.show())
                 .configure(Grid::Minor, |g| g.hide())
-                .set(Range::Limits(0., max as f64 * one[0]))
+                .set(Range::Limits(0., max * one[0]))
                 .set(Label(format!("Average time ({})", unit)))
                 .set(axis_scale.to_gnuplot())
         })
@@ -190,7 +187,7 @@ pub fn violin(
         });
 
     let mut is_first = true;
-    for (i, &(ref x, ref y)) in kdes.iter().enumerate() {
+    for (i, (x, y)) in kdes.iter().enumerate() {
         let i = i as f64 + 0.5;
         let y1: Vec<_> = y.iter().map(|&y| i + y * 0.45).collect();
         let y2: Vec<_> = y.iter().map(|&y| i - y * 0.45).collect();
