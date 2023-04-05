@@ -1060,7 +1060,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                     } else {
                         CliVerbosity::Normal
                     };
-                    let stdout_isatty = atty::is(atty::Stream::Stdout);
+                    let stdout_isatty = is_terminal::is_terminal(&std::io::stdout());
                     let mut enable_text_overwrite = stdout_isatty && !verbose && !debug_enabled();
                     let enable_text_coloring;
                     match matches.value_of("color") {

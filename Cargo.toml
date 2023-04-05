@@ -25,7 +25,7 @@ serde          = "1.0"
 serde_json     = "1.0"
 serde_derive   = "1.0"
 ciborium       = "0.2.0"
-atty           = "0.2.6"
+is-terminal    = "0.4.6"
 clap           = { version = "3.1", default-features = false, features = ["std"] }
 walkdir        = "2.3"
 tinytemplate   = "1.1"
