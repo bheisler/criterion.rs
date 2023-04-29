@@ -932,10 +932,10 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                     eprintln!("Warning: --color will be ignored when running with cargo-criterion. Use `cargo criterion --color {} -- <args>` instead.", color);
                 }
             }
-            if matches.contains_id("verbose") {
+            if matches.get_flag("verbose") {
                 eprintln!("Warning: --verbose will be ignored when running with cargo-criterion. Use `cargo criterion --output-format verbose -- <args>` instead.");
             }
-            if matches.contains_id("noplot") {
+            if matches.get_flag("noplot") {
                 eprintln!("Warning: --noplot will be ignored when running with cargo-criterion. Use `cargo criterion --plotting-backend disabled -- <args>` instead.");
             }
             if let Some(backend) = matches.get_one::<String>("plotting-backend") {
@@ -959,15 +959,15 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             }
         }
 
-        let bench = matches.contains_id("bench");
-        let test = matches.contains_id("test");
+        let bench = matches.get_flag("bench");
+        let test = matches.get_flag("test");
         let test_mode = match (bench, test) {
             (true, true) => true,   // cargo bench -- --test should run tests
             (true, false) => false, // cargo bench should run benchmarks
             (false, _) => true,     // cargo test --benches should run tests
         };
 
-        self.mode = if matches.contains_id("list") {
+        self.mode = if matches.get_flag("list") {
             let list_format = match matches
                 .get_one::<String>("format")
                 .expect("a default value was provided for this")
@@ -999,11 +999,11 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.connection = None;
         }
 
-        let filter = if matches.contains_id("ignored") {
+        let filter = if matches.get_flag("ignored") {
             // --ignored overwrites any name-based filters passed in.
             BenchmarkFilter::RejectAll
         } else if let Some(filter) = matches.get_one::<String>("FILTER") {
-            if matches.contains_id("exact") {
+            if matches.get_flag("exact") {
                 BenchmarkFilter::Exact(filter.to_owned())
             } else {
                 let regex = Regex::new(filter).unwrap_or_else(|err| {
@@ -1027,7 +1027,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             None => {}
         }
 
-        if matches.contains_id("noplot") {
+        if matches.get_flag("noplot") {
             self = self.without_plots();
         }
 
@@ -1035,7 +1035,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.baseline = Baseline::Save;
             self.baseline_directory = dir.to_owned()
         }
-        if matches.contains_id("discard-baseline") {
+        if matches.get_flag("discard-baseline") {
             self.baseline = Baseline::Discard;
         }
         if let Some(dir) = matches.get_one::<String>("baseline") {
@@ -1060,10 +1060,10 @@ https://bheisler.github.io/criterion.rs/book/faq.html
                     self.report.cli_enabled = false;
                 }
                 _ => {
-                    let verbose = matches.contains_id("verbose");
+                    let verbose = matches.get_flag("verbose");
                     let verbosity = if verbose {
                         CliVerbosity::Verbose
-                    } else if matches.contains_id("quiet") {
+                    } else if matches.get_flag("quiet") {
                         CliVerbosity::Quiet
                     } else {
                         CliVerbosity::Normal
@@ -1130,7 +1130,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             self.config.significance_level = num_significance_level;
         }
 
-        if matches.contains_id("quick") {
+        if matches.get_flag("quick") {
             self.config.quick_mode = true;
         }
 
