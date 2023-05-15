@@ -927,7 +927,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             .get_matches();
 
         if self.connection.is_some() {
-            if let Some(color) = matches.get_one("color").map(String::as_str) {
+            if let Some(color) = matches.get_one::<String>("color") {
                 if color != "auto" {
                     eprintln!("Warning: --color will be ignored when running with cargo-criterion. Use `cargo criterion --color {} -- <args>` instead.", color);
                 }
@@ -950,8 +950,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             if matches.contains_id("baseline")
                 || matches
                     .get_one::<String>("save-baseline")
-                    .map(|base| base != "base")
-                    .unwrap_or(false)
+                    .map_or(false, |base| base != "base")
                 || matches.contains_id("load-baseline")
             {
                 eprintln!("Error: baselines are not supported when running with cargo-criterion.");
