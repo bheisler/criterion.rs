@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Replaced atty dependency with is-terminal
 - MSRV bumped to 1.64
 - Upgraded clap dependency to v4
+- Upgraded tempfile dependency to v3.5.0
 
 ### Fixed
 - Quick mode (`--quick`) no longer outputs 1ms for measured times over 5 seconds
