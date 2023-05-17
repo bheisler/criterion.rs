@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.5.0] - 2023-05-XX
+
 ### Changed
 - Replaced lazy_static dependency with once_cell
 - Improved documentation of the `html_reports` feature
