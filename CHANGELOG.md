@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Replaced lazy_static dependency with once_cell
 - Improved documentation of the `html_reports` feature
 - Replaced atty dependency with is-terminal
-- (WIP, waiting on #679) MSRV bumped to 1.64
-- (WIP, waiting on #679) Upgraded clap dependency to v4
+- MSRV bumped to 1.64
+- Upgraded clap dependency to v4
 
 ### Fixed
 - Quick mode (`--quick`) no longer outputs 1ms for measured times over 5 seconds
