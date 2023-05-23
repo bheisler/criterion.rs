@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [0.5.0] - 2023-05-XX
+## [0.5.0] - 2023-05-23
 
 ### Changed
 - Replaced lazy_static dependency with once_cell
@@ -541,3 +541,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 [0.3.5]: https://github.com/bheisler/criterion.rs/compare/0.3.4...0.3.5
 [0.3.6]: https://github.com/bheisler/criterion.rs/compare/0.3.5...0.3.6
 [0.4.0]: https://github.com/bheisler/criterion.rs/compare/0.3.6...0.4.0
+[0.5.0]: https://github.com/bheisler/criterion.rs/compare/0.4.0...0.5.0
