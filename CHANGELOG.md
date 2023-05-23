@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.5.0] - 2023-05-XX
+
+### Changed
+- Replaced lazy_static dependency with once_cell
+- Improved documentation of the `html_reports` feature
+- Replaced atty dependency with is-terminal
+- MSRV bumped to 1.64
+- Upgraded clap dependency to v4
+- Upgraded tempfile dependency to v3.5.0
+
+### Fixed
+- Quick mode (`--quick`) no longer outputs 1ms for measured times over 5 seconds
+- Documentation updates
+
 ## [0.4.0] - 2022-09-10
 
 ### Removed
@@ -20,7 +34,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - HTML report hidden behind non-default feature flag: 'html_reports'
 - Standalone support (ie without cargo-criterion) feature flag: 'cargo_bench_support'
-- MSRV bumped to 1.60
+- MSRV bumped to 1.57
 - `rayon` and `plotters` are optional (and default) dependencies.
 - Status messages ('warming up', 'analyzing', etc) are printed to stderr, benchmark results are printed to stdout.
 - Accept subsecond durations for `--warm-up-time`, `--measurement-time` and `--profile-time`.
