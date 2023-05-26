@@ -103,7 +103,8 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
             // Early exit for extremely long running benchmarks:
             if time_start.elapsed() > maximum_bench_duration {
                 let iters = vec![n as f64, n as f64].into_boxed_slice();
-                let elapsed = vec![t_prev, t_prev].into_boxed_slice();
+                // prevent gnuplot bug when all values are equal
+                let elapsed = vec![t_prev, t_prev + 0.000001].into_boxed_slice();
                 return (ActualSamplingMode::Flat, iters, elapsed);
             }
 
