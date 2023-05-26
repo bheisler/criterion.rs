@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+ - Quick mode (--quick) no longer crashes with measured times over 5 seconds when --noplot is not active
+
 ## [0.5.0] - 2023-05-23
 
 ### Changed
