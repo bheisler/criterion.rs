@@ -242,15 +242,15 @@ where
             elapsed_time: Duration::from_millis(0),
         };
 
-        iters
-            .iter()
-            .map(|iters| {
-                b.iters = *iters;
-                (*f)(&mut b, black_box(parameter));
-                b.assert_iterated();
-                m.to_f64(&b.value)
-            })
-            .collect()
+        let mut results = Vec::with_capacity(iters.len());
+        results.resize(iters.len(), 0.0);
+        for (i, iters) in iters.iter().enumerate() {
+            b.iters = *iters;
+            (*f)(&mut b, black_box(parameter));
+            b.assert_iterated();
+            results[i] = m.to_f64(&b.value);
+        }
+        results
     }
 
     fn warm_up(&mut self, m: &M, how_long: Duration, parameter: &T) -> (u64, u64) {
