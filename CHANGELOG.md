@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.5.1] - 2023-05-26
+
 ### Fixed
  - Quick mode (--quick) no longer crashes with measured times over 5 seconds when --noplot is not active
 
@@ -545,3 +547,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 [0.3.6]: https://github.com/bheisler/criterion.rs/compare/0.3.5...0.3.6
 [0.4.0]: https://github.com/bheisler/criterion.rs/compare/0.3.6...0.4.0
 [0.5.0]: https://github.com/bheisler/criterion.rs/compare/0.4.0...0.5.0
+[0.5.1]: https://github.com/bheisler/criterion.rs/compare/0.5.0...0.5.1
