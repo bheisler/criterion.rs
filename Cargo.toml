@@ -43,6 +43,7 @@ tokio = { version = "1.0", default-features = false, features = [
   "rt",
 ], optional = true }
 async-std = { version = "1.9", optional = true }
+alloca = "0.3.3"
 
 [dependencies.plotters]
 version          = "^0.3.1"
@@ -61,14 +62,7 @@ futures    = { version = "0.3", default_features = false, features = ["executor"
 maintenance = { status = "passively-maintained" }
 
 [features]
-stable = [
-  "csv_output",
-  "html_reports",
-  "async_futures",
-  "async_smol",
-  "async_tokio",
-  "async_std",
-]
+stable = ["csv_output", "html_reports", "async_futures", "async_smol", "async_tokio", "async_std"]
 default = ["rayon", "plotters", "cargo_bench_support"]
 
 # Enable use of the nightly-only test::black_box function to discourage compiler optimizations.
