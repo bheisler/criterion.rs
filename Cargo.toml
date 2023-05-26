@@ -43,7 +43,7 @@ tokio = { version = "1.0", default-features = false, features = [
   "rt",
 ], optional = true }
 async-std = { version = "1.9", optional = true }
-alloca = "0.3.3"
+alloca = "0.3.4"
 
 [dependencies.plotters]
 version          = "^0.3.1"

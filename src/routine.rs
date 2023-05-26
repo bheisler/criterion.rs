@@ -246,15 +246,25 @@ where
         results.resize(iters.len(), 0.0);
         for (i, iters) in iters.iter().enumerate() {
             let stack_alloc = i % 2048;
-            alloca::with_alloca(
-                stack_alloc, /* how much bytes we want to allocate */
-                |_memory: &mut [core::mem::MaybeUninit<u8>] /* dynamically stack allocated slice itself */| {
-                    b.iters = *iters;
-                    (*f)(&mut b, black_box(parameter));
-                    b.assert_iterated();
-                    results[i] = m.to_f64(&b.value);
-                },
-            );
+            #[cfg(any(target_family = "unix", target_family = "windows"))]
+            {
+                alloca::with_alloca(
+                    stack_alloc, /* how much bytes we want to allocate */
+                    |_memory: &mut [core::mem::MaybeUninit<u8>] /* dynamically stack allocated slice itself */| {
+                        b.iters = *iters;
+                        (*f)(&mut b, black_box(parameter));
+                        b.assert_iterated();
+                        results[i] = m.to_f64(&b.value);
+                    },
+                );
+            }
+            #[cfg(not(any(target_family = "unix", target_family = "windows")))]
+            {
+                b.iters = *iters;
+                (*f)(&mut b, black_box(parameter));
+                b.assert_iterated();
+                results[i] = m.to_f64(&b.value);
+            }
         }
         results
     }
