@@ -245,7 +245,7 @@ where
         let mut results = Vec::with_capacity(iters.len());
         results.resize(iters.len(), 0.0);
         for (i, iters) in iters.iter().enumerate() {
-            let stack_alloc = i % 2048;
+            let stack_alloc = i % 4096; // default page size
             #[cfg(any(target_family = "unix", target_family = "windows"))]
             {
                 alloca::with_alloca(
