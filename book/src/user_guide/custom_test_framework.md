@@ -3,9 +3,9 @@
 Nightly versions of the rust compiler support custom test frameworks. Criterion.rs provides an
 experimental implementation of a custom test framework, meaning that you can use `#[criterion]`
 attributes to mark your benchmarks instead of the normal `criterion_group!/criterion_main!` macros.
-Right now this requires some unstable features, but at some point in the future 
+Right now this requires some unstable features, but at some point in the future
 `criterion_group!/criterion_main!` will be deprecated and `#[criterion]` will become the standard
-way to define a Criterion.rs benchmark. If you'd like to try this feature out early, see the 
+way to define a Criterion.rs benchmark. If you'd like to try this feature out early, see the
 documentation below.
 
 ## Using `#[criterion]`
