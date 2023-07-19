@@ -77,7 +77,7 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::default::Default;
 use std::env;
-pub use std::hint::black_box;
+use std::hint;
 use std::io::stdout;
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
@@ -148,6 +148,15 @@ static DEFAULT_OUTPUT_DIRECTORY: Lazy<PathBuf> = Lazy::new(|| {
 
 fn debug_enabled() -> bool {
     *DEBUG_ENABLED
+}
+
+/// A function that is opaque to the optimizer, used to prevent the compiler from
+/// optimizing away computations in a benchmark.
+/// 
+/// This function is deprecated in favour of `std::hint::black_box`.
+#[deprecated(note = "use `std::hint::black_box` instead")]
+pub fn black_box<T>(dummy: T) -> T {
+    hint::black_box(dummy)
 }
 
 /// Argument to [`Bencher::iter_batched`](struct.Bencher.html#method.iter_batched) and
