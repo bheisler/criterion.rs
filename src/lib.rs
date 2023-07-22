@@ -17,7 +17,6 @@
 
 #![warn(missing_docs)]
 #![warn(bare_trait_objects)]
-#![cfg_attr(feature = "real_blackbox", feature(test))]
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
@@ -38,9 +37,6 @@ extern crate quickcheck;
 
 use is_terminal::IsTerminal;
 use regex::Regex;
-
-#[cfg(feature = "real_blackbox")]
-extern crate test;
 
 #[macro_use]
 extern crate serde_derive;
