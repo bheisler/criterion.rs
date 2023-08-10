@@ -5,7 +5,7 @@ graphs to show the differences in performance between them. First, lets create a
 benchmark. We can even combine this with benchmarking over a range of inputs.
 
 ```rust
-use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
 
 fn fibonacci_slow(n: u64) -> u64 {
     match n {
@@ -55,9 +55,9 @@ fn bench_fibs(c: &mut Criterion) {
     let mut group = c.benchmark_group("Fibonacci");
     for i in [20u64, 21u64].iter() {
         group.bench_with_input(BenchmarkId::new("Recursive", i), i, 
-            |b, i| b.iter(|| fibonacci_slow(*i)));
+            |b, i| b.iter(|| fibonacci_slow(black_box(*i))));
         group.bench_with_input(BenchmarkId::new("Iterative", i), i, 
-            |b, i| b.iter(|| fibonacci_fast(*i)));
+            |b, i| b.iter(|| fibonacci_fast(black_box(*i))));
     }
     group.finish();
 }
