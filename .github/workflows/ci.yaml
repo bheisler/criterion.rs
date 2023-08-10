@@ -57,7 +57,10 @@ jobs:
         if: ${{ matrix.rust == 'stable' }}
         run: cargo clippy -- -D warnings
 
+      # This fails on 1.64, but works on 1.66 and later.
+      # https://github.com/rust-lang/rust/issues/103306
       - name: Test run targeting WASI
+        if: ${{ matrix.rust == 'stable' }}
         run: |
           curl https://wasmtime.dev/install.sh -sSf | bash
           source ~/.bashrc
