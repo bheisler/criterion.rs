@@ -72,8 +72,35 @@ pub fn iter_count(iterations: u64) -> String {
     }
 }
 
+/// Format a number with thousands separators.
+// Based on the corresponding libtest functionality, see
+// https://github.com/rust-lang/rust/blob/557359f92512ca88b62a602ebda291f17a953002/library/test/src/bench.rs#L87-L109
+fn thousands_sep(mut n: u64, sep: char) -> String {
+    use std::fmt::Write;
+    let mut output = String::new();
+    let mut trailing = false;
+    for &pow in &[9, 6, 3, 0] {
+        let base = 10_u64.pow(pow);
+        if pow == 0 || trailing || n / base != 0 {
+            if !trailing {
+                write!(output, "{}", n / base).unwrap();
+            } else {
+                write!(output, "{:03}", n / base).unwrap();
+            }
+            if pow != 0 {
+                output.push(sep);
+            }
+            trailing = true;
+        }
+        n %= base;
+    }
+
+    output
+}
+
+/// Format a value as an integer, including thousands-separators.
 pub fn integer(n: f64) -> String {
-    format!("{}", n as u64)
+    thousands_sep(n as u64, ',')
 }
 
 #[cfg(test)]
@@ -100,5 +127,11 @@ mod test {
             assert!(string.len() <= 7);
             float *= 2.0;
         }
+    }
+
+    #[test]
+    fn integer_thousands_sep() {
+        let n = 140352319.0;
+        assert_eq!(integer(n), "140,352,319");
     }
 }
