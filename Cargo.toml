@@ -78,7 +78,7 @@ default = ["rayon", "plotters", "cargo_bench_support"]
 real_blackbox = []
 
 # Enable async/await support
-async = ["futures"]
+async = []
 
 # These features enable built-in support for running async benchmarks on each different async
 # runtime.
