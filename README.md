@@ -3,7 +3,7 @@
 <div align="center">Statistics-driven Microbenchmarking in Rust</div>
 
 <div align="center">
-	<a href="https://bheisler.github.io/criterion.rs/book/getting_started.html">Getting Started</a>
+ <a href="https://bheisler.github.io/criterion.rs/book/getting_started.html">Getting Started</a>
     |
     <a href="https://bheisler.github.io/criterion.rs/book/index.html">User Guide</a>
     |
@@ -15,12 +15,8 @@
 </div>
 
 <div align="center">
-	<a href="https://github.com/bheisler/criterion.rs/actions/workflows/ci.yaml">
+ <a href="https://github.com/bheisler/criterion.rs/actions/workflows/ci.yaml">
         <img src="https://img.shields.io/github/checks-status/rgeometry/rgeometry/main?label=tests&logo=github" alt="GitHub branch checks state">
-    </a>
-    |
-    <a href="https://ci.appveyor.com/project/bheisler/criterion-rs-vt9fl">
-        <img src="https://ci.appveyor.com/api/projects/status/4255ads9ctpupcl2?svg=true" alt="Appveyor">
     </a>
     |
     <a href="https://crates.io/crates/criterion">
@@ -31,6 +27,7 @@
 Criterion.<span></span>rs helps you write fast code by detecting and measuring performance improvements or regressions, even small ones, quickly and accurately. You can optimize with confidence, knowing how each change affects the performance of your code.
 
 ## Table of Contents
+
 - [Table of Contents](#table-of-contents)
   - [Features](#features)
   - [Quickstart](#quickstart)
