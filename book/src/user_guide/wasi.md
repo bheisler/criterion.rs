@@ -24,8 +24,8 @@ With `wasm32-wasi` and `cargo-wasi` installed, we're almost set to compile our b
 
 ```diff
 [dev-dependencies]
--criterion = "0.4"
-+criterion = { version = "0.4", default-features = false }
+-criterion = "0.5.1"
++criterion = { version = "0.5.1", default-features = false }
 ```
 
 Compiling the benchmark with `cargo-wasi` will automatically select the right target and optimize the resulting file. Here I'm using the [hex](https://crates.io/crates/hex) crate as an example:
@@ -226,6 +226,6 @@ Criterion's default features have to be disabled when compiling to wasm. Failing
 
 ```diff
 [dev-dependencies]
--criterion = "0.4"
-+criterion = { version = "0.4", default-features = false }
+-criterion = "0.5.1"
++criterion = { version = "0.5.1", default-features = false }
 ```

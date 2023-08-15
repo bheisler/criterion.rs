@@ -4,6 +4,9 @@ authors = [
   "Brook Heisler <brookheisler@gmail.com>",
 ]
 name = "criterion"
+# When bumping:
+#
+# * Update version numbers in the book;
 version = "0.5.1"
 edition = "2018"
 
