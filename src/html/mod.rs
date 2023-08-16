@@ -721,7 +721,7 @@ impl Html {
                     try_else_return!(fs::load(&entry.join("sample.json")), || None);
                 let avg_times = iters
                     .into_iter()
-                    .zip(times.into_iter())
+                    .zip(times)
                     .map(|(iters, time)| time / iters)
                     .collect::<Vec<_>>();
 

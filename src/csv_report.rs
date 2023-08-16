@@ -41,7 +41,7 @@ impl<W: Write> CsvReportWriter<W> {
         };
         let throughput_num = throughput_num.as_deref();
 
-        for (count, measured_value) in data.iter_counts().iter().zip(data_scaled.into_iter()) {
+        for (count, measured_value) in data.iter_counts().iter().zip(data_scaled) {
             let row = CsvRow {
                 group,
                 function,

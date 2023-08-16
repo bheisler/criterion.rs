@@ -86,11 +86,11 @@ fn draw_line_comarision_figure<XR: AsRangedCoord<Value = f64>, YR: AsRangedCoord
         .draw()
         .unwrap();
 
-    for (id, (name, xs, ys)) in (0..).zip(data.into_iter()) {
+    for (id, (name, xs, ys)) in (0..).zip(data) {
         let series = chart
             .draw_series(
                 LineSeries::new(
-                    xs.into_iter().zip(ys.into_iter()),
+                    xs.into_iter().zip(ys),
                     COMPARISON_COLORS[id % NUM_COLORS].filled(),
                 )
                 .point_size(POINT_SIZE),
