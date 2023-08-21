@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Async benchmarking with Tokio may be done via a `tokio::runtime::Handle`, not only a `tokio::runtime::Runtime`
+
 ## [0.5.1] - 2023-05-26
 
 ### Fixed

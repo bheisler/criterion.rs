@@ -2,7 +2,7 @@
 //! Criterion.rs' async benchmarking support.
 //!
 //! Implementations are provided for:
-//! * Tokio (implemented directly for `tokio::Runtime`)
+//! * Tokio (implemented directly for `tokio::runtime::Runtime` and `tokio::runtime::Handle`)
 //! * Async-std
 //! * Smol
 //! * The Futures crate
@@ -50,6 +50,18 @@ impl AsyncExecutor for tokio::runtime::Runtime {
 }
 #[cfg(feature = "async_tokio")]
 impl AsyncExecutor for &tokio::runtime::Runtime {
+    fn block_on<T>(&self, future: impl Future<Output = T>) -> T {
+        (*self).block_on(future)
+    }
+}
+#[cfg(feature = "async_tokio")]
+impl AsyncExecutor for tokio::runtime::Handle {
+    fn block_on<T>(&self, future: impl Future<Output = T>) -> T {
+        self.block_on(future)
+    }
+}
+#[cfg(feature = "async_tokio")]
+impl AsyncExecutor for &tokio::runtime::Handle {
     fn block_on<T>(&self, future: impl Future<Output = T>) -> T {
         (*self).block_on(future)
     }
