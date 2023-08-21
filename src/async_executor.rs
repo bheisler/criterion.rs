@@ -54,6 +54,18 @@ impl AsyncExecutor for &tokio::runtime::Runtime {
         (*self).block_on(future)
     }
 }
+#[cfg(feature = "async_tokio")]
+impl AsyncExecutor for tokio::runtime::Handle {
+    fn block_on<T>(&self, future: impl Future<Output = T>) -> T {
+        self.block_on(future)
+    }
+}
+#[cfg(feature = "async_tokio")]
+impl AsyncExecutor for &tokio::runtime::Handle {
+    fn block_on<T>(&self, future: impl Future<Output = T>) -> T {
+        (*self).block_on(future)
+    }
+}
 
 /// Runs futures on the 'async-std' crate's global executor
 #[cfg(feature = "async_std")]
