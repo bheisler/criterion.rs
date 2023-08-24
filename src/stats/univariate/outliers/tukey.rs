@@ -239,7 +239,7 @@ impl Label {
 
     /// Checks if the data point is labeled as an outlier
     pub fn is_outlier(&self) -> bool {
-        matches!(*self, NotAnOutlier)
+        !matches!(*self, NotAnOutlier)
     }
 
     /// Checks if the data point is labeled as a "severe" outlier
