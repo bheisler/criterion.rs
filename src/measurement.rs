@@ -182,6 +182,10 @@ impl ValueFormatter for DurationFormatter {
                 self.bytes_per_second_decimal(bytes as f64, typical, values)
             }
             Throughput::Elements(elems) => self.elements_per_second(elems as f64, typical, values),
+            // The caller should be formatting the bytes and elements separately.
+            Throughput::ElementsAndBytes { elements, bytes: _ } => {
+                self.elements_per_second(elements as f64, typical, values)
+            }
         }
     }
 
