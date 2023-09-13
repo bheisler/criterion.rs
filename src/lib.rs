@@ -148,7 +148,7 @@ fn debug_enabled() -> bool {
 
 /// A function that is opaque to the optimizer, used to prevent the compiler from
 /// optimizing away computations in a benchmark.
-/// 
+///
 /// This function is deprecated in favour of `std::hint::black_box`.
 #[deprecated(note = "use `std::hint::black_box` instead")]
 pub fn black_box<T>(dummy: T) -> T {
