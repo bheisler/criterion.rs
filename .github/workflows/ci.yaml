@@ -64,7 +64,7 @@ jobs:
 
       - name: Check for clippy hints
         if: ${{ matrix.rust == 'stable' }}
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --workspace --all-targets -- -D warnings
 
       # This fails on 1.64, but works on 1.66 and later.
       # https://github.com/rust-lang/rust/issues/103306
