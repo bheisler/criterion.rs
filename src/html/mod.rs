@@ -530,10 +530,7 @@ impl Report for Html {
         // Group IDs by group id
         let mut id_groups: HashMap<&str, Vec<&BenchmarkId>> = HashMap::new();
         for id in found_ids.iter() {
-            id_groups
-                .entry(&id.group_id)
-                .or_insert_with(Vec::new)
-                .push(id);
+            id_groups.entry(&id.group_id).or_default().push(id);
         }
 
         let mut groups = id_groups
