@@ -23,7 +23,7 @@ jobs:
           - nightly
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@master
         name: Setup rust toolchain
@@ -86,7 +86,7 @@ jobs:
           - stable
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@master
         with:
