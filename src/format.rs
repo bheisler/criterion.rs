@@ -125,7 +125,7 @@ mod test {
         while float > -999_999.9 {
             let string = signed_short(float);
             println!("{}", string);
-            assert!(string.len() <= 7);
+            assert!(string.chars().count() <= 7);
             float *= 2.0;
         }
     }
