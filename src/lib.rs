@@ -17,7 +17,6 @@
 
 #![warn(missing_docs)]
 #![warn(bare_trait_objects)]
-#![cfg_attr(feature = "real_blackbox", feature(test))]
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
@@ -38,9 +37,6 @@ extern crate quickcheck;
 
 use is_terminal::IsTerminal;
 use regex::Regex;
-
-#[cfg(feature = "real_blackbox")]
-extern crate test;
 
 #[macro_use]
 extern crate serde_derive;
@@ -77,6 +73,7 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::default::Default;
 use std::env;
+use std::hint;
 use std::io::stdout;
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
@@ -152,24 +149,10 @@ fn debug_enabled() -> bool {
 /// A function that is opaque to the optimizer, used to prevent the compiler from
 /// optimizing away computations in a benchmark.
 ///
-/// This variant is backed by the (unstable) test::black_box function.
-#[cfg(feature = "real_blackbox")]
+/// This function is deprecated in favour of `std::hint::black_box`.
+#[deprecated(note = "use `std::hint::black_box` instead")]
 pub fn black_box<T>(dummy: T) -> T {
-    test::black_box(dummy)
-}
-
-/// A function that is opaque to the optimizer, used to prevent the compiler from
-/// optimizing away computations in a benchmark.
-///
-/// This variant is stable-compatible, but it may cause some performance overhead
-/// or fail to prevent code from being eliminated.
-#[cfg(not(feature = "real_blackbox"))]
-pub fn black_box<T>(dummy: T) -> T {
-    unsafe {
-        let ret = std::ptr::read_volatile(&dummy);
-        std::mem::forget(dummy);
-        ret
-    }
+    hint::black_box(dummy)
 }
 
 /// Argument to [`Bencher::iter_batched`] and [`Bencher::iter_batched_ref`] which controls the
