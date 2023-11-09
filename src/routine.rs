@@ -6,6 +6,31 @@ use crate::{black_box, ActualSamplingMode, Bencher, Criterion};
 use std::marker::PhantomData;
 use std::time::Duration;
 
+// https://doc.rust-lang.org/std/primitive.f64.html#method.next_up
+fn next_up(f: f64) -> f64 {
+        // We must use strictly integer arithmetic to prevent denormals from
+        // flushing to zero after an arithmetic operation on some platforms.
+        const TINY_BITS: u64 = 0x1; // Smallest positive f64.
+        const CLEAR_SIGN_MASK: u64 = 0x7fff_ffff_ffff_ffff;
+
+        if f.is_nan() || f.is_infinite() {
+            return f;
+        }
+
+        let bits = f.to_bits();
+
+        let abs = bits & CLEAR_SIGN_MASK;
+        let next_bits = if abs == 0 {
+            TINY_BITS
+        } else if bits == abs {
+            bits + 1
+        } else {
+            bits - 1
+        };
+        f64::from_bits(next_bits)
+
+}
+
 /// PRIVATE
 pub(crate) trait Routine<M: Measurement, T: ?Sized> {
     /// PRIVATE
@@ -103,8 +128,9 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
             // Early exit for extremely long running benchmarks:
             if time_start.elapsed() > maximum_bench_duration {
                 let iters = vec![n as f64, n as f64].into_boxed_slice();
-                // prevent gnuplot bug when all values are equal
-                let elapsed = vec![t_prev, t_prev + 0.000001].into_boxed_slice();
+                // prevent plotting bug where KDE estimation results in NaN when all values are equal because
+                // the stddev is 0.
+                let elapsed = vec![t_prev, next_up(t_prev)].into_boxed_slice();
                 return (ActualSamplingMode::Flat, iters, elapsed);
             }
 
