@@ -36,7 +36,6 @@ extern crate approx;
 #[cfg(test)]
 extern crate quickcheck;
 
-use is_terminal::IsTerminal;
 use regex::Regex;
 
 #[cfg(feature = "real_blackbox")]
@@ -77,7 +76,7 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::default::Default;
 use std::env;
-use std::io::stdout;
+use std::io::{stdout, IsTerminal};
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::Command;
