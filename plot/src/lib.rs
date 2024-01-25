@@ -995,9 +995,32 @@ pub fn version() -> Result<Version, VersionError> {
         return Err(VersionError::Error(error));
     }
 
-    let output = String::from_utf8(command_output.stdout).map_err(|_| VersionError::OutputError)?;
+    parse_version_utf8(&command_output.stdout).or_else(|utf8_err| {
+        // gnuplot can emit UTF-16 on some systems/configurations (e.g. some Windows machines).
+        // If we failed to parse as UTF-8, try again as UTF-16 to account for this.
+        // If UTF-16 parsing also fails, return the original error we got for UTF-8 to avoid confusing matters more.
+        parse_version_utf16(&command_output.stdout).map_err(|_| utf8_err)
+    })
+}
 
-    parse_version(&output).map_err(|_| VersionError::ParseError(output.clone()))
+fn parse_version_utf8(output_bytes: &[u8]) -> Result<Version, VersionError> {
+    let output = str::from_utf8(output_bytes).map_err(|_| VersionError::OutputError)?;
+    parse_version(output).map_err(|_| VersionError::ParseError(output.to_owned()))
+}
+
+fn parse_version_utf16(output_bytes: &[u8]) -> Result<Version, VersionError> {
+    if output_bytes.len() % 2 != 0 {
+        // Not an even number of bytes, so cannot be UTF-16.
+        return Err(VersionError::OutputError);
+    }
+
+    let output_as_u16: Vec<u16> = output_bytes
+        .chunks_exact(2)
+        .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
+        .collect();
+
+    let output = String::from_utf16(&output_as_u16).map_err(|_| VersionError::OutputError)?;
+    parse_version(&output).map_err(|_| VersionError::ParseError(output.to_owned()))
 }
 
 fn parse_version(version_str: &str) -> Result<Version, Option<ParseIntError>> {
