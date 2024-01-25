@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 - MSRV bumped to 1.70
 
+### Fixed
+
+- gnuplot version is now correctly detected when using certain Windows binaries/configurations that used to fail
+
 ## [0.5.1] - 2023-05-26
 
 ### Fixed
