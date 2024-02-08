@@ -84,7 +84,7 @@ use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
 use criterion_plot::{Version, VersionError};
-use once_cell::sync::Lazy;
+use std::sync::OnceLock;
 
 use crate::benchmark::BenchmarkConfig;
 use crate::connection::Connection;
@@ -102,50 +102,69 @@ pub use crate::bencher::AsyncBencher;
 pub use crate::bencher::Bencher;
 pub use crate::benchmark_group::{BenchmarkGroup, BenchmarkId};
 
-static DEBUG_ENABLED: Lazy<bool> = Lazy::new(|| std::env::var_os("CRITERION_DEBUG").is_some());
-static GNUPLOT_VERSION: Lazy<Result<Version, VersionError>> = Lazy::new(criterion_plot::version);
-static DEFAULT_PLOTTING_BACKEND: Lazy<PlottingBackend> = Lazy::new(|| match &*GNUPLOT_VERSION {
-    Ok(_) => PlottingBackend::Gnuplot,
-    #[cfg(feature = "plotters")]
-    Err(e) => {
-        match e {
-            VersionError::Exec(_) => eprintln!("Gnuplot not found, using plotters backend"),
-            e => eprintln!(
-                "Gnuplot not found or not usable, using plotters backend\n{}",
-                e
-            ),
-        };
-        PlottingBackend::Plotters
-    }
-    #[cfg(not(feature = "plotters"))]
-    Err(_) => PlottingBackend::None,
-});
-static CARGO_CRITERION_CONNECTION: Lazy<Option<Mutex<Connection>>> =
-    Lazy::new(|| match std::env::var("CARGO_CRITERION_PORT") {
+fn gnuplot_version() -> &'static Result<Version, VersionError> {
+    static GNUPLOT_VERSION: OnceLock<Result<Version, VersionError>> = OnceLock::new();
+
+    GNUPLOT_VERSION.get_or_init(criterion_plot::version)
+}
+
+fn default_plotting_backend() -> &'static PlottingBackend {
+    static DEFAULT_PLOTTING_BACKEND: OnceLock<PlottingBackend> = OnceLock::new();
+
+    DEFAULT_PLOTTING_BACKEND.get_or_init(|| match gnuplot_version() {
+        Ok(_) => PlottingBackend::Gnuplot,
+        #[cfg(feature = "plotters")]
+        Err(e) => {
+            match e {
+                VersionError::Exec(_) => eprintln!("Gnuplot not found, using plotters backend"),
+                e => eprintln!(
+                    "Gnuplot not found or not usable, using plotters backend\n{}",
+                    e
+                ),
+            };
+            PlottingBackend::Plotters
+        }
+        #[cfg(not(feature = "plotters"))]
+        Err(_) => PlottingBackend::None,
+    })
+}
+
+fn cargo_criterion_connection() -> &'static Option<Mutex<Connection>> {
+    static CARGO_CRITERION_CONNECTION: OnceLock<Option<Mutex<Connection>>> = OnceLock::new();
+
+    CARGO_CRITERION_CONNECTION.get_or_init(|| match std::env::var("CARGO_CRITERION_PORT") {
         Ok(port_str) => {
             let port: u16 = port_str.parse().ok()?;
             let stream = TcpStream::connect(("localhost", port)).ok()?;
             Some(Mutex::new(Connection::new(stream).ok()?))
         }
         Err(_) => None,
-    });
-static DEFAULT_OUTPUT_DIRECTORY: Lazy<PathBuf> = Lazy::new(|| {
-    // Set criterion home to (in descending order of preference):
-    // - $CRITERION_HOME (cargo-criterion sets this, but other users could as well)
-    // - $CARGO_TARGET_DIR/criterion
-    // - the cargo target dir from `cargo metadata`
-    // - ./target/criterion
-    if let Some(value) = env::var_os("CRITERION_HOME") {
-        PathBuf::from(value)
-    } else if let Some(path) = cargo_target_directory() {
-        path.join("criterion")
-    } else {
-        PathBuf::from("target/criterion")
-    }
-});
+    })
+}
+
+fn default_output_directory() -> &'static PathBuf {
+    static DEFAULT_OUTPUT_DIRECTORY: OnceLock<PathBuf> = OnceLock::new();
+
+    DEFAULT_OUTPUT_DIRECTORY.get_or_init(|| {
+        // Set criterion home to (in descending order of preference):
+        // - $CRITERION_HOME (cargo-criterion sets this, but other users could as well)
+        // - $CARGO_TARGET_DIR/criterion
+        // - the cargo target dir from `cargo metadata`
+        // - ./target/criterion
+        if let Some(value) = env::var_os("CRITERION_HOME") {
+            PathBuf::from(value)
+        } else if let Some(path) = cargo_target_directory() {
+            path.join("criterion")
+        } else {
+            PathBuf::from("target/criterion")
+        }
+    })
+}
 
 fn debug_enabled() -> bool {
-    *DEBUG_ENABLED
+    static DEBUG_ENABLED: OnceLock<bool> = OnceLock::new();
+
+    *DEBUG_ENABLED.get_or_init(|| std::env::var_os("CRITERION_DEBUG").is_some())
 }
 
 /// A function that is opaque to the optimizer, used to prevent the compiler from
@@ -416,7 +435,7 @@ impl Default for Criterion {
             cli: CliReport::new(false, false, CliVerbosity::Normal),
             bencher_enabled: false,
             bencher: BencherReport,
-            html: DEFAULT_PLOTTING_BACKEND.create_plotter().map(Html::new),
+            html: default_plotting_backend().create_plotter().map(Html::new),
             csv_enabled: cfg!(feature = "csv_output"),
         };
 
@@ -437,12 +456,12 @@ impl Default for Criterion {
             baseline_directory: "base".to_owned(),
             baseline: Baseline::Save,
             load_baseline: None,
-            output_directory: DEFAULT_OUTPUT_DIRECTORY.clone(),
+            output_directory: default_output_directory().clone(),
             all_directories: HashSet::new(),
             all_titles: HashSet::new(),
             measurement: WallTime,
             profiler: Box::new(RefCell::new(ExternalProfiler)),
-            connection: CARGO_CRITERION_CONNECTION
+            connection: cargo_criterion_connection()
                 .as_ref()
                 .map(|mtx| mtx.lock().unwrap()),
             mode: Mode::Benchmark,
@@ -499,7 +518,7 @@ impl<M: Measurement> Criterion<M> {
     pub fn plotting_backend(mut self, backend: PlottingBackend) -> Criterion<M> {
         if let PlottingBackend::Gnuplot = backend {
             assert!(
-                !GNUPLOT_VERSION.is_err(),
+                !gnuplot_version().is_err(),
                 "Gnuplot plotting backend was requested, but gnuplot is not available. \
                 To continue, either install Gnuplot or allow Criterion.rs to fall back \
                 to using plotters."
@@ -653,7 +672,7 @@ impl<M: Measurement> Criterion<M> {
     pub fn with_plots(mut self) -> Criterion<M> {
         // If running under cargo-criterion then don't re-enable the reports; let it do the reporting.
         if self.connection.is_none() && self.report.html.is_none() {
-            let default_backend = DEFAULT_PLOTTING_BACKEND.create_plotter();
+            let default_backend = default_plotting_backend().create_plotter();
             if let Some(backend) = default_backend {
                 self.report.html = Some(Html::new(backend));
             } else {
