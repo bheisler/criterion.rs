@@ -936,7 +936,7 @@ pub enum VersionError {
     Error(String),
     /// The `gnuplot` command returned invalid utf-8
     OutputError,
-    /// The `gnuplot` command returned an unparseable string
+    /// The `gnuplot` command returned an unparsable string
     ParseError(String),
 }
 impl fmt::Display for VersionError {
@@ -949,7 +949,7 @@ impl fmt::Display for VersionError {
             VersionError::OutputError => write!(f, "`gnuplot --version` returned invalid utf-8"),
             VersionError::ParseError(msg) => write!(
                 f,
-                "`gnuplot --version` returned an unparseable version string: {}",
+                "`gnuplot --version` returned an unparsable version string: {}",
                 msg
             ),
         }
