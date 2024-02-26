@@ -11,7 +11,7 @@ https://github.com/bheisler/criterion.rs/issues
 ## A Note on Dependency Updates
 
 Criterion.<span></span>rs does not accept pull requests to update dependencies unless specifically
-requested by the maintaner(s). Dependencies are updated manually by the maintainer(s) before each
+requested by the maintainer(s). Dependencies are updated manually by the maintainer(s) before each
 new release.
 
 ## Code
