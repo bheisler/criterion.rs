@@ -26,7 +26,7 @@ where
     /// # Panics
     ///
     /// Panics if `slice` contains any `NaN` or if `slice` has less than two elements
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::new_ret_no_self))]
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(slice: &[A]) -> &Sample<A> {
         assert!(slice.len() > 1 && slice.iter().all(|x| !x.is_nan()));
 

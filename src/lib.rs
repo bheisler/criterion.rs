@@ -18,14 +18,12 @@
 #![warn(missing_docs)]
 #![warn(bare_trait_objects)]
 #![cfg_attr(feature = "real_blackbox", feature(test))]
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(
+#![allow(
         clippy::just_underscores_and_digits, // Used in the stats code
         clippy::transmute_ptr_to_ptr, // Used in the stats code
         clippy::manual_non_exhaustive, // Remove when MSRV bumped above 1.40
     )
-)]
+]
 
 #[cfg(all(feature = "rayon", target_arch = "wasm32"))]
 compile_error!("Rayon cannot be used when targeting wasi32. Try disabling default features.");
@@ -764,7 +762,7 @@ impl<M: Measurement> Criterion<M> {
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
     #[must_use]
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::cognitive_complexity))]
+    #[allow(clippy::cognitive_complexity)]
     pub fn configure_from_args(mut self) -> Criterion<M> {
         use clap::{value_parser, Arg, Command};
         let matches = Command::new("Criterion Benchmark")
