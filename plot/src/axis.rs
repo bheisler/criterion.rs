@@ -1,7 +1,6 @@
 //! Coordinate axis
 
 use std::borrow::Cow;
-use std::iter::IntoIterator;
 
 use crate::map;
 use crate::traits::{Configure, Data, Set};
