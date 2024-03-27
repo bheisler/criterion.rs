@@ -44,13 +44,13 @@ the same executor that you would use in production. If your executor is not list
 implement the `criterion::async_executor::AsyncExecutor` trait for it to add support, or send a pull
 request.
 
-| Crate     | Feature                       | Executor Struct                                       |
-| --------- | ----------------------------- | ----------------------------------------------------- |
-| Tokio     | "async_tokio"                 | `tokio::runtime::Runtime`, `&tokio::runtime::Runtime` |
-| async-std | "async_std" (note underscore) | `AsyncStdExecutor`                                    |
-| Smol      | "async_smol"                  | `SmolExecutor`                                        |
-| futures   | "async_futures"               | `FuturesExecutor`                                     |
-| Other     | "async"                       |                                                       |
+| Crate     | Feature                       | Executor Struct                                                    |
+| --------- | ----------------------------- | ------------------------------------------------------------------ |
+| Tokio     | "async_tokio"                 | In `tokio::runtime`, `Runtime`, `&Runtime`, `Handle`, or `&Handle` |
+| async-std | "async_std" (note underscore) | `AsyncStdExecutor`                                                 |
+| Smol      | "async_smol"                  | `SmolExecutor`                                                     |
+| futures   | "async_futures"               | `FuturesExecutor`                                                  |
+| Other     | "async"                       |                                                                    |
 
 ### Considerations when benchmarking async functions
 
