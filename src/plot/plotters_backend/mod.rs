@@ -1,4 +1,4 @@
-use super::{PlotContext, PlotData, Plotter};
+use super::{LinePlotConfig, PlotContext, PlotData, Plotter};
 use crate::measurement::ValueFormatter;
 use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ValueType};
 use plotters::data::float::pretty_print_float;
@@ -184,13 +184,15 @@ impl Plotter for PlottersBackend {
 
     fn line_comparison(
         &mut self,
+        line_config: LinePlotConfig,
         ctx: PlotContext<'_>,
         formatter: &dyn ValueFormatter,
         all_curves: &[&(&BenchmarkId, Vec<f64>)],
         value_type: ValueType,
     ) {
-        let path = ctx.line_comparison_path();
+        let path = (line_config.path)(&ctx);
         summary::line_comparison(
+            line_config,
             formatter,
             ctx.id.as_title(),
             all_curves,

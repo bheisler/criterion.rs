@@ -9,6 +9,7 @@ pub(crate) use plotters_backend::PlottersBackend;
 use crate::estimate::Statistic;
 use crate::measurement::ValueFormatter;
 use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext, ValueType};
+use crate::Throughput;
 use std::path::PathBuf;
 
 const REPORT_STATS: [Statistic; 7] = [
@@ -50,6 +51,14 @@ impl<'a> PlotContext<'a> {
         path
     }
 
+    pub fn line_throughput_comparison_path(&self) -> PathBuf {
+        let mut path = self.context.output_directory.clone();
+        path.push(self.id.as_directory_name());
+        path.push("report");
+        path.push("lines_throughput.svg");
+        path
+    }
+
     pub fn violin_path(&self) -> PathBuf {
         let mut path = self.context.output_directory.clone();
         path.push(self.id.as_directory_name());
@@ -73,6 +82,53 @@ impl<'a> PlotData<'a> {
     }
 }
 
+#[derive(Clone, Copy)]
+pub(crate) struct LinePlotConfig {
+    label: &'static str,
+    scale: fn(&dyn ValueFormatter, &BenchmarkId, f64, &BenchmarkId, &mut [f64]) -> &'static str,
+    path: fn(&PlotContext<'_>) -> PathBuf,
+}
+
+impl LinePlotConfig {
+    pub fn time() -> Self {
+        Self {
+            label: "time",
+            scale: |formatter, _, max, _, vals| formatter.scale_values(max, vals),
+            path: |ctx| ctx.line_comparison_path(),
+        }
+    }
+
+    pub fn throughput() -> Self {
+        Self {
+            label: "throughput",
+            scale: |formatter, max_id, max, id, vals| {
+                // Scale values to be in line with max_id throughput
+                let from = id
+                    .throughput
+                    .as_ref()
+                    .expect("Throughput chart expects throughput to be defined");
+                let to = max_id.throughput.as_ref().unwrap();
+
+                let (from_bytes, to_bytes) = match (from, to) {
+                    (Throughput::Bytes(from), Throughput::Bytes(to)) => (from, to),
+                    (Throughput::BytesDecimal(from), Throughput::BytesDecimal(to)) => (from, to),
+                    (Throughput::Elements(from), Throughput::Elements(to)) => (from, to),
+                    _ => unreachable!("throughput types expected to be equal"),
+                };
+
+                let mul = *to_bytes as f64 / *from_bytes as f64;
+
+                for val in vals.iter_mut() {
+                    *val *= mul;
+                }
+
+                formatter.scale_throughputs(max, to, vals)
+            },
+            path: |ctx| ctx.line_throughput_comparison_path(),
+        }
+    }
+}
+
 pub(crate) trait Plotter {
     fn pdf(&mut self, ctx: PlotContext<'_>, data: PlotData<'_>);
 
@@ -86,6 +142,7 @@ pub(crate) trait Plotter {
 
     fn line_comparison(
         &mut self,
+        line_config: LinePlotConfig,
         ctx: PlotContext<'_>,
         formatter: &dyn ValueFormatter,
         all_curves: &[&(&BenchmarkId, Vec<f64>)],
