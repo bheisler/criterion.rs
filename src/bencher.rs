@@ -7,6 +7,9 @@ use crate::measurement::{Measurement, WallTime};
 use crate::BatchSize;
 
 #[cfg(feature = "async")]
+use futures::{future, stream::FuturesUnordered, StreamExt};
+
+#[cfg(feature = "async")]
 use std::future::Future;
 
 #[cfg(feature = "async")]
@@ -618,6 +621,68 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
         R: FnMut(I) -> F,
         F: Future<Output = O>,
     {
+        self.iter_batched_async_setup(|| future::ready(setup()), &mut routine, size)
+    }
+
+    /// Times a `routine` that requires some input by generating a batch of input, then timing the
+    /// iteration of the benchmark over the input. See [`BatchSize`](enum.BatchSize.html) for
+    /// details on choosing the batch size. Use this when the routine must consume its input and setup is async.
+    ///
+    /// For example, use this loop to benchmark sorting algorithms, because they require unsorted
+    /// data on each iteration.
+    ///
+    /// # Timing model
+    ///
+    /// ```text
+    /// elapsed = (Instant::now * num_batches) + (iters * (routine + O::drop)) + Vec::extend
+    /// ```
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// #[macro_use] extern crate criterion;
+    ///
+    /// use criterion::*;
+    /// use criterion::async_executor::FuturesExecutor;
+    ///
+    /// async fn create_scrambled_data() -> Vec<u64> {
+    ///     # vec![]
+    ///     // ...
+    /// }
+    ///
+    /// // The sorting algorithm to test
+    /// async fn sort(data: Vec<u64>) -> Vec<u64> {
+    ///     # vec![]
+    ///     // ...
+    /// }
+    ///
+    /// fn bench(c: &mut Criterion) {
+    ///     c.bench_function("with_setup", move |b| {
+    ///         // This will avoid timing the create_scrambled_data call.
+    ///         b.to_async(FuturesExecutor).iter_batched_async_setup(
+    ///             create_scrambled_data,
+    ///             |data| async move { sort(data).await },
+    ///             BatchSize::SmallInput,
+    ///         )
+    ///     });
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
+    /// ```
+    ///
+    #[inline(never)]
+    pub fn iter_batched_async_setup<I, O, S, R, F, G>(
+        &mut self,
+        mut setup: S,
+        mut routine: R,
+        size: BatchSize,
+    ) where
+        S: FnMut() -> G,
+        R: FnMut(I) -> F,
+        F: Future<Output = O>,
+        G: Future<Output = I>,
+    {
         let AsyncBencher { b, runner } = self;
         runner.block_on(async {
             b.iterated = true;
@@ -628,7 +693,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
 
             if batch_size == 1 {
                 for _ in 0..b.iters {
-                    let input = black_box(setup());
+                    let input = black_box(setup().await);
 
                     let start = b.measurement.start();
                     let output = routine(input).await;
@@ -643,7 +708,13 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
                 while iteration_counter < b.iters {
                     let batch_size = ::std::cmp::min(batch_size, b.iters - iteration_counter);
 
-                    let inputs = black_box((0..batch_size).map(|_| setup()).collect::<Vec<_>>());
+                    let inputs = black_box(
+                        (0..batch_size)
+                            .map(|_| setup())
+                            .collect::<FuturesUnordered<_>>()
+                            .collect::<Vec<_>>()
+                            .await,
+                    );
                     let mut outputs = Vec::with_capacity(batch_size as usize);
 
                     let start = b.measurement.start();
