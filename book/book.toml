@@ -4,6 +4,7 @@ description = "User Guide and Other Prose Documentation For Criterion.rs"
 author = "Brook Heisler"
 
 [output.html]
+git-repository-url = "https://github.com/bheisler/criterion.rs"
 
 [output.linkcheck]
 #follow-web-links = true
