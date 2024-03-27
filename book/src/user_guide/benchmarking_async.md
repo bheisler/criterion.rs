@@ -52,6 +52,28 @@ request.
 | futures   | "async_futures"               | `FuturesExecutor`                                     |
 | Other     | "async"                       |                                                       |
 
+### An Example with tokio::runtime::Runtime
+
+```rust
+
+// Compile Criterion.rs with features = ["async_tokio"]
+#[macro_use] extern crate criterion;
+
+use criterion::*;
+
+fn bench(c: &mut Criterion) {
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    c.bench_function("tokio_thread_sleep", move |b| {
+        b.to_async(&rt).iter(|| async move {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        })
+    });
+}
+
+criterion_group!(benches, bench);
+criterion_main!(benches);
+```
+
 ### Considerations when benchmarking async functions
 
 Async functions naturally result in more measurement overhead than synchronous functions. It is
