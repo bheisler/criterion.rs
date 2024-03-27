@@ -3,7 +3,7 @@
 Starting with Criterion.rs 0.4.0 HTML reports must be explicitly enabled via the `html_reports` [feature](https://doc.rust-lang.org/cargo/reference/features.html#dependency-features):
 ```toml
 [dev-dependencies]
-criterion = {version = "0.4.0", features = ["html_reports"] }
+criterion = { version = "0.5", features = ["html_reports"] }
 ```
 Criterion.rs can generate an HTML report displaying the results of the benchmark under
 `target/criterion/reports/index.html`. By default, the plots are generated using
