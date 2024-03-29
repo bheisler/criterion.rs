@@ -725,7 +725,7 @@ impl<M: Measurement> Criterion<M> {
     #[must_use]
     #[doc(hidden)]
     pub fn output_directory(mut self, path: &Path) -> Criterion<M> {
-        self.output_directory = path.to_owned();
+        path.clone_into(&mut self.output_directory);
 
         self
     }
@@ -1031,18 +1031,18 @@ https://bheisler.github.io/criterion.rs/book/faq.html
 
         if let Some(dir) = matches.get_one::<String>("save-baseline") {
             self.baseline = Baseline::Save;
-            self.baseline_directory = dir.to_owned()
+            dir.clone_into(&mut self.baseline_directory)
         }
         if matches.get_flag("discard-baseline") {
             self.baseline = Baseline::Discard;
         }
         if let Some(dir) = matches.get_one::<String>("baseline") {
             self.baseline = Baseline::CompareStrict;
-            self.baseline_directory = dir.to_owned();
+            dir.clone_into(&mut self.baseline_directory);
         }
         if let Some(dir) = matches.get_one::<String>("baseline-lenient") {
             self.baseline = Baseline::CompareLenient;
-            self.baseline_directory = dir.to_owned();
+            dir.clone_into(&mut self.baseline_directory);
         }
 
         if self.connection.is_some() {
