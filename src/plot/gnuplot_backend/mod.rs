@@ -52,20 +52,6 @@ fn debug_script(path: &Path, figure: &Figure) {
     }
 }
 
-/// Private
-trait Append<T> {
-    /// Private
-    fn append_(self, item: T) -> Self;
-}
-
-// NB I wish this was in the standard library
-impl<T> Append<T> for Vec<T> {
-    fn append_(mut self, item: T) -> Vec<T> {
-        self.push(item);
-        self
-    }
-}
-
 #[derive(Default)]
 pub(crate) struct Gnuplot {
     process_list: Vec<Child>,
