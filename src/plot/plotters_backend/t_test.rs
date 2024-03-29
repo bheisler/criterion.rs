@@ -1,5 +1,4 @@
 use super::*;
-use crate::report::ComparisonData;
 use std::path::Path;
 
 pub(crate) fn t_test(

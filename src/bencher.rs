@@ -1,4 +1,3 @@
-use std::iter::IntoIterator;
 use std::time::Duration;
 use std::time::Instant;
 

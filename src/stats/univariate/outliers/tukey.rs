@@ -37,7 +37,6 @@
 //! x: "severe" outlier
 //! ```
 
-use std::iter::IntoIterator;
 use std::ops::{Deref, Index};
 use std::slice;
 

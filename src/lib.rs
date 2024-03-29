@@ -74,7 +74,6 @@ mod stats;
 
 use std::cell::RefCell;
 use std::collections::HashSet;
-use std::default::Default;
 use std::env;
 use std::io::{stdout, IsTerminal};
 use std::net::TcpStream;
@@ -1171,7 +1170,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
     ///     // Now we can perform benchmarks with this group
     ///     group.bench_function("Bench 1", |b| b.iter(|| 1 ));
     ///     group.bench_function("Bench 2", |b| b.iter(|| 2 ));
-    ///    
+    ///
     ///     group.finish();
     /// }
     /// criterion_group!(benches, bench_simple);

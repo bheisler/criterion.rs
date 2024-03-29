@@ -1,11 +1,8 @@
-use std::iter;
-use std::process::Child;
-
 use criterion_plot::prelude::*;
 
 use super::*;
 use crate::kde;
-use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
+use crate::report::{ComparisonData, MeasurementData, ReportContext};
 
 pub(crate) fn t_test(
     id: &BenchmarkId,

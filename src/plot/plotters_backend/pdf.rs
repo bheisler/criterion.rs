@@ -1,8 +1,6 @@
 use super::*;
-use crate::measurement::ValueFormatter;
-use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
+use crate::report::ReportContext;
 use plotters::data;
-use plotters::style::RGBAColor;
 use std::path::Path;
 
 pub(crate) fn pdf_comparison_figure(
