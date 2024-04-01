@@ -119,6 +119,9 @@ alloc                   time:   [5.9846 ms 6.0192 ms 6.0623 ms]
                         thrpt:  [164.95 MiB/s 166.14 MiB/s 167.10 MiB/s]  
 ```
 
+You can also request that the throughput measure both elements/s and bytes/s if, for example, you're doing some kind of data processing and
+want to understand both the number of records/s and the total bytes/s achieved. This is achieved by setting `throughput` to `Throughput::ElementsAndBytes`.
+
 ## Chart Axis Scaling
 
 By default, Criterion.rs generates plots using a linear-scale axis. When using parameterized benchmarks, it is common for the input sizes to scale exponentially in order to cover a wide range of possible inputs. In this situation, it may be easier to read the resulting plots with a logarithmic axis.
