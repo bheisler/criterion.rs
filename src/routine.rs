@@ -37,7 +37,7 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
             .profile(id, report_context, time.as_nanos() as f64);
 
         let mut profile_path = report_context.output_directory.clone();
-        if (*crate::CARGO_CRITERION_CONNECTION).is_some() {
+        if crate::cargo_criterion_connection().is_some() {
             // If connected to cargo-criterion, generate a cargo-criterion-style path.
             // This is kind of a hack.
             profile_path.push("profile");
