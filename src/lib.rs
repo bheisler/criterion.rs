@@ -18,13 +18,10 @@
 #![warn(missing_docs)]
 #![warn(bare_trait_objects)]
 #![cfg_attr(feature = "real_blackbox", feature(test))]
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(
+#![allow(
         clippy::just_underscores_and_digits, // Used in the stats code
         clippy::transmute_ptr_to_ptr, // Used in the stats code
         clippy::manual_non_exhaustive, // Remove when MSRV bumped above 1.40
-    )
 )]
 
 #[cfg(all(feature = "rayon", target_arch = "wasm32"))]
@@ -74,7 +71,6 @@ mod stats;
 
 use std::cell::RefCell;
 use std::collections::HashSet;
-use std::default::Default;
 use std::env;
 use std::io::{stdout, IsTerminal};
 use std::net::TcpStream;
@@ -729,7 +725,7 @@ impl<M: Measurement> Criterion<M> {
     #[must_use]
     #[doc(hidden)]
     pub fn output_directory(mut self, path: &Path) -> Criterion<M> {
-        self.output_directory = path.to_owned();
+        path.clone_into(&mut self.output_directory);
 
         self
     }
@@ -764,7 +760,7 @@ impl<M: Measurement> Criterion<M> {
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
     #[must_use]
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::cognitive_complexity))]
+    #[allow(clippy::cognitive_complexity)]
     pub fn configure_from_args(mut self) -> Criterion<M> {
         use clap::{value_parser, Arg, Command};
         let matches = Command::new("Criterion Benchmark")
@@ -1035,18 +1031,18 @@ https://bheisler.github.io/criterion.rs/book/faq.html
 
         if let Some(dir) = matches.get_one::<String>("save-baseline") {
             self.baseline = Baseline::Save;
-            self.baseline_directory = dir.to_owned()
+            dir.clone_into(&mut self.baseline_directory)
         }
         if matches.get_flag("discard-baseline") {
             self.baseline = Baseline::Discard;
         }
         if let Some(dir) = matches.get_one::<String>("baseline") {
             self.baseline = Baseline::CompareStrict;
-            self.baseline_directory = dir.to_owned();
+            dir.clone_into(&mut self.baseline_directory);
         }
         if let Some(dir) = matches.get_one::<String>("baseline-lenient") {
             self.baseline = Baseline::CompareLenient;
-            self.baseline_directory = dir.to_owned();
+            dir.clone_into(&mut self.baseline_directory);
         }
 
         if self.connection.is_some() {
@@ -1171,7 +1167,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
     ///     // Now we can perform benchmarks with this group
     ///     group.bench_function("Bench 1", |b| b.iter(|| 1 ));
     ///     group.bench_function("Bench 2", |b| b.iter(|| 2 ));
-    ///    
+    ///
     ///     group.finish();
     /// }
     /// criterion_group!(benches, bench_simple);

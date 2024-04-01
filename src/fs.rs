@@ -9,10 +9,10 @@ use walkdir::{DirEntry, WalkDir};
 use crate::error::{Error, Result};
 use crate::report::BenchmarkId;
 
-pub fn load<A, P: ?Sized>(path: &P) -> Result<A>
+pub fn load<A, P>(path: &P) -> Result<A>
 where
     A: DeserializeOwned,
-    P: AsRef<Path>,
+    P: AsRef<Path> + ?Sized,
 {
     let path = path.as_ref();
     let mut f = File::open(path).map_err(|inner| Error::AccessError {

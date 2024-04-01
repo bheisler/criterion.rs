@@ -1,7 +1,3 @@
-use std::iter;
-use std::process::Child;
-
-use crate::stats::univariate::Sample;
 use crate::stats::Distribution;
 use criterion_plot::prelude::*;
 
@@ -9,8 +5,7 @@ use super::*;
 use crate::estimate::Estimate;
 use crate::estimate::Statistic;
 use crate::kde;
-use crate::measurement::ValueFormatter;
-use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
+use crate::report::{ComparisonData, MeasurementData, ReportContext};
 
 fn abs_distribution(
     id: &BenchmarkId,
