@@ -11,7 +11,7 @@ have introduced a cargo feature for plot and html generation. In order to activa
 generation make sure that your `Cargo.toml` activates the feature:
 
 ```toml
-criterion = { version = "0.4", features = ["html_reports"] }
+criterion = { version = "0.5", features = ["html_reports"] }
 ```
 
 ## File Structure
