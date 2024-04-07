@@ -72,6 +72,7 @@ mod stats;
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::env;
+use std::ffi::OsString;
 use std::io::{stdout, IsTerminal};
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
@@ -760,8 +761,18 @@ impl<M: Measurement> Criterion<M> {
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
     #[must_use]
+    pub fn configure_from_args(self) -> Criterion<M> {
+        self.configure_from(env::args_os())
+    }
+
+    /// Configure this criterion struct based on the provided command-line arguments.
+    #[must_use]
     #[allow(clippy::cognitive_complexity)]
-    pub fn configure_from_args(mut self) -> Criterion<M> {
+    pub fn configure_from<I, T>(mut self, itr: I) -> Criterion<M>
+    where
+        I: IntoIterator<Item = T>,
+        T: Into<OsString> + Clone,
+    {
         use clap::{value_parser, Arg, Command};
         let matches = Command::new("Criterion Benchmark")
             .arg(Arg::new("FILTER")
@@ -923,7 +934,7 @@ To test that the benchmarks work, run `cargo test --benches`
 NOTE: If you see an 'unrecognized option' error using any of the options above, see:
 https://bheisler.github.io/criterion.rs/book/faq.html
 ")
-            .get_matches();
+            .get_matches_from(itr);
 
         if self.connection.is_some() {
             if let Some(color) = matches.get_one::<String>("color") {
