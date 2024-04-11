@@ -101,7 +101,7 @@ fn bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("throughput-example");
     for (i, elements) in [elements_1, elements_2].iter().enumerate() {
         group.throughput(Throughput::Elements(elements.len() as u64));
-        group.bench_with_input(format!("Encode {}", i), elements, |elems, b| {
+        group.bench_with_input(format!("Encode {}", i), elements, |b, elems| {
             b.iter(||encode(elems))
         });
     }
