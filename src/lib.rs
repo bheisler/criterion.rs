@@ -68,6 +68,7 @@ mod stats;
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::env;
+use std::hint;
 use std::io::{stdout, IsTerminal};
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
