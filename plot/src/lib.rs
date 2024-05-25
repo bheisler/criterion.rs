@@ -366,10 +366,10 @@
 #![deny(bare_trait_objects)]
 // This lint has lots of false positives ATM, see
 // https://github.com/Manishearth/rust-clippy/issues/761
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::new_without_default))]
+#![allow(clippy::new_without_default)]
 // False positives with images
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::doc_markdown))]
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::many_single_char_names))]
+#![allow(clippy::doc_markdown)]
+#![allow(clippy::many_single_char_names)]
 
 extern crate cast;
 #[macro_use]
@@ -438,9 +438,6 @@ impl Figure {
         }
     }
 
-    // Allow clippy::format_push_string even with older versions of rust (<1.62) which
-    // don't have it defined.
-    #[allow(clippy::all)]
     fn script(&self) -> Vec<u8> {
         let mut s = String::new();
 
@@ -1062,7 +1059,7 @@ mod test {
     #[test]
     fn test_parse_version_on_valid_string() {
         let string = "gnuplot 5.0 patchlevel 7";
-        let version = super::parse_version(&string).unwrap();
+        let version = super::parse_version(string).unwrap();
         assert_eq!(5, version.major);
         assert_eq!(0, version.minor);
         assert_eq!("7", &version.patch);
@@ -1071,7 +1068,7 @@ mod test {
     #[test]
     fn test_parse_gentoo_version() {
         let string = "gnuplot 5.2 patchlevel 5a (Gentoo revision r0)";
-        let version = super::parse_version(&string).unwrap();
+        let version = super::parse_version(string).unwrap();
         assert_eq!(5, version.major);
         assert_eq!(2, version.minor);
         assert_eq!("5a", &version.patch);

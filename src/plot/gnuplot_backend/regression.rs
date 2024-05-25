@@ -1,15 +1,10 @@
-use std::process::Child;
-
 use crate::stats::bivariate::regression::Slope;
 use criterion_plot::prelude::*;
 
 use super::*;
-use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
-use crate::stats::bivariate::Data;
+use crate::report::{ComparisonData, MeasurementData, ReportContext};
 
 use crate::estimate::{ConfidenceInterval, Estimate};
-
-use crate::measurement::ValueFormatter;
 
 fn regression_figure(
     formatter: &dyn ValueFormatter,

@@ -13,7 +13,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 cast = "0.3"
-itertools = "0.10"
+itertools = ">=0.10, <=0.12"
 
 [dev-dependencies]
 itertools-num = "0.1"

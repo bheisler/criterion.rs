@@ -37,16 +37,17 @@ pub fn short(n: f64) -> String {
 fn signed_short(n: f64) -> String {
     let n_abs = n.abs();
 
+    let sign = if n >= 0.0 { '+' } else { '\u{2212}' };
     if n_abs < 10.0 {
-        format!("{:+.4}", n)
+        format!("{}{:.4}", sign, n_abs)
     } else if n_abs < 100.0 {
-        format!("{:+.3}", n)
+        format!("{}{:.3}", sign, n_abs)
     } else if n_abs < 1000.0 {
-        format!("{:+.2}", n)
+        format!("{}{:.2}", sign, n_abs)
     } else if n_abs < 10000.0 {
-        format!("{:+.1}", n)
+        format!("{}{:.1}", sign, n_abs)
     } else {
-        format!("{:+.0}", n)
+        format!("{}{:.0}", sign, n_abs)
     }
 }
 
@@ -72,8 +73,35 @@ pub fn iter_count(iterations: u64) -> String {
     }
 }
 
+/// Format a number with thousands separators.
+// Based on the corresponding libtest functionality, see
+// https://github.com/rust-lang/rust/blob/557359f92512ca88b62a602ebda291f17a953002/library/test/src/bench.rs#L87-L109
+fn thousands_sep(mut n: u64, sep: char) -> String {
+    use std::fmt::Write;
+    let mut output = String::new();
+    let mut trailing = false;
+    for &pow in &[9, 6, 3, 0] {
+        let base = 10_u64.pow(pow);
+        if pow == 0 || trailing || n / base != 0 {
+            if !trailing {
+                write!(output, "{}", n / base).unwrap();
+            } else {
+                write!(output, "{:03}", n / base).unwrap();
+            }
+            if pow != 0 {
+                output.push(sep);
+            }
+            trailing = true;
+        }
+        n %= base;
+    }
+
+    output
+}
+
+/// Format a value as an integer, including thousands-separators.
 pub fn integer(n: f64) -> String {
-    format!("{}", n as u64)
+    thousands_sep(n as u64, ',')
 }
 
 #[cfg(test)]
@@ -97,8 +125,14 @@ mod test {
         while float > -999_999.9 {
             let string = signed_short(float);
             println!("{}", string);
-            assert!(string.len() <= 7);
+            assert!(string.chars().count() <= 7);
             float *= 2.0;
         }
+    }
+
+    #[test]
+    fn integer_thousands_sep() {
+        let n = 140352319.0;
+        assert_eq!(integer(n), "140,352,319");
     }
 }

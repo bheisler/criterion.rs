@@ -4,7 +4,6 @@ use std::path::Path;
 
 use crate::estimate::{ConfidenceInterval, Estimate};
 use crate::stats::bivariate::regression::Slope;
-use crate::stats::bivariate::Data;
 
 pub(crate) fn regression_figure(
     title: Option<&str>,

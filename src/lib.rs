@@ -17,13 +17,10 @@
 
 #![warn(missing_docs)]
 #![warn(bare_trait_objects)]
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(
+#![allow(
         clippy::just_underscores_and_digits, // Used in the stats code
         clippy::transmute_ptr_to_ptr, // Used in the stats code
         clippy::manual_non_exhaustive, // Remove when MSRV bumped above 1.40
-    )
 )]
 
 #[cfg(all(feature = "rayon", target_arch = "wasm32"))]
@@ -35,7 +32,6 @@ extern crate approx;
 #[cfg(test)]
 extern crate quickcheck;
 
-use is_terminal::IsTerminal;
 use regex::Regex;
 
 #[macro_use]
@@ -71,10 +67,8 @@ mod stats;
 
 use std::cell::RefCell;
 use std::collections::HashSet;
-use std::default::Default;
 use std::env;
-use std::hint;
-use std::io::stdout;
+use std::io::{stdout, IsTerminal};
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -155,8 +149,7 @@ pub fn black_box<T>(dummy: T) -> T {
     hint::black_box(dummy)
 }
 
-/// Argument to [`Bencher::iter_batched`](struct.Bencher.html#method.iter_batched) and
-/// [`Bencher::iter_batched_ref`](struct.Bencher.html#method.iter_batched_ref) which controls the
+/// Argument to [`Bencher::iter_batched`] and [`Bencher::iter_batched_ref`] which controls the
 /// batch size.
 ///
 /// Generally speaking, almost all benchmarks should use `SmallInput`. If the input or the result
@@ -176,7 +169,7 @@ pub fn black_box<T>(dummy: T) -> T {
 ///
 /// With that said, if the runtime of your function is small relative to the measurement overhead
 /// it will be difficult to take accurate measurements. In this situation, the best option is to use
-/// [`Bencher::iter`](struct.Bencher.html#method.iter) which has next-to-zero measurement overhead.
+/// [`Bencher::iter`] which has next-to-zero measurement overhead.
 #[derive(Debug, Eq, PartialEq, Copy, Hash, Clone)]
 pub enum BatchSize {
     /// `SmallInput` indicates that the input to the benchmark routine (the value returned from
@@ -241,19 +234,19 @@ impl BatchSize {
     }
 }
 
-/// Baseline describes how the baseline_directory is handled.
+/// Baseline describes how the `baseline_directory` is handled.
 #[derive(Debug, Clone, Copy)]
 pub enum Baseline {
-    /// CompareLenient compares against a previous saved version of the baseline.
+    /// `CompareLenient` compares against a previous saved version of the baseline.
     /// If a previous baseline does not exist, the benchmark is run as normal but no comparison occurs.
     CompareLenient,
-    /// CompareStrict compares against a previous saved version of the baseline.
+    /// `CompareStrict` compares against a previous saved version of the baseline.
     /// If a previous baseline does not exist, a panic occurs.
     CompareStrict,
-    /// Save writes the benchmark results to the baseline directory,
+    /// `Save` writes the benchmark results to the baseline directory,
     /// overwriting any results that were previously there.
     Save,
-    /// Discard benchmark results.
+    /// `Discard` benchmark results.
     Discard,
 }
 
@@ -714,7 +707,7 @@ impl<M: Measurement> Criterion<M> {
     #[must_use]
     #[doc(hidden)]
     pub fn output_directory(mut self, path: &Path) -> Criterion<M> {
-        self.output_directory = path.to_owned();
+        path.clone_into(&mut self.output_directory);
 
         self
     }
@@ -749,7 +742,7 @@ impl<M: Measurement> Criterion<M> {
     /// Configure this criterion struct based on the command-line arguments to
     /// this process.
     #[must_use]
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::cognitive_complexity))]
+    #[allow(clippy::cognitive_complexity)]
     pub fn configure_from_args(mut self) -> Criterion<M> {
         use clap::{value_parser, Arg, Command};
         let matches = Command::new("Criterion Benchmark")
@@ -889,6 +882,11 @@ impl<M: Measurement> Criterion<M> {
                 .num_args(0)
                 .hide(true)
                 .help("Ignored, but added for compatibility with libtest."))
+            .arg(Arg::new("include-ignored")
+                .long("include-ignored")
+                .num_args(0)
+                .hide(true)
+                .help("Ignored, but added for compatibility with libtest."))
             .arg(Arg::new("version")
                 .hide(true)
                 .short('V')
@@ -1015,18 +1013,18 @@ https://bheisler.github.io/criterion.rs/book/faq.html
 
         if let Some(dir) = matches.get_one::<String>("save-baseline") {
             self.baseline = Baseline::Save;
-            self.baseline_directory = dir.to_owned()
+            dir.clone_into(&mut self.baseline_directory)
         }
         if matches.get_flag("discard-baseline") {
             self.baseline = Baseline::Discard;
         }
         if let Some(dir) = matches.get_one::<String>("baseline") {
             self.baseline = Baseline::CompareStrict;
-            self.baseline_directory = dir.to_owned();
+            dir.clone_into(&mut self.baseline_directory);
         }
         if let Some(dir) = matches.get_one::<String>("baseline-lenient") {
             self.baseline = Baseline::CompareLenient;
-            self.baseline_directory = dir.to_owned();
+            dir.clone_into(&mut self.baseline_directory);
         }
 
         if self.connection.is_some() {
@@ -1151,7 +1149,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
     ///     // Now we can perform benchmarks with this group
     ///     group.bench_function("Bench 1", |b| b.iter(|| 1 ));
     ///     group.bench_function("Bench 2", |b| b.iter(|| 2 ));
-    ///    
+    ///
     ///     group.finish();
     /// }
     /// criterion_group!(benches, bench_simple);

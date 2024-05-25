@@ -1,6 +1,5 @@
-use rand::distributions::{Distribution, Standard};
+use rand::distributions::Standard;
 use rand::prelude::*;
-use rand::rngs::StdRng;
 
 pub fn vec<T>(size: usize, start: usize) -> Option<Vec<T>>
 where

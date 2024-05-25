@@ -15,14 +15,15 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         rust:
           - stable
-          - 1.66.0 # MSRV
+          - 1.70.0 # MSRV
           - nightly
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@master
         name: Setup rust toolchain
@@ -55,7 +56,7 @@ jobs:
 
       - name: Check for clippy hints
         if: ${{ matrix.rust == 'stable' }}
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --workspace --all-targets -- -D warnings
 
       # This fails on 1.64, but works on 1.66 and later.
       # https://github.com/rust-lang/rust/issues/103306
@@ -77,7 +78,7 @@ jobs:
           - stable
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@master
         with:

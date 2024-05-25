@@ -2,7 +2,7 @@
 //! Criterion.rs' async benchmarking support.
 //!
 //! Implementations are provided for:
-//! * Tokio (implemented directly for tokio::Runtime)
+//! * Tokio (implemented directly for `tokio::Runtime`)
 //! * Async-std
 //! * Smol
 //! * The Futures crate

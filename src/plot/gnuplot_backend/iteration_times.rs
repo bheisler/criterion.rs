@@ -1,11 +1,7 @@
-use std::process::Child;
-
 use criterion_plot::prelude::*;
 
 use super::*;
-use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
-
-use crate::measurement::ValueFormatter;
+use crate::report::{ComparisonData, MeasurementData, ReportContext};
 
 fn iteration_times_figure(
     formatter: &dyn ValueFormatter,

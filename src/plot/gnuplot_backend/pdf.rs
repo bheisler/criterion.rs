@@ -1,8 +1,6 @@
 use super::*;
 use crate::kde;
-use crate::measurement::ValueFormatter;
-use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ReportContext};
-use std::process::Child;
+use crate::report::{ComparisonData, MeasurementData, ReportContext};
 
 pub(crate) fn pdf(
     id: &BenchmarkId,

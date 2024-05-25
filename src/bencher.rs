@@ -1,4 +1,3 @@
-use std::iter::IntoIterator;
 use std::time::Duration;
 use std::time::Instant;
 
@@ -223,7 +222,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     ///     let data = create_scrambled_data();
     ///
     ///     c.bench_function("with_setup", move |b| {
-    ///         // This will avoid timing the to_vec call.
+    ///         // This will avoid timing the clone call.
     ///         b.iter_batched(|| data.clone(), |mut data| sort(&mut data), BatchSize::SmallInput)
     ///     });
     /// }
@@ -313,7 +312,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     ///     let data = create_scrambled_data();
     ///
     ///     c.bench_function("with_setup", move |b| {
-    ///         // This will avoid timing the to_vec call.
+    ///         // This will avoid timing the clone call.
     ///         b.iter_batched(|| data.clone(), |mut data| sort(&mut data), BatchSize::SmallInput)
     ///     });
     /// }
@@ -602,7 +601,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     ///     let data = create_scrambled_data();
     ///
     ///     c.bench_function("with_setup", move |b| {
-    ///         // This will avoid timing the to_vec call.
+    ///         // This will avoid timing the clone call.
     ///         b.iter_batched(|| data.clone(), |mut data| async move { sort(&mut data).await }, BatchSize::SmallInput)
     ///     });
     /// }
@@ -700,7 +699,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     ///     let data = create_scrambled_data();
     ///
     ///     c.bench_function("with_setup", move |b| {
-    ///         // This will avoid timing the to_vec call.
+    ///         // This will avoid timing the clone call.
     ///         b.iter_batched(|| data.clone(), |mut data| async move { sort(&mut data).await }, BatchSize::SmallInput)
     ///     });
     /// }

@@ -155,7 +155,7 @@ where
 {
     type Scale = (f64, f64, f64, f64, f64);
 
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::many_single_char_names))]
+    #[allow(clippy::many_single_char_names)]
     fn append_to(self, buffer: &mut Vec<u8>, scale: (f64, f64, f64, f64, f64)) {
         let (a, b, c, d, e) = self;
 

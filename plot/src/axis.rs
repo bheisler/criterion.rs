@@ -1,7 +1,6 @@
 //! Coordinate axis
 
 use std::borrow::Cow;
-use std::iter::IntoIterator;
 
 use crate::map;
 use crate::traits::{Configure, Data, Set};
@@ -140,7 +139,7 @@ where
 
         let pairs = positions
             .into_iter()
-            .zip(labels.into_iter())
+            .zip(labels)
             .map(|(pos, label)| format!("'{}' {}", label.as_ref(), pos.f64()))
             .collect::<Vec<_>>();
 
@@ -155,9 +154,6 @@ where
 }
 
 impl<'a> Script for (Axis, &'a Properties) {
-    // Allow clippy::format_push_string even with older versions of rust (<1.62) which
-    // don't have it defined.
-    #[allow(clippy::all)]
     fn script(&self) -> String {
         let &(axis, properties) = self;
         let axis_ = axis.display();
