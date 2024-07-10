@@ -2,7 +2,7 @@
 name = "criterion_bencher_compat"
 version = "0.4.0"
 authors = ["Brook Heisler <redattack34@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 description = "Drop-in replacement for commonly-used parts of Bencher"
 homepage = "https://bheisler.github.io/criterion.rs/book/index.html"

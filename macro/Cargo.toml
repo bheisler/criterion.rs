@@ -2,7 +2,7 @@
 name = "criterion-macro"
 version = "0.4.0"
 authors = ["Brook Heisler <redattack34@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 description = "Custom Test Framework macro for Criterion.rs"
 homepage = "https://bheisler.github.io/criterion.rs/book/index.html"
