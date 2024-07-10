@@ -8,7 +8,7 @@ name = "criterion"
 #
 # * Update version numbers in the book;
 version = "0.5.1"
-edition = "2018"
+edition = "2021"
 
 description = "Statistics-driven micro-benchmarking library"
 homepage    = "https://bheisler.github.io/criterion.rs/book/index.html"
@@ -100,6 +100,7 @@ csv_output = ["csv"]
 
 [workspace]
 exclude = ["cargo-criterion"]
+resolver = "2"
 
 [[bench]]
 name    = "bench_main"
