@@ -1031,7 +1031,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
 
         if let Some(dir) = matches.get_one::<String>("save-baseline") {
             self.baseline = Baseline::Save;
-            dir.clone_into(&mut self.baseline_directory)
+            dir.clone_into(&mut self.baseline_directory);
         }
         if matches.get_flag("discard-baseline") {
             self.baseline = Baseline::Discard;

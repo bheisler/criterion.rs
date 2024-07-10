@@ -41,7 +41,7 @@ pub fn line_comparison(
 
     match axis_scale {
         AxisScale::Linear => {
-            draw_line_comarision_figure(root_area, unit, x_range, y_range, value_type, series_data)
+            draw_line_comarision_figure(root_area, unit, x_range, y_range, value_type, series_data);
         }
         AxisScale::Logarithmic => draw_line_comarision_figure(
             root_area,
@@ -209,7 +209,7 @@ pub fn violin(
     match axis_scale {
         AxisScale::Linear => draw_violin_figure(root_area, unit, x_range, y_range, kdes),
         AxisScale::Logarithmic => {
-            draw_violin_figure(root_area, unit, x_range.log_scale(), y_range, kdes)
+            draw_violin_figure(root_area, unit, x_range.log_scale(), y_range, kdes);
         }
     }
 }
