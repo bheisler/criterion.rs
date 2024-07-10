@@ -1,5 +1,6 @@
 use crate::report::BenchmarkId as InternalBenchmarkId;
 use crate::Throughput;
+use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::io::{Read, Write};
