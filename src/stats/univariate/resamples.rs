@@ -52,7 +52,7 @@ where
         }
 
         if let Some(ref v) = self.stage {
-            unsafe { mem::transmute::<&[_], _>(v) }
+            unsafe { mem::transmute::<&[A], &Sample<A>>(v) }
         } else {
             unreachable!();
         }
