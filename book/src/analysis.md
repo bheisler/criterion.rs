@@ -25,7 +25,7 @@ As measurement progresses, the sample iteration counts are increased. Suppose th
 
 `iterations = [d, 2d, 3d, ... Nd]`
 
-Where `N` is the total number of samples and `d` is a factor, calculated from the rough estimate of iteration time measured during the warmup period, which is used to scale the number of iterations to meet the configured measurement time. Note that `d` cannot be less than 1, and therefore the actual measurment time may exceed the configured measurement time if the iteration time is large or the configured measurement time is small.
+Where `N` is the total number of samples and `d` is a factor, calculated from the rough estimate of iteration time measured during the warmup period, which is used to scale the number of iterations to meet the configured measurement time. Note that `d` cannot be less than 1, and therefore the actual measurement time may exceed the configured measurement time if the iteration time is large or the configured measurement time is small.
 
 Note that Criterion.rs does not measure each individual iteration, only the complete sample. The resulting samples are stored for use in later stages. The sample data is also written to the local disk so that it can be used in the comparison phase of future benchmark runs.
 
