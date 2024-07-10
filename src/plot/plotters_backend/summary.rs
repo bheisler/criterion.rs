@@ -121,7 +121,7 @@ fn line_comparison_series_data<'a>(
     let max = all_curves
         .iter()
         .map(|&(_, data)| Sample::new(data).mean())
-        .fold(::std::f64::NAN, f64::max);
+        .fold(f64::NAN, f64::max);
 
     let mut dummy = [1.0];
     let unit = formatter.scale_values(max, &mut dummy);

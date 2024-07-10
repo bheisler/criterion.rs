@@ -351,13 +351,13 @@ pub enum BenchmarkFilter {
 /// Each benchmark consists of four phases:
 ///
 /// - **Warm-up**: The routine is repeatedly executed, to let the CPU/OS/JIT/interpreter adapt to
-/// the new load
+///   the new load
 /// - **Measurement**: The routine is repeatedly executed, and timing information is collected into
-/// a sample
+///   a sample
 /// - **Analysis**: The sample is analyzed and distilled into meaningful statistics that get
-/// reported to stdout, stored in files, and plotted
+///   reported to stdout, stored in files, and plotted
 /// - **Comparison**: The current sample is compared with the sample obtained in the previous
-/// benchmark.
+///   benchmark.
 pub struct Criterion<M: Measurement = WallTime> {
     config: BenchmarkConfig,
     filter: BenchmarkFilter,

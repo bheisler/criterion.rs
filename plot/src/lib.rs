@@ -69,7 +69,7 @@
 //! ```
 //!
 //! - error bars (based on
-//! [Julia plotting tutorial](https://plot.ly/julia/error-bars/#Colored-and-Styled-Error-Bars))
+//!   [Julia plotting tutorial](https://plot.ly/julia/error-bars/#Colored-and-Styled-Error-Bars))
 //!
 //! ![Plot](error_bar.svg)
 //!
@@ -149,7 +149,7 @@
 //! ```
 //!
 //! - Candlesticks (based on
-//! [`candlesticks.dem`](http://gnuplot.sourceforge.net/demo/candlesticks.html))
+//!   [`candlesticks.dem`](http://gnuplot.sourceforge.net/demo/candlesticks.html))
 //!
 //! ![Plot](candlesticks.svg)
 //!
@@ -285,7 +285,7 @@
 //! #   }));
 //! ```
 //! - Filled curves (based on
-//! [`transparent.dem`](http://gnuplot.sourceforge.net/demo/transparent.html))
+//!   [`transparent.dem`](http://gnuplot.sourceforge.net/demo/transparent.html))
 //!
 //! ![Plot](filled_curve.svg)
 //!
