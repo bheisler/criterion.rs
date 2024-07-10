@@ -11,14 +11,14 @@ fn large_setup(c: &mut Criterion) {
             || (0..SIZE).map(|i| i as u8).collect::<Vec<_>>(),
             |v| v,
             BatchSize::NumBatches(1),
-        )
+        );
     });
 }
 
 fn small_setup(c: &mut Criterion) {
     let mut group = c.benchmark_group("iter_with_large_setup");
     group.bench_function("small_setup", |b| {
-        b.iter_batched(|| SIZE, |size| size, BatchSize::NumBatches(1))
+        b.iter_batched(|| SIZE, |size| size, BatchSize::NumBatches(1));
     });
 }
 

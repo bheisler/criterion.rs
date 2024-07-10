@@ -47,7 +47,7 @@ fn python_fibonacci(c: &mut Criterion) {
                 let nanoseconds: u64 =
                     u64::from_str(line.trim()).expect("Unable to parse time from child process");
                 Duration::from_nanos(nanoseconds)
-            })
+            });
         });
 
         // Ensure that your child process terminates itself gracefully!

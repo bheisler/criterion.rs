@@ -197,7 +197,7 @@ fn test_sample_size() {
         .sample_size(50)
         .bench_function("test_sample_size", move |b| {
             clone.count();
-            b.iter(|| 10)
+            b.iter(|| 10);
         });
 
     // This function will be called more than sample_size times because of the
@@ -215,7 +215,7 @@ fn test_warmup_time() {
         .warm_up_time(Duration::from_millis(100))
         .bench_function("test_warmup_time_1", move |b| {
             clone.count();
-            b.iter(|| 10)
+            b.iter(|| 10);
         });
 
     let counter2 = Counter::default();
@@ -224,7 +224,7 @@ fn test_warmup_time() {
         .warm_up_time(Duration::from_millis(2000))
         .bench_function("test_warmup_time_2", move |b| {
             clone.count();
-            b.iter(|| 10)
+            b.iter(|| 10);
         });
 
     assert!(counter1.read() < counter2.read());
@@ -275,43 +275,43 @@ fn test_timing_loops() {
     let mut c = short_benchmark(&dir);
     let mut group = c.benchmark_group("test_timing_loops");
     group.bench_function("iter_with_setup", |b| {
-        b.iter_with_setup(|| vec![10], |v| v[0])
+        b.iter_with_setup(|| vec![10], |v| v[0]);
     });
     group.bench_function("iter_with_large_setup", |b| {
-        b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumBatches(1))
+        b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumBatches(1));
     });
     group.bench_function("iter_with_large_drop", |b| {
-        b.iter_with_large_drop(|| vec![10; 100])
+        b.iter_with_large_drop(|| vec![10; 100]);
     });
     group.bench_function("iter_batched_small", |b| {
-        b.iter_batched(|| vec![10], |v| v[0], BatchSize::SmallInput)
+        b.iter_batched(|| vec![10], |v| v[0], BatchSize::SmallInput);
     });
     group.bench_function("iter_batched_large", |b| {
-        b.iter_batched(|| vec![10], |v| v[0], BatchSize::LargeInput)
+        b.iter_batched(|| vec![10], |v| v[0], BatchSize::LargeInput);
     });
     group.bench_function("iter_batched_per_iteration", |b| {
-        b.iter_batched(|| vec![10], |v| v[0], BatchSize::PerIteration)
+        b.iter_batched(|| vec![10], |v| v[0], BatchSize::PerIteration);
     });
     group.bench_function("iter_batched_one_batch", |b| {
-        b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumBatches(1))
+        b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumBatches(1));
     });
     group.bench_function("iter_batched_10_iterations", |b| {
-        b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumIterations(10))
+        b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumIterations(10));
     });
     group.bench_function("iter_batched_ref_small", |b| {
-        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::SmallInput)
+        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::SmallInput);
     });
     group.bench_function("iter_batched_ref_large", |b| {
-        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::LargeInput)
+        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::LargeInput);
     });
     group.bench_function("iter_batched_ref_per_iteration", |b| {
-        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::PerIteration)
+        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::PerIteration);
     });
     group.bench_function("iter_batched_ref_one_batch", |b| {
-        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::NumBatches(1))
+        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::NumBatches(1));
     });
     group.bench_function("iter_batched_ref_10_iterations", |b| {
-        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::NumIterations(10))
+        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::NumIterations(10));
     });
 }
 
@@ -461,7 +461,7 @@ fn test_criterion_doesnt_panic_if_measured_time_is_zero() {
     let dir = temp_dir();
     let mut c = short_benchmark(&dir);
     c.bench_function("zero_time", |bencher| {
-        bencher.iter_custom(|_iters| Duration::new(0, 0))
+        bencher.iter_custom(|_iters| Duration::new(0, 0));
     });
 }
 
@@ -494,7 +494,7 @@ mod macros {
 
         // silence dead_code warning
         if false {
-            main()
+            main();
         }
     }
 

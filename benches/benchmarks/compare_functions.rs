@@ -34,13 +34,13 @@ fn compare_fibonaccis_group(c: &mut Criterion) {
     let mut group = c.benchmark_group("Fibonacci3");
     for i in 20..=21 {
         group.bench_with_input(BenchmarkId::new("Recursive", i), &i, |b, i| {
-            b.iter(|| fibonacci_slow(*i))
+            b.iter(|| fibonacci_slow(*i));
         });
         group.bench_with_input(BenchmarkId::new("Iterative", i), &i, |b, i| {
-            b.iter(|| fibonacci_fast(*i))
+            b.iter(|| fibonacci_fast(*i));
         });
     }
-    group.finish()
+    group.finish();
 }
 
 criterion_group!(fibonaccis, compare_fibonaccis, compare_fibonaccis_group,);

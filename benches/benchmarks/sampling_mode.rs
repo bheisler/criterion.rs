@@ -7,17 +7,17 @@ fn sampling_mode_tests(c: &mut Criterion) {
 
     group.sampling_mode(SamplingMode::Auto);
     group.bench_function("Auto", |bencher| {
-        bencher.iter(|| sleep(Duration::from_millis(0)))
+        bencher.iter(|| sleep(Duration::from_millis(0)));
     });
 
     group.sampling_mode(SamplingMode::Linear);
     group.bench_function("Linear", |bencher| {
-        bencher.iter(|| sleep(Duration::from_millis(0)))
+        bencher.iter(|| sleep(Duration::from_millis(0)));
     });
 
     group.sampling_mode(SamplingMode::Flat);
     group.bench_function("Flat", |bencher| {
-        bencher.iter(|| sleep(Duration::from_millis(10)))
+        bencher.iter(|| sleep(Duration::from_millis(10)));
     });
 
     group.finish();

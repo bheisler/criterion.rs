@@ -149,8 +149,8 @@ pub(crate) fn abs_distributions(
                 distribution,
                 estimate,
                 size,
-            )
-        })
+            );
+        });
 }
 
 fn rel_distribution(
@@ -303,6 +303,6 @@ pub(crate) fn rel_distributions(
             comparison.relative_estimates.get(statistic),
             comparison.noise_threshold,
             size,
-        )
+        );
     });
 }

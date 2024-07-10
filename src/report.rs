@@ -395,7 +395,7 @@ impl CliReport {
 
     fn text_overwrite(&self) {
         if self.enable_text_overwrite {
-            eprint!("\r{}", ClearLine::All)
+            eprint!("\r{}", ClearLine::All);
         }
     }
 
@@ -590,7 +590,7 @@ impl Report for CliReport {
                     throughput,
                     typical_estimate.confidence_interval.lower_bound
                 )),
-            )
+            );
         }
 
         if !matches!(self.verbosity, CliVerbosity::Quiet) {
