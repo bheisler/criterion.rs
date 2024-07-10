@@ -34,12 +34,10 @@ extern crate approx;
 extern crate quickcheck;
 
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "real_blackbox")]
 extern crate test;
-
-#[macro_use]
-extern crate serde_derive;
 
 // Needs to be declared before other modules
 // in order to be usable there.

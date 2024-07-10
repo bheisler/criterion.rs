@@ -11,6 +11,7 @@ use crate::stats::univariate::Sample;
 use crate::stats::Distribution;
 use crate::{PlotConfiguration, Throughput};
 use anes::{Attribute, ClearLine, Color, ResetAttributes, SetAttribute, SetForegroundColor};
+use serde::{Deserialize, Serialize};
 use std::cmp;
 use std::collections::HashSet;
 use std::fmt;

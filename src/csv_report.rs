@@ -3,6 +3,7 @@ use crate::measurement::ValueFormatter;
 use crate::report::{BenchmarkId, MeasurementData, Report, ReportContext};
 use crate::Throughput;
 use csv::Writer;
+use serde::Serialize;
 use std::io::Write;
 use std::path::Path;
 
