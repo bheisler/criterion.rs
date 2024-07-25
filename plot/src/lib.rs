@@ -372,8 +372,6 @@
 #![allow(clippy::many_single_char_names)]
 
 extern crate cast;
-#[macro_use]
-extern crate itertools;
 
 use std::borrow::Cow;
 use std::fmt;

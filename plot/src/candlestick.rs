@@ -140,7 +140,7 @@ where
         } = candlesticks;
 
         let data = Matrix::new(
-            izip!(x, box_min, whisker_min, whisker_high, box_high),
+            itertools::izip!(x, box_min, whisker_min, whisker_high, box_high),
             (x_factor, y_factor, y_factor, y_factor, y_factor),
         );
         self.plots
