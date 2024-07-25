@@ -313,7 +313,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     ///
     ///     c.bench_function("with_setup", move |b| {
     ///         // This will avoid timing the clone call.
-    ///         b.iter_batched(|| data.clone(), |mut data| sort(&mut data), BatchSize::SmallInput)
+    ///         b.iter_batched_ref(|| data.clone(), |mut data| sort(&mut data), BatchSize::SmallInput)
     ///     });
     /// }
     ///
