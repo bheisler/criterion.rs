@@ -17,7 +17,6 @@
 
 #![warn(missing_docs)]
 #![warn(bare_trait_objects)]
-#![cfg_attr(feature = "real_blackbox", feature(test))]
 #![allow(
         clippy::just_underscores_and_digits, // Used in the stats code
         clippy::transmute_ptr_to_ptr, // Used in the stats code
@@ -35,9 +34,6 @@ extern crate quickcheck;
 
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-
-#[cfg(feature = "real_blackbox")]
-extern crate test;
 
 // Needs to be declared before other modules
 // in order to be usable there.
@@ -144,25 +140,9 @@ fn debug_enabled() -> bool {
 
 /// A function that is opaque to the optimizer, used to prevent the compiler from
 /// optimizing away computations in a benchmark.
-///
-/// This variant is backed by the (unstable) test::black_box function.
-#[cfg(feature = "real_blackbox")]
+#[deprecated(note = "use `std::hint::black_box()` instead")]
 pub fn black_box<T>(dummy: T) -> T {
-    test::black_box(dummy)
-}
-
-/// A function that is opaque to the optimizer, used to prevent the compiler from
-/// optimizing away computations in a benchmark.
-///
-/// This variant is stable-compatible, but it may cause some performance overhead
-/// or fail to prevent code from being eliminated.
-#[cfg(not(feature = "real_blackbox"))]
-pub fn black_box<T>(dummy: T) -> T {
-    unsafe {
-        let ret = std::ptr::read_volatile(&dummy);
-        std::mem::forget(dummy);
-        ret
-    }
+    std::hint::black_box(dummy)
 }
 
 /// Argument to [`Bencher::iter_batched`] and [`Bencher::iter_batched_ref`] which controls the

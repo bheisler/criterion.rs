@@ -63,7 +63,8 @@ harness = false
 Next, define a benchmark by creating a file at `$PROJECT/benches/my_benchmark.rs` with the following contents:
 
 ```rust
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
+use criterion::{criterion_group, criterion_main, Criterion};
 
 fn fibonacci(n: u64) -> u64 {
     match n {

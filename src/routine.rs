@@ -2,7 +2,8 @@ use crate::benchmark::BenchmarkConfig;
 use crate::connection::OutgoingMessage;
 use crate::measurement::Measurement;
 use crate::report::{BenchmarkId, Report, ReportContext};
-use crate::{black_box, ActualSamplingMode, Bencher, Criterion};
+use crate::{ActualSamplingMode, Bencher, Criterion};
+use std::hint::black_box;
 use std::marker::PhantomData;
 use std::time::Duration;
 

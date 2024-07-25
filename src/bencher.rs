@@ -1,7 +1,7 @@
+use std::hint::black_box;
 use std::time::Duration;
 use std::time::Instant;
 
-use crate::black_box;
 use crate::measurement::{Measurement, WallTime};
 use crate::BatchSize;
 
@@ -103,7 +103,6 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     /// ```rust
     /// #[macro_use] extern crate criterion;
     /// use criterion::*;
-    /// use criterion::black_box;
     /// use std::time::Instant;
     ///
     /// fn foo() {
@@ -115,7 +114,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     ///         b.iter_custom(|iters| {
     ///             let start = Instant::now();
     ///             for _i in 0..iters {
-    ///                 black_box(foo());
+    ///                 std::hint::black_box(foo());
     ///             }
     ///             start.elapsed()
     ///         })
@@ -461,7 +460,6 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     /// ```rust
     /// #[macro_use] extern crate criterion;
     /// use criterion::*;
-    /// use criterion::black_box;
     /// use criterion::async_executor::FuturesExecutor;
     /// use std::time::Instant;
     ///
@@ -475,7 +473,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     ///             async move {
     ///                 let start = Instant::now();
     ///                 for _i in 0..iters {
-    ///                     black_box(foo().await);
+    ///                     std::hint::black_box(foo().await);
     ///                 }
     ///                 start.elapsed()
     ///             }
