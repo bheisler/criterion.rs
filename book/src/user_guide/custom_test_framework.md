@@ -28,8 +28,9 @@ Let's take a look at an example benchmark (note that this example assumes you're
 #![feature(custom_test_frameworks)]
 #![test_runner(criterion::runner)]
 
-use criterion::{Criterion, black_box};
+use criterion::Criterion;
 use criterion_macro::criterion;
+use std::hint::black_box;
 
 fn fibonacci(n: u64) -> u64 {
     match n {

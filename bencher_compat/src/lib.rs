@@ -1,7 +1,7 @@
 extern crate criterion;
 
+pub use std::hint::black_box;
 pub use criterion::Criterion;
-pub use criterion::black_box;
 use criterion::measurement::WallTime;
 
 /// Stand-in for `bencher::Bencher` which uses Criterion.rs to perform the benchmark instead.

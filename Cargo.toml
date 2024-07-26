@@ -72,7 +72,7 @@ stable = [
 ]
 default = ["rayon", "plotters", "cargo_bench_support"]
 
-# Enable use of the nightly-only test::black_box function to discourage compiler optimizations.
+# This is a legacy feature that no longer does anything, but removing it would be a semver break.
 real_blackbox = []
 
 # Enable async/await support

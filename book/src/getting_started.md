@@ -39,7 +39,8 @@ file at `$PROJECT/benches/my_benchmark.rs` with the following contents (see the 
 below for an explanation of this code):
 
 ```rust
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
 use mycrate::fibonacci;
 
 fn criterion_benchmark(c: &mut Criterion) {
@@ -78,7 +79,8 @@ median [25.733 us 25.988 us] med. abs. dev. [234.09 ns 544.07 ns]
 Let's go back and walk through that benchmark code in more detail.
 
 ```rust
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
 use mycrate::fibonacci;
 ```
 

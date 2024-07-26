@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 - MSRV bumped to 1.70
 
+### Changed
+- The `real_blackbox` feature no longer has any impact. Criterion always uses `std::hint::black_box()` now.
+  Users of `criterion::black_box()` should switch to `std::hint::black_box()`.
+
 ### Fixed
 
 - gnuplot version is now correctly detected when using certain Windows binaries/configurations that used to fail

@@ -5,7 +5,8 @@ graphs to show the differences in performance between them. First, lets create a
 benchmark. We can even combine this with benchmarking over a range of inputs.
 
 ```rust
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
+use std::hint::black_box;
 
 fn fibonacci_slow(n: u64) -> u64 {
     match n {

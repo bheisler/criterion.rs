@@ -1,7 +1,8 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(criterion::runner)]
 
-use criterion::{Criterion, black_box};
+use std::hint::black_box;
+use criterion::Criterion;
 use criterion_macro::criterion;
 
 fn fibonacci(n: u64) -> u64 {

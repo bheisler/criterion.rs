@@ -77,13 +77,11 @@ To see this, consider the following benchmark:
 
 ```rust
 fn compare_small(c: &mut Criterion) {
-    use criterion::black_box;
-
     let mut group = c.benchmark_group("small");
     group.bench_with_input("unlooped", 10, |b, i| b.iter(|| i + 10));
     group.bench_with_input("looped", 10, |b, i| b.iter(|| {
         for _ in 0..10000 {
-            black_box(i + 10);
+            std::hint::black_box(i + 10);
         }
     }));
     group.finish();
@@ -111,7 +109,7 @@ Process](./analysis.md) page for more details on how Criterion.rs performs its m
 the [Timing Loops](./user_guide/timing_loops.md) page for details on choosing a timing loop to minimize
 measurement overhead.
 
-### When Should I Use `criterion::black_box`?
+### When Should I Use `std::hint::black_box`?
 
 `black_box` is a function which prevents certain compiler optimizations. Benchmarks are often
 slightly artificial in nature and the compiler can take advantage of that to generate faster code

@@ -48,7 +48,8 @@ criterion = "0.5.1"
 The next step is to update the imports:
 
 ```rust
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
 ```
 
 Then, we can change the `bench_fib` function. Remove the `#[bench]` and change
@@ -72,7 +73,8 @@ criterion_main!(benches);
 And that's it! The complete migrated benchmark code is below:
 
 ```rust
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
 
 fn fibonacci(n: u64) -> u64 {
     match n {
