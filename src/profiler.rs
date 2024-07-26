@@ -14,7 +14,7 @@ pub trait Profiler {
 
     /// This function is called after Criterion.rs stops profiling a particular
     /// benchmark. The benchmark ID and directory are the same as in the call
-    /// to `start`, provided for convenience.
+    /// to [`start_profiling`](Self::start_profiling), provided for convenience.
     fn stop_profiling(&mut self, benchmark_id: &str, benchmark_dir: &Path);
 }
 

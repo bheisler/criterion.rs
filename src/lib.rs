@@ -267,12 +267,14 @@ pub enum Baseline {
 }
 
 /// Enum used to select the plotting backend.
+///
+/// See [`Criterion::plotting_backend`].
 #[derive(Debug, Clone, Copy)]
 pub enum PlottingBackend {
     /// Plotting backend which uses the external `gnuplot` command to render plots. This is the
     /// default if the `gnuplot` command is installed.
     Gnuplot,
-    /// Plotting backend which uses the rust 'Plotters' library. This is the default if `gnuplot`
+    /// Plotting backend which uses the Rust 'Plotters' library. This is the default if `gnuplot`
     /// is not installed.
     Plotters,
     /// Null plotting backend which outputs nothing,
@@ -455,7 +457,7 @@ impl Default for Criterion {
 
 impl<M: Measurement> Criterion<M> {
     /// Changes the measurement for the benchmarks run with this runner. See the
-    /// Measurement trait for more details
+    /// [`Measurement`] trait for more details
     pub fn with_measurement<M2: Measurement>(self, m: M2) -> Criterion<M2> {
         // Can't use struct update syntax here because they're technically different types.
         Criterion {
@@ -477,7 +479,7 @@ impl<M: Measurement> Criterion<M> {
 
     #[must_use]
     /// Changes the internal profiler for benchmarks run with this runner. See
-    /// the Profiler trait for more details.
+    /// the [`Profiler`] trait for more details.
     pub fn with_profiler<P: Profiler + 'static>(self, p: P) -> Criterion<M> {
         Criterion {
             profiler: Box::new(RefCell::new(p)),
@@ -486,10 +488,12 @@ impl<M: Measurement> Criterion<M> {
     }
 
     #[must_use]
-    /// Set the plotting backend. By default, Criterion will use gnuplot if available, or plotters
-    /// if not.
+    /// Set the [plotting backend]. By default, Criterion will use `gnuplot` if available,
+    /// or `plotters` if not.
     ///
-    /// Panics if `backend` is `PlottingBackend::Gnuplot` and gnuplot is not available.
+    /// Panics if `backend` is [`PlottingBackend::Gnuplot`] and `gnuplot` is not available.
+    ///
+    /// [plotting backend]: PlottingBackend
     pub fn plotting_backend(mut self, backend: PlottingBackend) -> Criterion<M> {
         if let PlottingBackend::Gnuplot = backend {
             assert!(

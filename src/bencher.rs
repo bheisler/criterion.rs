@@ -25,7 +25,7 @@ use crate::async_executor::AsyncExecutor;
 /// * If your routine requires no per-iteration setup and returns a value with an expensive `drop`
 ///   method, use `iter_with_large_drop`.
 /// * If your routine requires some per-iteration setup that shouldn't be timed, use `iter_batched`
-///   or `iter_batched_ref`. See [`BatchSize`](enum.BatchSize.html) for a discussion of batch sizes.
+///   or `iter_batched_ref`. See [`BatchSize`] for a discussion of batch sizes.
 ///   If the setup value implements `Drop` and you don't want to include the `drop` time in the
 ///   measurement, use `iter_batched_ref`, otherwise use `iter_batched`. These methods are also
 ///   suitable for benchmarking routines which return a value with an expensive `drop` method,
@@ -189,7 +189,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     }
 
     /// Times a `routine` that requires some input by generating a batch of input, then timing the
-    /// iteration of the benchmark over the input. See [`BatchSize`](enum.BatchSize.html) for
+    /// iteration of the benchmark over the input. See [`BatchSize`] for
     /// details on choosing the batch size. Use this when the routine must consume its input.
     ///
     /// For example, use this loop to benchmark sorting algorithms, because they require unsorted
@@ -278,7 +278,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     }
 
     /// Times a `routine` that requires some input by generating a batch of input, then timing the
-    /// iteration of the benchmark over the input. See [`BatchSize`](enum.BatchSize.html) for
+    /// iteration of the benchmark over the input. See [`BatchSize`] for
     /// details on choosing the batch size. Use this when the routine should accept the input by
     /// mutable reference.
     ///
@@ -384,7 +384,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     }
 }
 
-/// Async/await variant of the Bencher struct.
+/// Async/await variant of [`Bencher`].
 #[cfg(feature = "async")]
 pub struct AsyncBencher<'a, 'b, A: AsyncExecutor, M: Measurement = WallTime> {
     b: &'b mut Bencher<'a, M>,
@@ -567,7 +567,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     }
 
     /// Times a `routine` that requires some input by generating a batch of input, then timing the
-    /// iteration of the benchmark over the input. See [`BatchSize`](enum.BatchSize.html) for
+    /// iteration of the benchmark over the input. See [`BatchSize`] for
     /// details on choosing the batch size. Use this when the routine must consume its input.
     ///
     /// For example, use this loop to benchmark sorting algorithms, because they require unsorted
@@ -664,7 +664,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     }
 
     /// Times a `routine` that requires some input by generating a batch of input, then timing the
-    /// iteration of the benchmark over the input. See [`BatchSize`](enum.BatchSize.html) for
+    /// iteration of the benchmark over the input. See [`BatchSize`] for
     /// details on choosing the batch size. Use this when the routine should accept the input by
     /// mutable reference.
     ///
