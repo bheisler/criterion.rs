@@ -15,7 +15,7 @@ Once that's installed, add the dependencies to your Cargo.toml:
 
 ```toml
 [dev-dependencies]
-criterion = "0.4"
+criterion = "0.5"
 criterion-macro = "0.4"
 ```
 
