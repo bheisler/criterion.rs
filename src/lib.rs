@@ -314,20 +314,15 @@ impl Mode {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 /// Enum representing the list format.
 pub(crate) enum ListFormat {
     /// The regular, default format.
+    #[default]
     Pretty,
     /// The terse format, where nothing other than the name of the test and ": benchmark" at the end
     /// is printed out.
     Terse,
-}
-
-impl Default for ListFormat {
-    fn default() -> Self {
-        Self::Pretty
-    }
 }
 
 /// Benchmark filtering support.
@@ -1291,9 +1286,10 @@ pub enum Throughput {
 }
 
 /// Axis scaling type
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub enum AxisScale {
     /// Axes scale linearly
+    #[default]
     Linear,
 
     /// Axes scale logarithmically
@@ -1315,17 +1311,9 @@ pub enum AxisScale {
 /// benchmark_group.plot_config(plot_config);
 /// // Use benchmark group
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct PlotConfiguration {
     summary_scale: AxisScale,
-}
-
-impl Default for PlotConfiguration {
-    fn default() -> PlotConfiguration {
-        PlotConfiguration {
-            summary_scale: AxisScale::Linear,
-        }
-    }
 }
 
 impl PlotConfiguration {
@@ -1342,10 +1330,11 @@ impl PlotConfiguration {
 /// This enum allows the user to control how Criterion.rs chooses the iteration count when sampling.
 /// The default is Auto, which will choose a method automatically based on the iteration time during
 /// the warm-up phase.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub enum SamplingMode {
     /// Criterion.rs should choose a sampling method automatically. This is the default, and is
     /// recommended for most users and most benchmarks.
+    #[default]
     Auto,
 
     /// Scale the iteration count in each sample linearly. This is suitable for most benchmarks,
