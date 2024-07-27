@@ -38,7 +38,7 @@ regex          = { version = "1.5", default-features = false, features = ["std"]
 # Optional dependencies
 rayon = { version = "1.3", optional = true }
 csv = { version = "1.1", optional = true }
-futures = { version = "0.3", default-features = false, optional = true }
+futures = { version = "0.3", default-features = false, features = ["executor"], optional = true }
 smol = { version = "1.2", default-features = false, optional = true }
 tokio = { version = "1.0", default-features = false, features = [
   "rt",
@@ -56,7 +56,7 @@ tempfile   = "3.5.0"
 approx     = "0.5.0"
 quickcheck = { version = "1.0", default-features = false }
 rand       = "0.8"
-futures    = { version = "0.3", default-features = false, features = ["executor"] }
+futures    = "0.3"
 
 [badges]
 maintenance = { status = "passively-maintained" }
@@ -75,15 +75,21 @@ default = ["rayon", "plotters", "cargo_bench_support"]
 # This is a legacy feature that no longer does anything, but removing it would be a semver break.
 real_blackbox = []
 
+# Enable rayon support
+rayon = ["dep:rayon"]
+
+# Enable plotters support
+plotters = ["dep:plotters"]
+
 # Enable async/await support
 async = []
 
 # These features enable built-in support for running async benchmarks on each different async
 # runtime.
-async_futures = ["futures/executor", "async"]
-async_smol    = ["smol", "async"]
-async_tokio   = ["tokio", "async"]
-async_std     = ["async-std", "async"]
+async_futures = ["dep:futures", "async"]
+async_smol    = ["dep:smol", "async"]
+async_tokio   = ["dep:tokio", "async"]
+async_std     = ["dep:async-std", "async"]
 
 # This feature _currently_ does nothing except disable a warning message, but in 0.4.0 it will be
 # required in order to have Criterion.rs generate its own plots (as opposed to using cargo-criterion)
@@ -96,7 +102,7 @@ cargo_bench_support = []
 # This feature _currently_ does nothing, but in 0.4.0 it will be
 # required in order to have Criterion.rs generate CSV files. This feature is deprecated in favor of
 # cargo-criterion's --message-format=json option.
-csv_output = ["csv"]
+csv_output = ["dep:csv"]
 
 [workspace]
 exclude = ["cargo-criterion"]
