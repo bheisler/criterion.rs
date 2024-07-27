@@ -1154,8 +1154,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
     /// # Examples:
     ///
     /// ```rust
-    /// #[macro_use] extern crate criterion;
-    /// use self::criterion::*;
+    /// use criterion::{criterion_group, criterion_main, Criterion};
     ///
     /// fn bench_simple(c: &mut Criterion) {
     ///     let mut group = c.benchmark_group("My Group");
@@ -1187,13 +1186,13 @@ impl<M> Criterion<M>
 where
     M: Measurement + 'static,
 {
-    /// Benchmarks a function. For comparing multiple functions, see `benchmark_group`.
+    /// Benchmarks a function. For comparing multiple functions, see
+    /// [`benchmark_group`](Self::benchmark_group).
     ///
     /// # Example
     ///
     /// ```rust
-    /// #[macro_use] extern crate criterion;
-    /// use self::criterion::*;
+    /// use criterion::{criterion_group, criterion_main, Criterion};
     ///
     /// fn bench(c: &mut Criterion) {
     ///     // Setup (construct data, allocate memory, etc)
@@ -1218,13 +1217,12 @@ where
     }
 
     /// Benchmarks a function with an input. For comparing multiple functions or multiple inputs,
-    /// see `benchmark_group`.
+    /// see [`benchmark_group`](Self::benchmark_group).
     ///
     /// # Example
     ///
     /// ```rust
-    /// #[macro_use] extern crate criterion;
-    /// use self::criterion::*;
+    /// use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
     ///
     /// fn bench(c: &mut Criterion) {
     ///     // Setup (construct data, allocate memory, etc)
@@ -1285,7 +1283,7 @@ pub enum Throughput {
     Elements(u64),
 }
 
-/// Axis scaling type
+/// Axis scaling type. Specified via [`PlotConfiguration::summary_scale`].
 #[derive(Debug, Default, Clone, Copy)]
 pub enum AxisScale {
     /// Axes scale linearly
@@ -1318,9 +1316,13 @@ pub struct PlotConfiguration {
 
 impl PlotConfiguration {
     #[must_use]
-    /// Set the axis scale (linear or logarithmic) for the summary plots. Typically, you would
-    /// set this to logarithmic if benchmarking over a range of inputs which scale exponentially.
-    /// Defaults to linear.
+    /// Set the axis scale ([linear] or [logarithmic]) for the summary plots.
+    ///
+    /// Typically, you would set this to logarithmic if benchmarking over a
+    /// range of inputs which scale exponentially. Defaults to [`AxisScale::Linear`].
+    ///
+    /// [linear]: AxisScale::Linear
+    /// [logarithmic]: AxisScale::Logarithmic
     pub fn summary_scale(mut self, new_scale: AxisScale) -> PlotConfiguration {
         self.summary_scale = new_scale;
         self
@@ -1328,7 +1330,7 @@ impl PlotConfiguration {
 }
 
 /// This enum allows the user to control how Criterion.rs chooses the iteration count when sampling.
-/// The default is Auto, which will choose a method automatically based on the iteration time during
+/// The default is `Auto`, which will choose a method automatically based on the iteration time during
 /// the warm-up phase.
 #[derive(Debug, Default, Clone, Copy)]
 pub enum SamplingMode {
@@ -1343,10 +1345,11 @@ pub enum SamplingMode {
 
     /// Keep the iteration count the same for all samples. This is not recommended, as it affects
     /// the statistics that Criterion.rs can compute. However, it requires fewer iterations than
-    /// the Linear method and therefore is more suitable for very long-running benchmarks where
+    /// the `Linear` method and therefore is more suitable for very long-running benchmarks where
     /// benchmark execution time is more of a problem and statistical precision is less important.
     Flat,
 }
+
 impl SamplingMode {
     pub(crate) fn choose_sampling_mode(
         &self,
@@ -1380,6 +1383,7 @@ pub(crate) enum ActualSamplingMode {
     Linear,
     Flat,
 }
+
 impl ActualSamplingMode {
     pub(crate) fn iteration_counts(
         &self,

@@ -9,8 +9,8 @@ use std::time::{Duration, Instant};
 /// Trait providing functions to format measured values to string so that they can be displayed on
 /// the command line or in the reports. The functions of this trait take measured values in f64
 /// form; implementors can assume that the values are of the same scale as those produced by the
-/// associated [MeasuredValue](trait.MeasuredValue.html) (eg. if your measurement produces values in
-/// nanoseconds, the values passed to the formatter will be in nanoseconds).
+/// associated [`Measurement`] (eg. if your measurement produces values in nanoseconds, the
+/// values passed to the formatter will be in nanoseconds).
 ///
 /// Implementors are encouraged to format the values in a way that is intuitive for humans and
 /// uses the SI prefix system. For example, the format used by [`WallTime`] can display the value

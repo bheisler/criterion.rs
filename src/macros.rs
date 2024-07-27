@@ -18,9 +18,7 @@
 /// Complete form:
 ///
 /// ```
-/// # #[macro_use]
-/// # extern crate criterion;
-/// # use criterion::Criterion;
+/// # use criterion::{criterion_group, Criterion};
 /// # fn bench_method1(c: &mut Criterion) {
 /// # }
 /// #
@@ -44,9 +42,7 @@
 /// Compact Form:
 ///
 /// ```
-/// # #[macro_use]
-/// # extern crate criterion;
-/// # use criterion::Criterion;
+/// # use criterion::{criterion_group, Criterion};
 /// # fn bench_method1(c: &mut Criterion) {
 /// # }
 /// #
@@ -100,10 +96,8 @@ macro_rules! criterion_group {
 ///
 /// Since we've disabled the default benchmark harness, we need to add our own:
 ///
-/// ```ignore
-/// #[macro_use]
-/// extern crate criterion;
-/// use criterion::Criterion;
+/// ```no_run
+/// use criterion::{criterion_group, criterion_main, Criterion};
 /// fn bench_method1(c: &mut Criterion) {
 /// }
 ///

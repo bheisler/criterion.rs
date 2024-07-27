@@ -21,16 +21,22 @@ use crate::async_executor::AsyncExecutor;
 /// way to time a routine and each has advantages and disadvantages.
 ///
 /// * If you want to do the iteration and measurement yourself (eg. passing the iteration count
-///   to a separate process), use `iter_custom`.
+///   to a separate process), use [`iter_custom`].
 /// * If your routine requires no per-iteration setup and returns a value with an expensive `drop`
-///   method, use `iter_with_large_drop`.
-/// * If your routine requires some per-iteration setup that shouldn't be timed, use `iter_batched`
-///   or `iter_batched_ref`. See [`BatchSize`] for a discussion of batch sizes.
+///   method, use [`iter_with_large_drop`].
+/// * If your routine requires some per-iteration setup that shouldn't be timed, use [`iter_batched`]
+///   or [`iter_batched_ref`]. See [`BatchSize`] for a discussion of batch sizes.
 ///   If the setup value implements `Drop` and you don't want to include the `drop` time in the
-///   measurement, use `iter_batched_ref`, otherwise use `iter_batched`. These methods are also
+///   measurement, use [`iter_batched_ref`], otherwise use [`iter_batched`]. These methods are also
 ///   suitable for benchmarking routines which return a value with an expensive `drop` method,
-///   but are more complex than `iter_with_large_drop`.
-/// * Otherwise, use `iter`.
+///   but are more complex than [`iter_with_large_drop`].
+/// * Otherwise, use [`iter`].
+///
+/// [`iter`]: Bencher::iter
+/// [`iter_custom`]: Bencher::iter_custom
+/// [`iter_with_large_drop`]: Bencher::iter_with_large_drop
+/// [`iter_batched`]: Bencher::iter_batched
+/// [`iter_batched_ref`]: Bencher::iter_batched_ref
 pub struct Bencher<'a, M: Measurement = WallTime> {
     pub(crate) iterated: bool,         // Have we iterated this benchmark?
     pub(crate) iters: u64,             // Number of times to iterate this benchmark
@@ -56,9 +62,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     /// # Example
     ///
     /// ```rust
-    /// #[macro_use] extern crate criterion;
-    ///
-    /// use criterion::*;
+    /// use criterion::{criterion_group, criterion_main, Criterion};
     ///
     /// // The function to benchmark
     /// fn foo() {
@@ -97,12 +101,11 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     /// and coordinate with multiple threads).
     ///
     /// # Timing model
-    /// Custom, the timing model is whatever is returned as the Duration from `routine`.
+    /// Custom, the timing model is whatever is returned as the [`Duration`] from `routine`.
     ///
     /// # Example
     /// ```rust
-    /// #[macro_use] extern crate criterion;
-    /// use criterion::*;
+    /// use criterion::{criterion_group, criterion_main, Criterion};
     /// use std::time::Instant;
     ///
     /// fn foo() {
@@ -148,8 +151,9 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     /// Times a `routine` by collecting its output on each iteration. This avoids timing the
     /// destructor of the value returned by `routine`.
     ///
-    /// WARNING: This requires `O(iters * mem::size_of::<O>())` of memory, and `iters` is not under the
-    /// control of the caller. If this causes out-of-memory errors, use `iter_batched` instead.
+    /// WARNING: This requires `O(iters * mem::size_of::<O>())` of memory, and `iters` is not
+    /// under the control of the caller. If this causes out-of-memory errors, use
+    /// [`iter_batched`](Self::iter_batched) instead.
     ///
     /// # Timing model
     ///
@@ -160,9 +164,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     /// # Example
     ///
     /// ```rust
-    /// #[macro_use] extern crate criterion;
-    ///
-    /// use criterion::*;
+    /// use criterion::{criterion_group, criterion_main, Criterion};
     ///
     /// fn create_vector() -> Vec<u64> {
     ///     # vec![]
@@ -203,9 +205,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     /// # Example
     ///
     /// ```rust
-    /// #[macro_use] extern crate criterion;
-    ///
-    /// use criterion::*;
+    /// use criterion::{criterion_group, criterion_main, BatchSize, Criterion};
     ///
     /// fn create_scrambled_data() -> Vec<u64> {
     ///     # vec![]
@@ -293,9 +293,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
     /// # Example
     ///
     /// ```rust
-    /// #[macro_use] extern crate criterion;
-    ///
-    /// use criterion::*;
+    /// use criterion::{criterion_group, criterion_main, BatchSize, Criterion};
     ///
     /// fn create_scrambled_data() -> Vec<u64> {
     ///     # vec![]
@@ -408,9 +406,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     /// # Example
     ///
     /// ```rust
-    /// #[macro_use] extern crate criterion;
-    ///
-    /// use criterion::*;
+    /// use criterion::{criterion_group, criterion_main, Criterion};
     /// use criterion::async_executor::FuturesExecutor;
     ///
     /// // The function to benchmark
@@ -454,12 +450,11 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     /// and coordinate with multiple threads).
     ///
     /// # Timing model
-    /// Custom, the timing model is whatever is returned as the Duration from `routine`.
+    /// Custom, the timing model is whatever is returned as the [`Duration`] from `routine`.
     ///
     /// # Example
     /// ```rust
-    /// #[macro_use] extern crate criterion;
-    /// use criterion::*;
+    /// use criterion::{criterion_group, criterion_main, Criterion};
     /// use criterion::async_executor::FuturesExecutor;
     /// use std::time::Instant;
     ///
@@ -513,8 +508,9 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     /// Times a `routine` by collecting its output on each iteration. This avoids timing the
     /// destructor of the value returned by `routine`.
     ///
-    /// WARNING: This requires `O(iters * mem::size_of::<O>())` of memory, and `iters` is not under the
-    /// control of the caller. If this causes out-of-memory errors, use `iter_batched` instead.
+    /// WARNING: This requires `O(iters * mem::size_of::<O>())` of memory, and `iters`
+    /// is not under the control of the caller. If this causes out-of-memory errors, use
+    /// [`iter_batched`](Self::iter_batched) instead.
     ///
     /// # Timing model
     ///
@@ -525,9 +521,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     /// # Example
     ///
     /// ```rust
-    /// #[macro_use] extern crate criterion;
-    ///
-    /// use criterion::*;
+    /// use criterion::{criterion_group, criterion_main, Criterion};
     /// use criterion::async_executor::FuturesExecutor;
     ///
     /// async fn create_vector() -> Vec<u64> {
@@ -580,9 +574,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     /// # Example
     ///
     /// ```rust
-    /// #[macro_use] extern crate criterion;
-    ///
-    /// use criterion::*;
+    /// use criterion::{criterion_group, criterion_main, BatchSize, Criterion};
     /// use criterion::async_executor::FuturesExecutor;
     ///
     /// fn create_scrambled_data() -> Vec<u64> {
@@ -678,9 +670,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
     /// # Example
     ///
     /// ```rust
-    /// #[macro_use] extern crate criterion;
-    ///
-    /// use criterion::*;
+    /// use criterion::{criterion_group, criterion_main, BatchSize, Criterion};
     /// use criterion::async_executor::FuturesExecutor;
     ///
     /// fn create_scrambled_data() -> Vec<u64> {
