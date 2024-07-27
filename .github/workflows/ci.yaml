@@ -90,3 +90,12 @@ jobs:
       - uses: taiki-e/install-action@nextest
 
       - run: ci/nextest-compat.sh
+
+  # If this fails, consider changing your text or adding something to .typos.toml
+  typos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: check typos
+        uses: crate-ci/typos@v1.23.5
