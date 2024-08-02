@@ -16,8 +16,7 @@ use std::time::Duration;
 /// # Examples:
 ///
 /// ```no_run
-/// #[macro_use] extern crate criterion;
-/// use self::criterion::*;
+/// use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 /// use std::time::Duration;
 ///
 /// fn bench_simple(c: &mut Criterion) {
