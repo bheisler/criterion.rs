@@ -1,7 +1,4 @@
-#[macro_use]
-extern crate criterion_bencher_compat;
-
-use criterion_bencher_compat::Bencher;
+use criterion_bencher_compat::{benchmark_group, benchmark_main, Bencher};
 
 fn a(bench: &mut Bencher) {
     bench.iter(|| {
