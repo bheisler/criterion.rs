@@ -23,7 +23,7 @@ pub enum Error {
         inner: SerdeError,
     },
     #[cfg(feature = "csv_output")]
-    /// This API requires the following crate features to be activated: csv_output
+    /// This API requires the following crate features to be activated: `csv_output`
     CsvError(CsvError),
 }
 impl fmt::Display for Error {

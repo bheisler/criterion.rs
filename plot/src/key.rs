@@ -192,7 +192,7 @@ pub enum Order {
 // TODO XY position
 #[derive(Clone, Copy)]
 pub enum Position {
-    /// Inside the area surrounded by the four (BottomX, TopX, LeftY and RightY) axes
+    /// Inside the area surrounded by the four (Bottom X, Top X, Left Y and Right Y) axes
     Inside(Vertical, Horizontal),
     /// Outside of that area
     Outside(Vertical, Horizontal),
