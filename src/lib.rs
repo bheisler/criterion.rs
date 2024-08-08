@@ -15,7 +15,7 @@
 //! * Produces detailed charts, providing thorough understanding of your code's
 //!   performance behavior.
 
-#![warn(missing_docs)]
+#![warn(clippy::doc_markdown, missing_docs)]
 #![warn(bare_trait_objects)]
 #![allow(
         clippy::just_underscores_and_digits, // Used in the stats code

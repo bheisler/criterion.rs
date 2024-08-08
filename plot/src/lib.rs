@@ -361,14 +361,12 @@
 //!     }));
 //! ```
 
-#![deny(missing_docs)]
+#![deny(clippy::doc_markdown, missing_docs)]
 #![deny(warnings)]
 #![deny(bare_trait_objects)]
 // This lint has lots of false positives ATM, see
 // https://github.com/Manishearth/rust-clippy/issues/761
 #![allow(clippy::new_without_default)]
-// False positives with images
-#![allow(clippy::doc_markdown)]
 #![allow(clippy::many_single_char_names)]
 
 use std::borrow::Cow;

@@ -374,7 +374,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         self.iterated = false;
     }
 
-    /// Convert this bencher into an AsyncBencher, which enables async/await support.
+    /// Convert this bencher into an [`AsyncBencher`], which enables async/await support.
     #[cfg(feature = "async")]
     pub fn to_async<'b, A: AsyncExecutor>(&'b mut self, runner: A) -> AsyncBencher<'a, 'b, A, M> {
         AsyncBencher { b: self, runner }
