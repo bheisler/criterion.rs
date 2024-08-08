@@ -371,8 +371,6 @@
 #![allow(clippy::doc_markdown)]
 #![allow(clippy::many_single_char_names)]
 
-extern crate cast;
-
 use std::borrow::Cow;
 use std::fmt;
 use std::fs::File;

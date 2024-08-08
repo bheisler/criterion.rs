@@ -1,5 +1,3 @@
-extern crate criterion;
-
 pub use std::hint::black_box;
 pub use criterion::Criterion;
 use criterion::measurement::WallTime;

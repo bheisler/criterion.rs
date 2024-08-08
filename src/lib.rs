@@ -26,12 +26,6 @@
 #[cfg(all(feature = "rayon", target_arch = "wasm32"))]
 compile_error!("Rayon cannot be used when targeting wasi32. Try disabling default features.");
 
-#[cfg(test)]
-extern crate approx;
-
-#[cfg(test)]
-extern crate quickcheck;
-
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
