@@ -124,7 +124,7 @@ specific patch version of Criterion.<span></span>rs.
 
 ### Maintenance
 
-Criterion.<span></span>rs was originally created by Jorge Aparicio (@japaric) and is currently being maintained by Brook Heisler (@bheisler).
+Criterion.<span></span>rs was originally created by Jorge Aparicio [(@japaric)](https://github.com/japaric) and is currently being maintained by Brook Heisler [(@bheisler)](https://github.com/bheisler).
 
 ### License
 
