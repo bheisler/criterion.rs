@@ -43,6 +43,7 @@ tokio = { version = "1.0", default-features = false, features = [
   "rt",
 ], optional = true }
 async-std = { version = "1.9", optional = true }
+alloca = "0.3.4"
 
 [dependencies.plotters]
 version          = "^0.3.1"
@@ -61,14 +62,7 @@ futures    = "0.3"
 maintenance = { status = "passively-maintained" }
 
 [features]
-stable = [
-  "csv_output",
-  "html_reports",
-  "async_futures",
-  "async_smol",
-  "async_tokio",
-  "async_std",
-]
+stable = ["csv_output", "html_reports", "async_futures", "async_smol", "async_tokio", "async_std"]
 default = ["rayon", "plotters", "cargo_bench_support"]
 
 # This is a legacy feature that no longer does anything, but removing it would be a semver break.

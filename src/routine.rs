@@ -244,15 +244,31 @@ where
             elapsed_time: Duration::from_millis(0),
         };
 
-        iters
-            .iter()
-            .map(|iters| {
+        let mut results = Vec::with_capacity(iters.len());
+        results.resize(iters.len(), 0.0);
+        for (i, iters) in iters.iter().enumerate() {
+            let stack_alloc = i % 4096; // default page size
+            #[cfg(any(target_family = "unix", target_family = "windows"))]
+            {
+                alloca::with_alloca(
+                    stack_alloc, /* how much bytes we want to allocate */
+                    |_memory: &mut [core::mem::MaybeUninit<u8>] /* dynamically stack allocated slice itself */| {
+                        b.iters = *iters;
+                        (*f)(&mut b, black_box(parameter));
+                        b.assert_iterated();
+                        results[i] = m.to_f64(&b.value);
+                    },
+                );
+            }
+            #[cfg(not(any(target_family = "unix", target_family = "windows")))]
+            {
                 b.iters = *iters;
                 (*f)(&mut b, black_box(parameter));
                 b.assert_iterated();
-                m.to_f64(&b.value)
-            })
-            .collect()
+                results[i] = m.to_f64(&b.value);
+            }
+        }
+        results
     }
 
     fn warm_up(&mut self, m: &M, how_long: Duration, parameter: &T) -> (u64, u64) {
@@ -279,6 +295,8 @@ where
             }
 
             b.iters = b.iters.wrapping_mul(2);
+            b.iters = b.iters.min(64); // To make sure we offset the test at least with 0-64 bytes
+                                       // wit alloca
         }
     }
 }
