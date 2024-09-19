@@ -177,6 +177,7 @@ impl BenchmarkId {
             Some(Throughput::Bytes(n))
             | Some(Throughput::Elements(n))
             | Some(Throughput::BytesDecimal(n)) => Some(n as f64),
+            Some(Throughput::ElementsAndBytes { elements, bytes: _ }) => Some(elements as f64),
             None => self
                 .value_str
                 .as_ref()
@@ -189,6 +190,10 @@ impl BenchmarkId {
             Some(Throughput::Bytes(_)) => Some(ValueType::Bytes),
             Some(Throughput::BytesDecimal(_)) => Some(ValueType::Bytes),
             Some(Throughput::Elements(_)) => Some(ValueType::Elements),
+            Some(Throughput::ElementsAndBytes {
+                elements: _,
+                bytes: _,
+            }) => Some(ValueType::Elements),
             None => self
                 .value_str
                 .as_ref()
@@ -578,7 +583,7 @@ impl Report for CliReport {
             );
         }
 
-        if let Some(ref throughput) = meas.throughput {
+        for ref throughput in measurement_throughputs(meas) {
             println!(
                 "{}thrpt:  [{} {} {}]",
                 " ".repeat(24),
@@ -789,6 +794,18 @@ fn compare_to_threshold(estimate: &Estimate, noise: f64) -> ComparisonResult {
     } else {
         ComparisonResult::NonSignificant
     }
+}
+
+fn measurement_throughputs(mes: &MeasurementData<'_>) -> Vec<Throughput> {
+    mes.throughput
+        .as_ref()
+        .map(|t| match t {
+            Throughput::ElementsAndBytes { elements, bytes } => {
+                vec![Throughput::Elements(*elements), Throughput::Bytes(*bytes)]
+            }
+            _ => vec![t.clone()],
+        })
+        .unwrap_or(vec![])
 }
 
 #[cfg(test)]

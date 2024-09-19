@@ -1275,6 +1275,23 @@ pub enum Throughput {
     /// collection, but could also be the number of lines of input text or the number of values to
     /// parse.
     Elements(u64),
+
+    /// Measure throughput in terms of both elements/second and bytes/second. Typically,
+    /// this would be used if you have a collection of rows where `elements` would be the length of
+    /// the collection and `bytes` would be the total size of the collection if you're processing
+    /// the entire collection in one iteration. This will make sure the report simultaneously
+    /// includes on the rows/s and MB/s that data processing is able to achieve.
+    /// The elements are considered the "primary" throughput being reported on (i.e. what will appear
+    /// in the BenchmarkId).
+    ElementsAndBytes {
+        /// The value should be the number of elements processed by one iteration of the benchmarked code.
+        /// Typically, this would be the size of a collection, but could also be the number of lines of
+        /// input text or the number of values to parse.
+        elements: u64,
+        /// The value should be the number of bytes processed by one iteration of the benchmarked code.
+        /// Typically, this would be the length of an input string or `&[u8]`.
+        bytes: u64,
+    },
 }
 
 /// Axis scaling type. Specified via [`PlotConfiguration::summary_scale`].

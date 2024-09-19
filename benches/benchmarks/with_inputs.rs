@@ -22,6 +22,18 @@ fn from_elem(c: &mut Criterion) {
         });
     }
     group.finish();
+
+    let mut group = c.benchmark_group("from_elem_dual_throughput");
+    for size in [KB, 2 * KB].iter() {
+        group.throughput(Throughput::ElementsAndBytes {
+            elements: *size as u64,
+            bytes: 2 * *size as u64,
+        });
+        group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, &size| {
+            b.iter(|| iter::repeat(0u16).take(size).collect::<Vec<_>>());
+        });
+    }
+    group.finish();
 }
 
 criterion_group!(benches, from_elem);

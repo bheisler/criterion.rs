@@ -22,6 +22,14 @@ impl ValueFormatter for HalfSecFormatter {
                 "{} elem/s/2",
                 (elems as f64) / (value * 2f64 * 10f64.powi(-9))
             ),
+            Throughput::ElementsAndBytes {
+                elements: _,
+                bytes: _,
+            } => format!(
+                "{} elem/s/2, {} b/s/2",
+                (elems as f64) / (value * 2f64 * 10f64.powi(-9),),
+                (bytes as f64) / (value * 2f64 * 10f64.powi(-9))
+            ),
         }
     }
 
@@ -53,6 +61,9 @@ impl ValueFormatter for HalfSecFormatter {
                 }
 
                 "elem/s/2"
+            }
+            Throughput::ElementsAndBytes { elements, bytes: _ } => {
+                self.scale_throughputs(_typical, &Throughput::Elements(elements), values)
             }
         }
     }
