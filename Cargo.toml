@@ -43,7 +43,7 @@ smol = { version = "2.0", default-features = false, optional = true }
 tokio = { version = "1.0", default-features = false, features = [
   "rt",
 ], optional = true }
-async-std = { version = "1.9", optional = true }
+async-std = { version = "1.13", optional = true }
 
 [dependencies.plotters]
 version          = "^0.3.2"
