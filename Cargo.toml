@@ -9,6 +9,7 @@ name = "criterion"
 # * Update version numbers in the book;
 version = "0.5.1"
 edition = "2021"
+rust-version = "1.70"
 
 description = "Statistics-driven micro-benchmarking library"
 homepage    = "https://bheisler.github.io/criterion.rs/book/index.html"
