@@ -23,8 +23,8 @@ exclude     = ["book/*"]
 anes           = "0.1.4"
 criterion-plot = { path = "plot", version = "0.5.0" }
 itertools      = "0.13"
-serde          = { version = "1.0", features = ["derive"] }
-serde_json     = "1.0"
+serde          = { version = "1.0.100", features = ["derive"] }
+serde_json     = "1.0.100"
 ciborium       = "0.2.0"
 clap           = { version = "=4.4.9", default-features = false, features = ["std", "help"] }
 walkdir        = "2.3"
@@ -32,7 +32,7 @@ tinytemplate   = "1.1"
 cast           = "0.3"
 num-traits     = { version = "0.2", default-features = false, features = ["std"] }
 oorandom       = "11.1"
-regex          = { version = "1.5", default-features = false, features = ["std"] }
+regex          = { version = "1.5.1", default-features = false, features = ["std"] }
 
 # Optional dependencies
 rayon = { version = "1.3", optional = true }
@@ -45,7 +45,7 @@ tokio = { version = "1.0", default-features = false, features = [
 async-std = { version = "1.9", optional = true }
 
 [dependencies.plotters]
-version          = "^0.3.1"
+version          = "^0.3.2"
 optional         = true
 default-features = false
 features         = ["svg_backend", "area_series", "line_series"]
