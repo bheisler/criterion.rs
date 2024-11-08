@@ -91,16 +91,13 @@ async_smol    = ["dep:smol", "async"]
 async_tokio   = ["dep:tokio", "async"]
 async_std     = ["dep:async-std", "async"]
 
-# This feature _currently_ does nothing except disable a warning message, but in 0.4.0 it will be
-# required in order to have Criterion.rs generate its own plots (as opposed to using cargo-criterion)
+# Make Criterion.rs generate its own plots (as opposed to using cargo-criterion)
 html_reports = []
 
-# This feature _currently_ does nothing except disable a warning message, but in 0.4.0 it will be
-# required in order to have Criterion.rs be usable outside of cargo-criterion.
+# Make Criterion.rs usable outside of cargo-criterion.
 cargo_bench_support = []
 
-# This feature _currently_ does nothing, but in 0.4.0 it will be
-# required in order to have Criterion.rs generate CSV files. This feature is deprecated in favor of
+# Make Criterion.rs generate CSV files. This feature is deprecated in favor of
 # cargo-criterion's --message-format=json option.
 csv_output = ["dep:csv"]
 
