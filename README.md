@@ -22,6 +22,10 @@
     <a href="https://crates.io/crates/criterion">
         <img src="https://img.shields.io/crates/v/criterion.svg" alt="Crates.io">
     </a>
+    |
+    <a href="https://gurubase.io/g/criterion-rs">
+        <img src="https://img.shields.io/badge/Gurubase-Ask%20Criterion.rs%20Guru-006BFF" alt="Gurubase">
+    </a>
 </div>
 
 Criterion.<span></span>rs helps you write fast code by detecting and measuring performance improvements or regressions, even small ones, quickly and accurately. You can optimize with confidence, knowing how each change affects the performance of your code.
