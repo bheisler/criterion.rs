@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
  - Quick mode (--quick) no longer crashes with measured times over 5 seconds when --noplot is not active
+ - `Throughput::ElementsAndBytes` added to allow the text summary to report throughput in both units simultaneously.
 
 ## [0.5.0] - 2023-05-23
 
