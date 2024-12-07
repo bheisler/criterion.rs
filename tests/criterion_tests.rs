@@ -274,6 +274,9 @@ fn test_timing_loops() {
     let dir = temp_dir();
     let mut c = short_benchmark(&dir);
     let mut group = c.benchmark_group("test_timing_loops");
+    group.bench_function("iter_reuse", |b| {
+        b.iter_reuse(vec![10], |v| v);
+    });
     group.bench_function("iter_with_setup", |b| {
         b.iter_with_setup(|| vec![10], |v| v[0]);
     });
