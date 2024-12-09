@@ -21,41 +21,54 @@ fn abs_distribution(
     let mut ci_values = [ci.lower_bound, ci.upper_bound, estimate.point_estimate];
     let unit = formatter.scale_values(typical, &mut ci_values);
     let (lb, ub, point) = (ci_values[0], ci_values[1], ci_values[2]);
-
-    let start = lb - (ub - lb) / 9.;
-    let end = ub + (ub - lb) / 9.;
-    let mut scaled_xs: Vec<f64> = distribution.iter().cloned().collect();
-    let _ = formatter.scale_values(typical, &mut scaled_xs);
-    let scaled_xs_sample = Sample::new(&scaled_xs);
-    let (kde_xs, ys) = kde::sweep(scaled_xs_sample, KDE_POINTS, Some((start, end)));
-
-    // interpolate between two points of the KDE sweep to find the Y position at the point estimate.
-    let n_point = kde_xs
-        .iter()
-        .position(|&x| x >= point)
-        .unwrap_or(kde_xs.len() - 1)
-        .max(1); // Must be at least the second element or this will panic
-    let slope = (ys[n_point] - ys[n_point - 1]) / (kde_xs[n_point] - kde_xs[n_point - 1]);
-    let y_point = ys[n_point - 1] + (slope * (point - kde_xs[n_point - 1]));
-
     let zero = iter::repeat(0);
 
-    let start = kde_xs
-        .iter()
-        .enumerate()
-        .find(|&(_, &x)| x >= lb)
-        .unwrap()
-        .0;
-    let end = kde_xs
-        .iter()
-        .enumerate()
-        .rev()
-        .find(|&(_, &x)| x <= ub)
-        .unwrap()
-        .0;
-    let len = end - start;
+    let (kde_xs, ys, start, len, y_point) =
+    // If lower_bound == upper_bound, all samples have the same value.
+    // Here we make some tweaks for better visualization in the charts.
+    if lb == ub {
+        let delta = if lb == 0. { 0.01 } else { lb * 0.01 };
+        // the first two x,y values are to draw the line/bar of the distribution at `x`
+        // the second two x,y values are to draw the rectangle of the confidence interval
+        let kde_xs = Vec::from([lb, lb, lb - delta, lb + delta]).into_boxed_slice();
+        let ys = Vec::from([0_f64, point, point, point]).into_boxed_slice();
+        // start and len are used to mark the range of confidence interval rectangle coordinates
+        let start = 2_usize;
+        let len = 2_usize;
+        (kde_xs, ys, start, len, point)
+    } else {
+        let start = lb - (ub - lb) / 9.;
+        let end = ub + (ub - lb) / 9.;
+        let mut scaled_xs: Vec<f64> = distribution.iter().cloned().collect();
+        let _ = formatter.scale_values(typical, &mut scaled_xs);
+        let scaled_xs_sample = Sample::new(&scaled_xs);
+        let (kde_xs, ys) = kde::sweep(scaled_xs_sample, KDE_POINTS, Some((start, end)));
 
-    let kde_xs_sample = Sample::new(&kde_xs);
+        // interpolate between two points of the KDE sweep to find the Y position at the point estimate.
+        let n_point = kde_xs
+            .iter()
+            .position(|&x| x >= point)
+            .unwrap_or(kde_xs.len() - 1)
+            .max(1); // Must be at least the second element or this will panic
+        let slope = (ys[n_point] - ys[n_point - 1]) / (kde_xs[n_point] - kde_xs[n_point - 1]);
+        let y_point = ys[n_point - 1] + (slope * (point - kde_xs[n_point - 1]));
+
+        let start = kde_xs
+            .iter()
+            .enumerate()
+            .find(|&(_, &x)| x >= lb)
+            .unwrap()
+            .0;
+        let end = kde_xs
+            .iter()
+            .enumerate()
+            .rev()
+            .find(|&(_, &x)| x <= ub)
+            .unwrap()
+            .0;
+        let len = end - start;
+        (kde_xs, ys, start, len, y_point)
+    };
 
     let mut figure = Figure::new();
     figure
