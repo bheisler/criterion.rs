@@ -237,7 +237,6 @@ pub(crate) fn pdf_small(
     let mean = scaled_avg_times.mean();
 
     let (xs, ys, mean_y) = kde::sweep_and_estimate(scaled_avg_times, KDE_POINTS, None, mean);
-    let xs_ = Sample::new(&xs);
     let ys_ = Sample::new(&ys);
 
     let y_limit = ys_.max() * 1.1;
