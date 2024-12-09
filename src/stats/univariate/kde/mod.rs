@@ -17,6 +17,7 @@ where
     bandwidth: A,
     kernel: K,
     sample: &'a Sample<A>,
+    are_samples_the_same: bool,
 }
 
 impl<'a, A, K> Kde<'a, A, K>
@@ -27,10 +28,14 @@ where
     /// Creates a new kernel density estimator from the `sample`, using a kernel and estimating
     /// the bandwidth using the method `bw`
     pub fn new(sample: &'a Sample<A>, kernel: K, bw: Bandwidth) -> Kde<'a, A, K> {
+        // We check if all samples have the same value just once
+        // during initialization and store it in `are_samples_the_same`.
+        // This is used in the `estimate(x)` method.
         Kde {
             bandwidth: bw.estimate(sample),
             kernel,
             sample,
+            are_samples_the_same: sample.min() == sample.max(),
         }
     }
 
@@ -56,16 +61,22 @@ where
 
     /// Estimates the probability density of `x`
     pub fn estimate(&self, x: A) -> A {
-        let _0 = A::cast(0);
-        let slice = self.sample;
-        let h = self.bandwidth;
-        let n = A::cast(slice.len());
+        if self.are_samples_the_same {
+            // the probability density of `x`` is 1
+            // when all samples are `x``
+            A::cast(1)
+        } else {
+            let _0 = A::cast(0);
+            let slice = self.sample;
+            let h = self.bandwidth;
+            let n = A::cast(slice.len());
 
-        let sum = slice
-            .iter()
-            .fold(_0, |acc, &x_i| acc + self.kernel.evaluate((x - x_i) / h));
+            let sum = slice
+                .iter()
+                .fold(_0, |acc, &x_i| acc + self.kernel.evaluate((x - x_i) / h));
 
-        sum / (h * n)
+            sum / (h * n)
+        }
     }
 }
 
