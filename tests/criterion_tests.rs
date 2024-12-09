@@ -275,7 +275,9 @@ fn test_timing_loops() {
         use criterion::PlottingBackend::*;
         [
             None,
+            #[cfg(feature = "html_reports")]
             Gnuplot,
+            #[cfg(feature = "html_reports")]
             #[cfg(feature = "plotters")]
             Plotters,
         ]
