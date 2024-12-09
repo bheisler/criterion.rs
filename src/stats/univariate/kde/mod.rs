@@ -102,6 +102,19 @@ macro_rules! test {
             use crate::stats::univariate::kde::{Bandwidth, Kde};
             use crate::stats::univariate::Sample;
 
+            // The bandwidth should be a positive (non-zero) number, even when
+            // the samples are all the same (constant measurements).
+            // It's very unlikely that all samples will have the same value, but
+            // not impossible, so we should handle that case gracefully.
+            #[test]
+            fn positive_bandwidth() {
+                const CONSTANT_MEASUREMENT: $ty = 1.;
+                let sample = Sample::new(&[CONSTANT_MEASUREMENT, CONSTANT_MEASUREMENT]);
+                let bandwidth_estimator = Bandwidth::Silverman;
+                let h = bandwidth_estimator.estimate(&sample);
+                assert!(h > 0., "The bandwidth should be > 0, even when all samples have the same value, but it was 0.");
+            }
+
             // The [-inf inf] integral of the estimated PDF should be one
             quickcheck! {
                 fn integral(size: u8, start: u8) -> TestResult {
