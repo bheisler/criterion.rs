@@ -249,7 +249,7 @@ pub(crate) fn pdf_small(
         .set(size.unwrap_or(SIZE))
         .configure(Axis::BottomX, |a| {
             a.set(Label(format!("Average time ({})", unit)))
-                .set(Range::Limits(xs_.min(), xs_.max()))
+                .set(Range::Auto)
         })
         .configure(Axis::LeftY, |a| {
             a.set(Label("Density (a.u.)"))

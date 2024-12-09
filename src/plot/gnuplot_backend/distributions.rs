@@ -68,7 +68,7 @@ fn abs_distribution(
         )))
         .configure(Axis::BottomX, |a| {
             a.set(Label(format!("Average time ({})", unit)))
-                .set(Range::Limits(kde_xs_sample.min(), kde_xs_sample.max()))
+                .set(Range::Auto)
         })
         .configure(Axis::LeftY, |a| a.set(Label("Density (a.u.)")))
         .configure(Key, |k| {
