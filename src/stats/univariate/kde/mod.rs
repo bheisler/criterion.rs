@@ -84,7 +84,19 @@ impl Bandwidth {
                 let n = A::cast(sample.len());
                 let sigma = sample.std_dev(None);
 
-                sigma * (factor / n).powf(exponent)
+                // When all samples have the same value (rare case, but not impossible),
+                // the standard deviation will be zero, and the Silverman
+                // method will produce a zeroed bandwidth.
+                // But the bandwidth should always be a positive (non-zero) number,
+                // so if that happens, the optimal bandwidth should be very small,
+                // as this will create a very sharp peak at the single data point,
+                // accurately reflecting the fact that all data is concentrated
+                // at that single value.
+                if sigma.is_zero() {
+                    A::cast(0.001)
+                } else {
+                    sigma * (factor / n).powf(exponent)
+                }
             }
         }
     }
