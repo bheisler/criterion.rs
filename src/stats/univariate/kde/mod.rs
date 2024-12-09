@@ -114,6 +114,20 @@ macro_rules! test {
             use crate::stats::univariate::kde::{Bandwidth, Kde};
             use crate::stats::univariate::Sample;
 
+            // The probability density of a sample when all sample
+            // values are the same X should be 1 for X.
+            #[test]
+            fn constant_sample_measurements() {
+                const CONSTANT_MEASUREMENT: $ty = 1.;
+                let measurements = &[CONSTANT_MEASUREMENT, CONSTANT_MEASUREMENT];
+                let sample = Sample::new(measurements);
+                let kde = Kde::new(sample, Gaussian, Bandwidth::Silverman);
+                for x in measurements {
+                    let prob_density = kde.estimate(*x);
+                    assert_eq!(prob_density, 1., "The probability density of X when all samples are X should be 1.");
+                }
+            }
+
             // The bandwidth should be a positive (non-zero) number, even when
             // the samples are all the same (constant measurements).
             // It's very unlikely that all samples will have the same value, but
