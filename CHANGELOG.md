@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 - MSRV bumped to 1.70
+- Fixed plotting bug when all samples' measurements have the same value. See [#720](https://github.com/bheisler/criterion.rs/issues/720).
 
 ### Changed
 - The `real_blackbox` feature no longer has any impact. Criterion always uses `std::hint::black_box()` now.

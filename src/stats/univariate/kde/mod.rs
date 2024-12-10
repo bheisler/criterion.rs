@@ -17,6 +17,7 @@ where
     bandwidth: A,
     kernel: K,
     sample: &'a Sample<A>,
+    are_samples_the_same: bool,
 }
 
 impl<'a, A, K> Kde<'a, A, K>
@@ -27,10 +28,14 @@ where
     /// Creates a new kernel density estimator from the `sample`, using a kernel and estimating
     /// the bandwidth using the method `bw`
     pub fn new(sample: &'a Sample<A>, kernel: K, bw: Bandwidth) -> Kde<'a, A, K> {
+        // We check if all samples have the same value just once
+        // during initialization and store it in `are_samples_the_same`.
+        // This is used in the `estimate(x)` method.
         Kde {
             bandwidth: bw.estimate(sample),
             kernel,
             sample,
+            are_samples_the_same: sample.min() == sample.max(),
         }
     }
 
@@ -56,16 +61,22 @@ where
 
     /// Estimates the probability density of `x`
     pub fn estimate(&self, x: A) -> A {
-        let _0 = A::cast(0);
-        let slice = self.sample;
-        let h = self.bandwidth;
-        let n = A::cast(slice.len());
+        if self.are_samples_the_same {
+            // the probability density of `x`` is 1
+            // when all samples are `x``
+            A::cast(1)
+        } else {
+            let _0 = A::cast(0);
+            let slice = self.sample;
+            let h = self.bandwidth;
+            let n = A::cast(slice.len());
 
-        let sum = slice
-            .iter()
-            .fold(_0, |acc, &x_i| acc + self.kernel.evaluate((x - x_i) / h));
+            let sum = slice
+                .iter()
+                .fold(_0, |acc, &x_i| acc + self.kernel.evaluate((x - x_i) / h));
 
-        sum / (h * n)
+            sum / (h * n)
+        }
     }
 }
 
@@ -84,7 +95,19 @@ impl Bandwidth {
                 let n = A::cast(sample.len());
                 let sigma = sample.std_dev(None);
 
-                sigma * (factor / n).powf(exponent)
+                // When all samples have the same value (rare case, but not impossible),
+                // the standard deviation will be zero, and the Silverman
+                // method will produce a zeroed bandwidth.
+                // But the bandwidth should always be a positive (non-zero) number,
+                // so if that happens, the optimal bandwidth should be very small,
+                // as this will create a very sharp peak at the single data point,
+                // accurately reflecting the fact that all data is concentrated
+                // at that single value.
+                if sigma.is_zero() {
+                    A::cast(0.001)
+                } else {
+                    sigma * (factor / n).powf(exponent)
+                }
             }
         }
     }
@@ -101,6 +124,33 @@ macro_rules! test {
             use crate::stats::univariate::kde::kernel::Gaussian;
             use crate::stats::univariate::kde::{Bandwidth, Kde};
             use crate::stats::univariate::Sample;
+
+            // The probability density of a sample when all sample
+            // values are the same X should be 1 for X.
+            #[test]
+            fn constant_sample_measurements() {
+                const CONSTANT_MEASUREMENT: $ty = 1.;
+                let measurements = &[CONSTANT_MEASUREMENT, CONSTANT_MEASUREMENT];
+                let sample = Sample::new(measurements);
+                let kde = Kde::new(sample, Gaussian, Bandwidth::Silverman);
+                for x in measurements {
+                    let prob_density = kde.estimate(*x);
+                    assert_eq!(prob_density, 1., "The probability density of X when all samples are X should be 1.");
+                }
+            }
+
+            // The bandwidth should be a positive (non-zero) number, even when
+            // the samples are all the same (constant measurements).
+            // It's very unlikely that all samples will have the same value, but
+            // not impossible, so we should handle that case gracefully.
+            #[test]
+            fn positive_bandwidth() {
+                const CONSTANT_MEASUREMENT: $ty = 1.;
+                let sample = Sample::new(&[CONSTANT_MEASUREMENT, CONSTANT_MEASUREMENT]);
+                let bandwidth_estimator = Bandwidth::Silverman;
+                let h = bandwidth_estimator.estimate(&sample);
+                assert!(h > 0., "The bandwidth should be > 0, even when all samples have the same value, but it was 0.");
+            }
 
             // The [-inf inf] integral of the estimated PDF should be one
             quickcheck! {
