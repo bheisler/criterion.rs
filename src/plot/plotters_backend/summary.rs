@@ -68,6 +68,7 @@ fn draw_line_comarision_figure<XR: AsRangedCoord<Value = f64>, YR: AsRangedCoord
     let input_suffix = match value_type {
         ValueType::Bytes => " Size (Bytes)",
         ValueType::Elements => " Size (Elements)",
+        ValueType::Bits => " Size (Bits)",
         ValueType::Value => "",
     };
 

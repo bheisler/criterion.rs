@@ -1275,6 +1275,11 @@ pub enum Throughput {
     /// collection, but could also be the number of lines of input text or the number of values to
     /// parse.
     Elements(u64),
+
+    /// Measure throughput in terms of bits/second. The value should be the number of bits
+    /// processed by one iteration of the benchmarked code. Typically, this would be the number of
+    /// bits transferred by a networking function.
+    Bits(u64),
 }
 
 /// Axis scaling type. Specified via [`PlotConfiguration::summary_scale`].
