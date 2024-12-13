@@ -47,6 +47,7 @@ pub fn line_comparison(
     let input_suffix = match value_type {
         ValueType::Bytes => " Size (Bytes)",
         ValueType::Elements => " Size (Elements)",
+        ValueType::Bits => " Size (Bits)",
         ValueType::Value => "",
     };
 
