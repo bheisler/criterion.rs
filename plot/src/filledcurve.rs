@@ -96,7 +96,7 @@ impl Set<Opacity> for Properties {
     fn set(&mut self, opacity: Opacity) -> &mut Properties {
         let opacity = opacity.0;
         assert!(opacity >= 0.0 && opacity <= 1.0);
-        self.opacity = Some(opacity.0);
+        self.opacity = Some(opacity);
         self
     }
 }
