@@ -95,7 +95,7 @@ impl Set<Opacity> for Properties {
     /// Panics if `opacity` is outside the range `[0, 1]`
     fn set(&mut self, opacity: Opacity) -> &mut Properties {
         let opacity = opacity.0;
-        assert!(opacity >= 0.0 && opacity <= 1.0);
+        assert!((0.0..=1.0).contains(&opacity));
         self.opacity = Some(opacity);
         self
     }
