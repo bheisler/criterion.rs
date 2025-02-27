@@ -634,7 +634,7 @@ impl Set<FontSize> for Figure {
     fn set(&mut self, size: FontSize) -> &mut Figure {
         let size = size.0;
 
-        assert!(size >= 0.);
+        assert!(size > 0.);
 
         self.font_size = Some(size);
         self
