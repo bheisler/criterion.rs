@@ -16,7 +16,7 @@ Whichever benchmarking tool you use, though, the process is basically the same. 
 * Check out the main branch of your code
 * Build it and run the benchmarks once, to establish a baseline
 * Then switch to the pull request branch
-* Built it again and run the benchmarks a second time to compare against the baseline.
+* Build it again and run the benchmarks a second time to compare against the baseline.
 
 ### `cargo bench` Gives "Unrecognized Option" Errors for Valid Command-line Options
 
