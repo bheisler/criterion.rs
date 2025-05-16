@@ -31,7 +31,7 @@ impl Properties {
     }
 }
 
-impl<'a> Script for (Axis, Grid, &'a Properties) {
+impl Script for (Axis, Grid, &Properties) {
     fn script(&self) -> String {
         let &(axis, grid, properties) = self;
         let axis = axis.display();

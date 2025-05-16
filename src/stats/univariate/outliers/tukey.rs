@@ -153,7 +153,7 @@ where
     }
 }
 
-impl<'a, 'b, A> IntoIterator for &'b LabeledSample<'a, A>
+impl<'a, A> IntoIterator for &LabeledSample<'a, A>
 where
     A: Float,
 {
