@@ -153,7 +153,7 @@ where
     }
 }
 
-impl<'a> Script for (Axis, &'a Properties) {
+impl Script for (Axis, &Properties) {
     fn script(&self) -> String {
         let &(axis, properties) = self;
         let axis_ = axis.display();

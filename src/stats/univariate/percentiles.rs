@@ -20,7 +20,7 @@ where
     unsafe fn at_unchecked(&self, p: A) -> A {
         let _100 = A::cast(100);
         debug_assert!(p >= A::cast(0) && p <= _100);
-        debug_assert!(self.0.len() > 0);
+        debug_assert!(!self.0.is_empty());
         let len = self.0.len() - 1;
 
         if p == _100 {
@@ -47,7 +47,7 @@ where
         let _100 = A::cast(100);
 
         assert!(p >= _0 && p <= _100);
-        assert!(self.0.len() > 0);
+        assert!(!self.0.is_empty());
 
         unsafe { self.at_unchecked(p) }
     }

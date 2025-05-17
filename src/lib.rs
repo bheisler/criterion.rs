@@ -939,7 +939,7 @@ https://bheisler.github.io/criterion.rs/book/faq.html
             if matches.contains_id("baseline")
                 || matches
                     .get_one::<String>("save-baseline")
-                    .map_or(false, |base| base != "base")
+                    .is_some_and(|base| base != "base")
                 || matches.contains_id("load-baseline")
             {
                 eprintln!("Error: baselines are not supported when running with cargo-criterion.");
