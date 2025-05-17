@@ -271,48 +271,71 @@ fn test_filtering() {
 
 #[test]
 fn test_timing_loops() {
-    let dir = temp_dir();
-    let mut c = short_benchmark(&dir);
-    let mut group = c.benchmark_group("test_timing_loops");
-    group.bench_function("iter_with_setup", |b| {
-        b.iter_with_setup(|| vec![10], |v| v[0]);
-    });
-    group.bench_function("iter_with_large_setup", |b| {
-        b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumBatches(1));
-    });
-    group.bench_function("iter_with_large_drop", |b| {
-        b.iter_with_large_drop(|| vec![10; 100]);
-    });
-    group.bench_function("iter_batched_small", |b| {
-        b.iter_batched(|| vec![10], |v| v[0], BatchSize::SmallInput);
-    });
-    group.bench_function("iter_batched_large", |b| {
-        b.iter_batched(|| vec![10], |v| v[0], BatchSize::LargeInput);
-    });
-    group.bench_function("iter_batched_per_iteration", |b| {
-        b.iter_batched(|| vec![10], |v| v[0], BatchSize::PerIteration);
-    });
-    group.bench_function("iter_batched_one_batch", |b| {
-        b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumBatches(1));
-    });
-    group.bench_function("iter_batched_10_iterations", |b| {
-        b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumIterations(10));
-    });
-    group.bench_function("iter_batched_ref_small", |b| {
-        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::SmallInput);
-    });
-    group.bench_function("iter_batched_ref_large", |b| {
-        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::LargeInput);
-    });
-    group.bench_function("iter_batched_ref_per_iteration", |b| {
-        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::PerIteration);
-    });
-    group.bench_function("iter_batched_ref_one_batch", |b| {
-        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::NumBatches(1));
-    });
-    group.bench_function("iter_batched_ref_10_iterations", |b| {
-        b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::NumIterations(10));
-    });
+    let plotting_backends = {
+        use criterion::PlottingBackend::*;
+        [
+            None,
+            #[cfg(feature = "html_reports")]
+            Gnuplot,
+            #[cfg(feature = "html_reports")]
+            #[cfg(feature = "plotters")]
+            Plotters,
+        ]
+    };
+    for plotting_backend in plotting_backends {
+        let dir = temp_dir();
+        let mut c = short_benchmark(&dir).plotting_backend(plotting_backend);
+        let mut group = c.benchmark_group("test_timing_loops");
+        group.bench_function("iter_with_setup", |b| {
+            b.iter_with_setup(|| vec![10], |v| v[0]);
+        });
+        group.bench_function("iter_with_large_setup", |b| {
+            b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumBatches(1));
+        });
+        group.bench_function("iter_with_large_drop", |b| {
+            b.iter_with_large_drop(|| vec![10; 100]);
+        });
+        group.bench_function("iter_batched_small", |b| {
+            b.iter_batched(|| vec![10], |v| v[0], BatchSize::SmallInput);
+        });
+        group.bench_function("iter_batched_large", |b| {
+            b.iter_batched(|| vec![10], |v| v[0], BatchSize::LargeInput);
+        });
+        group.bench_function("iter_batched_per_iteration", |b| {
+            b.iter_batched(|| vec![10], |v| v[0], BatchSize::PerIteration);
+        });
+        group.bench_function("iter_batched_one_batch", |b| {
+            b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumBatches(1));
+        });
+        group.bench_function("iter_batched_10_iterations", |b| {
+            b.iter_batched(|| vec![10], |v| v[0], BatchSize::NumIterations(10));
+        });
+        group.bench_function("iter_batched_ref_small", |b| {
+            b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::SmallInput);
+        });
+        group.bench_function("iter_batched_ref_large", |b| {
+            b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::LargeInput);
+        });
+        group.bench_function("iter_batched_ref_per_iteration", |b| {
+            b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::PerIteration);
+        });
+        group.bench_function("iter_batched_ref_one_batch", |b| {
+            b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::NumBatches(1));
+        });
+        group.bench_function("iter_batched_ref_10_iterations", |b| {
+            b.iter_batched_ref(|| vec![10], |v| v[0], BatchSize::NumIterations(10));
+        });
+        group.bench_function("iter_custom_const_total_duration", |b| {
+            b.iter_custom(|_iter| Duration::from_nanos(1))
+        });
+        #[allow(
+            clippy::redundant_closure,
+            reason = "Keep the 'iter' variable visible for clarity."
+        )]
+        group.bench_function("iter_custom_const_iter_duration", |b| {
+            b.iter_custom(|iter| Duration::from_nanos(iter))
+        });
+    }
 }
 
 // Verify that all expected output files are present
