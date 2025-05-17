@@ -9,6 +9,7 @@ name = "criterion"
 # * Update version numbers in the book;
 version = "0.6.0"
 edition = "2021"
+# Update the MSRV variable in .github/workflows/ci.yml when changing this.
 rust-version = "1.80"
 
 description = "Statistics-driven micro-benchmarking library"
