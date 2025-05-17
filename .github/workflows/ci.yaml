@@ -18,9 +18,8 @@ jobs:
       fail-fast: false
       matrix:
         rust:
-          - stable
+          - 1.87.0 # Stable release as of 2025-05-17
           - 1.70.0 # MSRV
-          - nightly
 
     steps:
       - uses: actions/checkout@v4
