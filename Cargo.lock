@@ -347,7 +347,7 @@ dependencies = [
 
 [[package]]
 name = "criterion"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "anes",
  "approx",
