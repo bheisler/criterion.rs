@@ -38,6 +38,7 @@ impl<W: Write> CsvReportWriter<W> {
             Some(Throughput::Bytes(bytes)) => (Some(format!("{}", bytes)), Some("bytes")),
             Some(Throughput::BytesDecimal(bytes)) => (Some(format!("{}", bytes)), Some("bytes")),
             Some(Throughput::Elements(elems)) => (Some(format!("{}", elems)), Some("elements")),
+            Some(Throughput::Bits(bits)) => (Some(format!("{}", bits)), Some("bits")),
             None => (None, None),
         };
         let throughput_num = throughput_num.as_deref();
