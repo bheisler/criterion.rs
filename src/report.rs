@@ -59,6 +59,7 @@ impl<'a> MeasurementData<'a> {
 pub enum ValueType {
     Bytes,
     Elements,
+    Bits,
     Value,
 }
 
@@ -176,7 +177,8 @@ impl BenchmarkId {
         match self.throughput {
             Some(Throughput::Bytes(n))
             | Some(Throughput::Elements(n))
-            | Some(Throughput::BytesDecimal(n)) => Some(n as f64),
+            | Some(Throughput::BytesDecimal(n))
+            | Some(Throughput::Bits(n)) => Some(n as f64),
             None => self
                 .value_str
                 .as_ref()
@@ -189,6 +191,7 @@ impl BenchmarkId {
             Some(Throughput::Bytes(_)) => Some(ValueType::Bytes),
             Some(Throughput::BytesDecimal(_)) => Some(ValueType::Bytes),
             Some(Throughput::Elements(_)) => Some(ValueType::Elements),
+            Some(Throughput::Bits(_)) => Some(ValueType::Bits),
             None => self
                 .value_str
                 .as_ref()

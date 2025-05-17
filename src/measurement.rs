@@ -166,6 +166,26 @@ impl DurationFormatter {
 
         unit
     }
+
+    fn bits_per_second(&self, bits: f64, typical: f64, values: &mut [f64]) -> &'static str {
+        let bits_per_second = bits * (1e9 / typical);
+        let (denominator, unit) = if bits_per_second < 1000.0 {
+            (1.0, "  b/s")
+        } else if bits_per_second < 1000.0 * 1000.0 {
+            (1000.0, "Kb/s")
+        } else if bits_per_second < 1000.0 * 1000.0 * 1000.0 {
+            (1000.0 * 1000.0, "Mb/s")
+        } else {
+            (1000.0 * 1000.0 * 1000.0, "Gb/s")
+        };
+
+        for val in values {
+            let bits_per_second = bits * (1e9 / *val);
+            *val = bits_per_second / denominator;
+        }
+
+        unit
+    }
 }
 impl ValueFormatter for DurationFormatter {
     fn scale_throughputs(
@@ -180,6 +200,7 @@ impl ValueFormatter for DurationFormatter {
                 self.bytes_per_second_decimal(bytes as f64, typical, values)
             }
             Throughput::Elements(elems) => self.elements_per_second(elems as f64, typical, values),
+            Throughput::Bits(bits) => self.bits_per_second(bits as f64, typical, values),
         }
     }
 
