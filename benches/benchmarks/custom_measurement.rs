@@ -18,6 +18,12 @@ impl ValueFormatter for HalfSecFormatter {
             Throughput::Bytes(bytes) | Throughput::BytesDecimal(bytes) => {
                 format!("{} b/s/2", (bytes as f64) / (value * 2f64 * 10f64.powi(-9)))
             }
+            Throughput::Bits(bits) => {
+                format!(
+                    "{} bits/s/2",
+                    (bits as f64) / (value * 2f64 * 10f64.powi(-9))
+                )
+            }
             Throughput::Elements(elems) => format!(
                 "{} elem/s/2",
                 (elems as f64) / (value * 2f64 * 10f64.powi(-9))
@@ -46,6 +52,13 @@ impl ValueFormatter for HalfSecFormatter {
                 }
 
                 "b/s/2"
+            }
+            Throughput::Bits(bits) => {
+                for val in values {
+                    *val = (bits as f64) / (*val * 2f64 * 10f64.powi(-9));
+                }
+
+                "bits/s/2"
             }
             Throughput::Elements(elems) => {
                 for val in values {
