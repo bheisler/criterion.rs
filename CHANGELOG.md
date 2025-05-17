@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - The `real_blackbox` feature no longer has any impact. Criterion always uses `std::hint::black_box()` now.
   Users of `criterion::black_box()` should switch to `std::hint::black_box()`.
+- 'clap' dependency unpinned.
 
 ### Fixed
 
