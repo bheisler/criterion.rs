@@ -10,6 +10,7 @@ on:
 name: tests
 env:
   CARGO_TERM_COLOR: always
+  MSRV: 1.80.0
 
 jobs:
   ci:
@@ -19,7 +20,7 @@ jobs:
       matrix:
         rust:
           - 1.87.0 # Stable release as of 2025-05-17
-          - 1.80.0 # MSRV
+          - $MSRV # MSRV
 
     steps:
       - uses: actions/checkout@v4
@@ -110,11 +111,11 @@ jobs:
 
       - name: Install needed Rust toolchain versions
         run: |
-          rustup install stable
+          rustup install $MSRV
           rustup install nightly
 
       - name: Downgrade dependencies to minimal versions
         run: cargo +nightly update -Z minimal-versions
 
       - name: Compile with minimal versions
-        run: cargo +stable build --all-targets --locked
+        run: cargo +$MSRV build --all-targets --locked
