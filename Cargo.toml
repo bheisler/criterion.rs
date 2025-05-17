@@ -27,7 +27,7 @@ itertools      = "0.13"
 serde          = { version = "1.0.100", features = ["derive"] }
 serde_json     = "1.0.100"
 ciborium       = "0.2.0"
-clap           = { version = "=4.4.9", default-features = false, features = ["std", "help"] }
+clap           = { version = "4.5", default-features = false, features = ["std", "help"] }
 walkdir        = "2.3"
 tinytemplate   = "1.1"
 cast           = "0.3"
