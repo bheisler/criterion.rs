@@ -38,9 +38,9 @@ fn bench_fibs(c: &mut Criterion) {
     let mut group = c.benchmark_group("Fibonacci");
     for i in [20u64, 21u64].iter() {
         group.bench_with_input(BenchmarkId::new("Recursive", i), i, 
-            |b, i| b.iter(|| fibonacci_slow(*i)));
+            |b, i| b.iter(|| fibonacci_slow(black_box(*i))));
         group.bench_with_input(BenchmarkId::new("Iterative", i), i, 
-            |b, i| b.iter(|| fibonacci_fast(*i)));
+            |b, i| b.iter(|| fibonacci_fast(black_box(*i))));
     }
     group.finish();
 }
