@@ -94,6 +94,81 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         self.elapsed_time = time_start.elapsed();
     }
 
+    /// Times a `routine` by executing it many times and timing the total elapsed time.
+    ///
+    /// Prefer this timing loop when `routine` returns a value that can be reused in
+    /// the next iteration.
+    ///
+    /// # Timing model
+    ///
+    /// Note that the `Bencher` also times the time required to move a value from one call to another.
+    /// Therefore prefer this timing loop when the runtime of this movement is negligible.
+    ///
+    /// ```text
+    /// elapsed = Instant::now + iters * (routine + Range::next)
+    /// ```
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use criterion::{criterion_group, criterion_main, Criterion};
+    ///
+    /// const HANDLE_COUNT: usize = 100;
+    ///
+    /// fn spawn_task(f: impl FnOnce() -> Vec<usize>) {
+    ///     todo!()
+    /// }
+    ///
+    /// fn await_task() -> Vec<usize> {
+    ///     todo!()
+    /// }
+    ///
+    /// // The function to benchmark that accept, use and returns a empty vector of a certain length
+    /// fn spawn_and_await(mut vec: Vec<usize>) -> Vec<usize> {
+    ///     // move to closure
+    ///     spawn_task(move || {
+    ///         // use vec here and return
+    ///         vec
+    ///     });
+    ///
+    ///     // move back
+    ///     let mut vec = await_task();
+    ///     vec.clear();
+    ///
+    ///     vec
+    /// }
+    ///
+    /// fn bench(c: &mut Criterion) {
+    ///     c.bench_function("iter", move |b| {
+    ///         b.iter_reuse(Vec::with_capacity(HANDLE_COUNT), |vec| spawn_and_await(vec))
+    ///     });
+    /// }
+    ///
+    /// criterion_group!(benches, bench);
+    /// criterion_main!(benches);
+    /// ```
+    ///
+    #[inline(never)]
+    pub fn iter_reuse<IO, R>(&mut self, input: IO, mut routine: R)
+    where
+        R: FnMut(IO) -> IO,
+    {
+        self.iterated = true;
+
+        let time_start = Instant::now();
+        let start = self.measurement.start();
+
+        let mut input_output = input;
+        for _ in 0..self.iters {
+            input_output = black_box(routine(input_output));
+        }
+
+        self.value = self.measurement.end(start);
+        self.elapsed_time = time_start.elapsed();
+
+        black_box(drop(input_output));
+    }
+
     /// Times a `routine` by executing it many times and relying on `routine` to measure its own execution time.
     ///
     /// Prefer this timing loop in cases where `routine` has to do its own measurements to
