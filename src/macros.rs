@@ -61,6 +61,7 @@
 #[macro_export]
 macro_rules! criterion_group {
     (name = $name:ident; config = $config:expr; targets = $( $target:path ),+ $(,)*) => {
+        #[allow(missing_docs)]
         pub fn $name() {
             let mut criterion: $crate::Criterion<_> = $config
                 .configure_from_args();
