@@ -1403,7 +1403,7 @@ impl ActualSamplingMode {
                     let recommended_sample_size =
                         ActualSamplingMode::recommend_linear_sample_size(m_ns as f64, met);
                     let actual_time = Duration::from_nanos(expected_ns as u64);
-                    eprint!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?}",
+                    eprint!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase measurement time to {:.1?}",
                             n, target_time, actual_time);
 
                     if recommended_sample_size != n {
@@ -1432,7 +1432,7 @@ impl ActualSamplingMode {
                     let recommended_sample_size =
                         ActualSamplingMode::recommend_flat_sample_size(m_ns, met);
                     let actual_time = Duration::from_nanos(expected_ns as u64);
-                    eprint!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase target time to {:.1?}",
+                    eprint!("\nWarning: Unable to complete {} samples in {:.1?}. You may wish to increase measurement time to {:.1?}",
                             n, target_time, actual_time);
 
                     if recommended_sample_size != n {

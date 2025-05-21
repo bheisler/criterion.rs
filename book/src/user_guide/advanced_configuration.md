@@ -53,6 +53,18 @@ criterion_group!{
 criterion_main!(benches);
 ```
 
+It is also possible to change the Criterion.rs' default measurement time for benchmarks (defaults to 5.0s).
+
+```rust
+fn bench(c: &mut Criterion) {
+    let mut group = c.benchmark_group("measurement-time-example");
+    group.measurement_time(Duration::from_secs(30));
+    group.bench_function("my-function", |b| b.iter(|| my_function()));
+    group.finish();
+}
+
+```
+
 ## Throughput Measurements
 
 When benchmarking some types of code it is useful to measure the throughput as well as the iteration time, either in bytes per second or elements per second. Criterion.rs can estimate the throughput of a benchmark, but it needs to know how many bytes or elements each iteration will process.
