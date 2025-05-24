@@ -36,9 +36,9 @@ macro_rules! elapsed {
 mod compare;
 
 // Common analysis procedure
-pub(crate) fn common<M: Measurement, T: ?Sized>(
+pub(crate) fn common<M: Measurement, T: ?Sized, R: Routine<M, T> + ?Sized>(
     id: &BenchmarkId,
-    routine: &mut dyn Routine<M, T>,
+    routine: &mut R,
     config: &BenchmarkConfig,
     criterion: &Criterion<M>,
     report_context: &ReportContext,
