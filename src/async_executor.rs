@@ -28,7 +28,7 @@ pub struct FuturesExecutor;
 #[cfg(feature = "async_futures")]
 impl AsyncExecutor for FuturesExecutor {
     fn block_on<T>(&self, future: impl Future<Output = T>) -> T {
-        futures::executor::block_on(future)
+        futures_executor::block_on(future)
     }
 }
 
