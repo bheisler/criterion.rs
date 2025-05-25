@@ -91,8 +91,14 @@ impl<'a, M: Measurement> Bencher<'a, M> {
             black_box(routine());
         }
         self.value = self.measurement.end(start);
+        if self.measurement.lt(&self.value, &self.measurement.one()) {
+            self.value = self.measurement.add(&self.value, &self.measurement.one());
+        }
         assert!(self.measurement.to_f64(&self.value) > f64::MIN_POSITIVE, "{}", self.measurement.to_f64(&self.value));
         self.elapsed_time = time_start.elapsed();
+        if self.elapsed_time < Duration::new(0, 1) {
+            self.elapsed_time += Duration::new(0, 1);
+        }
         assert_ne!(self.elapsed_time, Duration::new(0, 0));
     }
 
