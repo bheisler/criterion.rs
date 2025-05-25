@@ -96,6 +96,7 @@ pub trait Measurement {
     /// Return the least value greater than zero.
     fn one(&self) -> Self::Value;
 
+    /// Return true iff val < other.
     fn lt(&self, val: &Self::Value, other: &Self::Value) -> bool;
     
     /// Converts the measured value to f64 so that it can be used in statistical analysis.
