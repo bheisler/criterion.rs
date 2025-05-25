@@ -257,6 +257,9 @@ impl<'a, M: Measurement> Bencher<'a, M> {
 
                 drop(black_box(output));
             }
+            if self.measurement.lt(&self.value, &self.measurement.one()) {
+                self.value = self.measurement.add(&self.value, &self.measurement.one());
+            }
             assert!(self.measurement.to_f64(&self.value) > f64::MIN_POSITIVE, "batch_size: {}, iters: {}, value: {}", batch_size, self.iters, self.measurement.to_f64(&self.value));
         } else {
             let mut iteration_counter = 0;
@@ -275,6 +278,9 @@ impl<'a, M: Measurement> Bencher<'a, M> {
                 black_box(outputs);
 
                 iteration_counter += batch_size;
+            }
+            if self.measurement.lt(&self.value, &self.measurement.one()) {
+                self.value = self.measurement.add(&self.value, &self.measurement.one());
             }
             assert!(self.measurement.to_f64(&self.value) > f64::MIN_POSITIVE, "{}", self.measurement.to_f64(&self.value));
         }

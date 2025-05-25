@@ -93,6 +93,11 @@ pub trait Measurement {
     /// Return a "zero" value for the Value type which can be added to another value.
     fn zero(&self) -> Self::Value;
 
+    /// Return the least value greater than zero.
+    fn one(&self) -> Self::Value;
+
+    fn lt(&self, val: &Self::Value, other: &Self::Value) -> bool;
+    
     /// Converts the measured value to f64 so that it can be used in statistical analysis.
     fn to_f64(&self, value: &Self::Value) -> f64;
 
@@ -248,6 +253,12 @@ impl Measurement for WallTime {
     }
     fn zero(&self) -> Self::Value {
         Duration::from_secs(0)
+    }
+    fn one(&self) -> Self::Value {
+        Duration::from_nanos(1)
+    }
+    fn lt (&self, val: &Self::Value, other: &Self::Value) -> bool {
+        val < other
     }
     fn to_f64(&self, val: &Self::Value) -> f64 {
         val.as_nanos() as f64
