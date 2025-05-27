@@ -81,7 +81,7 @@ impl Script for Properties {
         }
 
         if let Some(ref title) = self.title {
-            script.push_str(&format!("title '{}' ", title))
+            script.push_str(&format!("title '{title}' "))
         }
 
         if self.boxed {

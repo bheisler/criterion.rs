@@ -41,7 +41,7 @@ impl Script for Properties {
         script.push_str(&format!("lt {} ", self.line_type.display()));
 
         if let Some(lw) = self.linewidth {
-            script.push_str(&format!("lw {} ", lw))
+            script.push_str(&format!("lw {lw} "))
         }
 
         if let Some(color) = self.color {
@@ -53,7 +53,7 @@ impl Script for Properties {
         }
 
         if let Some(ps) = self.point_size {
-            script.push_str(&format!("ps {} ", ps))
+            script.push_str(&format!("ps {ps} "))
         }
 
         if let Some(ref label) = self.label {
