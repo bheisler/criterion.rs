@@ -44,7 +44,7 @@ pub struct Bencher<'a, M: Measurement = WallTime> {
     pub(crate) measurement: &'a M,     // Reference to the measurement object
     pub(crate) elapsed_time: Duration, // How much time did it take to perform the iteration? Used for the warmup period.
 }
-impl<'a, M: Measurement> Bencher<'a, M> {
+impl<'a, M: Measurement<Intermediate = (u32, u64)>> Bencher<'a, M> {
     /// Times a `routine` by executing it many times and timing the total elapsed time.
     ///
     /// Prefer this timing loop when `routine` returns a value that doesn't have a destructor.
@@ -91,6 +91,17 @@ impl<'a, M: Measurement> Bencher<'a, M> {
             black_box(routine());
         }
         self.value = self.measurement.end(start);
+        if self.measurement.lt(&self.value, &self.measurement.zero()) {
+            // uh oh, RDPTSCP may have gotten reset to zero or something?
+            match start {
+                (aux, startcycles) => {
+                    eprintln!("start: {:?} {:?}, self.value: {}", aux, startcycles, self.value);
+                }
+                _ => {
+                    panic!("wut");
+                }
+            }
+        }
         if self.measurement.lt(&self.value, &self.measurement.one()) {
             self.value = self.measurement.add(&self.value, &self.measurement.one());
         }
