@@ -71,7 +71,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         match loaded {
             Err(err) => panic!(
                 "Baseline '{base}' must exist before it can be loaded; try --save-baseline {base}. Error: {err}",
-                base = baseline, err = err
+                base=criterion.baseline_directory,
             ),
             Ok(samples) => {
                 sampling_mode = samples.sampling_mode;

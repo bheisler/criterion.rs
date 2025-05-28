@@ -441,11 +441,11 @@ impl Figure {
         ));
 
         if let Some(width) = self.box_width {
-            s.push_str(&format!("set boxwidth {}\n", width))
+            s.push_str(&format!("set boxwidth {width}\n"))
         }
 
         if let Some(ref title) = self.title {
-            s.push_str(&format!("set title '{}'\n", title))
+            s.push_str(&format!("set title '{title}'\n"))
         }
 
         for axis in self.axes.iter() {
@@ -461,20 +461,20 @@ impl Figure {
         }
 
         if let Some(alpha) = self.alpha {
-            s.push_str(&format!("set style fill transparent solid {}\n", alpha))
+            s.push_str(&format!("set style fill transparent solid {alpha}\n"))
         }
 
         s.push_str(&format!("set terminal {} dashed", self.terminal.display()));
 
         if let Some((width, height)) = self.size {
-            s.push_str(&format!(" size {}, {}", width, height))
+            s.push_str(&format!(" size {width}, {height}"))
         }
 
         if let Some(ref name) = self.font {
             if let Some(size) = self.font_size {
-                s.push_str(&format!(" font '{},{}'", name, size))
+                s.push_str(&format!(" font '{name},{size}'"))
             } else {
-                s.push_str(&format!(" font '{}'", name))
+                s.push_str(&format!(" font '{name}'"))
             }
         }
 
@@ -936,16 +936,14 @@ pub enum VersionError {
 impl fmt::Display for VersionError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            VersionError::Exec(err) => write!(f, "`gnuplot --version` failed: {}", err),
+            VersionError::Exec(err) => write!(f, "`gnuplot --version` failed: {err}"),
             VersionError::Error(msg) => {
-                write!(f, "`gnuplot --version` failed with error message:\n{}", msg)
+                write!(f, "`gnuplot --version` failed with error message:\n{msg}")
             }
             VersionError::OutputError => write!(f, "`gnuplot --version` returned invalid utf-8"),
             VersionError::ParseError(msg) => write!(
                 f,
-                "`gnuplot --version` returned an unparsable version string: {}",
-                msg
-            ),
+                "`gnuplot --version` returned an unparsable version string: {msg}"),
         }
     }
 }

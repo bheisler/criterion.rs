@@ -38,7 +38,7 @@ impl Display<Cow<'static, str>> for Color {
             Color::Green => Cow::from("green"),
             Color::Magenta => Cow::from("magenta"),
             Color::Red => Cow::from("red"),
-            Color::Rgb(r, g, b) => Cow::from(format!("#{:02x}{:02x}{:02x}", r, g, b)),
+            Color::Rgb(r, g, b) => Cow::from(format!("#{r:02x}{g:02x}{b:02x}")),
             Color::White => Cow::from("white"),
             Color::Yellow => Cow::from("yellow"),
         }

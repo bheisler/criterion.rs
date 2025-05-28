@@ -33,18 +33,15 @@ impl std::fmt::Display for MessageError {
         match self {
             MessageError::Deserialization(error) => write!(
                 f,
-                "Failed to deserialize message to Criterion.rs benchmark:\n{}",
-                error
+                "Failed to deserialize message to Criterion.rs benchmark:\n{error}"
             ),
             MessageError::Serialization(error) => write!(
                 f,
-                "Failed to serialize message to Criterion.rs benchmark:\n{}",
-                error
+                "Failed to serialize message to Criterion.rs benchmark:\n{error}"
             ),
             MessageError::Io(error) => write!(
                 f,
-                "Failed to read or write message to Criterion.rs benchmark:\n{}",
-                error
+                "Failed to read or write message to Criterion.rs benchmark:\n{error}"
             ),
         }
     }

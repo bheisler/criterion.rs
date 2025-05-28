@@ -159,27 +159,27 @@ impl Script for (Axis, &Properties) {
         let axis_ = axis.display();
 
         let mut script = if properties.hidden {
-            return format!("unset {}tics\n", axis_);
+            return format!("unset {axis_}tics\n");
         } else {
-            format!("set {}tics nomirror ", axis_)
+            format!("set {axis_}tics nomirror ")
         };
 
         if let Some(ref tics) = properties.tics {
-            script.push_str(&format!("({})", tics))
+            script.push_str(&format!("({tics})"))
         }
 
         script.push('\n');
 
         if let Some(ref label) = properties.label {
-            script.push_str(&format!("set {}label '{}'\n", axis_, label))
+            script.push_str(&format!("set {axis_}label '{label}'\n"))
         }
 
         if let Some((low, high)) = properties.range {
-            script.push_str(&format!("set {}range [{}:{}]\n", axis_, low, high))
+            script.push_str(&format!("set {axis_}range [{low}:{high}]\n"))
         }
 
         if properties.logarithmic {
-            script.push_str(&format!("set logscale {}\n", axis_));
+            script.push_str(&format!("set logscale {axis_}\n"));
         }
 
         for (grid, properties) in properties.grids.iter() {

@@ -115,10 +115,12 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
                     .bench(measurement, &[n * 2], parameter)
                     .first()
                     .unwrap();
+                assert!(t_now - t_prev > f64::MIN_POSITIVE);
                 let t = (t_prev + 2. * t_now) / 5.;
                 let stdev = (sq(t_prev - t) + sq(t_now - 2. * t)).sqrt();
                 // println!("Sample: {} {:.2}", n, stdev / t);
                 let elapsed = time_start.elapsed();
+                assert!(elapsed > Duration::new(0, 1));
                 if (stdev < target_rel_stdev * t && elapsed > minimum_bench_duration)
                     || elapsed > maximum_bench_duration
                 {
