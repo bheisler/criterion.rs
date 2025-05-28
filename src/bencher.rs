@@ -44,7 +44,7 @@ pub struct Bencher<'a, M: Measurement = WallTime> {
     pub(crate) measurement: &'a M,     // Reference to the measurement object
     pub(crate) elapsed_time: Duration, // How much time did it take to perform the iteration? Used for the warmup period.
 }
-impl<'a, M: Measurement<Intermediate = (u32, u64)>> Bencher<'a, M> {
+impl<'a, M: Measurement> Bencher<'a, M> {
     /// Times a `routine` by executing it many times and timing the total elapsed time.
     ///
     /// Prefer this timing loop when `routine` returns a value that doesn't have a destructor.
@@ -90,17 +90,10 @@ impl<'a, M: Measurement<Intermediate = (u32, u64)>> Bencher<'a, M> {
         for _ in 0..self.iters {
             black_box(routine());
         }
-        self.value = self.measurement.end(start);
+        self.value = self.measurement.end(&start);
         if self.measurement.lt(&self.value, &self.measurement.zero()) {
             // uh oh, RDPTSCP may have gotten reset to zero or something?
-            match start {
-                (aux, startcycles) => {
-                    eprintln!("start: {:?} {:?}, self.value: {}", aux, startcycles, self.value);
-                }
-                _ => {
-                    panic!("wut");
-                }
-            }
+            self.measurement.debugprint(&start, &self.value);
         }
         if self.measurement.lt(&self.value, &self.measurement.one()) {
             self.value = self.measurement.add(&self.value, &self.measurement.one());
@@ -155,6 +148,9 @@ impl<'a, M: Measurement<Intermediate = (u32, u64)>> Bencher<'a, M> {
         self.iterated = true;
         let time_start = Instant::now();
         self.value = routine(self.iters);
+        if self.measurement.lt(&self.value, &self.measurement.one()) {
+            self.value = self.measurement.add(&self.value, &self.measurement.one());
+        }
         assert!(self.measurement.to_f64(&self.value) > f64::MIN_POSITIVE, "{}", self.measurement.to_f64(&self.value));
         self.elapsed_time = time_start.elapsed();
         assert_ne!(self.elapsed_time, Duration::new(0, 0));
@@ -269,7 +265,7 @@ impl<'a, M: Measurement<Intermediate = (u32, u64)>> Bencher<'a, M> {
 
                 let start = self.measurement.start();
                 let output = routine(input);
-                let end = self.measurement.end(start);
+                let end = self.measurement.end(&start);
                 self.value = self.measurement.add(&self.value, &end);
 
                 drop(black_box(output));
@@ -289,7 +285,7 @@ impl<'a, M: Measurement<Intermediate = (u32, u64)>> Bencher<'a, M> {
 
                 let start = self.measurement.start();
                 outputs.extend(inputs.into_iter().map(&mut routine));
-                let end = self.measurement.end(start);
+                let end = self.measurement.end(&start);
                 self.value = self.measurement.add(&self.value, &end);
 
                 black_box(outputs);
@@ -366,7 +362,7 @@ impl<'a, M: Measurement<Intermediate = (u32, u64)>> Bencher<'a, M> {
 
                 let start = self.measurement.start();
                 let output = routine(&mut input);
-                let end = self.measurement.end(start);
+                let end = self.measurement.end(&start);
                 self.value = self.measurement.add(&self.value, &end);
 
                 drop(black_box(output));
@@ -383,7 +379,7 @@ impl<'a, M: Measurement<Intermediate = (u32, u64)>> Bencher<'a, M> {
 
                 let start = self.measurement.start();
                 outputs.extend(inputs.iter_mut().map(&mut routine));
-                let end = self.measurement.end(start);
+                let end = self.measurement.end(&start);
                 self.value = self.measurement.add(&self.value, &end);
 
                 black_box(outputs);
