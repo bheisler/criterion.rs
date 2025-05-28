@@ -371,7 +371,7 @@ pub mod plat_apple {
 }
 
 #[cfg(target_arch = "x86_64")]
-/// A slightly better timer for x86_64 platforms.
+/// A slightly better timer for `x86_64` platforms.
 pub mod plat_x86_64 {
     use cpuid;
     use crate::{Throughput, Measurement};
@@ -379,8 +379,10 @@ pub mod plat_x86_64 {
     use core::arch::x86_64;
 
     #[derive(Default)]
+    /// Use RDTSCP instruction as a clock.
     pub struct RDTSCPMeasurement { }
 
+    /// Formatter.
     pub struct RDTSCPValueFormatter { }
 
     impl ValueFormatter for RDTSCPValueFormatter {
