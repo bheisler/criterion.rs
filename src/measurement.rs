@@ -381,7 +381,6 @@ pub mod plat_x86_64 {
             let ofreq = cpuid::clock_frequency();
             assert!(ofreq.is_some());
             let freq_mhz = ofreq.unwrap();
-            eprintln!("freq {freq_mhz} MHz");
 
             let typical_as_nanos = typical_value * 1000.0 / freq_mhz as f64;
             let (factor, unit) = if typical_as_nanos < 10f64.powi(0) {
