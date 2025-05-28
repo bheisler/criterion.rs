@@ -21,6 +21,9 @@ categories  = ["development-tools::profiling"]
 license     = "Apache-2.0 OR MIT"
 exclude     = ["book/*"]
 
+[lints.clippy]
+uninlined_format_args = "allow"
+
 [dependencies]
 anes           = "0.1.4"
 criterion-plot = { path = "plot", version = "0.5.0" }
