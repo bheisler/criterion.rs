@@ -276,16 +276,22 @@ impl Measurement for WallTime {
 }
 
 #[cfg(target_vendor = "apple")]
+/// A slightly better timer for Apple platforms.
 pub mod plat_apple {
-    use mach_sys::mach_time::mach_absolute_time;
+    use mach_sys::mach_time::{mach_absolute_time, mach_timebase_info};
+    use mach_sys::kern_return::KERN_SUCCESS;
+    use crate::measurement::ValueFormatter;
+    use std::mem::MaybeUninit;
+    use crate::{Measurement, Throughput};
 
     #[derive(Default)]
-    struct MachAbsoluteTimeMeasurement { }
+    /// Use the `mach_absolute_time()` clock, which is slightly better
+    /// in my [tests](https://github.com/zooko/measure-clocks) than
+    /// `Instant::now()`.
+    pub struct MachAbsoluteTimeMeasurement { }
 
-    struct MachAbsoluteTimeValueFormatter { }
-
-    use mach_sys::mach_time::mach_timebase_info;
-    use mach_sys::kern_return::KERN_SUCCESS;
+    /// Formatter
+    pub struct MachAbsoluteTimeValueFormatter { }
 
     impl ValueFormatter for MachAbsoluteTimeValueFormatter {
         fn scale_values(&self, typical_value: f64, values: &mut [f64]) -> &'static str {
@@ -338,7 +344,7 @@ pub mod plat_apple {
             unsafe { mach_absolute_time() }
         }
         fn end(&self, i: &Self::Intermediate) -> Self::Value {
-           ( unsafe { mach_absolute_time() } - i )
+            ( unsafe { mach_absolute_time() } - i )
         }
         fn add(&self, v1: &Self::Value, v2: &Self::Value) -> Self::Value {
             *v1 + *v2
@@ -349,8 +355,11 @@ pub mod plat_apple {
         fn one(&self) -> Self::Value {
             1
         }
-        fn lt (&self, val: &Self::Value, other: &Self::Value) -> bool {
+        fn lt(&self, val: &Self::Value, other: &Self::Value) -> bool {
             val < other
+        }
+        fn debugprint(&self, val: &Self::Intermediate, other: &Self::Value) {
+            eprintln!("val: {val:?}, other: {other:?}");
         }
         fn to_f64(&self, val: &Self::Value) -> f64 {
             *val as f64
@@ -362,6 +371,7 @@ pub mod plat_apple {
 }
 
 #[cfg(target_arch = "x86_64")]
+/// A slightly better timer for x86_64 platforms.
 pub mod plat_x86_64 {
     use cpuid;
     use crate::{Throughput, Measurement};
@@ -445,7 +455,7 @@ pub mod plat_x86_64 {
         fn one(&self) -> Self::Value {
             Some(1)
         }
-        fn lt (&self, val: &Self::Value, other: &Self::Value) -> bool {
+        fn lt(&self, val: &Self::Value, other: &Self::Value) -> bool {
             if val.is_some() && other.is_some() {
                 val < other
             } else {
