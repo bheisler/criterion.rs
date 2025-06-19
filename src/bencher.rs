@@ -98,12 +98,10 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         if self.measurement.lt(&self.value, &self.measurement.one()) {
             self.value = self.measurement.add(&self.value, &self.measurement.one());
         }
-        assert!(self.measurement.to_f64(&self.value) > f64::MIN_POSITIVE, "{}", self.measurement.to_f64(&self.value));
         self.elapsed_time = time_start.elapsed();
         if self.elapsed_time < Duration::new(0, 1) {
-            self.elapsed_time += Duration::new(0, 1);
+            self.elapsed_time = Duration::new(0, 1);
         }
-        assert_ne!(self.elapsed_time, Duration::new(0, 0));
     }
 
     /// Times a `routine` by executing it many times and relying on `routine` to measure its own execution time.
@@ -151,12 +149,11 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         if self.measurement.lt(&self.value, &self.measurement.one()) {
             self.value = self.measurement.add(&self.value, &self.measurement.one());
         }
-        assert!(self.measurement.to_f64(&self.value) > f64::MIN_POSITIVE, "{}", self.measurement.to_f64(&self.value));
         self.elapsed_time = time_start.elapsed();
-        if self.elapsed_time == Duration::new(0, 0) {
+        //debug_assert_ne!(self.elapsed_time, Duration::new(0, 0));
+        if self.elapsed_time < Duration::new(0, 1) {
             self.elapsed_time = Duration::new(0, 1);
         }
-        //assert_ne!(self.elapsed_time, Duration::new(0, 0));
     }
 
     #[doc(hidden)]
@@ -302,7 +299,9 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         }
 
         self.elapsed_time = time_start.elapsed();
-        assert_ne!(self.elapsed_time, Duration::new(0, 0));
+        if self.elapsed_time < Duration::new(0, 1) {
+            self.elapsed_time = Duration::new(0, 1);
+        }
     }
 
     /// Times a `routine` that requires some input by generating a batch of input, then timing the
@@ -391,7 +390,9 @@ impl<'a, M: Measurement> Bencher<'a, M> {
             }
         }
         self.elapsed_time = time_start.elapsed();
-        assert_ne!(self.elapsed_time, Duration::new(0, 0));
+        if self.elapsed_time < Duration::new(0, 1) {
+            self.elapsed_time += Duration::new(0, 1);
+        }
     }
 
     // Benchmarks must actually call one of the iter methods. This causes benchmarks to fail loudly
@@ -470,7 +471,9 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
             }
             b.value = b.measurement.end(start);
             b.elapsed_time = time_start.elapsed();
-            assert_ne!(b.elapsed_time, Duration::new(0, 0));
+            if b.elapsed_time < Duration::new(0, 1) {
+                b.elapsed_time = Duration::new(0, 1);
+            }
         });
     }
 
@@ -524,6 +527,9 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
             b.value = routine(b.iters).await;
             b.elapsed_time = time_start.elapsed();
             assert_ne!(b.elapsed_time, Duration::new(0, 0));
+            if b.elapsed_time < Duration::new(0, 1) {
+                b.elapsed_time = Duration::new(0, 1);
+            }
         })
     }
 
@@ -683,6 +689,9 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
 
             b.elapsed_time = time_start.elapsed();
             assert_ne!(b.elapsed_time, Duration::new(0, 0));
+            if b.elapsed_time < Duration::new(0, 1) {
+                b.elapsed_time = Duration::new(0, 1);
+            }
         })
     }
 
@@ -779,7 +788,9 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
                 }
             }
             b.elapsed_time = time_start.elapsed();
-            assert_ne!(b.elapsed_time, Duration::new(0, 0));
+            if b.elapsed_time < Duration::new(0, 1) {
+                b.elapsed_time = Duration::new(0, 1);
+            }
         });
     }
 }
