@@ -344,7 +344,12 @@ pub mod plat_apple {
             unsafe { mach_absolute_time() }
         }
         fn end(&self, i: &Self::Intermediate) -> Self::Value {
-            ( unsafe { mach_absolute_time() } - i )
+            let t = unsafe { mach_absolute_time() };
+            if t > *i {
+                t - *i
+            } else {
+                1
+            }
         }
         fn add(&self, v1: &Self::Value, v2: &Self::Value) -> Self::Value {
             *v1 + *v2
