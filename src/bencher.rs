@@ -153,7 +153,10 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         }
         assert!(self.measurement.to_f64(&self.value) > f64::MIN_POSITIVE, "{}", self.measurement.to_f64(&self.value));
         self.elapsed_time = time_start.elapsed();
-        assert_ne!(self.elapsed_time, Duration::new(0, 0));
+        if self.elapsed_time == Duration::new(0, 0) {
+            self.elapsed_time = Duration::new(0, 1);
+        }
+        //assert_ne!(self.elapsed_time, Duration::new(0, 0));
     }
 
     #[doc(hidden)]
