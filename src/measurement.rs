@@ -250,7 +250,12 @@ impl Measurement for WallTime {
         Instant::now()
     }
     fn end(&self, i: &Self::Intermediate) -> Self::Value {
-        i.elapsed()
+        let e = i.elapsed();
+        if e > Duration::from_nanos(0) {
+            e
+        } else {
+            Duration::from_nanos(1)
+        }
     }
     fn add(&self, v1: &Self::Value, v2: &Self::Value) -> Self::Value {
         *v1 + *v2
