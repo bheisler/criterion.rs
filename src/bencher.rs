@@ -93,8 +93,8 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         self.value = self.measurement.end(&start);
         debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         self.elapsed_time = time_start.elapsed();
-        if self.elapsed_time < Duration::new(0, 1) {
-            self.elapsed_time = Duration::new(0, 1);
+        if self.elapsed_time < Duration::from_nanos(1) {
+            self.elapsed_time = Duration::from_nanos(1);
         }
     }
 
@@ -142,9 +142,8 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         self.value = routine(self.iters);
         debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         self.elapsed_time = time_start.elapsed();
-        //debug_assert_ne!(self.elapsed_time, Duration::new(0, 0));
-        if self.elapsed_time < Duration::new(0, 1) {
-            self.elapsed_time = Duration::new(0, 1);
+        if self.elapsed_time < Duration::from_nanos(1) {
+            self.elapsed_time = Duration::from_nanos(1);
         }
     }
 
@@ -285,8 +284,8 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         }
 
         self.elapsed_time = time_start.elapsed();
-        if self.elapsed_time < Duration::new(0, 1) {
-            self.elapsed_time = Duration::new(0, 1);
+        if self.elapsed_time < Duration::from_nanos(1) {
+            self.elapsed_time = Duration::from_nanos(1);
         }
     }
 
@@ -377,8 +376,8 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         }
         debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         self.elapsed_time = time_start.elapsed();
-        if self.elapsed_time < Duration::new(0, 1) {
-            self.elapsed_time += Duration::new(0, 1);
+        if self.elapsed_time < Duration::from_nanos(1) {
+            self.elapsed_time = Duration::from_nanos(1);
         }
     }
 
@@ -459,8 +458,8 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
             b.value = b.measurement.end(start);
             debug_assert!(b.measurement.lt(&b.measurement.zero(), &b.value));
             b.elapsed_time = time_start.elapsed();
-            if b.elapsed_time < Duration::new(0, 1) {
-                b.elapsed_time = Duration::new(0, 1);
+            if b.elapsed_time < Duration::from_nanos(1) {
+                b.elapsed_time = Duration::from_nanos(1);
             }
         });
     }
@@ -514,9 +513,8 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
             let time_start = Instant::now();
             b.value = routine(b.iters).await;
             b.elapsed_time = time_start.elapsed();
-            assert_ne!(b.elapsed_time, Duration::new(0, 0));
-            if b.elapsed_time < Duration::new(0, 1) {
-                b.elapsed_time = Duration::new(0, 1);
+            if self.elapsed_time < Duration::from_nanos(1) {
+                self.elapsed_time = Duration::from_nanos(1);
             }
         })
     }
@@ -677,9 +675,8 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
             debug_assert!(b.measurement.lt(&b.measurement.zero(), &b.value));
 
             b.elapsed_time = time_start.elapsed();
-            assert_ne!(b.elapsed_time, Duration::new(0, 0));
-            if b.elapsed_time < Duration::new(0, 1) {
-                b.elapsed_time = Duration::new(0, 1);
+            if b.elapsed_time < Duration::from_nanos(1) {
+                b.elapsed_time = Duration::from_nanos(1);
             }
         })
     }
