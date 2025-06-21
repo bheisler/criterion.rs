@@ -91,13 +91,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
             black_box(routine());
         }
         self.value = self.measurement.end(&start);
-        if self.measurement.lt(&self.value, &self.measurement.zero()) {
-            // uh oh, RDTSCP may have gotten reset to zero or something?
-            self.measurement.debugprint(&start, &self.value);
-        }
-        if self.measurement.lt(&self.value, &self.measurement.one()) {
-            self.value = self.measurement.add(&self.value, &self.measurement.one());
-        }
+        debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         self.elapsed_time = time_start.elapsed();
         if self.elapsed_time < Duration::new(0, 1) {
             self.elapsed_time = Duration::new(0, 1);
@@ -146,9 +140,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         self.iterated = true;
         let time_start = Instant::now();
         self.value = routine(self.iters);
-        if self.measurement.lt(&self.value, &self.measurement.one()) {
-            self.value = self.measurement.add(&self.value, &self.measurement.one());
-        }
+        debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         self.elapsed_time = time_start.elapsed();
         //debug_assert_ne!(self.elapsed_time, Duration::new(0, 0));
         if self.elapsed_time < Duration::new(0, 1) {
@@ -270,10 +262,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
 
                 drop(black_box(output));
             }
-            if self.measurement.lt(&self.value, &self.measurement.one()) {
-                self.value = self.measurement.add(&self.value, &self.measurement.one());
-            }
-            assert!(self.measurement.to_f64(&self.value) > f64::MIN_POSITIVE, "batch_size: {}, iters: {}, value: {}", batch_size, self.iters, self.measurement.to_f64(&self.value));
+            debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         } else {
             let mut iteration_counter = 0;
 
@@ -292,10 +281,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
 
                 iteration_counter += batch_size;
             }
-            if self.measurement.lt(&self.value, &self.measurement.one()) {
-                self.value = self.measurement.add(&self.value, &self.measurement.one());
-            }
-            assert!(self.measurement.to_f64(&self.value) > f64::MIN_POSITIVE, "{}", self.measurement.to_f64(&self.value));
+            debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         }
 
         self.elapsed_time = time_start.elapsed();
@@ -389,6 +375,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
                 iteration_counter += batch_size;
             }
         }
+        debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         self.elapsed_time = time_start.elapsed();
         if self.elapsed_time < Duration::new(0, 1) {
             self.elapsed_time += Duration::new(0, 1);
@@ -470,6 +457,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
                 black_box(routine().await);
             }
             b.value = b.measurement.end(start);
+            debug_assert!(b.measurement.lt(&b.measurement.zero(), &b.value));
             b.elapsed_time = time_start.elapsed();
             if b.elapsed_time < Duration::new(0, 1) {
                 b.elapsed_time = Duration::new(0, 1);
@@ -686,6 +674,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
                     iteration_counter += batch_size;
                 }
             }
+            debug_assert!(b.measurement.lt(&b.measurement.zero(), &b.value));
 
             b.elapsed_time = time_start.elapsed();
             assert_ne!(b.elapsed_time, Duration::new(0, 0));
@@ -787,6 +776,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
                     iteration_counter += batch_size;
                 }
             }
+            debug_assert!(b.measurement.lt(&b.measurement.zero(), &b.value));
             b.elapsed_time = time_start.elapsed();
             if b.elapsed_time < Duration::new(0, 1) {
                 b.elapsed_time = Duration::new(0, 1);
