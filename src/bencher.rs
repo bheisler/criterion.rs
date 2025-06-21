@@ -92,7 +92,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         }
         self.value = self.measurement.end(&start);
         if self.measurement.lt(&self.value, &self.measurement.zero()) {
-            // uh oh, RDPTSCP may have gotten reset to zero or something?
+            // uh oh, RDTSCP may have gotten reset to zero or something?
             self.measurement.debugprint(&start, &self.value);
         }
         if self.measurement.lt(&self.value, &self.measurement.one()) {

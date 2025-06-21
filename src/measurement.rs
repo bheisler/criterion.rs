@@ -70,6 +70,7 @@ pub trait ValueFormatter {
 /// of that set of iterations) and `end` is called at the end of the measurement with the value
 /// returned by `start`.
 ///
+/// All Measurements must be greater than 0.
 pub trait Measurement {
     /// This type represents an intermediate value for the measurements. It will be produced by the
     /// start function and passed to the end function. An example might be the wall-clock time as
@@ -455,7 +456,11 @@ pub mod plat_x86_64 {
             if i.0 != aux {
                 None
             } else {
-                Some(cycs - i.1)
+                if cycs > i.1 {
+                    Some(cycs - i.1)
+                } else {
+                    Some(1)
+                }
             }
         }
         fn add(&self, v1: &Self::Value, v2: &Self::Value) -> Self::Value {
@@ -483,7 +488,7 @@ pub mod plat_x86_64 {
                     *val as f64
                 }
                 None => {
-                    f64::MIN
+                    f64::NAN // ??? this could cause trouble...
                 }
             }
         }
