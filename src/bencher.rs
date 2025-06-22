@@ -91,6 +91,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
             black_box(routine());
         }
         self.value = self.measurement.end(&start);
+        debug_assert!(self.measurement.to_f64(&self.value).is_finite());
         debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         self.elapsed_time = time_start.elapsed();
         if self.elapsed_time < Duration::from_nanos(1) {
@@ -140,6 +141,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         self.iterated = true;
         let time_start = Instant::now();
         self.value = routine(self.iters);
+        debug_assert!(self.measurement.to_f64(&self.value).is_finite());
         debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         self.elapsed_time = time_start.elapsed();
         if self.elapsed_time < Duration::from_nanos(1) {
@@ -261,7 +263,6 @@ impl<'a, M: Measurement> Bencher<'a, M> {
 
                 drop(black_box(output));
             }
-            debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         } else {
             let mut iteration_counter = 0;
 
@@ -280,8 +281,9 @@ impl<'a, M: Measurement> Bencher<'a, M> {
 
                 iteration_counter += batch_size;
             }
-            debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         }
+        debug_assert!(self.measurement.to_f64(&self.value).is_finite());
+        debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
 
         self.elapsed_time = time_start.elapsed();
         if self.elapsed_time < Duration::from_nanos(1) {
@@ -374,6 +376,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
                 iteration_counter += batch_size;
             }
         }
+        debug_assert!(self.measurement.to_f64(&self.value).is_finite());
         debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         self.elapsed_time = time_start.elapsed();
         if self.elapsed_time < Duration::from_nanos(1) {
@@ -456,6 +459,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
                 black_box(routine().await);
             }
             b.value = b.measurement.end(start);
+            debug_assert!(self.measurement.to_f64(&self.value).is_finite());
             debug_assert!(b.measurement.lt(&b.measurement.zero(), &b.value));
             b.elapsed_time = time_start.elapsed();
             if b.elapsed_time < Duration::from_nanos(1) {
@@ -512,6 +516,8 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
             b.iterated = true;
             let time_start = Instant::now();
             b.value = routine(b.iters).await;
+            debug_assert!(self.measurement.to_f64(&self.value).is_finite());
+            debug_assert!(b.measurement.lt(&b.measurement.zero(), &b.value));
             b.elapsed_time = time_start.elapsed();
             if self.elapsed_time < Duration::from_nanos(1) {
                 self.elapsed_time = Duration::from_nanos(1);
@@ -672,6 +678,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
                     iteration_counter += batch_size;
                 }
             }
+            debug_assert!(b.measurement.to_f64(&b.value).is_finite());
             debug_assert!(b.measurement.lt(&b.measurement.zero(), &b.value));
 
             b.elapsed_time = time_start.elapsed();
@@ -773,6 +780,7 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
                     iteration_counter += batch_size;
                 }
             }
+            debug_assert!(b.measurement.to_f64(&b.value).is_finite());
             debug_assert!(b.measurement.lt(&b.measurement.zero(), &b.value));
             b.elapsed_time = time_start.elapsed();
             if b.elapsed_time < Duration::new(0, 1) {

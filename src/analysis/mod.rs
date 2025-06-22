@@ -121,6 +121,14 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         return;
     }
 
+    if times.contains(&f64::NAN) {
+        error!(
+            "At least one measurement of benchmark {} had a NAN.",
+            id.as_title()
+        );
+        return;
+    }
+
     let avg_times = iters
         .iter()
         .zip(times.iter())
