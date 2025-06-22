@@ -21,6 +21,9 @@ categories  = ["development-tools::profiling"]
 license     = "Apache-2.0 OR MIT"
 exclude     = ["book/*"]
 
+[lints.clippy]
+uninlined_format_args = "allow"
+
 [dependencies]
 anes           = "0.1.4"
 criterion-plot = { path = "plot", version = "0.5.0" }
@@ -35,6 +38,13 @@ cast           = "0.3"
 num-traits     = { version = "0.2", default-features = false, features = ["std"] }
 oorandom       = "11.1"
 regex          = { version = "1.5.1", default-features = false, features = ["std"] }
+rayon = "1.3"
+
+[target.'cfg(target_vendor="apple")'.dependencies]
+mach-sys = "0.5"
+
+[target.'cfg(target_arch="x86_64")'.dependencies]
+cpuid = "0.1.1"
 
 # Optional dependencies
 rayon = { version = "1.3", optional = true }

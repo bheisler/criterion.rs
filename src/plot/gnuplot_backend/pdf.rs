@@ -28,7 +28,7 @@ pub(crate) fn pdf(
     let y_label = if exponent == 0 {
         "Iterations".to_owned()
     } else {
-        format!("Iterations (x 10^{})", exponent)
+        format!("Iterations (x 10^{exponent})")
     };
 
     let (xs, ys) = kde::sweep(scaled_avg_times, KDE_POINTS, None);
@@ -46,7 +46,7 @@ pub(crate) fn pdf(
         .set(size.unwrap_or(SIZE))
         .configure(Axis::BottomX, |a| {
             let xs_ = Sample::new(&xs);
-            a.set(Label(format!("Average time ({})", unit)))
+            a.set(Label(format!("Average time ({unit})")))
                 .set(Range::Limits(xs_.min(), xs_.max()))
         })
         .configure(Axis::LeftY, |a| {
@@ -248,7 +248,7 @@ pub(crate) fn pdf_small(
         .set(Font(DEFAULT_FONT))
         .set(size.unwrap_or(SIZE))
         .configure(Axis::BottomX, |a| {
-            a.set(Label(format!("Average time ({})", unit)))
+            a.set(Label(format!("Average time ({unit})")))
                 .set(Range::Limits(xs_.min(), xs_.max()))
         })
         .configure(Axis::LeftY, |a| {
@@ -317,7 +317,7 @@ fn pdf_comparison_figure(
         .set(Font(DEFAULT_FONT))
         .set(size.unwrap_or(SIZE))
         .configure(Axis::BottomX, |a| {
-            a.set(Label(format!("Average time ({})", unit)))
+            a.set(Label(format!("Average time ({unit})")))
         })
         .configure(Axis::LeftY, |a| a.set(Label("Density (a.u.)")))
         .configure(Axis::RightY, |a| a.hide())

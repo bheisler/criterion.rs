@@ -90,8 +90,13 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         for _ in 0..self.iters {
             black_box(routine());
         }
-        self.value = self.measurement.end(start);
+        self.value = self.measurement.end(&start);
+        debug_assert!(self.measurement.to_f64(&self.value).is_finite());
+        debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         self.elapsed_time = time_start.elapsed();
+        if self.elapsed_time < Duration::from_nanos(1) {
+            self.elapsed_time = Duration::from_nanos(1);
+        }
     }
 
     /// Times a `routine` by executing it many times and relying on `routine` to measure its own execution time.
@@ -136,7 +141,12 @@ impl<'a, M: Measurement> Bencher<'a, M> {
         self.iterated = true;
         let time_start = Instant::now();
         self.value = routine(self.iters);
+        debug_assert!(self.measurement.to_f64(&self.value).is_finite());
+        debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         self.elapsed_time = time_start.elapsed();
+        if self.elapsed_time < Duration::from_nanos(1) {
+            self.elapsed_time = Duration::from_nanos(1);
+        }
     }
 
     #[doc(hidden)]
@@ -248,7 +258,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
 
                 let start = self.measurement.start();
                 let output = routine(input);
-                let end = self.measurement.end(start);
+                let end = self.measurement.end(&start);
                 self.value = self.measurement.add(&self.value, &end);
 
                 drop(black_box(output));
@@ -264,7 +274,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
 
                 let start = self.measurement.start();
                 outputs.extend(inputs.into_iter().map(&mut routine));
-                let end = self.measurement.end(start);
+                let end = self.measurement.end(&start);
                 self.value = self.measurement.add(&self.value, &end);
 
                 black_box(outputs);
@@ -272,8 +282,13 @@ impl<'a, M: Measurement> Bencher<'a, M> {
                 iteration_counter += batch_size;
             }
         }
+        debug_assert!(self.measurement.to_f64(&self.value).is_finite());
+        debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
 
         self.elapsed_time = time_start.elapsed();
+        if self.elapsed_time < Duration::from_nanos(1) {
+            self.elapsed_time = Duration::from_nanos(1);
+        }
     }
 
     /// Times a `routine` that requires some input by generating a batch of input, then timing the
@@ -336,7 +351,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
 
                 let start = self.measurement.start();
                 let output = routine(&mut input);
-                let end = self.measurement.end(start);
+                let end = self.measurement.end(&start);
                 self.value = self.measurement.add(&self.value, &end);
 
                 drop(black_box(output));
@@ -353,7 +368,7 @@ impl<'a, M: Measurement> Bencher<'a, M> {
 
                 let start = self.measurement.start();
                 outputs.extend(inputs.iter_mut().map(&mut routine));
-                let end = self.measurement.end(start);
+                let end = self.measurement.end(&start);
                 self.value = self.measurement.add(&self.value, &end);
 
                 black_box(outputs);
@@ -361,7 +376,12 @@ impl<'a, M: Measurement> Bencher<'a, M> {
                 iteration_counter += batch_size;
             }
         }
+        debug_assert!(self.measurement.to_f64(&self.value).is_finite());
+        debug_assert!(self.measurement.lt(&self.measurement.zero(), &self.value));
         self.elapsed_time = time_start.elapsed();
+        if self.elapsed_time < Duration::from_nanos(1) {
+            self.elapsed_time = Duration::from_nanos(1);
+        }
     }
 
     // Benchmarks must actually call one of the iter methods. This causes benchmarks to fail loudly
@@ -439,7 +459,12 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
                 black_box(routine().await);
             }
             b.value = b.measurement.end(start);
+            debug_assert!(self.measurement.to_f64(&self.value).is_finite());
+            debug_assert!(b.measurement.lt(&b.measurement.zero(), &b.value));
             b.elapsed_time = time_start.elapsed();
+            if b.elapsed_time < Duration::from_nanos(1) {
+                b.elapsed_time = Duration::from_nanos(1);
+            }
         });
     }
 
@@ -491,7 +516,12 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
             b.iterated = true;
             let time_start = Instant::now();
             b.value = routine(b.iters).await;
+            debug_assert!(self.measurement.to_f64(&self.value).is_finite());
+            debug_assert!(b.measurement.lt(&b.measurement.zero(), &b.value));
             b.elapsed_time = time_start.elapsed();
+            if self.elapsed_time < Duration::from_nanos(1) {
+                self.elapsed_time = Duration::from_nanos(1);
+            }
         })
     }
 
@@ -648,8 +678,13 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
                     iteration_counter += batch_size;
                 }
             }
+            debug_assert!(b.measurement.to_f64(&b.value).is_finite());
+            debug_assert!(b.measurement.lt(&b.measurement.zero(), &b.value));
 
             b.elapsed_time = time_start.elapsed();
+            if b.elapsed_time < Duration::from_nanos(1) {
+                b.elapsed_time = Duration::from_nanos(1);
+            }
         })
     }
 
@@ -745,7 +780,12 @@ impl<'a, 'b, A: AsyncExecutor, M: Measurement> AsyncBencher<'a, 'b, A, M> {
                     iteration_counter += batch_size;
                 }
             }
+            debug_assert!(b.measurement.to_f64(&b.value).is_finite());
+            debug_assert!(b.measurement.lt(&b.measurement.zero(), &b.value));
             b.elapsed_time = time_start.elapsed();
+            if b.elapsed_time < Duration::new(0, 1) {
+                b.elapsed_time = Duration::new(0, 1);
+            }
         });
     }
 }

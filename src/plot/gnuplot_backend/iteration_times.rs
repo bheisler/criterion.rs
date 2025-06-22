@@ -23,7 +23,7 @@ fn iteration_times_figure(
         })
         .configure(Axis::LeftY, |a| {
             a.configure(Grid::Major, |g| g.show())
-                .set(Label(format!("Average Iteration Time ({})", unit)))
+                .set(Label(format!("Average Iteration Time ({unit})")))
         })
         .plot(
             Points {
@@ -102,7 +102,7 @@ fn iteration_times_comparison_figure(
         })
         .configure(Axis::LeftY, |a| {
             a.configure(Grid::Major, |g| g.show())
-                .set(Label(format!("Average Iteration Time ({})", unit)))
+                .set(Label(format!("Average Iteration Time ({unit})")))
         })
         .configure(Key, |k| {
             k.set(Justification::Left)

@@ -346,6 +346,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cpuid"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0c4b055219ace68cabfbb8071c4aad068565d11b67e092e151b17b9fd3bdba9"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "criterion"
 version = "0.6.0"
 dependencies = [
@@ -355,10 +364,12 @@ dependencies = [
  "cast",
  "ciborium",
  "clap",
+ "cpuid",
  "criterion-plot",
  "csv",
  "futures",
  "itertools",
+ "mach-sys",
  "num-traits",
  "oorandom",
  "plotters",
@@ -714,6 +725,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 dependencies = [
  "value-bag",
+]
+
+[[package]]
+name = "mach-sys"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "48460c2e82a3a0de197152fdf8d2c2d5e43adc501501553e439bf2156e6f87c7"
+dependencies = [
+ "fastrand",
 ]
 
 [[package]]

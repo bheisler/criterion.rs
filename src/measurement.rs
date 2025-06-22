@@ -70,6 +70,7 @@ pub trait ValueFormatter {
 /// of that set of iterations) and `end` is called at the end of the measurement with the value
 /// returned by `start`.
 ///
+/// All Measurements must be greater than 0.
 pub trait Measurement {
     /// This type represents an intermediate value for the measurements. It will be produced by the
     /// start function and passed to the end function. An example might be the wall-clock time as
@@ -84,7 +85,7 @@ pub trait Measurement {
     fn start(&self) -> Self::Intermediate;
 
     /// Criterion.rs will call this after iterating the benchmark to get the measured value.
-    fn end(&self, i: Self::Intermediate) -> Self::Value;
+    fn end(&self, i: &Self::Intermediate) -> Self::Value;
 
     /// Combine two values. Criterion.rs sometimes needs to perform measurements in multiple batches
     /// of iterations, so the value from one batch must be added to the sum of the previous batches.
@@ -93,6 +94,15 @@ pub trait Measurement {
     /// Return a "zero" value for the Value type which can be added to another value.
     fn zero(&self) -> Self::Value;
 
+    /// Return the least value greater than zero.
+    fn one(&self) -> Self::Value;
+
+    /// Return true iff val < other.
+    fn lt(&self, val: &Self::Value, other: &Self::Value) -> bool;
+    
+    /// Print some stuff about these
+    fn debugprint(&self, val: &Self::Intermediate, other: &Self::Value);
+    
     /// Converts the measured value to f64 so that it can be used in statistical analysis.
     fn to_f64(&self, value: &Self::Value) -> f64;
 
@@ -240,8 +250,13 @@ impl Measurement for WallTime {
     fn start(&self) -> Self::Intermediate {
         Instant::now()
     }
-    fn end(&self, i: Self::Intermediate) -> Self::Value {
-        i.elapsed()
+    fn end(&self, i: &Self::Intermediate) -> Self::Value {
+        let e = i.elapsed();
+        if e > Duration::from_nanos(0) {
+            e
+        } else {
+            Duration::from_nanos(1)
+        }
     }
     fn add(&self, v1: &Self::Value, v2: &Self::Value) -> Self::Value {
         *v1 + *v2
@@ -249,10 +264,235 @@ impl Measurement for WallTime {
     fn zero(&self) -> Self::Value {
         Duration::from_secs(0)
     }
+    fn one(&self) -> Self::Value {
+        Duration::from_nanos(1)
+    }
+    fn lt(&self, val: &Self::Value, other: &Self::Value) -> bool {
+        val < other
+    }
+    fn debugprint(&self, val: &Self::Intermediate, other: &Self::Value) {
+        eprintln!("val: {val:?}, other: {other:?}");
+    }
     fn to_f64(&self, val: &Self::Value) -> f64 {
         val.as_nanos() as f64
     }
     fn formatter(&self) -> &dyn ValueFormatter {
         &DurationFormatter
+    }
+}
+
+#[cfg(target_vendor = "apple")]
+/// A slightly better timer for Apple platforms.
+pub mod plat_apple {
+    use mach_sys::mach_time::{mach_absolute_time, mach_timebase_info};
+    use mach_sys::kern_return::KERN_SUCCESS;
+    use crate::measurement::ValueFormatter;
+    use std::mem::MaybeUninit;
+    use crate::{Measurement, Throughput};
+
+    #[derive(Default)]
+    /// Use the `mach_absolute_time()` clock, which is slightly better
+    /// in my [tests](https://github.com/zooko/measure-clocks) than
+    /// `Instant::now()`.
+    pub struct MachAbsoluteTimeMeasurement { }
+
+    /// Formatter
+    pub struct MachAbsoluteTimeValueFormatter { }
+
+    impl ValueFormatter for MachAbsoluteTimeValueFormatter {
+        fn scale_values(&self, typical_value: f64, values: &mut [f64]) -> &'static str {
+            let mut mtt1: MaybeUninit<mach_timebase_info> = MaybeUninit::uninit();
+            let retval = unsafe { mach_timebase_info(mtt1.as_mut_ptr()) };
+            assert_eq!(retval, KERN_SUCCESS);
+            let mtt2 = unsafe { mtt1.assume_init() };
+
+            let typical_as_nanos = typical_value * mtt2.numer as f64 / mtt2.denom as f64;
+            let (factor, unit) = if typical_as_nanos < 10f64.powi(0) {
+                (10f64.powi(3), "ps")
+            } else if typical_as_nanos < 10f64.powi(3) {
+                (10f64.powi(0), "ns")
+            } else if typical_as_nanos < 10f64.powi(6) {
+                (10f64.powi(-3), "µs")
+            } else if typical_as_nanos < 10f64.powi(9) {
+                (10f64.powi(-6), "ms")
+            } else {
+                (10f64.powi(-9), "s")
+            };
+
+            for val in values {
+                *val *= factor * mtt2.numer as f64;
+                *val /= mtt2.denom as f64;
+            }
+
+            unit
+        }
+        
+        fn scale_throughputs(
+            &self,
+            _typical: f64,
+            _throughput: &Throughput,
+            _values: &mut [f64],
+        ) -> &'static str {
+            todo!();
+        }
+
+        fn scale_for_machines(&self, _values: &mut [f64]) -> &'static str {
+            // no scaling is needed
+            "ns"
+        }
+    }
+
+    impl Measurement for MachAbsoluteTimeMeasurement {
+        type Intermediate = u64;
+        type Value = u64;
+
+        fn start(&self) -> Self::Intermediate {
+            unsafe { mach_absolute_time() }
+        }
+        fn end(&self, i: &Self::Intermediate) -> Self::Value {
+            let t = unsafe { mach_absolute_time() };
+            if t > *i {
+                t - *i
+            } else {
+                1
+            }
+        }
+        fn add(&self, v1: &Self::Value, v2: &Self::Value) -> Self::Value {
+            *v1 + *v2
+        }
+        fn zero(&self) -> Self::Value {
+            0
+        }
+        fn one(&self) -> Self::Value {
+            1
+        }
+        fn lt(&self, val: &Self::Value, other: &Self::Value) -> bool {
+            val < other
+        }
+        fn debugprint(&self, val: &Self::Intermediate, other: &Self::Value) {
+            eprintln!("val: {val:?}, other: {other:?}");
+        }
+        fn to_f64(&self, val: &Self::Value) -> f64 {
+            *val as f64
+        }
+        fn formatter(&self) -> &dyn ValueFormatter {
+            &MachAbsoluteTimeValueFormatter { }
+        }
+    }
+}
+
+#[cfg(target_arch = "x86_64")]
+/// A slightly better timer for `x86_64` platforms.
+pub mod plat_x86_64 {
+    use cpuid;
+    use crate::{Throughput, Measurement};
+    use crate::measurement::ValueFormatter;
+    use core::arch::x86_64;
+
+    #[derive(Default)]
+    /// Use RDTSCP instruction as a clock.
+    pub struct RDTSCPMeasurement { }
+
+    /// Formatter.
+    pub struct RDTSCPValueFormatter { }
+
+    impl ValueFormatter for RDTSCPValueFormatter {
+        fn scale_values(&self, typical_value: f64, values: &mut [f64]) -> &'static str {
+            // xxx maybe store the auto-detected frequency during the warm-up period in this struct instead of detecting it at this point in the run?
+                
+            let ofreq = cpuid::clock_frequency();
+            debug_assert!(ofreq.is_some());
+            let freq_mhz = ofreq.unwrap();
+
+            let typical_as_nanos = typical_value * 1000.0 / freq_mhz as f64;
+            let (factor, unit) = if typical_as_nanos < 10f64.powi(0) {
+                (10f64.powi(3), "ps")
+            } else if typical_as_nanos < 10f64.powi(3) {
+                (10f64.powi(0), "ns")
+            } else if typical_as_nanos < 10f64.powi(6) {
+                (10f64.powi(-3), "µs")
+            } else if typical_as_nanos < 10f64.powi(9) {
+                (10f64.powi(-6), "ms")
+            } else {
+                (10f64.powi(-9), "s")
+            };
+
+            for val in values {
+                *val *= factor * 1000.0;
+                *val /= freq_mhz as f64;
+            }
+
+            unit
+        }
+        
+        fn scale_throughputs(
+            &self,
+            _typical: f64,
+            _throughput: &Throughput,
+            _values: &mut [f64],
+        ) -> &'static str {
+            todo!();
+        }
+
+        fn scale_for_machines(&self, _values: &mut [f64]) -> &'static str {
+            // no scaling is needed
+            "ns"
+        }
+    }
+
+    impl Measurement for RDTSCPMeasurement {
+        type Intermediate = (u32, u64);
+        type Value = Option<u64>;
+
+        fn start(&self) -> Self::Intermediate {
+            let mut aux = 0;
+            let cycs = unsafe { x86_64::__rdtscp(&mut aux) };
+            ( aux, cycs )
+        }
+        fn end(&self, i: &Self::Intermediate) -> Self::Value {
+            let mut aux = 0;
+            let cycs = unsafe { x86_64::__rdtscp(&mut aux) };
+            if i.0 != aux {
+                None
+            } else {
+                if cycs > i.1 {
+                    Some(cycs - i.1)
+                } else {
+                    Some(1)
+                }
+            }
+        }
+        fn add(&self, v1: &Self::Value, v2: &Self::Value) -> Self::Value {
+            Some((*v1)? + (*v2)?)
+        }
+        fn zero(&self) -> Self::Value {
+            Some(0)
+        }
+        fn one(&self) -> Self::Value {
+            Some(1)
+        }
+        fn lt(&self, val: &Self::Value, other: &Self::Value) -> bool {
+            if val.is_some() && other.is_some() {
+                val < other
+            } else {
+                false
+            }
+        }
+        fn debugprint(&self, val: &Self::Intermediate, other: &Self::Value) {
+            eprintln!("val: {val:?}, other: {other:?}");
+        }
+        fn to_f64(&self, oval: &Self::Value) -> f64 {
+            match oval {
+                Some(val) => {
+                    *val as f64
+                }
+                None => {
+                    f64::NAN // ??? this could cause trouble...
+                }
+            }
+        }
+        fn formatter(&self) -> &dyn ValueFormatter {
+            &RDTSCPValueFormatter { }
+        }
     }
 }

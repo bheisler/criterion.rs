@@ -37,7 +37,7 @@ impl Script for Properties {
         script.push_str("fillstyle ");
 
         if let Some(opacity) = self.opacity {
-            script.push_str(&format!("solid {} ", opacity))
+            script.push_str(&format!("solid {opacity} "))
         }
 
         // TODO border shoulde be configurable

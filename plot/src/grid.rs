@@ -40,7 +40,7 @@ impl Script for (Axis, Grid, &Properties) {
         if properties.hidden {
             String::new()
         } else {
-            format!("set grid {}{}tics\n", grid, axis)
+            format!("set grid {grid}{axis}tics\n")
         }
     }
 }

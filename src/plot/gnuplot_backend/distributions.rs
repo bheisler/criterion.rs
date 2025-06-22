@@ -67,7 +67,7 @@ fn abs_distribution(
             statistic
         )))
         .configure(Axis::BottomX, |a| {
-            a.set(Label(format!("Average time ({})", unit)))
+            a.set(Label(format!("Average time ({unit})")))
                 .set(Range::Limits(kde_xs_sample.min(), kde_xs_sample.max()))
         })
         .configure(Axis::LeftY, |a| a.set(Label("Density (a.u.)")))
@@ -113,7 +113,7 @@ fn abs_distribution(
             },
         );
 
-    let path = context.report_path(id, &format!("{}.svg", statistic));
+    let path = context.report_path(id, &format!("{statistic}.svg"));
     debug_script(&path, &figure);
     figure.set(Output(path)).draw().unwrap()
 }
@@ -276,7 +276,7 @@ fn rel_distribution(
             },
         );
 
-    let path = context.report_path(id, &format!("change/{}.svg", statistic));
+    let path = context.report_path(id, &format!("change/{statistic}.svg"));
     debug_script(&path, &figure);
     figure.set(Output(path)).draw().unwrap()
 }

@@ -15,12 +15,15 @@ fn abs_distribution(
 ) {
     let ci = &estimate.confidence_interval;
     let typical = ci.upper_bound;
+    debug_assert!(typical.is_finite());
     let mut ci_values = [ci.lower_bound, ci.upper_bound, estimate.point_estimate];
     let unit = formatter.scale_values(typical, &mut ci_values);
     let (lb, ub, point) = (ci_values[0], ci_values[1], ci_values[2]);
 
     let start = lb - (ub - lb) / 9.;
+    debug_assert!(start.is_finite());
     let end = ub + (ub - lb) / 9.;
+    debug_assert!(end.is_finite());
     let mut scaled_xs: Vec<f64> = distribution.iter().cloned().collect();
     let _ = formatter.scale_values(typical, &mut scaled_xs);
     let scaled_xs_sample = Sample::new(&scaled_xs);
@@ -56,7 +59,11 @@ fn abs_distribution(
     let root_area = SVGBackend::new(&path, size.unwrap_or(SIZE)).into_drawing_area();
 
     let x_range = plotters::data::fitting_range(kde_xs_sample.iter());
+    debug_assert!(x_range.start.is_finite());
+    debug_assert!(x_range.end.is_finite());
     let mut y_range = plotters::data::fitting_range(ys.iter());
+    debug_assert!(y_range.start.is_finite());
+    debug_assert!(y_range.end.is_finite());
 
     y_range.end *= 1.1;
 
@@ -164,6 +171,8 @@ fn rel_distribution(
 ) {
     let ci = &estimate.confidence_interval;
     let (lb, ub) = (ci.lower_bound, ci.upper_bound);
+    debug_assert!(lb.is_finite());
+    debug_assert!(ub.is_finite());
 
     let start = lb - (ub - lb) / 9.;
     let end = ub + (ub - lb) / 9.;

@@ -71,7 +71,7 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
         match loaded {
             Err(err) => panic!(
                 "Baseline '{base}' must exist before it can be loaded; try --save-baseline {base}. Error: {err}",
-                base = baseline, err = err
+                base=criterion.baseline_directory,
             ),
             Ok(samples) => {
                 sampling_mode = samples.sampling_mode;
@@ -116,6 +116,14 @@ pub(crate) fn common<M: Measurement, T: ?Sized>(
             "At least one measurement of benchmark {} took zero time per \
             iteration. This should not be possible. If using iter_custom, please verify \
             that your routine is correctly measured.",
+            id.as_title()
+        );
+        return;
+    }
+
+    if times.contains(&f64::NAN) {
+        error!(
+            "At least one measurement of benchmark {} had a NAN.",
             id.as_title()
         );
         return;

@@ -30,18 +30,17 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::AccessError { path, inner } => {
-                write!(f, "Failed to access file {:?}: {}", path, inner)
+                write!(f, "Failed to access file {path:?}: {inner}")
             }
             Error::CopyError { from, to, inner } => {
-                write!(f, "Failed to copy file {:?} to {:?}: {}", from, to, inner)
+                write!(f, "Failed to copy file {from:?} to {to:?}: {inner}")
             }
             Error::SerdeError { path, inner } => write!(
                 f,
-                "Failed to read or write file {:?} due to serialization error: {}",
-                path, inner
+                "Failed to read or write file {path:?} due to serialization error: {inner}"
             ),
             #[cfg(feature = "csv_output")]
-            Error::CsvError(inner) => write!(f, "CSV error: {}", inner),
+            Error::CsvError(inner) => write!(f, "CSV error: {inner}"),
         }
     }
 }

@@ -40,7 +40,7 @@ use std::time::Duration;
 ///     for x in 0..3 {
 ///         for y in 0..3 {
 ///             let point = (x, y);
-///             let parameter_string = format!("{} * {}", x, y);
+///             let parameter_string = format!("{x} * {y}");
 ///             group.bench_with_input(BenchmarkId::new("Multiply", parameter_string), &point,
 ///                 |b, (p_x, p_y)| b.iter(|| p_x * p_y));
 ///         }
@@ -329,7 +329,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
             }
             Mode::List(_) => {
                 if do_run {
-                    println!("{}: benchmark", id);
+                    println!("{id}: benchmark");
                 }
             }
             Mode::Test => {
@@ -440,7 +440,7 @@ impl BenchmarkId {
     ) -> BenchmarkId {
         BenchmarkId {
             function_name: Some(function_name.into()),
-            parameter: Some(format!("{}", parameter)),
+            parameter: Some(format!("{parameter}")),
         }
     }
 
@@ -449,7 +449,7 @@ impl BenchmarkId {
     pub fn from_parameter<P: ::std::fmt::Display>(parameter: P) -> BenchmarkId {
         BenchmarkId {
             function_name: None,
-            parameter: Some(format!("{}", parameter)),
+            parameter: Some(format!("{parameter}")),
         }
     }
 
@@ -463,7 +463,7 @@ impl BenchmarkId {
     pub(crate) fn no_function_with_input<P: ::std::fmt::Display>(parameter: P) -> BenchmarkId {
         BenchmarkId {
             function_name: None,
-            parameter: Some(format!("{}", parameter)),
+            parameter: Some(format!("{parameter}")),
         }
     }
 }

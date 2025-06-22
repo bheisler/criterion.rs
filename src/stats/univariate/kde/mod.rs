@@ -58,14 +58,30 @@ where
     pub fn estimate(&self, x: A) -> A {
         let _0 = A::cast(0);
         let slice = self.sample;
-        let h = self.bandwidth;
+        let mut h = self.bandwidth;
+        debug_assert!(h.is_finite());
+        debug_assert!(!h.is_sign_negative());
+        //assert!(!h.is_zero());
+        if h.is_zero() {
+            h = A::min_positive_value();
+        }
         let n = A::cast(slice.len());
+        debug_assert!(n.is_finite());
+        debug_assert!(!n.is_zero());
 
         let sum = slice
             .iter()
             .fold(_0, |acc, &x_i| acc + self.kernel.evaluate((x - x_i) / h));
+        debug_assert!(sum.is_finite());
+        //assert!(!sum.is_zero());
 
-        sum / (h * n)
+        let mut res = sum / (h * n);
+        debug_assert!(res.is_finite());
+        if res.is_zero() {
+            res = A::min_positive_value();
+        }
+        //assert!(!res.is_zero());
+        res
     }
 }
 
