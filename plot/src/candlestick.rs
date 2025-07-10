@@ -3,6 +3,7 @@
 use std::borrow::Cow;
 
 use crate::data::Matrix;
+use crate::itertools_mini::zip5;
 use crate::traits::{self, Data, Set};
 use crate::{Color, Default, Display, Figure, Label, LineType, LineWidth, Plot, Script};
 
@@ -140,7 +141,7 @@ where
         } = candlesticks;
 
         let data = Matrix::new(
-            itertools::izip!(x, box_min, whisker_min, whisker_high, box_high),
+            zip5(x, box_min, whisker_min, whisker_high, box_high),
             (x_factor, y_factor, y_factor, y_factor, y_factor),
         );
         self.plots

@@ -3,6 +3,7 @@
 use std::borrow::Cow;
 
 use crate::data::Matrix;
+use crate::itertools_mini::zip4;
 use crate::traits::{self, Data, Set};
 use crate::{
     Color, Display, ErrorBarDefault, Figure, Label, LineType, LineWidth, Plot, PointSize,
@@ -259,7 +260,7 @@ where
             } => (x, y, y_low, y_high, y_factor),
         };
         let data = Matrix::new(
-            itertools::izip!(x, y, length, height),
+            zip4(x, y, length, height),
             (x_factor, y_factor, e_factor, e_factor),
         );
         self.plots.push(Plot::new(

@@ -391,6 +391,7 @@ pub mod curve;
 pub mod errorbar;
 pub mod filledcurve;
 pub mod grid;
+mod itertools_mini;
 pub mod key;
 pub mod prelude;
 pub mod proxy;
