@@ -358,7 +358,6 @@ dependencies = [
  "criterion-plot",
  "csv",
  "futures",
- "itertools",
  "num-traits",
  "oorandom",
  "plotters",
