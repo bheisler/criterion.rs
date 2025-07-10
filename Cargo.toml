@@ -24,7 +24,6 @@ exclude     = ["book/*"]
 [dependencies]
 anes           = "0.1.4"
 criterion-plot = { path = "plot", version = "0.5.0" }
-itertools      = "0.13"
 serde          = { version = "1.0.100", features = ["derive"] }
 serde_json     = "1.0.100"
 ciborium       = "0.2.0"
