@@ -1,12 +1,12 @@
 use super::{debug_script, gnuplot_escape};
 use super::{DARK_BLUE, DEFAULT_FONT, KDE_POINTS, LINEWIDTH, POINT_SIZE, SIZE};
+use crate::itertools_mini::chunk_by;
 use crate::kde;
 use crate::measurement::ValueFormatter;
 use crate::report::{BenchmarkId, ValueType};
 use crate::stats::univariate::Sample;
 use crate::AxisScale;
 use criterion_plot::prelude::*;
-use itertools::Itertools;
 use std::cmp::Ordering;
 use std::path::{Path, PathBuf};
 use std::process::Child;
@@ -84,8 +84,9 @@ pub fn line_comparison(
     // This assumes the curves are sorted. It also assumes that the benchmark IDs all have numeric
     // values or throughputs and that value is sensible (ie. not a mix of bytes and elements
     // or whatnot)
-    for (key, group) in &all_curves.iter().chunk_by(|&&&(id, _)| &id.function_id) {
+    for (key, group) in chunk_by(all_curves, |&&(id, _)| &id.function_id) {
         let mut tuples: Vec<_> = group
+            .iter()
             .map(|&&(id, ref sample)| {
                 // Unwrap is fine here because it will only fail if the assumptions above are not true
                 // ie. programmer error.

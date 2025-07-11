@@ -47,6 +47,7 @@ mod estimate;
 mod format;
 mod fs;
 mod html;
+mod itertools_mini;
 mod kde;
 mod macros;
 pub mod measurement;
