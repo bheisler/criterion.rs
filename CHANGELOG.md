@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-07-25
+- Bump version of criterion-plot to align dependencies.
+
 ## [0.6.0] - 2025-05-17
 
 ### Changed
