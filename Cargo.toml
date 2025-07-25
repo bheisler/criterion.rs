@@ -7,7 +7,7 @@ name = "criterion"
 # When bumping:
 #
 # * Update version numbers in the book;
-version = "0.6.0"
+version = "0.7.0"
 edition = "2021"
 # Update the MSRV variable in .github/workflows/ci.yml when changing this.
 rust-version = "1.80"
@@ -23,7 +23,7 @@ exclude     = ["book/*"]
 
 [dependencies]
 anes           = "0.1.4"
-criterion-plot = { path = "plot", version = "0.5.0" }
+criterion-plot = { path = "plot", version = "0.6.0" }
 itertools      = "0.13"
 serde          = { version = "1.0.100", features = ["derive"] }
 serde_json     = "1.0.100"
