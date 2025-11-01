@@ -129,7 +129,7 @@ parameters are automatically black-boxed by Criterion.rs so you don't need to do
 writing an un-parameterized benchmark of a function that takes an argument, however, this may be
 worth considering.
 
-### Cargo Prints a Warning About Explicit [[bench]] Sections in Cargo.toml
+### Cargo Prints a Warning About Explicit `[[bench]]` Sections in Cargo.toml
 
 Currently, Cargo treats any `*.rs` file in the `benches` directory as a
 benchmark, unless there are one or more `[[bench]]` sections in the
