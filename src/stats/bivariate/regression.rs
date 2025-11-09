@@ -45,9 +45,25 @@ where
 
         for (&x, &y) in data.iter() {
             ss_res = ss_res + (y - m * x).powi(2);
-            ss_tot = ss_res + (y - y_bar).powi(2);
+            ss_tot = ss_tot + (y - y_bar).powi(2);
         }
 
         _1 - ss_res / ss_tot
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn r_squared() {
+        let data = Data::new(&[0.0, 1.0, 2.0, 3.0], &[0.0, 2.0, 4.0, 6.0]);
+
+        let r2_perfect_fit: f64 = Slope(2.0).r_squared(&data);
+        assert!((r2_perfect_fit - 1.0).abs() < 1e-12);
+
+        let r2_bad_fit: f64 = Slope(1.0).r_squared(&data);
+        assert!((r2_bad_fit - 0.3).abs() < 1e-12);
     }
 }
