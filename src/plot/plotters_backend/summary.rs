@@ -34,8 +34,7 @@ pub fn line_comparison(
         plotters::data::fitting_range(series_data.iter().flat_map(|(_, xs, _)| xs.iter()));
     let y_range =
         plotters::data::fitting_range(series_data.iter().flat_map(|(_, _, ys)| ys.iter()));
-    let root_area = SVGBackend::new(&path, SIZE)
-        .into_drawing_area()
+    let root_area = new_svg_drawing_area(&path, SIZE)
         .titled(&format!("{}: Comparison", title), (DEFAULT_FONT, 20))
         .unwrap();
 
@@ -202,8 +201,7 @@ pub fn violin(
 
     let size = (960, 150 + (18 * all_curves.len() as u32));
 
-    let root_area = SVGBackend::new(&path, size)
-        .into_drawing_area()
+    let root_area = new_svg_drawing_area(&path, size)
         .titled(&format!("{}: Violin plot", title), (DEFAULT_FONT, 20))
         .unwrap();
 

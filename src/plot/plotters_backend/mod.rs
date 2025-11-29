@@ -1,6 +1,9 @@
+use std::path::Path;
+
 use super::{PlotContext, PlotData, Plotter};
 use crate::measurement::ValueFormatter;
 use crate::report::{BenchmarkId, ComparisonData, MeasurementData, ValueType};
+use plotters::coord::Shift;
 use plotters::data::float::pretty_print_float;
 use plotters::prelude::*;
 
@@ -32,6 +35,23 @@ fn convert_size(size: Option<(usize, usize)>) -> Option<(u32, u32)> {
 }
 #[derive(Default)]
 pub struct PlottersBackend;
+
+pub(crate) fn new_svg_drawing_area(
+    path: &Path,
+    size: (u32, u32),
+) -> DrawingArea<SVGBackend, Shift> {
+    let area = SVGBackend::new(path, size).into_drawing_area();
+    area.draw(&Rectangle::new(
+        [(0, 0), (size.0 as i32, size.1 as i32)],
+        ShapeStyle {
+            color: RGBAColor(255, 255, 255, 1.0),
+            filled: true,
+            stroke_width: 0,
+        },
+    ))
+    .unwrap();
+    area
+}
 
 #[allow(unused_variables)]
 impl Plotter for PlottersBackend {

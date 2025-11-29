@@ -38,7 +38,7 @@ pub(crate) fn regression_figure(
     };
 
     let size = size.unwrap_or(SIZE);
-    let root_area = SVGBackend::new(path, size).into_drawing_area();
+    let root_area = new_svg_drawing_area(&path, size);
 
     let mut cb = ChartBuilder::on(&root_area);
     if let Some(title) = title {
@@ -167,7 +167,7 @@ pub(crate) fn regression_comparison_figure(
     let y_max = point.max(base_point);
 
     let size = size.unwrap_or(SIZE);
-    let root_area = SVGBackend::new(path, size).into_drawing_area();
+    let root_area = new_svg_drawing_area(&path, size);
 
     let mut cb = ChartBuilder::on(&root_area);
     if let Some(title) = title {

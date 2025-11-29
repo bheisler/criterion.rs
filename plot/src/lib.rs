@@ -478,6 +478,12 @@ impl Figure {
             }
         }
 
+        // fillstyle transparent solid 1 is required for noborder to take effect?
+        s.push_str(
+            "\nset object 1 rect from screen 0,0 to screen 1,1 behind \
+                fillcolor rgb\"#ffffff\" fillstyle transparent solid 1 noborder\n",
+        );
+
         // TODO This removes the crossbars from the ends of error bars, but should be configurable
         s.push_str("\nunset bars\n");
 

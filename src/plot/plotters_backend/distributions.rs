@@ -53,7 +53,7 @@ fn abs_distribution(
     let kde_xs_sample = Sample::new(&kde_xs);
 
     let path = context.report_path(id, &format!("{}.svg", statistic));
-    let root_area = SVGBackend::new(&path, size.unwrap_or(SIZE)).into_drawing_area();
+    let root_area = new_svg_drawing_area(&path, size.unwrap_or(SIZE));
 
     let x_range = plotters::data::fitting_range(kde_xs_sample.iter());
     let mut y_range = plotters::data::fitting_range(ys.iter());
@@ -213,7 +213,7 @@ fn rel_distribution(
     };
     let y_range = plotters::data::fitting_range(ys.iter());
     let path = context.report_path(id, &format!("change/{}.svg", statistic));
-    let root_area = SVGBackend::new(&path, size.unwrap_or(SIZE)).into_drawing_area();
+    let root_area = new_svg_drawing_area(&path, size.unwrap_or(SIZE));
 
     let mut chart = ChartBuilder::on(&root_area)
         .margin((5).percent())

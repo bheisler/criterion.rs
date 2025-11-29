@@ -36,7 +36,7 @@ pub(crate) fn pdf_comparison_figure(
     let y_range = data::fitting_range(base_ys.iter().chain(ys.iter()));
 
     let size = size.unwrap_or(SIZE);
-    let root_area = SVGBackend::new(&path, (size.0, size.1)).into_drawing_area();
+    let root_area = new_svg_drawing_area(&path, size);
 
     let mut cb = ChartBuilder::on(&root_area);
 
@@ -130,7 +130,7 @@ pub(crate) fn pdf_small(
     let path = context.report_path(id, "pdf_small.svg");
 
     let size = size.unwrap_or(SIZE);
-    let root_area = SVGBackend::new(&path, (size.0, size.1)).into_drawing_area();
+    let root_area = new_svg_drawing_area(&path, size);
 
     let mut chart = ChartBuilder::on(&root_area)
         .margin((5).percent())
@@ -206,7 +206,7 @@ pub(crate) fn pdf(
     let xs_ = Sample::new(&xs);
 
     let size = size.unwrap_or(SIZE);
-    let root_area = SVGBackend::new(&path, (size.0, size.1)).into_drawing_area();
+    let root_area = new_svg_drawing_area(&path, size);
 
     let range = data::fitting_range(ys.iter());
 

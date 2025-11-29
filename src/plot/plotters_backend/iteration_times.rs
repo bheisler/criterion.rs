@@ -16,7 +16,7 @@ pub(crate) fn iteration_times_figure(
     let scaled_y = Sample::new(&scaled_y);
 
     let size = size.unwrap_or(SIZE);
-    let root_area = SVGBackend::new(path, size).into_drawing_area();
+    let root_area = new_svg_drawing_area(&path, size);
 
     let mut cb = ChartBuilder::on(&root_area);
     if let Some(title) = title {
@@ -82,7 +82,7 @@ pub(crate) fn iteration_times_comparison_figure(
     let scaled_base_y = Sample::new(scaled_base_y);
 
     let size = size.unwrap_or(SIZE);
-    let root_area = SVGBackend::new(path, size).into_drawing_area();
+    let root_area = new_svg_drawing_area(&path, size);
 
     let mut cb = ChartBuilder::on(&root_area);
     if let Some(title) = title {
