@@ -1,0 +1,70 @@
+on:
+  push:
+    paths:
+      - 'book/**'
+    branches:
+      - master
+
+name: publish docs
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Cache cargo registry and build artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install mdBook + mdbook-linkcheck2 (via Cargo)
+        run: |
+          set -eux
+          cargo install mdbook --version 0.5.2 --locked
+          cargo install mdbook-linkcheck2 --version 0.11.0 --locked
+
+      - name: Verify versions
+        run: |
+          mdbook --version
+          mdbook-linkcheck2 --version
+
+      - name: Build docs
+        run: |
+          cd book
+          mdbook build
+
+      - name: Deploy to GitHub Pages
+        run: |
+
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+
+          git worktree add gh-pages gh-pages || git worktree add --force gh-pages gh-pages || (
+            git branch gh-pages
+            git worktree add gh-pages gh-pages
+          )
+
+          cd gh-pages
+          rsync -av --delete ../book/book/html/ .
+
+          git status --porcelain
+                    
+          if [ "$(git status --porcelain)" != "" ]; then
+            git add --all
+            git commit -m "Publish built docs triggered by ${{ github.sha }}"
+          
+            git push --set-upstream origin gh-pages || \
+            git push --force origin gh-pages
+          fi
+          
