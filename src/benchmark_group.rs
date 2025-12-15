@@ -5,7 +5,7 @@ use crate::measurement::Measurement;
 use crate::report::BenchmarkId as InternalBenchmarkId;
 use crate::report::Report;
 use crate::report::ReportContext;
-use crate::routine::{Function, Routine};
+use crate::routine::Routine;
 use crate::{Bencher, Criterion, Mode, PlotConfiguration, SamplingMode, Throughput};
 use std::time::Duration;
 
@@ -25,7 +25,7 @@ use std::time::Duration;
 ///     // Now we can perform benchmarks with this group
 ///     group.bench_function("Bench 1", |b| b.iter(|| 1 ));
 ///     group.bench_function("Bench 2", |b| b.iter(|| 2 ));
-///    
+///
 ///     // It's recommended to call group.finish() explicitly at the end, but if you don't it will
 ///     // be called automatically when the group is dropped.
 ///     group.finish();
@@ -45,13 +45,13 @@ use std::time::Duration;
 ///                 |b, (p_x, p_y)| b.iter(|| p_x * p_y));
 ///         }
 ///     }
-///    
+///
 ///     group.finish();
 /// }
 ///
 /// fn bench_throughput(c: &mut Criterion) {
 ///     let mut group = c.benchmark_group("Summation");
-///     
+///
 ///     for size in [1024, 2048, 4096].iter() {
 ///         // Generate input of an appropriate size...
 ///         let input = vec![1u64, *size];
@@ -269,11 +269,20 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
         self
     }
 
-    fn run_bench<F, I>(&mut self, id: BenchmarkId, input: &I, f: F)
+    fn run_bench<F, I>(&mut self, id: BenchmarkId, input: &I, mut f: F)
     where
         F: FnMut(&mut Bencher<'_, M>, &I),
         I: ?Sized,
     {
+        self.run_bench_mono(id, input, &mut f);
+    }
+
+    fn run_bench_mono<I: ?Sized>(
+        &mut self,
+        id: BenchmarkId,
+        input: &I,
+        func: &mut dyn FnMut(&mut Bencher<'_, M>, &I),
+    ) {
         let config = self.partial_config.to_complete(&self.criterion.config);
         let report_context = ReportContext {
             output_directory: self.criterion.output_directory.clone(),
@@ -302,7 +311,6 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
 
         let do_run = self.criterion.filter_matches(id.id());
         self.any_matched |= do_run;
-        let mut func = Function::new(f);
 
         match &self.criterion.mode {
             Mode::Benchmark => {
@@ -318,7 +326,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
                 if do_run {
                     analysis::common(
                         &id,
-                        &mut func,
+                        func,
                         &config,
                         self.criterion,
                         &report_context,

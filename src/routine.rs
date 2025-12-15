@@ -4,7 +4,6 @@ use crate::measurement::Measurement;
 use crate::report::{BenchmarkId, Report, ReportContext};
 use crate::{ActualSamplingMode, Bencher, Criterion};
 use std::hint::black_box;
-use std::marker::PhantomData;
 use std::time::Duration;
 
 /// PRIVATE
@@ -204,38 +203,8 @@ pub(crate) trait Routine<M: Measurement, T: ?Sized> {
     }
 }
 
-pub struct Function<M: Measurement, F, T>
-where
-    F: FnMut(&mut Bencher<'_, M>, &T),
-    T: ?Sized,
-{
-    f: F,
-    // TODO: Is there some way to remove these?
-    _phantom: PhantomData<T>,
-    _phamtom2: PhantomData<M>,
-}
-impl<M: Measurement, F, T> Function<M, F, T>
-where
-    F: FnMut(&mut Bencher<'_, M>, &T),
-    T: ?Sized,
-{
-    pub fn new(f: F) -> Function<M, F, T> {
-        Function {
-            f,
-            _phantom: PhantomData,
-            _phamtom2: PhantomData,
-        }
-    }
-}
-
-impl<M: Measurement, F, T> Routine<M, T> for Function<M, F, T>
-where
-    F: FnMut(&mut Bencher<'_, M>, &T),
-    T: ?Sized,
-{
+impl<'a, M: Measurement, T: ?Sized> Routine<M, T> for dyn FnMut(&mut Bencher<'_, M>, &T) + 'a {
     fn bench(&mut self, m: &M, iters: &[u64], parameter: &T) -> Vec<f64> {
-        let f = &mut self.f;
-
         let mut b = Bencher {
             iterated: false,
             iters: 0,
@@ -248,7 +217,7 @@ where
             .iter()
             .map(|iters| {
                 b.iters = *iters;
-                (*f)(&mut b, black_box(parameter));
+                self(&mut b, black_box(parameter));
                 b.assert_iterated();
                 m.to_f64(&b.value)
             })
@@ -256,7 +225,6 @@ where
     }
 
     fn warm_up(&mut self, m: &M, how_long: Duration, parameter: &T) -> (u64, u64) {
-        let f = &mut self.f;
         let mut b = Bencher {
             iterated: false,
             iters: 1,
@@ -268,7 +236,7 @@ where
         let mut total_iters = 0;
         let mut elapsed_time = Duration::from_millis(0);
         loop {
-            (*f)(&mut b, black_box(parameter));
+            self(&mut b, black_box(parameter));
 
             b.assert_iterated();
 
