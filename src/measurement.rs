@@ -232,6 +232,7 @@ impl ValueFormatter for DurationFormatter {
 
 /// `WallTime` is the default measurement in Criterion.rs. It measures the elapsed time from the
 /// beginning of a series of iterations to the end.
+#[derive(Clone, Copy)]
 pub struct WallTime;
 impl Measurement for WallTime {
     type Intermediate = Instant;
