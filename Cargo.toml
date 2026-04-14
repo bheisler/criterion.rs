@@ -70,7 +70,7 @@ features = ["svg_backend", "area_series", "line_series"]
 tempfile = "3.5.0"
 approx = "0.5.0"
 quickcheck = { version = "1.0", default-features = false }
-rand = "0.8"
+rand = "0.9"
 futures = "0.3"
 
 [badges]
