@@ -1136,21 +1136,93 @@ impl Report for CliReport {
             return;
         }
 
-        let entries = load_estimates_for_ids(&context.output_directory, &available_ids);
-        let change = load_change_for_ids(&context.output_directory, &available_ids);
-        if entries.len() < 2 {
-            return;
+        // Check if benchmarks are parameterized (have both function_id and value_str).
+        // If so, produce per-value comparison tables so that implementations are compared
+        // at each parameter value separately rather than as one flat list.
+        let has_subgroups = available_ids
+            .iter()
+            .all(|id| id.function_id.is_some() && id.value_str.is_some());
+
+        if has_subgroups {
+            let mut value_strs: Vec<&str> = available_ids
+                .iter()
+                .filter_map(|id| id.value_str.as_deref())
+                .collect();
+            let all_numeric = value_strs.iter().all(|s| s.parse::<f64>().is_ok());
+            if all_numeric {
+                value_strs.sort_by(|a, b| {
+                    a.parse::<f64>()
+                        .unwrap()
+                        .partial_cmp(&b.parse::<f64>().unwrap())
+                        .unwrap_or(Ordering::Equal)
+                });
+            } else {
+                value_strs.sort();
+            }
+            value_strs.dedup();
+
+            let group_id = &available_ids[0].group_id;
+            self.text_overwrite();
+            println!(
+                "Comparison for group '{}' (by parameter):",
+                group_id
+            );
+            println!("  Higher is better; best performer is 1.00 (typical).");
+
+            for value_str in &value_strs {
+                let sub_ids: Vec<_> = available_ids
+                    .iter()
+                    .filter(|id| id.value_str.as_deref() == Some(*value_str))
+                    .copied()
+                    .collect();
+                if sub_ids.len() < 2 {
+                    continue;
+                }
+
+                let entries =
+                    load_estimates_for_ids(&context.output_directory, &sub_ids);
+                let change =
+                    load_change_for_ids(&context.output_directory, &sub_ids);
+                if entries.len() < 2 {
+                    continue;
+                }
+
+                let rows = build_comparison_rows(&entries, formatter, Some(&change));
+                if rows.is_empty() {
+                    continue;
+                }
+
+                println!();
+                println!("  n = {}:", value_str);
+                self.print_comparison_rows(&rows);
+            }
+        } else {
+            let entries = load_estimates_for_ids(&context.output_directory, &available_ids);
+            let change = load_change_for_ids(&context.output_directory, &available_ids);
+            if entries.len() < 2 {
+                return;
+            }
+
+            let rows = build_comparison_rows(&entries, formatter, Some(&change));
+            if rows.is_empty() {
+                return;
+            }
+
+            self.text_overwrite();
+            println!("Comparison for group '{}':", entries[0].0.group_id);
+            println!("  Higher is better; best performer is 1.00 (typical).");
+
+            self.print_comparison_rows(&rows);
         }
+    }
 
-        let rows = build_comparison_rows(&entries, formatter, Some(&change));
-        if rows.is_empty() {
-            return;
-        }
+    fn group_separator(&self) {
+        println!();
+    }
+}
 
-        self.text_overwrite();
-        println!("Comparison for group '{}':", entries[0].0.group_id);
-        println!("  Higher is better; best performer is 1.00 (typical).");
-
+impl CliReport {
+    fn print_comparison_rows(&self, rows: &[ComparisonRow]) {
         let show_labels = rows.len() > 1;
         let max_label_len = rows
             .iter()
@@ -1161,7 +1233,7 @@ impl Report for CliReport {
 
         for row in rows {
             if show_labels {
-                println!("  {}:", row.label);
+                println!("    {}:", row.label);
             }
             for (idx, cell) in row.cells.iter().enumerate() {
                 let ratio_str = format!("{:.3}", cell.ratio);
@@ -1255,7 +1327,7 @@ impl Report for CliReport {
                 };
 
                 println!(
-                    "    {}:{pad}{ratio} ({value}){change}{rank}",
+                    "      {}:{pad}{ratio} ({value}){change}{rank}",
                     label_colored,
                     pad = " ".repeat(padding + 1),
                     ratio = ratio_str,
@@ -1265,10 +1337,6 @@ impl Report for CliReport {
                 );
             }
         }
-    }
-
-    fn group_separator(&self) {
-        println!();
     }
 }
 

@@ -565,6 +565,7 @@ impl Report for Html {
                     context,
                     formatter,
                     false,
+                    false,
                 );
             }
         }
@@ -580,7 +581,17 @@ impl Report for Html {
                 let subgroup_id =
                     BenchmarkId::new(group_id.clone(), None, Some(value_str.clone()), None);
 
-                self.generate_summary(&subgroup_id, &samples_with_value, context, formatter, false);
+                // Enable comparison tables for per-value sub-groups when comparison mode
+                // is active, so each parameter value gets its own ranked comparison.
+                let enable_comparison = context.comparison;
+                self.generate_summary(
+                    &subgroup_id,
+                    &samples_with_value,
+                    context,
+                    formatter,
+                    false,
+                    enable_comparison,
+                );
             }
         }
 
@@ -610,6 +621,7 @@ impl Report for Html {
             &all_data,
             context,
             formatter,
+            true,
             true,
         );
         self.plotter.borrow_mut().wait();
@@ -831,6 +843,7 @@ impl Html {
         report_context: &ReportContext,
         formatter: &dyn ValueFormatter,
         full_summary: bool,
+        enable_comparison: bool,
     ) {
         let plot_ctx = PlotContext {
             id,
@@ -874,7 +887,7 @@ impl Html {
             })
             .collect();
 
-        let comparison = if full_summary && report_context.comparison {
+        let comparison = if enable_comparison && report_context.comparison {
             let ids: Vec<_> = data.iter().map(|&&(id, _)| id).collect();
             let estimates = load_estimates_for_ids(&report_context.output_directory, &ids);
             if estimates.len() == ids.len() && estimates.len() > 1 {
