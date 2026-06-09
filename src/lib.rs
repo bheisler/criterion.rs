@@ -179,6 +179,7 @@ pub fn black_box<T>(dummy: T) -> T {
 /// it will be difficult to take accurate measurements. In this situation, the best option is to use
 /// [`Bencher::iter`] which has next-to-zero measurement overhead.
 #[derive(Debug, Eq, PartialEq, Copy, Hash, Clone)]
+#[non_exhaustive]
 pub enum BatchSize {
     /// `SmallInput` indicates that the input to the benchmark routine (the value returned from
     /// the setup routine) is small enough that millions of values can be safely held in memory.
@@ -219,9 +220,6 @@ pub enum BatchSize {
     /// will be larger than that of `NumBatches`. Most benchmarks should use `SmallInput` or
     /// `LargeInput` instead.
     NumIterations(u64),
-
-    #[doc(hidden)]
-    __NonExhaustive,
 }
 impl BatchSize {
     /// Convert to a number of iterations per batch.
@@ -232,12 +230,11 @@ impl BatchSize {
     /// measurement overhead from the benchmark time.
     fn iters_per_batch(self, iters: u64) -> u64 {
         match self {
-            BatchSize::SmallInput => (iters + 10 - 1) / 10,
-            BatchSize::LargeInput => (iters + 1000 - 1) / 1000,
+            BatchSize::SmallInput => iters.div_ceil(10),
+            BatchSize::LargeInput => iters.div_ceil(1000),
             BatchSize::PerIteration => 1,
-            BatchSize::NumBatches(batches) => (iters + batches - 1) / batches,
+            BatchSize::NumBatches(batches) => iters.div_ceil(batches),
             BatchSize::NumIterations(size) => size,
-            BatchSize::__NonExhaustive => panic!("__NonExhaustive is not a valid BatchSize."),
         }
     }
 }
@@ -741,6 +738,7 @@ impl<M: Measurement> Criterion<M> {
         let report_context = ReportContext {
             output_directory: self.output_directory.clone(),
             plot_config: PlotConfiguration::default(),
+            comparison: false,
         };
 
         self.report.final_summary(&report_context);
@@ -1173,6 +1171,18 @@ https://bheisler.github.io/criterion.rs/book/faq.html
         }
 
         BenchmarkGroup::new(self, group_name)
+    }
+
+    /// Create a benchmark group that will automatically emit a comparison summary at the end of
+    /// the run. Use this to benchmark several implementations of the same operation and compare
+    /// them side-by-side.
+    pub fn comparison_benchmark_group<S: Into<String>>(
+        &mut self,
+        group_name: S,
+    ) -> BenchmarkGroup<'_, M> {
+        let mut group = self.benchmark_group(group_name);
+        group.comparison();
+        group
     }
 }
 impl<M> Criterion<M>

@@ -143,7 +143,7 @@ fn line_comparison_series_data<'a>(
                 (x, y)
             })
             .collect();
-        tuples.sort_by(|&(ax, _), &(bx, _)| (ax.partial_cmp(&bx).unwrap_or(Ordering::Less)));
+        tuples.sort_by(|&(ax, _), &(bx, _)| ax.partial_cmp(&bx).unwrap_or(Ordering::Less));
         let function_name = key.as_ref();
         let (xs, mut ys): (Vec<_>, Vec<_>) = tuples.into_iter().unzip();
         formatter.scale_values(max, &mut ys);

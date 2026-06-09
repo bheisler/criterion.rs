@@ -4,6 +4,7 @@ mod benchmarks;
 
 criterion_main! {
     benchmarks::compare_functions::fibonaccis,
+    benchmarks::comparison_demo::comparison_group,
     benchmarks::external_process::benches,
     benchmarks::iter_with_large_drop::benches,
     benchmarks::iter_with_large_setup::benches,

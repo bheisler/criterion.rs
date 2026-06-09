@@ -1,4 +1,7 @@
-use crate::report::{make_filename_safe, BenchmarkId, MeasurementData, Report, ReportContext};
+use crate::report::{
+    build_comparison_rows, load_change_for_ids, load_estimates_for_ids, make_filename_safe,
+    BenchmarkId, ComparisonRow, MeasurementData, Report, ReportContext,
+};
 use crate::stats::bivariate::regression::Slope;
 
 use crate::estimate::Estimate;
@@ -16,6 +19,21 @@ use std::path::{Path, PathBuf};
 use tinytemplate::TinyTemplate;
 
 const THUMBNAIL_SIZE: Option<Size> = Some(Size(450, 300));
+
+fn ordinal(n: usize) -> String {
+    let rem100 = n % 100;
+    let suffix = if (11..=13).contains(&rem100) {
+        "th"
+    } else {
+        match n % 10 {
+            1 => "st",
+            2 => "nd",
+            3 => "rd",
+            _ => "th",
+        }
+    };
+    format!("{n}{suffix}")
+}
 
 fn debug_context<S: Serialize>(path: &Path, context: &S) {
     if crate::debug_enabled() {
@@ -85,7 +103,86 @@ struct SummaryContext {
     violin_plot: Option<String>,
     line_chart: Option<String>,
 
+    comparison: Option<Vec<SummaryComparisonMetric>>,
     benchmarks: Vec<IndividualBenchmark>,
+}
+
+#[derive(Serialize)]
+struct SummaryComparisonMetric {
+    name: String,
+    values: Vec<SummaryComparisonValue>,
+}
+
+#[derive(Serialize)]
+struct SummaryComparisonValue {
+    name: String,
+    rank: usize,
+    rank_ordinal: String,
+    rank_class: Option<String>,
+    ratio: String,
+    value: String,
+    is_best: bool,
+    delta_to_next: Option<String>,
+    change: Option<String>,
+    change_class: Option<String>,
+    rank_delta: Option<String>,
+    score_delta: Option<String>,
+    score_class: Option<String>,
+    next_rank_ordinal: Option<String>,
+}
+
+impl From<ComparisonRow> for SummaryComparisonMetric {
+    fn from(row: ComparisonRow) -> Self {
+        fn format_rank_delta(value: f64) -> String {
+            if value > 200.0 {
+                format!("{:.2}x", 1.0 + value / 100.0)
+            } else {
+                format!("{:.1}%", value)
+            }
+        }
+
+        SummaryComparisonMetric {
+            name: row.label.to_owned(),
+            values: row
+                .cells
+                .into_iter()
+                .map(|cell| SummaryComparisonValue {
+                    name: cell.name,
+                    rank: cell.rank,
+                    rank_ordinal: ordinal(cell.rank),
+                    rank_class: None,
+                    ratio: format!("{:.3}", cell.ratio),
+                    value: cell.formatted_value,
+                    is_best: cell.is_best,
+                    delta_to_next: cell.delta_to_next.map(format_rank_delta),
+                    change: cell.change.map(|c| format::change(c, true)),
+                    change_class: match cell.change_positive {
+                        Some(true) => Some("regressed".to_owned()),
+                        Some(false) => Some("improved".to_owned()),
+                        None => None,
+                    },
+                    rank_delta: None,
+                    score_delta: cell.score_delta.map(|d| {
+                        if d.abs() < 0.0005 {
+                            "0.000".to_owned()
+                        } else {
+                            format!("{:+.3}", d)
+                        }
+                    }),
+                    score_class: cell.score_delta.map(|d| {
+                        if d.abs() < 0.0005 {
+                            "".to_owned()
+                        } else if d > 0.0 {
+                            "improved".to_owned()
+                        } else {
+                            "regressed".to_owned()
+                        }
+                    }),
+                    next_rank_ordinal: cell.delta_to_next.map(|_| ordinal(cell.rank + 1)),
+                })
+                .collect(),
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -468,6 +565,7 @@ impl Report for Html {
                     context,
                     formatter,
                     false,
+                    false,
                 );
             }
         }
@@ -483,7 +581,17 @@ impl Report for Html {
                 let subgroup_id =
                     BenchmarkId::new(group_id.clone(), None, Some(value_str.clone()), None);
 
-                self.generate_summary(&subgroup_id, &samples_with_value, context, formatter, false);
+                // Enable comparison tables for per-value sub-groups when comparison mode
+                // is active, so each parameter value gets its own ranked comparison.
+                let enable_comparison = context.comparison;
+                self.generate_summary(
+                    &subgroup_id,
+                    &samples_with_value,
+                    context,
+                    formatter,
+                    false,
+                    enable_comparison,
+                );
             }
         }
 
@@ -513,6 +621,7 @@ impl Report for Html {
             &all_data,
             context,
             formatter,
+            true,
             true,
         );
         self.plotter.borrow_mut().wait();
@@ -734,6 +843,7 @@ impl Html {
         report_context: &ReportContext,
         formatter: &dyn ValueFormatter,
         full_summary: bool,
+        enable_comparison: bool,
     ) {
         let plot_ctx = PlotContext {
             id,
@@ -777,6 +887,28 @@ impl Html {
             })
             .collect();
 
+        let comparison = if enable_comparison && report_context.comparison {
+            let ids: Vec<_> = data.iter().map(|&&(id, _)| id).collect();
+            let estimates = load_estimates_for_ids(&report_context.output_directory, &ids);
+            if estimates.len() == ids.len() && estimates.len() > 1 {
+                let change = load_change_for_ids(&report_context.output_directory, &ids);
+                let rows = build_comparison_rows(&estimates, formatter, Some(&change));
+                if rows.is_empty() {
+                    None
+                } else {
+                    Some(
+                        rows.into_iter()
+                            .map(SummaryComparisonMetric::from)
+                            .collect(),
+                    )
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
         let context = SummaryContext {
             group_id: id.as_title().to_owned(),
 
@@ -786,6 +918,7 @@ impl Html {
             violin_plot: Some(plot_ctx.violin_path().to_string_lossy().into_owned()),
             line_chart: line_path.map(|p| p.to_string_lossy().into_owned()),
 
+            comparison,
             benchmarks,
         };
 

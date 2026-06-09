@@ -41,7 +41,7 @@ where
     T::Builder: Send,
 {
     let nresamples_sqrt = (nresamples as f64).sqrt().ceil() as usize;
-    let per_chunk = (nresamples + nresamples_sqrt - 1) / nresamples_sqrt;
+    let per_chunk = nresamples.div_ceil(nresamples_sqrt);
 
     #[cfg(feature = "rayon")]
     {

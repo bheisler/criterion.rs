@@ -54,6 +54,7 @@ fn python_fibonacci(c: &mut Criterion) {
 
         // Ensure that your child process terminates itself gracefully!
         process.kill().expect("Unable to kill child process");
+        let _ = process.wait();
     }
 }
 

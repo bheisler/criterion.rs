@@ -1,4 +1,5 @@
 pub mod compare_functions;
+pub mod comparison_demo;
 pub mod custom_measurement;
 pub mod external_process;
 pub mod iter_with_large_drop;

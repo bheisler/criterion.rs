@@ -63,7 +63,7 @@ pub mod axis {
             old
         }
 
-        pub fn iter(&self) -> Items<T> {
+        pub fn iter(&self) -> Items<'_, T> {
             Items {
                 map: self,
                 state: Some(Axis::BottomX),
@@ -143,7 +143,7 @@ pub mod grid {
             old
         }
 
-        pub fn iter(&self) -> Items<T> {
+        pub fn iter(&self) -> Items<'_, T> {
             Items {
                 map: self,
                 state: Some(Grid::Major),

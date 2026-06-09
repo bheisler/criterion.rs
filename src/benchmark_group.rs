@@ -81,6 +81,7 @@ pub struct BenchmarkGroup<'a, M: Measurement> {
     any_matched: bool,
     partial_config: PartialBenchmarkConfig,
     throughput: Option<Throughput>,
+    comparison: bool,
 }
 impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
     /// Changes the size of the sample for this benchmark
@@ -234,6 +235,14 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
         self
     }
 
+    /// Mark this benchmark group as a comparison group. Criterion.rs will summarize the
+    /// benchmarks in this group against one another once the group completes, highlighting the
+    /// best performer for each statistic.
+    pub fn comparison(&mut self) -> &mut Self {
+        self.comparison = true;
+        self
+    }
+
     pub(crate) fn new(criterion: &mut Criterion<M>, group_name: String) -> BenchmarkGroup<'_, M> {
         BenchmarkGroup {
             criterion,
@@ -242,6 +251,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
             any_matched: false,
             partial_config: PartialBenchmarkConfig::default(),
             throughput: None,
+            comparison: false,
         }
     }
 
@@ -278,6 +288,7 @@ impl<'a, M: Measurement> BenchmarkGroup<'a, M> {
         let report_context = ReportContext {
             output_directory: self.criterion.output_directory.clone(),
             plot_config: self.partial_config.plot_config.clone(),
+            comparison: self.comparison,
         };
 
         let mut id = InternalBenchmarkId::new(
@@ -383,6 +394,7 @@ impl<'a, M: Measurement> Drop for BenchmarkGroup<'a, M> {
             let report_context = ReportContext {
                 output_directory: self.criterion.output_directory.clone(),
                 plot_config: self.partial_config.plot_config.clone(),
+                comparison: self.comparison,
             };
 
             self.criterion.report.summarize(

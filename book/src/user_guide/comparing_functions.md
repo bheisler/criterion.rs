@@ -87,4 +87,22 @@ each implementation.
 The line chart shows a comparison of the different functions as the input or input size increases,
 which can be generated with `Criterion::benchmark_group`.
 
-    
+## Comparison Summary
+
+If you want Criterion.rs to emit a quick comparison of the implementations in a group, enable
+comparison mode on the group. The CLI and summary report normalize the *typical* statistic (the same
+primary number shown elsewhere in Criterion) so the fastest benchmark shows as `1.00` (ranked first)
+and slower ones are shown in red. Each line also shows how much faster it is than the next entry
+and its change from the previous run if a baseline exists. At the moment only the typical statistic is shown in the
+comparison summary; other statistics are not included.
+
+```rust
+fn bench_fibs(c: &mut Criterion) {
+    let mut group = c.comparison_benchmark_group("Fibonacci");
+    // or:
+    // let mut group = c.benchmark_group("Fibonacci");
+    // group.comparison();
+
+    // add benchmarks as usual
+}
+```

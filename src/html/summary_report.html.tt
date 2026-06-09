@@ -46,6 +46,54 @@
         #footer p \{
             text-align: center
         }
+
+        table.comparison \{
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        table.comparison th,
+        table.comparison td \{
+            border: 1px solid #888;
+            padding: 4px;
+            text-align: center;
+        }
+
+        table.comparison td .value,
+        table.comparison td .delta,
+        table.comparison td .change \{
+            display: block;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        table.comparison td.worse \{
+            color: #b22222;
+        }
+
+        table.comparison td.best \{
+            font-weight: bold;
+            color: #2d862d;
+        }
+
+        .rank \{
+            font-weight: bold;
+        }
+
+        .delta-positive \{
+            color: #2d862d;
+            font-weight: bold;
+        }
+
+        .change.improved \{
+            color: #2d862d;
+            font-weight: bold;
+        }
+
+        .change.regressed \{
+            color: #b22222;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -65,6 +113,40 @@
         <h3>Line Chart</h3>
         <img src="lines.svg" alt="Line Chart" />
         <p>This chart shows the mean measured time for each function as the input (or the size of the input) increases.</p>
+        {{- endif }}
+        {{- if comparison }}
+        <h3>Comparison</h3>
+        <p>Best performer is normalized to 1.00 (typical); lower values indicate slower results relative to the fastest benchmark.</p>
+        <table class="comparison">
+            <thead>
+                <tr>
+                    <th>Statistic</th>
+                    {{- for value in comparison.0.values }}
+                    <th><span class="rank">{value.rank_ordinal}</span> {value.name}</th>
+                    {{- endfor }}
+                </tr>
+            </thead>
+            <tbody>
+                {{- for row in comparison }}
+                <tr>
+                    <th>{row.name}</th>
+                    {{- for value in row.values }}
+                    <td class="{{ if value.is_best }}best{{ else }}worse{{ endif }}">
+                        <div class="ratio">{value.ratio}</div>
+                        <div class="value">
+                            {value.value}{{ if value.delta_to_next }}, <span class="delta-positive">{value.delta_to_next}</span> faster than {{ if value.next_rank_ordinal }}{value.next_rank_ordinal}{{ else }}next{{ endif }}{{ endif }}
+                        </div>
+                        {{- if value.change }}
+                        <div class="change{{ if value.change_class }} {value.change_class}{{ endif }}">
+                            change: [{{ if value.score_delta }}<span class="{{ if value.score_class }}{value.score_class}{{ endif }}">{value.score_delta}</span>{{ else }}0.000{{ endif }}, {value.change}]
+                        </div>
+                        {{- endif }}
+                    </td>
+                    {{- endfor }}
+                </tr>
+                {{- endfor }}
+            </tbody>
+        </table>
         {{- endif }}
         {{- for bench in benchmarks }}
         <section class="plots">

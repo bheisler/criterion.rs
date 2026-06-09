@@ -1003,7 +1003,7 @@ fn parse_version_utf8(output_bytes: &[u8]) -> Result<Version, VersionError> {
 }
 
 fn parse_version_utf16(output_bytes: &[u8]) -> Result<Version, VersionError> {
-    if output_bytes.len() % 2 != 0 {
+    if output_bytes.len() & 1 == 1 {
         // Not an even number of bytes, so cannot be UTF-16.
         return Err(VersionError::OutputError);
     }

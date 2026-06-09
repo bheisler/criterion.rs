@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Opt-in comparison benchmark groups that generate ranked summaries across multiple
+  implementations (CLI + HTML). The summary normalizes the typical statistic to 1.00,
+  highlights the fastest entry, shows percent faster than the next rank, and reports change vs
+  baseline.
+
 ## [0.7.0] - 2025-07-25
 - Bump version of criterion-plot to align dependencies.
 
